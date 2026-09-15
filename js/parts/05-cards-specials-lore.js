@@ -98,12 +98,12 @@ const BEAST_CARD_TEMPLATES=[
   {key:"african_elephant",name:"Elefante Africano",type:"unit",icon:"🐘",portrait:CARD_PORTRAITS.africanElephant,rarity:"Legendaria",cost:5,hp:18,atk:16,guard:7,dex:3,agi:3,mov:1,range:1,beast:true,text:"Arremetida Colosal: cuando se mueve exactamente 1 celda en línea recta hacia el frente, directamente hacia una unidad enemiga, y la ataca inmediatamente, obtiene +6 AT (AT 22) y el objetivo pierde 4 AGI durante ese combate. Si impacta, empuja al objetivo principal hasta 2 celdas. Los enemigos situados a ambos lados del objetivo reciben un impacto de AT 10, pierden 4 AGI para evadir, no contraatacan y son empujados 1 celda. Si el objetivo principal no puede retroceder, recibe 8 de daño directo de Pisoteo. Después de cargar, el Elefante pierde 2 GD hasta el inicio del siguiente ciclo táctico."}
 ];
 const BEAST_TRAP_CARD_TEMPLATES=[
-  {key:"iron_jaw_trap",name:"Cepo de Hierro",type:"trap",icon:"🪤",portrait:CARD_PORTRAITS.ironJawTrap,rarity:"Básica",cost:1,trap:"beast_cell",beastTrap:"iron_jaw",text:"Coloca un cepo en una celda libre. La primera unidad enemiga que entre recibe 1 daño directo y pierde 1 MOV durante el siguiente ciclo táctico."},
+  {key:"iron_jaw_trap",name:"Cepo de Hierro",type:"trap",icon:"🪤",portrait:CARD_PORTRAITS.ironJawTrap,rarity:"Básica",cost:1,trap:"beast_cell",beastTrap:"iron_jaw",text:"Coloca un cepo en una celda libre. La primera unidad enemiga que entre recibe 1 daño directo y pierde 1 MOV por 18/15/12 s según sea Básica/Especial/Legendaria."},
   {key:"covered_pit",name:"Foso Cubierto",type:"trap",icon:"🕳️",portrait:CARD_PORTRAITS.coveredPit,rarity:"Básica",cost:2,trap:"beast_cell",beastTrap:"covered_pit",text:"Coloca un foso en una celda libre. La primera unidad enemiga terrestre que entre caminando cae y queda eliminada del juego. No afecta unidades aéreas."},
-  {key:"hunting_net",name:"Red de Caza",type:"trap",icon:"🕸️",portrait:CARD_PORTRAITS.huntingNet,rarity:"Básica",cost:1,trap:"beast_target",beastTrap:"hunting_net",text:"Elige una unidad enemiga en rango 3 del líder: pierde -2 AGI hasta el final del ciclo táctico actual."},
+  {key:"hunting_net",name:"Red de Caza",type:"trap",icon:"🕸️",portrait:CARD_PORTRAITS.huntingNet,rarity:"Básica",cost:1,trap:"beast_target",beastTrap:"hunting_net",text:"Elige una unidad enemiga en rango 3 del líder: pierde -2 AGI por 18/15/12 s según sea Básica/Especial/Legendaria."},
   {key:"blood_bait",name:"Carnada Ámbar",type:"trap",icon:"🥩",portrait:CARD_PORTRAITS.bloodBait,rarity:"Básica",cost:2,trap:"beast_cell",beastTrap:"blood_bait",text:"Coloca la carnada en una celda. La primera Bestia aliada que ataque a un enemigo adyacente a ella obtiene +3 AT y +2 DX durante ese combate. La carnada se consume al conceder el beneficio."},
   {key:"tracking_smoke",name:"Estacas de Bambú",type:"trap",icon:"🎍",portrait:CARD_PORTRAITS.trackingSmoke,rarity:"Básica",cost:3,trap:"beast_cell",beastTrap:"bamboo_stakes",text:"Coloca estacas en una celda libre. La primera unidad terrestre enemiga que entre recibe 4 daño directo y Sangrado 1 durante 20 s. No afecta unidades aéreas."},
-  {key:"rope_cage",name:"Jaula de Cuerda",type:"trap",icon:"🪢",portrait:CARD_PORTRAITS.ropeCage,rarity:"Básica",cost:3,trap:"beast_cell",beastTrap:"rope_cage",text:"Coloca una jaula de cuerda. La primera unidad enemiga que entre recibe 3 daño directo y no puede atacar durante el siguiente ciclo táctico."}
+  {key:"rope_cage",name:"Jaula de Cuerda",type:"trap",icon:"🪢",portrait:CARD_PORTRAITS.ropeCage,rarity:"Básica",cost:3,trap:"beast_cell",beastTrap:"rope_cage",text:"Coloca una jaula de cuerda. La primera unidad enemiga que entre recibe 3 daño directo y no puede atacar por 7/6/5 s según sea Básica/Especial/Legendaria."}
 ];
 CARD_TEMPLATES.push(...BEAST_CARD_TEMPLATES,...BEAST_TRAP_CARD_TEMPLATES);
 
@@ -1770,8 +1770,8 @@ const DET_CARD_EFFECT_SECTIONS={
   shield_wall:[{title:"MURO DE ESCUDOS",body:"Otorga +2 Guardia a una unidad aliada durante la duración táctica vigente.",icon:"assets/ui/status_icons/status_guard.webp",kind:"buff"}],
   smoke_bomb:[
     {title:"BOMBA DE HUMO",body:"Marca una invocación rival con una penalización temporal de movilidad.",icon:"assets/ui/effect_icons/bomba_de_humo.webp",kind:"debuff"},
-    {title:"MOV -1",body:"La unidad afectada pierde 1 MOV durante la duración vigente de la trampa.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"},
-    {title:"AGI -2",body:"La unidad afectada pierde 2 AGI durante la duración vigente de la trampa.",icon:"assets/ui/status_icons/status_debuff.webp",kind:"debuff"}
+    {title:"MOV -1",body:"La unidad afectada pierde 1 MOV por 18/15/12 s según sea Básica/Especial/Legendaria.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"},
+    {title:"AGI -2",body:"La unidad afectada pierde 2 AGI por 18/15/12 s según sea Básica/Especial/Legendaria.",icon:"assets/ui/status_icons/status_debuff.webp",kind:"debuff"}
   ],
   inspiration:[{title:"INSPIRACIÓN",body:"Otorga +1 AT a una unidad aliada durante la duración táctica vigente.",icon:"assets/ui/status_icons/status_buff.webp",kind:"buff"}],
   warning_rune:[
@@ -1788,7 +1788,7 @@ const DET_CARD_EFFECT_SECTIONS={
   iron_jaw_trap:[
     {title:"CEPO DE CELDA",body:"Se coloca en una celda libre y se consume cuando una unidad enemiga entra en ella.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
     {title:"DAÑO DIRECTO",body:"La primera unidad enemiga que lo pisa recibe 1 daño directo.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"},
-    {title:"MOV -1",body:"La unidad afectada pierde 1 MOV durante la duración indicada por la regla de la trampa.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"}
+    {title:"MOV -1",body:"La unidad afectada pierde 1 MOV por 18/15/12 s según sea Básica/Especial/Legendaria.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"}
   ],
   covered_pit:[
     {title:"FOSO OCULTO",body:"Se coloca en una celda libre y se activa cuando una unidad enemiga terrestre entra caminando.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
@@ -1797,7 +1797,7 @@ const DET_CARD_EFFECT_SECTIONS={
   ],
   hunting_net:[
     {title:"OBJETIVO EN RG 3",body:"Elige una unidad enemiga situada a 3 casillas o menos de tu líder.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
-    {title:"AGI -2",body:"La unidad elegida pierde 2 AGI durante la duración vigente de Red de Caza.",icon:"assets/ui/status_icons/status_debuff.webp",kind:"debuff"}
+    {title:"AGI -2",body:"La unidad elegida pierde 2 AGI por 18/15/12 s según sea Básica/Especial/Legendaria.",icon:"assets/ui/status_icons/status_debuff.webp",kind:"debuff"}
   ],
   blood_bait:[
     {title:"CARNADA DE CELDA",body:"Se coloca en una celda y espera a que una Bestia aliada ataque a un enemigo adyacente a ella.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
@@ -1814,13 +1814,13 @@ const DET_CARD_EFFECT_SECTIONS={
   rope_cage:[
     {title:"JAULA DE CELDA",body:"Se coloca en una celda libre y se activa con la primera unidad enemiga que entra.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
     {title:"3 DAÑO DIRECTO",body:"La unidad que activa la Jaula recibe 3 de daño directo.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"},
-    {title:"BLOQUEO DE ATAQUE",body:"La unidad afectada no puede atacar durante la duración indicada por la regla actual de la carta.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"}
+    {title:"BLOQUEO DE ATAQUE",body:"La unidad afectada no puede atacar por 7/6/5 s según sea Básica/Especial/Legendaria.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"}
   ],
 
   // Trampas mejoradas
   snare_trap_plus:[
     {title:"TRAMPA DE CADENAS",body:"Se activa sobre una unidad enemiga al cumplirse su condición de movimiento.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
-    {title:"MOV -2",body:"Reduce el MOV de la unidad afectada en 2 durante la duración táctica indicada.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"}
+    {title:"MOV -2",body:"Reduce el MOV de la unidad afectada en 2 por 14/12/10 s según sea Básica/Especial/Legendaria.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"}
   ],
   warning_rune_plus:[
     {title:"RUNA PREPARADA",body:"Se coloca sobre una unidad aliada y espera el primer ataque recibido.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
@@ -1843,16 +1843,16 @@ const DET_CARD_EFFECT_SECTIONS={
     {title:"VENENO PREVIO",body:"Si la unidad ya estaba envenenada, se aplica la regla general de muerte por doble Veneno cuando corresponda.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"}
   ],
   traitors_bed:[
-    {title:"MARCA SELECTIVA",body:"Solo puede marcar una unidad enemiga no líder que cumpla la condición de ataque indicada por la carta.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
-    {title:"DORMIDA",body:"Al abrirse, la unidad no puede moverse, atacar ni contraatacar según el nivel del objetivo.",icon:"assets/ui/status_icons/status_paralysis.webp",kind:"debuff"},
+    {title:"MARCA SELECTIVA",body:"Puede marcar cualquier unidad enemiga que no sea líder.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
+    {title:"DORMIDA",body:"Al abrirse, la unidad no puede moverse, atacar ni contraatacar por 7/6/5 s según sea Básica/Especial/Legendaria.",icon:"assets/ui/status_icons/status_paralysis.webp",kind:"debuff"},
     {title:"VULNERABLE",body:"Contra una unidad Especial, el próximo daño ignora Guardia.",icon:"assets/ui/status_icons/status_defense.webp",kind:"debuff"},
     {title:"EXPUESTA",body:"Contra una unidad Legendaria, el próximo daño se duplica e ignora Guardia.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"}
   ],
   broken_blood_oath:[
     {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga y espera a que active un efecto o reciba un buff.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
     {title:"CANCELACIÓN",body:"Cancela el efecto o buff que activa la trampa.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"},
-    {title:"PÉRDIDA DE STATS",body:"Aplica penalizaciones de Ataque y Guardia que aumentan según la rareza del objetivo.",icon:"assets/ui/status_icons/status_debuff.webp",kind:"debuff"},
-    {title:"SILENCIO",body:"Contra una unidad Legendaria también elimina buffs y aplica Silencio según la regla de la carta.",icon:"assets/ui/status_icons/status_silence.webp",kind:"debuff"}
+    {title:"PÉRDIDA DE STATS",body:"Básica: -1 AT/-1 Guardia 18 s. Especial: -2 AT/-2 Guardia 12 s. Legendaria: -3 Guardia 6 s.",icon:"assets/ui/status_icons/status_debuff.webp",kind:"debuff"},
+    {title:"SILENCIO",body:"Contra una unidad Legendaria también aplica Silencio durante 5 s.",icon:"assets/ui/status_icons/status_silence.webp",kind:"debuff"}
   ],
   true_name_exile:[
     {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga y espera a que derrote una de tus unidades.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
@@ -1864,15 +1864,15 @@ const DET_CARD_EFFECT_SECTIONS={
     {title:"VIDA COMPLETA",body:"Solo puede marcar una unidad enemiga que esté con su Vida completa.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
     {title:"PÉRDIDA DE VIDA",body:"Al abrirse hace 3 de daño directo o elimina un porcentaje de la Vida actual según la rareza.",icon:"assets/ui/status_icons/status_hp.webp",kind:"debuff"},
     {title:"IGNORA GUARDIA",body:"Las versiones Especial y Legendaria ignoran la Guardia al aplicar la pérdida de Vida.",icon:"assets/ui/status_icons/status_defense.webp",kind:"debuff"},
-    {title:"SIN CURACIÓN",body:"Las versiones superiores impiden que la unidad marcada se cure durante la duración indicada.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"},
-    {title:"SIN REDUCCIÓN",body:"La versión Legendaria también impide recibir reducción de daño durante su duración.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"}
+    {title:"SIN CURACIÓN",body:"Especial: no puede curarse durante 12 s. Legendaria: no puede curarse durante 6 s.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"},
+    {title:"SIN REDUCCIÓN",body:"La versión Legendaria impide reducción de daño durante 6 s.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"}
   ],
   thousand_banners_ambush:[
     {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga y espera a que se acerque a tu líder.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
     {title:"EMBOSCADA",body:"Se activa cuando la unidad marcada termina su movimiento a 2 casillas o menos de tu líder.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
     {title:"DAÑO DIRECTO",body:"Hace 3 de daño a una unidad Básica y 5 a una Especial o Legendaria.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"},
     {title:"EMPUJE",body:"Empuja 1 casilla a una Básica y 2 casillas a una Especial o Legendaria, si existe espacio válido.",icon:"assets/ui/effect_icons/empuje_salvaje.webp",kind:"debuff"},
-    {title:"CONTROL",body:"La Especial no puede atacar durante el ciclo indicado; la Legendaria queda Aturdida y no puede atacar ni contraatacar.",icon:"assets/ui/status_icons/status_paralysis.webp",kind:"debuff"}
+    {title:"CONTROL",body:"Especial: no puede atacar durante 12 s. Legendaria: queda Aturdida durante 5 s.",icon:"assets/ui/status_icons/status_paralysis.webp",kind:"debuff"}
   ],
   shadow_cut:[
     {title:"MARCA A HERIDOS",body:"Solo marca una unidad enemiga que ya esté herida.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
@@ -1883,12 +1883,12 @@ const DET_CARD_EFFECT_SECTIONS={
     {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga y espera a que vaya a atacar.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
     {title:"CANCELA ATAQUE",body:"El ataque original de la unidad marcada se cancela cuando la trampa se abre.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"},
     {title:"ATAQUE ALIADO",body:"Las versiones Especial y Legendaria pueden obligarla a atacar a una unidad de su propio bando que esté en rango.",icon:"assets/ui/status_icons/status_control.webp",kind:"debuff"},
-    {title:"ATURDIMIENTO / DX",body:"Si la versión Legendaria no encuentra aliado propio en rango, queda Aturdida y recibe -3 DX según la duración de la carta.",icon:"assets/ui/status_icons/status_paralysis.webp",kind:"debuff"}
+    {title:"ATURDIMIENTO / DX",body:"Si la Legendaria no encuentra aliado propio en rango, queda Aturdida 5 s y recibe -3 DX durante 10 s.",icon:"assets/ui/status_icons/status_paralysis.webp",kind:"debuff"}
   ],
   fallen_kings_seal:[
     {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga y espera una curación, buff o reducción de daño.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
     {title:"CANCELA AYUDA",body:"Cancela la curación, buff o reducción de daño que activa el Sello.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"},
-    {title:"-5 GENERAL",body:"Aplica -5 a Guardia, Destreza, Agilidad, Movimiento, HP, Rango y demás valores aplicables según la regla vigente.",icon:"assets/ui/status_icons/status_debuff.webp",kind:"debuff"}
+    {title:"-5 GENERAL",body:"Aplica -5 general durante 10/8/6 s según sea Básica/Especial/Legendaria. Un efecto tan fuerte dura menos.",icon:"assets/ui/status_icons/status_debuff.webp",kind:"debuff"}
   ],
   camp_betrayal:[
     {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
@@ -1897,7 +1897,7 @@ const DET_CARD_EFFECT_SECTIONS={
   ],
   night_without_guard:[
     {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga para preparar la apertura de la trampa.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
-    {title:"ATURDIMIENTO GLOBAL",body:"Cuando se abre, aturde a todas las unidades enemigas durante 10 s según la regla actual.",icon:"assets/ui/status_icons/status_paralysis.webp",kind:"debuff"}
+    {title:"ATURDIMIENTO GLOBAL",body:"Cuando se abre, aturde a todas las unidades enemigas no líder durante 4 s. El control global tiene duración corta.",icon:"assets/ui/status_icons/status_paralysis.webp",kind:"debuff"}
   ]
 };
 function getDetExplicitCardEffectSections(entity){

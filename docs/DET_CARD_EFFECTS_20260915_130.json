@@ -1,6 +1,6 @@
 {
-  "version": "20260915.129",
-  "purpose": "Un icono por efecto; click abre explicación individual en DET.",
+  "version": "20260915.130",
+  "purpose": "DET modular por iconos + duraciones TR v130; trampas temporales por rareza/intensidad y sin splash de eventos.",
   "cards": {
     "bolt": [
       {
@@ -63,13 +63,13 @@
       },
       {
         "title": "MOV -1",
-        "body": "La unidad afectada pierde 1 MOV durante la duración vigente de la trampa.",
+        "body": "La unidad afectada pierde 1 MOV por 18/15/12 s según sea Básica/Especial/Legendaria.",
         "icon": "assets/ui/status_icons/status_lock.webp",
         "kind": "debuff"
       },
       {
         "title": "AGI -2",
-        "body": "La unidad afectada pierde 2 AGI durante la duración vigente de la trampa.",
+        "body": "La unidad afectada pierde 2 AGI por 18/15/12 s según sea Básica/Especial/Legendaria.",
         "icon": "assets/ui/status_icons/status_debuff.webp",
         "kind": "debuff"
       }
@@ -133,7 +133,7 @@
       },
       {
         "title": "MOV -1",
-        "body": "La unidad afectada pierde 1 MOV durante la duración indicada por la regla de la trampa.",
+        "body": "La unidad afectada pierde 1 MOV por 18/15/12 s según sea Básica/Especial/Legendaria.",
         "icon": "assets/ui/status_icons/status_lock.webp",
         "kind": "debuff"
       }
@@ -167,7 +167,7 @@
       },
       {
         "title": "AGI -2",
-        "body": "La unidad elegida pierde 2 AGI durante la duración vigente de Red de Caza.",
+        "body": "La unidad elegida pierde 2 AGI por 18/15/12 s según sea Básica/Especial/Legendaria.",
         "icon": "assets/ui/status_icons/status_debuff.webp",
         "kind": "debuff"
       }
@@ -239,7 +239,7 @@
       },
       {
         "title": "BLOQUEO DE ATAQUE",
-        "body": "La unidad afectada no puede atacar durante la duración indicada por la regla actual de la carta.",
+        "body": "La unidad afectada no puede atacar por 7/6/5 s según sea Básica/Especial/Legendaria.",
         "icon": "assets/ui/status_icons/status_lock.webp",
         "kind": "debuff"
       }
@@ -253,7 +253,7 @@
       },
       {
         "title": "MOV -2",
-        "body": "Reduce el MOV de la unidad afectada en 2 durante la duración táctica indicada.",
+        "body": "Reduce el MOV de la unidad afectada en 2 por 14/12/10 s según sea Básica/Especial/Legendaria.",
         "icon": "assets/ui/status_icons/status_lock.webp",
         "kind": "debuff"
       }
@@ -345,13 +345,13 @@
     "traitors_bed": [
       {
         "title": "MARCA SELECTIVA",
-        "body": "Solo puede marcar una unidad enemiga no líder que cumpla la condición de ataque indicada por la carta.",
+        "body": "Puede marcar cualquier unidad enemiga que no sea líder.",
         "icon": "assets/ui/status_icons/status_curse.webp",
         "kind": "debuff"
       },
       {
         "title": "DORMIDA",
-        "body": "Al abrirse, la unidad no puede moverse, atacar ni contraatacar según el nivel del objetivo.",
+        "body": "Al abrirse, la unidad no puede moverse, atacar ni contraatacar por 7/6/5 s según sea Básica/Especial/Legendaria.",
         "icon": "assets/ui/status_icons/status_paralysis.webp",
         "kind": "debuff"
       },
@@ -383,13 +383,13 @@
       },
       {
         "title": "PÉRDIDA DE STATS",
-        "body": "Aplica penalizaciones de Ataque y Guardia que aumentan según la rareza del objetivo.",
+        "body": "Básica: -1 AT/-1 Guardia 18 s. Especial: -2 AT/-2 Guardia 12 s. Legendaria: -3 Guardia 6 s.",
         "icon": "assets/ui/status_icons/status_debuff.webp",
         "kind": "debuff"
       },
       {
         "title": "SILENCIO",
-        "body": "Contra una unidad Legendaria también elimina buffs y aplica Silencio según la regla de la carta.",
+        "body": "Contra una unidad Legendaria también aplica Silencio durante 5 s.",
         "icon": "assets/ui/status_icons/status_silence.webp",
         "kind": "debuff"
       }
@@ -441,13 +441,13 @@
       },
       {
         "title": "SIN CURACIÓN",
-        "body": "Las versiones superiores impiden que la unidad marcada se cure durante la duración indicada.",
+        "body": "Especial: no puede curarse durante 12 s. Legendaria: no puede curarse durante 6 s.",
         "icon": "assets/ui/status_icons/status_lock.webp",
         "kind": "debuff"
       },
       {
         "title": "SIN REDUCCIÓN",
-        "body": "La versión Legendaria también impide recibir reducción de daño durante su duración.",
+        "body": "La versión Legendaria impide reducción de daño durante 6 s.",
         "icon": "assets/ui/status_icons/status_curse.webp",
         "kind": "debuff"
       }
@@ -479,7 +479,7 @@
       },
       {
         "title": "CONTROL",
-        "body": "La Especial no puede atacar durante el ciclo indicado; la Legendaria queda Aturdida y no puede atacar ni contraatacar.",
+        "body": "Especial: no puede atacar durante 12 s. Legendaria: queda Aturdida durante 5 s.",
         "icon": "assets/ui/status_icons/status_paralysis.webp",
         "kind": "debuff"
       }
@@ -525,7 +525,7 @@
       },
       {
         "title": "ATURDIMIENTO / DX",
-        "body": "Si la versión Legendaria no encuentra aliado propio en rango, queda Aturdida y recibe -3 DX según la duración de la carta.",
+        "body": "Si la Legendaria no encuentra aliado propio en rango, queda Aturdida 5 s y recibe -3 DX durante 10 s.",
         "icon": "assets/ui/status_icons/status_paralysis.webp",
         "kind": "debuff"
       }
@@ -545,7 +545,7 @@
       },
       {
         "title": "-5 GENERAL",
-        "body": "Aplica -5 a Guardia, Destreza, Agilidad, Movimiento, HP, Rango y demás valores aplicables según la regla vigente.",
+        "body": "Aplica -5 general durante 10/8/6 s según sea Básica/Especial/Legendaria. Un efecto tan fuerte dura menos.",
         "icon": "assets/ui/status_icons/status_debuff.webp",
         "kind": "debuff"
       }
@@ -579,7 +579,7 @@
       },
       {
         "title": "ATURDIMIENTO GLOBAL",
-        "body": "Cuando se abre, aturde a todas las unidades enemigas durante 10 s según la regla actual.",
+        "body": "Cuando se abre, aturde a todas las unidades enemigas no líder durante 4 s. El control global tiene duración corta.",
         "icon": "assets/ui/status_icons/status_paralysis.webp",
         "kind": "debuff"
       }

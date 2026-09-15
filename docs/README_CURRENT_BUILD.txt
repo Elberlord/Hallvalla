@@ -1,1 +1,1 @@
-20260915.129 · DET por efectos + portraits canónicos + JSON constructor de mazos
+20260915.130 · Trampas TR por tiempo real + intensidad/rareza · splash de eventos desactivados · DET modular

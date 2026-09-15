@@ -1,0 +1,16 @@
+HallValla v130
+
+- Trampas temporales migradas a duraciones en milisegundos en TR.
+- Duración general por intensidad y rareza del objetivo:
+  * leve: Básica 18 s / Especial 15 s / Legendaria 12 s
+  * media: 14 s / 12 s / 10 s
+  * fuerte: 10 s / 8 s / 6 s
+  * control duro: 7 s / 6 s / 5 s
+  * control global: 4 s
+- Efectos pequeños duran más; efectos extremos duran menos.
+- Bomba de Humo, Red de Caza, Cepo de Hierro, Jaula de Cuerda y trampas legendarias principales usan timestamps reales.
+- Noche Sin Guardia: aturdimiento global no-líder 4 s.
+- Sello de los Reyes Caídos: -5 general de duración corta según rareza.
+- Los loops TR respetan locks de movimiento/ataque/curación/contraataque por timestamp.
+- Splash de eventos de ataque, invocación, estado y magia desactivados. Se conservan FX de campo, sonidos y splash final de victoria/derrota.
+- DET/JSON actualizados para reflejar las nuevas duraciones.

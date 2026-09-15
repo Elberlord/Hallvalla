@@ -1062,7 +1062,7 @@ const BASIC_MAGIC_TRAP_PACK = [
     trap:"slow",
     slow:1,
     agiSlow:2,
-    text:"Bomba de Humo: una invocación rival recibe -1 MOV y -2 AGI hasta su próximo turno."
+    text:"Bomba de Humo: una invocación rival recibe -1 MOV y -2 AGI por tiempo real. Duración por rareza del objetivo: Básica 18 s · Especial 15 s · Legendaria 12 s."
   },
   {
     key:"inspiration",

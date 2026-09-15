@@ -73,16 +73,16 @@ function hydrateCardVisualData(card){
 const LEGENDARY_TRAP_CARDS=[
   {key:"false_alliance_legendary",name:"Falsa Alianza",type:"trap",icon:"🤝",portrait:"assets/cards/basic/spells/inspiration.webp",cost:5,trap:"legendary_mark",legendaryTrap:"false_alliance",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Al jugarla, elige una unidad enemiga que no sea líder. Cuando la unidad marcada declare movimiento hacia una de tus unidades, cancela el movimiento y cambia de bando de forma permanente. Afecta unidades básicas, especiales y legendarias."},
   {key:"primordial_serpent_poison",name:"Veneno de la Serpiente Primordial",type:"trap",icon:"🐍",portrait:"assets/cards/basic/spells/veneno.webp",cost:6,trap:"legendary_mark",legendaryTrap:"primordial_poison",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga que no sea líder. Al abrir el siguiente ciclo táctico aplica Veneno de la Serpiente Primordial: causa 3 pulsos separados por 10 s, de 2, 4 y 8 de daño. Si la unidad ya tenía Veneno, muere por regla general."},
-  {key:"traitors_bed",name:"La Cama del Traidor",type:"trap",icon:"🕯️",portrait:"assets/cards/basic/spells/paralisis.webp",cost:7,trap:"legendary_mark",legendaryTrap:"traitors_bed",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga que no sea líder y no haya atacado durante el ciclo táctico actual. Al abrir el siguiente ciclo táctico: Básica: queda Dormida; no puede moverse, atacar ni contraatacar. Especial: Dormida y Vulnerable; el próximo daño ignora Guardia. Legendaria: Dormida y Expuesta; el próximo daño se duplica e ignora Guardia."},
-  {key:"broken_blood_oath",name:"Juramento de Sangre Roto",type:"trap",icon:"🩸",portrait:"assets/cards/basic/equipment/guardabrazos_de_ruptura.webp",cost:6,trap:"legendary_mark",legendaryTrap:"broken_oath",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando la unidad marcada active un efecto o reciba un buff: Básica: cancela el efecto/buff y recibe -1 Ataque/-1 Guardia durante el ciclo táctico actual. Especial: cancela, pierde buffs activos y recibe -2 Ataque/-2 Guardia hasta el final del siguiente ciclo táctico. Legendaria: cancela, pierde buffs, queda Silenciada hasta el siguiente ciclo táctico y recibe -3 Guardia."},
+  {key:"traitors_bed",name:"La Cama del Traidor",type:"trap",icon:"🕯️",portrait:"assets/cards/basic/spells/paralisis.webp",cost:7,trap:"legendary_mark",legendaryTrap:"traitors_bed",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga que no sea líder. Al abrirse queda Dormida: no puede moverse, atacar ni contraatacar por 7/6/5 s según sea Básica/Especial/Legendaria. Especial: el próximo daño ignora Guardia. Legendaria: el próximo daño se duplica e ignora Guardia."},
+  {key:"broken_blood_oath",name:"Juramento de Sangre Roto",type:"trap",icon:"🩸",portrait:"assets/cards/basic/equipment/guardabrazos_de_ruptura.webp",cost:6,trap:"legendary_mark",legendaryTrap:"broken_oath",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando active un efecto o reciba un buff, lo cancela. Básica: -1 AT/-1 Guardia durante 18 s. Especial: -2 AT/-2 Guardia durante 12 s. Legendaria: -3 Guardia durante 6 s y Silencio durante 5 s."},
   {key:"true_name_exile",name:"Exilio del Nombre Verdadero",type:"trap",icon:"🕳️",portrait:"assets/cards/basic/equipment/manto_del_ejecutor.webp",cost:7,trap:"legendary_mark",legendaryTrap:"true_name_exile",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando la unidad marcada derrote una de tus unidades: Básica: sale del campo hasta el final del siguiente ciclo táctico y vuelve con 1 Vida menos. Especial: Exilio 10 s; vuelve junto a su líder con la mitad de su Vida máxima. Legendaria: Exilio 20 s; no puede atacar, bloquear, activar efectos ni recibir buffs; vuelve con mitad de Vida y sin buffs."},
-  {key:"ash_banquet",name:"Banquete de Ceniza",type:"trap",icon:"🍷",portrait:"assets/cards/basic/spells/fireball.webp",cost:6,trap:"legendary_mark",legendaryTrap:"ash_banquet",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga con Vida completa. Al abrir el siguiente ciclo táctico: Básica: pierde 3 Vida directa. Especial: pierde 40% de su Vida actual, ignora Guardia y no puede curarse durante el ciclo táctico actual. Legendaria: pierde 50% de su Vida actual, ignora Guardia, no puede curarse ni recibir reducción de daño durante el ciclo táctico actual."},
-  {key:"thousand_banners_ambush",name:"Emboscada de los Mil Estandartes",type:"trap",icon:"🏴",portrait:"assets/cards/basic/spells/sand_storm.webp",cost:5,trap:"legendary_mark",legendaryTrap:"thousand_banners",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando termine su movimiento a 2 casillas o menos de tu líder: Básica: recibe 3 daño directo y es empujada 1 casilla si hay espacio. Especial: recibe 5 daño directo, es empujada 2 casillas y no puede atacar durante el ciclo táctico actual. Legendaria: recibe 5 daño directo, es empujada 2 casillas y queda Aturdida; no puede atacar ni contraatacar."},
+  {key:"ash_banquet",name:"Banquete de Ceniza",type:"trap",icon:"🍷",portrait:"assets/cards/basic/spells/fireball.webp",cost:6,trap:"legendary_mark",legendaryTrap:"ash_banquet",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga con Vida completa. Básica: pierde 3 Vida directa. Especial: pierde 40% de su Vida actual, ignora Guardia y no puede curarse durante 12 s. Legendaria: pierde 50% de su Vida actual, ignora Guardia y no puede curarse ni recibir reducción de daño durante 6 s."},
+  {key:"thousand_banners_ambush",name:"Emboscada de los Mil Estandartes",type:"trap",icon:"🏴",portrait:"assets/cards/basic/spells/sand_storm.webp",cost:5,trap:"legendary_mark",legendaryTrap:"thousand_banners",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando termine su movimiento a 2 casillas o menos de tu líder: Básica: 3 daño y empuje 1. Especial: 5 daño, empuje 2 y no puede atacar durante 12 s. Legendaria: 5 daño, empuje 2 y queda Aturdida durante 5 s."},
   {key:"shadow_cut",name:"Corte de Sombras",type:"trap",icon:"🌑",portrait:"assets/cards/basic/equipment/capa_de_escaramuza.webp",cost:6,trap:"legendary_mark",legendaryTrap:"shadow_cut",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga herida. Cuando la unidad marcada reciba daño, si después de ese daño queda con menos de la mitad de su Vida máxima, muere. Si queda exactamente en la mitad, no muere."},
-  {key:"false_crown",name:"La Corona Falsa",type:"trap",icon:"👑",portrait:"assets/cards/basic/spells/athena_blessing.webp",cost:5,trap:"legendary_mark",legendaryTrap:"false_crown",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando vaya a atacar: Básica: cancela el ataque y recibe -2 Destreza durante el ciclo táctico actual. Especial: cancela el ataque y, si tiene una unidad de su propio bando en rango, debe atacarla. Legendaria: cancela el ataque y, si tiene aliado propio en rango, debe atacarlo con +2 Ataque; si no, queda Aturdida y pierde -3 Destreza hasta el final del siguiente ciclo táctico."},
-  {key:"fallen_kings_seal",name:"Sello de los Reyes Caídos",type:"trap",icon:"🜏",portrait:"assets/cards/basic/equipment/amuleto_de_canalizacion.webp",cost:7,trap:"legendary_mark",legendaryTrap:"fallen_kings_seal",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando vaya a recibir curación, buff o reducción de daño, cancela esa ayuda y la unidad recibe -5 Guardia, -5 Destreza, -5 Agilidad, -5 Movimiento, -5 HP, -5 Rango y -5 en todos sus valores aplicables."},
+  {key:"false_crown",name:"La Corona Falsa",type:"trap",icon:"👑",portrait:"assets/cards/basic/spells/athena_blessing.webp",cost:5,trap:"legendary_mark",legendaryTrap:"false_crown",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando vaya a atacar: Básica cancela el ataque y aplica -2 DX durante 18 s. Especial redirige el ataque contra un aliado propio si hay uno en rango. Legendaria hace lo mismo con +2 AT; si no hay aliado, queda Aturdida 5 s y con -3 DX durante 10 s."},
+  {key:"fallen_kings_seal",name:"Sello de los Reyes Caídos",type:"trap",icon:"🜏",portrait:"assets/cards/basic/equipment/amuleto_de_canalizacion.webp",cost:7,trap:"legendary_mark",legendaryTrap:"fallen_kings_seal",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando vaya a recibir curación, buff o reducción de daño, cancela esa ayuda y aplica -5 general. Por ser un castigo extremo dura menos: 10/8/6 s según sea Básica/Especial/Legendaria."},
   {key:"camp_betrayal",name:"Traición del Campamento",type:"trap",icon:"⛺",portrait:"assets/cards/basic/equipment/visera_de_guerra.webp",cost:6,trap:"legendary_mark",legendaryTrap:"camp_betrayal",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Al inicio de la siguiente ciclo táctico enemigo, si tiene unidades aliadas adyacentes, esas unidades la traicionan y atacan a la unidad marcada."},
-  {key:"night_without_guard",name:"La Noche Sin Guardia",type:"trap",icon:"🌘",portrait:"assets/cards/basic/spells/shield_wall.webp",cost:7,trap:"legendary_mark",legendaryTrap:"night_without_guard",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando se abre, aturde a todas las unidades enemigas por 10 s."}
+  {key:"night_without_guard",name:"La Noche Sin Guardia",type:"trap",icon:"🌘",portrait:"assets/cards/basic/spells/shield_wall.webp",cost:7,trap:"legendary_mark",legendaryTrap:"night_without_guard",rarity:"Legendaria",text:"Trampa Legendaria dirigida. Marca una unidad enemiga. Cuando se abre, aturde a todas las unidades enemigas no líder durante 4 s. Al ser control global, su duración es deliberadamente corta."}
 ];
 
 const IMPROVED_MAGIC_TRAP_PACK=[
@@ -90,7 +90,7 @@ const IMPROVED_MAGIC_TRAP_PACK=[
   {key:"sand_curse_plus",name:"Maldición de arena reforzada",type:"spell",icon:"🌪️",portrait:"assets/cards/basic/spells/sand_storm.webp",cost:2,spell:"damage",damageType:"sand",damage:4,rarity:"Épica",text:"Hace 4 de daño a una unidad o líder rival. Versión mejorada de Maldición de arena."},
   {key:"pharaoh_blessing_plus",name:"Bendición real de Atenea",type:"spell",icon:"👑",portrait:"assets/cards/basic/spells/athena_blessing.webp",cost:2,spell:"buff",buff:3,rarity:"Épica",text:"+3 ataque a una unidad aliada durante el ciclo táctico actual. Ideal para remates y presión."},
   {key:"dust_guard_plus",name:"Muralla de polvo",type:"spell",icon:"🧱",portrait:"assets/cards/basic/spells/shield_wall.webp",cost:2,spell:"shield",guard:4,rarity:"Épica",text:"+4 GUARDIA a una unidad aliada hasta el final del ciclo táctico actual."},
-  {key:"snare_trap_plus",name:"Trampa de cadenas",type:"trap",icon:"⛓️",portrait:"assets/cards/beasts/iron_jaw_trap.webp",cost:2,trap:"slow",slow:2,rarity:"Épica",text:"Cuando un enemigo se mueva, reduce su MOV en 2 durante durante el ciclo táctico actual."},
+  {key:"snare_trap_plus",name:"Trampa de cadenas",type:"trap",icon:"⛓️",portrait:"assets/cards/beasts/iron_jaw_trap.webp",cost:2,trap:"slow",slow:2,rarity:"Épica",text:"Reduce el MOV de una unidad enemiga en 2 por 14/12/10 s según sea Básica/Especial/Legendaria."},
   {key:"warning_rune_plus",name:"Runa de contraataque",type:"trap",icon:"◇",portrait:"assets/cards/basic/traps/warning_rune.webp",cost:2,trap:"guard",guard:3,rarity:"Épica",text:"Colócala sobre una unidad aliada. La primera vez que esa unidad sea atacada, obtiene +3 GUARDIA durante ese combate y la runa se consume."},
   ...LEGENDARY_TRAP_CARDS
 ];
@@ -894,12 +894,54 @@ function advanceMoralePressureAfterTurn(state,endingOwner,units=state?.units||[]
   return{moralePressure:{1:next[1],2:next[2]},status,logs};
 }
 
-function effectiveAtk(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);let v=(u?.atk||0)+(u?.buffAtk||0)+(u?.permAtk||0)+(u?.tempAtkBuff||0)-(u?.tempAtkDebuff||0)-getHannibalAtkDebuff(u)-getKhalidAttackPenalty(u)-(u?.leader?0:getMoraleAttackPenalty(u?.owner))+(bonus.atk||0)+(arcaneLink.atk||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=africanLionAllyAtkAura(u);v+=hectorEnemyAtkAura(u);v+=cuChulainnFearAura(u);return Math.max(0,v)}
+
+// TR v130 · Estados temporales de trampas por tiempo real.
+// La duración baja cuando el efecto es más fuerte y las unidades de mayor rareza
+// resisten mejor los controles. Los campos expirados se ignoran sin necesidad de
+// barrer el estado cada frame.
+const HALLVALLA_TRAP_DURATION_MS=Object.freeze({
+  minor:Object.freeze({basic:18000,special:15000,legendary:12000}),
+  medium:Object.freeze({basic:14000,special:12000,legendary:10000}),
+  major:Object.freeze({basic:10000,special:8000,legendary:6000}),
+  hard:Object.freeze({basic:7000,special:6000,legendary:5000}),
+  globalHard:4000
+});
+function hallvallaTrapNow(){return Date.now();}
+function getTrapTimedDurationMs(target,intensity="medium",globalEffect=false){
+  if(globalEffect)return HALLVALLA_TRAP_DURATION_MS.globalHard;
+  const tier=getUnitTrapTier(target);
+  return Number(HALLVALLA_TRAP_DURATION_MS[intensity]?.[tier]||HALLVALLA_TRAP_DURATION_MS.medium[tier]||10000);
+}
+function getRtTrapDebuff(unit,stat,now=hallvallaTrapNow()){
+  const cap=String(stat||"").replace(/^./,c=>c.toUpperCase());
+  const until=Number(unit?.[`rtTrap${cap}DebuffUntil`]||0);
+  return until>now?Math.max(0,Number(unit?.[`rtTrap${cap}Debuff`]||0)):0;
+}
+function withRtTrapDebuff(unit,stat,amount,durationMs,source="Trampa"){
+  const cap=String(stat||"").replace(/^./,c=>c.toUpperCase());
+  const amountKey=`rtTrap${cap}Debuff`,untilKey=`rtTrap${cap}DebuffUntil`,sourceKey=`rtTrap${cap}DebuffSource`;
+  const now=hallvallaTrapNow(),until=now+Math.max(0,Number(durationMs||0));
+  return {...unit,[amountKey]:Math.max(Number(unit?.[amountKey]||0),Math.max(0,Number(amount||0))),[untilKey]:Math.max(Number(unit?.[untilKey]||0),until),[sourceKey]:source};
+}
+function withRtTrapLock(unit,kind,durationMs,source="Trampa"){
+  const field={move:"rtMoveLockedUntil",attack:"rtAttackLockedUntil",counter:"rtCounterLockedUntil",defense:"rtDefLockedUntil",silence:"rtSilencedUntil",heal:"rtNoHealUntil",reduction:"rtNoReductionUntil",stun:"rtStunnedUntil"}[kind];
+  if(!field)return unit;
+  const until=hallvallaTrapNow()+Math.max(0,Number(durationMs||0));
+  return {...unit,[field]:Math.max(Number(unit?.[field]||0),until),rtTrapLockSource:source};
+}
+function isRtTrapLocked(unit,kind,now=hallvallaTrapNow()){
+  if(!unit)return false;
+  if(Number(unit.rtStunnedUntil||0)>now&&["move","attack","counter","defense","silence"].includes(kind))return true;
+  const field={move:"rtMoveLockedUntil",attack:"rtAttackLockedUntil",counter:"rtCounterLockedUntil",defense:"rtDefLockedUntil",silence:"rtSilencedUntil",heal:"rtNoHealUntil",reduction:"rtNoReductionUntil"}[kind];
+  return !!field&&Number(unit?.[field]||0)>now;
+}
+
+function effectiveAtk(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);let v=(u?.atk||0)+(u?.buffAtk||0)+(u?.permAtk||0)+(u?.tempAtkBuff||0)-(u?.tempAtkDebuff||0)-getRtTrapDebuff(u,"atk")-getHannibalAtkDebuff(u)-getKhalidAttackPenalty(u)-(u?.leader?0:getMoraleAttackPenalty(u?.owner))+(bonus.atk||0)+(arcaneLink.atk||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=africanLionAllyAtkAura(u);v+=hectorEnemyAtkAura(u);v+=cuChulainnFearAura(u);return Math.max(0,v)}
 function isRhinoStunnedNow(u){return !!(u&&u.rhinoStunnedTurnKey&&u.rhinoStunnedTurnKey===publicState?.turnKey)}
 function halveForRhinoStun(v,u){v=Math.max(0,Number(v)||0);return isRhinoStunnedNow(u)?Math.floor(v/2):v}
-function effectiveDex(u){const forcedZero=!!(u?.saboteadorDexZeroTurnKey&&u.saboteadorDexZeroTurnKey===publicState?.turnKey);if(forcedZero)return 0;const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);const rawTempDebuff=Number(u?.tempDexDebuff||0);const legacyIgaHack=!!(u?.saboteadorDexZeroTurnKey&&rawTempDebuff>=90);const tempDebuff=legacyIgaHack?0:rawTempDebuff;let v=(u?.dex||0)+(u?.tempDexBuff||0)-tempDebuff+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
-function effectiveAgi(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)+b+(arcaneLink.agi||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return applyHallvallaValueHooks("unit.effectiveAgi",Math.max(0,halveForRhinoStun(v,u)),{unit:u})}
-function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(0,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u)-Number(u?.tempHpDebuff||0))}
+function effectiveDex(u){const forcedZero=!!(u?.saboteadorDexZeroTurnKey&&u.saboteadorDexZeroTurnKey===publicState?.turnKey);if(forcedZero)return 0;const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);const rawTempDebuff=Number(u?.tempDexDebuff||0);const legacyIgaHack=!!(u?.saboteadorDexZeroTurnKey&&rawTempDebuff>=90);const tempDebuff=legacyIgaHack?0:rawTempDebuff;let v=(u?.dex||0)+(u?.tempDexBuff||0)-tempDebuff-getRtTrapDebuff(u,"dex")+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
+function effectiveAgi(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)-getRtTrapDebuff(u,"agi")+b+(arcaneLink.agi||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return applyHallvallaValueHooks("unit.effectiveAgi",Math.max(0,halveForRhinoStun(v,u)),{unit:u})}
+function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(1,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u)-Number(u?.tempHpDebuff||0)-getRtTrapDebuff(u,"hp"))}
 function isSkiparSummonMoveActive(u,state=publicState){return !!(u&&u.key==="skipar_del_drakkar"&&state&&u.summonedTurnKey&&u.summonedTurnKey===state.turnKey);}
 function getCanonicalNaturalMovement(u){
   const movement=typeof getHallvallaUnitMovementProfile==="function"?getHallvallaUnitMovementProfile(u):null;
@@ -912,7 +954,7 @@ function effectiveMov(u){
   const canonical=getCanonicalNaturalMovement(u);
   const hasFixedMov=u?.fixedMov!==null&&u?.fixedMov!==undefined&&u?.fixedMov!==""&&Number.isFinite(Number(u.fixedMov));
   const canonicalBaseMov=hasFixedMov?Math.max(0,Number(u.fixedMov)):(canonical?canonical.finalMov:(u?.mov||0));
-  const base=u?.leader?0:Math.max(0,canonicalBaseMov+(u?.permMov||0)+summonBonus+equipmentMoveBonus+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getGenghisMovDebuff(u)-getHannibalMovDebuff(u));
+  const base=u?.leader?0:Math.max(0,canonicalBaseMov+(u?.permMov||0)+summonBonus+equipmentMoveBonus+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getRtTrapDebuff(u,"mov")-getGenghisMovDebuff(u)-getHannibalMovDebuff(u));
   return applyHallvallaValueHooks("unit.effectiveMov",base,{unit:u});
 }function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
 function isAfricanElephantChargeReady(u,target){
@@ -930,7 +972,7 @@ function maxTurnGuard(u){
   const base=typeof u.baseGuard==="number"?u.baseGuard:(u.guard||0);
   return Math.max(0,base+(getLeaderBonus(u).guard||0));
 }
-function effectiveGuard(u){return Math.max(0,(u?.guard||0)+(u?.tempGuardBuff||0)+hectorGuardAura(u)+achillesConcentrationGuard(u)+attilaEnemyAura(u).guard+solomonJinnGuardAura(u)+hoplitePhalanxGuard(u))}
+function effectiveGuard(u){return Math.max(0,(u?.guard||0)+(u?.tempGuardBuff||0)-getRtTrapDebuff(u,"guard")+hectorGuardAura(u)+achillesConcentrationGuard(u)+attilaEnemyAura(u).guard+solomonJinnGuardAura(u)+hoplitePhalanxGuard(u))}
 function displayEffectiveGuard(u){return Math.max(0,effectiveGuard(u)+(u?.defenseModeReady?2:0))}
 function restoreTurnGuardForOwner(units,owner){
   return (units||[]).map(u=>u.owner===owner?{...u,guard:maxTurnGuard(u),evasionSpent:0,defenseModeReady:false,mulanExecutionMoveReady:false,mulanExecutionChoiceReady:false}:u);
@@ -1070,8 +1112,8 @@ function getCombatMods(attacker,defender,attackContext=null){
   const caesar=firstOwnerUnit(defender.owner,"julius_caesar");
   if(caesar&&!caesar.caesarUsedTurn){mods.attackerAtk-=4;mods.attackerDex-=3;mods.caesarId=caesar.id;mods.notes.push(`${attacker.name} -4 AT/-3 DX por Disciplina de las Legiones.`);}
   const joan=firstOwnerUnit(defender.owner,"joan_of_arc");
-  if(joan&&!joan.joanUsedTurn&&defender.noReductionTurnKey!==publicState?.turnKey){mods.damageReduction+=3;mods.joanId=joan.id;mods.notes.push(`Juana de Arco reduce 3 daño recibido por un aliado.`);}
-  if(defender.key==="gilgamesh"&&isRangedAttack(attacker,defender)&&defender.noReductionTurnKey!==publicState?.turnKey){mods.damageReduction+=2;mods.notes.push(`Gilgamesh reduce 2 daño de proyectiles o magia a distancia.`);}
+  if(joan&&!joan.joanUsedTurn&&defender.noReductionTurnKey!==publicState?.turnKey&&!isRtTrapLocked(defender,"reduction")){mods.damageReduction+=3;mods.joanId=joan.id;mods.notes.push(`Juana de Arco reduce 3 daño recibido por un aliado.`);}
+  if(defender.key==="gilgamesh"&&isRangedAttack(attacker,defender)&&defender.noReductionTurnKey!==publicState?.turnKey&&!isRtTrapLocked(defender,"reduction")){mods.damageReduction+=2;mods.notes.push(`Gilgamesh reduce 2 daño de proyectiles o magia a distancia.`);}
   if(melee&&attacker.key==="bengal_tiger"&&isAttackFromStealth(attacker,attackContext)){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Emboscada desde Sigilo.`);}
   if(melee&&attacker.key==="bengal_tiger"&&adjacentAllies(defender).some(a=>a.owner===attacker.owner&&isBeastUnit(a))){mods.defenderAgi-=2;mods.notes.push(`${defender.name} -2 AGI por Ataque por la espalda de la manada.`);}
   if(melee&&attacker.key==="wild_boar"&&(attacker.movedSpaces||0)>=2){mods.attackerAtk+=1;mods.notes.push(`${attacker.name} +1 AT por Carga Brusca.`);}
@@ -1391,7 +1433,7 @@ function canLanceFirstStrike(attacker,defender,mods={}){
   if(mods&&mods.falconDive)return false;
   if(!isLanceUnitCardLike(defender))return false;
   if(defender.lanceFirstStrikeUsedTurn)return false;
-  if(defender.noCounterTurnKey&&defender.noCounterTurnKey===publicState?.turnKey)return false;
+  if((defender.noCounterTurnKey&&defender.noCounterTurnKey===publicState?.turnKey)||isRtTrapLocked(defender,"counter"))return false;
 
   // Formación de picas / regla de lanza solo responde a combatientes puramente
   // cuerpo a cuerpo: RG 1 y ataque declarado desde una casilla adyacente.
@@ -1785,7 +1827,6 @@ function canMarkLegendaryTrapForOwner(card,target,owner){
   if(!card||card.trap!=="legendary_mark")return false;
   if(!target||target.owner===owner||target.leader)return false;
   const max=(typeof effectiveMaxHp==="function"?effectiveMaxHp(target):(target.maxHp||target.hp||0));
-  if(card.legendaryTrap==="traitors_bed"&&target.acted)return false;
   if(card.legendaryTrap==="ash_banquet"&&(target.hp||0)<max)return false;
   if(card.legendaryTrap==="shadow_cut"&&(target.hp||0)>=max)return false;
   return true;
@@ -1872,21 +1913,28 @@ function resolveStartTurnLegendaryTraps(units,turnOwner,turnKey){
     }
     if(trap.trapKey==="traitors_bed"){
       triggered=true;
-      n.noMoveTurnKey=turnKey;n.noAttackTurnKey=turnKey;n.noCounterTurnKey=turnKey;
+      const trapMs=getTrapTimedDurationMs(n,"hard");
+      n=withRtTrapLock(withRtTrapLock(withRtTrapLock(n,"move",trapMs,trap.cardName),"attack",trapMs,trap.cardName),"counter",trapMs,trap.cardName);
       if(tier==="special")n.ignoreGuardNextDamageTurnKey=turnKey;
       if(tier==="legendary"){n.doubleNextDamageTurnKey=turnKey;n.ignoreGuardNextDamageTurnKey=turnKey;}
-      logs.push(`${trap.cardName} se revela: ${target.name} queda atrapada en sueño táctico.`);
+      logs.push(`${trap.cardName} se revela: ${target.name} queda Dormida durante ${Math.round(trapMs/1000)} s.`);
     }
     if(trap.trapKey==="ash_banquet"){
       triggered=true;
       const dmg=tier==="basic"?3:tier==="special"?Math.ceil((target.hp||0)*0.40):Math.ceil((target.hp||0)*0.50);
-      n=applyDirectHpDamage(n,dmg);n.noHealTurnKey=turnKey;if(tier==="legendary")n.noReductionTurnKey=turnKey;
-      logs.push(`${trap.cardName} se revela: ${target.name} pierde ${dmg} Vida directa.`);
+      n=applyDirectHpDamage(n,dmg);
+      if(tier!=="basic"){
+        const healMs=getTrapTimedDurationMs(n,tier==="special"?"medium":"major");
+        n=withRtTrapLock(n,"heal",healMs,trap.cardName);
+        if(tier==="legendary")n=withRtTrapLock(n,"reduction",healMs,trap.cardName);
+        logs.push(`${trap.cardName} se revela: ${target.name} pierde ${dmg} Vida directa y queda sin curación${tier==="legendary"?" ni reducción de daño":""} durante ${Math.round(healMs/1000)} s.`);
+      }else logs.push(`${trap.cardName} se revela: ${target.name} pierde ${dmg} Vida directa.`);
     }
     if(trap.trapKey==="night_without_guard"){
       triggered=true;
-      out=out.map(u=>u.owner!==trap.owner&&!u.leader?{...u,noMoveTurnKey:currentOrNextTurnKeyForOwner(u.owner),noAttackTurnKey:currentOrNextTurnKeyForOwner(u.owner),noDefTurnKey:currentOrNextTurnKeyForOwner(u.owner),noCounterTurnKey:currentOrNextTurnKeyForOwner(u.owner)}:u);
-      logs.push(`${trap.cardName} se revela: todas las unidades enemigas quedan Aturdidas por 1 turno.`);
+      const trapMs=getTrapTimedDurationMs(target,"hard",true);
+      out=out.map(u=>u.owner!==trap.owner&&!u.leader?withRtTrapLock(u,"stun",trapMs,trap.cardName):u);
+      logs.push(`${trap.cardName} se revela: todas las unidades enemigas quedan Aturdidas durante ${Math.round(trapMs/1000)} s.`);
     }
     if(triggered){
       if(trap.trapKey!=="night_without_guard")out=out.map(u=>u.id===target.id?n:u);
@@ -1917,8 +1965,12 @@ function resolveMovementLegendaryTraps(unit,dest,units,trapList=null){
       const dmg=tier==="basic"?3:5;
       n=applyDirectHpDamage(n,dmg);
       if(tier==="basic")n=moveGentlyAwayFromLeader(n,owner,out,1);
-      if(tier!=="basic"){n=moveGentlyAwayFromLeader(n,owner,out,2);n.noAttackTurnKey=publicState.turnKey;}
-      if(tier==="legendary")n.noCounterTurnKey=publicState.turnKey;
+      if(tier!=="basic"){
+        n=moveGentlyAwayFromLeader(n,owner,out,2);
+        const controlMs=getTrapTimedDurationMs(n,tier==="legendary"?"hard":"medium");
+        n=withRtTrapLock(n,"attack",controlMs,trap.cardName);
+        if(tier==="legendary")n=withRtTrapLock(withRtTrapLock(n,"counter",controlMs,trap.cardName),"move",controlMs,trap.cardName);
+      }
       out=out.map(u=>u.id===moving.id?n:u).filter(u=>u.hp>0);
       logs.push(`${trap.cardName} se revela: ${moving.name} recibe ${dmg} daño directo y es rechazado.`);
       traps=removeTrapById(traps,trap.id);
@@ -1935,15 +1987,18 @@ function resolvePreAttackLegendaryTraps(attacker,units,trapList=null){
       cancel=true;
       const ownTargets=out.filter(u=>u.owner===attacker.owner&&u.id!==attacker.id&&attackZones(attacker).includes(`${u.x},${u.y}`));
       if(tier==="basic"){
-        out=out.map(u=>u.id===attacker.id?{...u,tempDexDebuff:(u.tempDexDebuff||0)+2}:u);
-        logs.push(`${trap.cardName} se revela: ${attacker.name} pierde el ataque y queda con -2 DX.`);
+        const debuffMs=getTrapTimedDurationMs(attacker,"minor");
+        out=out.map(u=>u.id===attacker.id?withRtTrapDebuff(u,"dex",2,debuffMs,trap.cardName):u);
+        logs.push(`${trap.cardName} se revela: ${attacker.name} pierde el ataque y queda con -2 DX durante ${Math.round(debuffMs/1000)} s.`);
       }else if(ownTargets.length){
         redirect=ownTargets[0];
         bonusAtk=tier==="legendary"?2:0;
         cancel=false;
       }else{
-        out=out.map(u=>u.id===attacker.id?{...u,noAttackTurnKey:publicState.turnKey,tempDexDebuff:(u.tempDexDebuff||0)+3}:u);
-        logs.push(`${trap.cardName} se revela: ${attacker.name} queda aturdida por no encontrar blanco propio.`);
+        const stunMs=getTrapTimedDurationMs(attacker,"hard");
+        const dexMs=getTrapTimedDurationMs(attacker,"medium");
+        out=out.map(u=>u.id===attacker.id?withRtTrapDebuff(withRtTrapLock(u,"stun",stunMs,trap.cardName),"dex",3,dexMs,trap.cardName):u);
+        logs.push(`${trap.cardName} se revela: ${attacker.name} queda Aturdida ${Math.round(stunMs/1000)} s y con -3 DX durante ${Math.round(dexMs/1000)} s.`);
       }
       traps=removeTrapById(traps,trap.id);
     }
@@ -1959,25 +2014,22 @@ function resolveBuffHealLegendaryTraps(target,kind,units){
     cancel=true;
     let n={...target,buffAtk:0,tempAtkBuff:0,tempGuardBuff:0};
     if(trap.trapKey==="broken_oath"){
-      if(tier==="basic"){n.tempAtkBuff=(n.tempAtkBuff||0)-1;n.tempGuardBuff=(n.tempGuardBuff||0)-1;}
-      else if(tier==="special"){n.tempAtkBuff=(n.tempAtkBuff||0)-2;n.tempGuardBuff=(n.tempGuardBuff||0)-2;}
-      else{
-        n.tempGuardBuff=(n.tempGuardBuff||0)-3;n.silencedTurnKey=publicState.turnKey;
+      const amount=tier==="basic"?1:tier==="special"?2:3;
+      const debuffMs=getTrapTimedDurationMs(n,amount<=1?"minor":amount===2?"medium":"major");
+      if(tier!=="legendary"){
+        n=withRtTrapDebuff(withRtTrapDebuff(n,"atk",amount,debuffMs,trap.cardName),"guard",amount,debuffMs,trap.cardName);
+      }else{
+        n=withRtTrapDebuff(n,"guard",3,debuffMs,trap.cardName);
+        n=withRtTrapLock(n,"silence",getTrapTimedDurationMs(n,"hard"),trap.cardName);
         if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("silence_apply",n,1);
         if(!floatFxEvent)floatFxEvent=makeFloatFxEvent("silence",n,1,{iconText:"🔇"});
       }
-      logs.push(`${trap.cardName} cancela ${kind} sobre ${target.name}.`);
+      logs.push(`${trap.cardName} cancela ${kind} sobre ${target.name} y aplica su penalización durante ${Math.round(debuffMs/1000)} s.`);
     }else{
-      n.tempGuardBuff=(n.tempGuardBuff||0)-5;
-      n.tempDexDebuff=(n.tempDexDebuff||0)+5;
-      n.tempAgiDebuff=(n.tempAgiDebuff||0)+5;
-      n.tempMovDebuff=Math.max(Number(n.tempMovDebuff||0),5);
-      n.tempMovDebuffSource=trap.cardName;
-      n.tempAtkDebuff=(n.tempAtkDebuff||0)+5;
-      n.tempRangeDebuff=(n.tempRangeDebuff||0)+5;
-      n.tempHpDebuff=(n.tempHpDebuff||0)+5;
+      const debuffMs=getTrapTimedDurationMs(n,"major");
+      for(const stat of ["guard","dex","agi","mov","atk","range","hp"])n=withRtTrapDebuff(n,stat,5,debuffMs,trap.cardName);
       n.hp=Math.min(n.hp||0,effectiveMaxHp(n));
-      logs.push(`${trap.cardName} cancela ${kind} y aplica -5 Guardia, -5 DX, -5 AGI, -5 MOV, -5 HP máximo, -5 RG y -5 AT a ${target.name}.`);
+      logs.push(`${trap.cardName} cancela ${kind} y aplica -5 general a ${target.name} durante ${Math.round(debuffMs/1000)} s.`);
     }
     out=out.map(u=>u.id===target.id?n:u);
     out=out.filter(u=>u.hp>0);

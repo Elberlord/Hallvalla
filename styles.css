@@ -28775,3 +28775,6 @@ body.hv-forge-edit-active #deckBuilderPanel #currentDeckList{
   animation:hvRtLeaderShieldPulse .62s ease-in-out infinite alternate;
 }
 @keyframes hvRtLeaderShieldPulse{from{opacity:.55;scale:.96}to{opacity:1;scale:1.04}}
+
+/* v130 · En TR los splash de eventos se desactivan: el combate ya informa por FX de campo/estados. */
+#eventSplashOverlay,.event-splash-overlay{display:none!important;pointer-events:none!important;}

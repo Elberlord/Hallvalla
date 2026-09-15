@@ -995,7 +995,7 @@ function hallvallaRtTargetCandidates(unit,units=publicState?.units||[]){
 }
 function hallvallaRtChooseTarget(unit,units=publicState?.units||[]){return hallvallaRtTargetCandidates(unit,units)[0]||null;}
 function hallvallaRtCanAttackNow(unit,target){
-  if(Number(unit?.rtExiledUntil||0)>hallvallaRtNow())return false;
+  if(Number(unit?.rtExiledUntil||0)>hallvallaRtNow()||isRtTrapLocked(unit,"attack",hallvallaRtNow()))return false;
   if(!hallvallaRtValidEnemy(unit,target))return false;
   try{
     const rg=Math.max(1,Number(getUnitAttackRange(unit)||1));
@@ -1030,7 +1030,7 @@ function hallvallaRtCrowdPenalty(cell,owner,units){
   return adjacent*.28+sameLane*.08;
 }
 function hallvallaRtChooseStep(unit,target,units=publicState?.units||[]){
-  if(!unit||!target||Number(typeof effectiveMov==='function'?effectiveMov(unit):unit.mov||0)<=0)return null;
+  if(!unit||!target||isRtTrapLocked(unit,"move",hallvallaRtNow())||Number(typeof effectiveMov==='function'?effectiveMov(unit):unit.mov||0)<=0)return null;
   const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&Number(u.hp||0)>0).map(u=>hallvallaRtCellKey(u.x,u.y)));
   const lane=hallvallaRtStableLane(unit);
   const currentDistance=dist(unit,target);
@@ -1057,7 +1057,7 @@ function hallvallaRtChooseStep(unit,target,units=publicState?.units||[]){
 }
 
 function hallvallaRtChooseSpawnExitStep(unit,units=publicState?.units||[]){
-  if(!unit||unit.leader||Number(typeof effectiveMov==="function"?effectiveMov(unit):unit.mov||0)<=0)return null;
+  if(!unit||unit.leader||isRtTrapLocked(unit,"move",hallvallaRtNow())||Number(typeof effectiveMov==="function"?effectiveMov(unit):unit.mov||0)<=0)return null;
   const leader=hallvallaRtGetOwnerLeader(unit.owner,units);
   if(!leader||dist(unit,leader)>1)return null;
   const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&Number(u.hp||0)>0).map(u=>hallvallaRtCellKey(u.x,u.y)));
@@ -1326,7 +1326,7 @@ function hallvallaRtAiChoosePlay(ai,units,mana){
       const amount=Math.max(0,Number(effectiveCardValue(card,"heal")||0));
       for(const target of allies){
         if(typeof canReceiveHealFromCard==="function"&&!canReceiveHealFromCard(card,target,2))continue;
-        if(target.noHealTurnKey===publicState?.turnKey||target.noHealWhilePoisoned)continue;
+        if(target.noHealTurnKey===publicState?.turnKey||isRtTrapLocked(target,"heal")||target.noHealWhilePoisoned)continue;
         const maxHp=Math.max(1,Number(effectiveMaxHp(target)||target.hp||1)),hp=Math.max(0,Number(target.hp||0)),missing=Math.max(0,maxHp-hp);
         const cleanse=typeof cardCleanseEnabled==="function"&&cardCleanseEnabled(card)&&typeof hasCurableStatus==="function"&&hasCurableStatus(target);
         if(missing<=0&&!cleanse)continue;
@@ -1363,7 +1363,7 @@ function hallvallaRtAiChoosePlay(ai,units,mana){
     if(card?.spell==="paralysis"){
       for(const target of enemyUnits){
         if(typeof canDirectlyTarget==="function"&&!canDirectlyTarget(card,target))continue;
-        if(target.noMoveTurnKey===publicState?.turnKey||target.noAttackTurnKey===publicState?.turnKey)continue;
+        if(target.noMoveTurnKey===publicState?.turnKey||target.noAttackTurnKey===publicState?.turnKey||isRtTrapLocked(target,"move")||isRtTrapLocked(target,"attack"))continue;
         let score=275+hallvallaRtAiThreatValue(target)*1.45+Math.max(0,Number(target.mov||0))*22+Math.max(1,Number(target.range||1))*18-cost*7;
         push("paralysis",card,target,score);
       }
@@ -1464,7 +1464,7 @@ async function hallvallaRtAiResolvePlay(choice,ai,units,now){
     log=`J2 usa ${card.name}: ${target.name} recibe ${actual} daño mágico${affinity}.`+log;
   }else if(choice.kind==="heal"){
     const target=nextUnits.find(u=>u.id===choice.target?.id&&u.owner===2&&Number(u.hp||0)>0);if(!target||!canReceiveHealFromCard(card,target,2))return false;
-    if(target.noHealTurnKey===publicState?.turnKey||target.noHealWhilePoisoned)return false;
+    if(target.noHealTurnKey===publicState?.turnKey||isRtTrapLocked(target,"heal",now)||target.noHealWhilePoisoned)return false;
     const heal=Math.max(0,Number(effectiveCardValue(card,"heal")||0)),cleanse=cardCleanseEnabled(card),hadCleanse=cleanse&&hasCurableStatus(target),actual=Math.max(0,Math.min(effectiveMaxHp(target),Number(target.hp||0)+heal)-Number(target.hp||0));
     const bh=resolveBuffHealLegendaryTraps(target,"curación",nextUnits);legendaryTraps=bh.traps||legendaryTraps;
     if(!bh.cancel){const caster=hallvallaRtGetOwnerLeader(2,nextUnits);if(caster)battleFxEvent=makeMagicFxEvent(caster,target,"heal",{type:"heal",spellKey:card.key,effectAction:cleanse?"cleanse":"heal",hit:true});}
@@ -1489,12 +1489,12 @@ async function hallvallaRtAiResolvePlay(choice,ai,units,now){
     statusFxEvent=makeStatusFxEvent("poison_apply",live,live.poisonDamage||1);floatFxEvent=makeFloatFxEvent("poison",live,live.poisonDamage||1,{iconText:"☠"});removeCard();log=`J2 usa ${card.name}: ${target.name} recibe Veneno.`;
   }else if(choice.kind==="slow"){
     const target=nextUnits.find(u=>u.id===choice.target?.id&&u.owner===1&&!u.leader&&Number(u.hp||0)>0);if(!target||!canTargetStealth(card,target))return false;
-    const amount=Math.max(0,Number(effectiveCardValue(card,"slow")||0)),agiSlow=Number(card.agiSlow||0);
-    nextUnits=nextUnits.map(u=>{if(u.id!==target.id)return u;const current=Number(u.tempMovDebuff||0);const n={...u,tempMovDebuff:Math.max(current,amount),tempMovDebuffSource:amount>=current?card.name:(u.tempMovDebuffSource||card.name)};if(agiSlow>0){n.tempAgiDebuff=Number(n.tempAgiDebuff||0)+agiSlow;n.tempAgiDebuffSource=card.name;}return n;});
-    const live=nextUnits.find(u=>u.id===target.id)||target;floatFxEvent=makeFloatFxEvent("debuff",live,amount,{iconText:"▼"});removeCard();log=`J2 activa ${card.name}: ${target.name} pierde ${amount} MOV${agiSlow>0?` y ${agiSlow} AGI`:""}.`;
+    const amount=Math.max(0,Number(effectiveCardValue(card,"slow")||0)),agiSlow=Number(card.agiSlow||0),trapMs=getTrapTimedDurationMs(target,amount>=4?"major":amount>=2?"medium":"minor");
+    nextUnits=nextUnits.map(u=>{if(u.id!==target.id)return u;let n=withRtTrapDebuff(u,"mov",amount,trapMs,card.name);if(agiSlow>0)n=withRtTrapDebuff(n,"agi",agiSlow,trapMs,card.name);return n;});
+    const live=nextUnits.find(u=>u.id===target.id)||target;floatFxEvent=makeFloatFxEvent("debuff",live,amount,{iconText:"▼"});removeCard();log=`J2 activa ${card.name}: ${target.name} pierde ${amount} MOV${agiSlow>0?` y ${agiSlow} AGI`:""} durante ${Math.round(trapMs/1000)} s.`;
   }else if(choice.kind==="beast_target"){
     const target=nextUnits.find(u=>u.id===choice.target?.id&&u.owner===1&&!u.leader&&Number(u.hp||0)>0),leader=hallvallaRtGetOwnerLeader(2,nextUnits);if(!target||!leader||dist(leader,target)>3||!canTargetStealth(card,target))return false;
-    nextUnits=nextUnits.map(u=>u.id===target.id?{...u,tempAgiDebuff:Number(u.tempAgiDebuff||0)+2}:u);const live=nextUnits.find(u=>u.id===target.id)||target;floatFxEvent=makeFloatFxEvent("debuff",live,2,{iconText:"▼"});removeCard();log=`J2 usa ${card.name}: ${target.name} pierde -2 AGI.`;
+    const trapMs=getTrapTimedDurationMs(target,"minor");nextUnits=nextUnits.map(u=>u.id===target.id?withRtTrapDebuff(u,"agi",2,trapMs,card.name):u);const live=nextUnits.find(u=>u.id===target.id)||target;floatFxEvent=makeFloatFxEvent("debuff",live,2,{iconText:"▼"});removeCard();log=`J2 usa ${card.name}: ${target.name} pierde -2 AGI durante ${Math.round(trapMs/1000)} s.`;
   }else if(choice.kind==="reveal_stealth"){
     const cell=choice.cell||{x:choice.target?.x,y:choice.target?.y};if(!Number.isFinite(Number(cell.x))||!Number.isFinite(Number(cell.y)))return false;
     const rev=revealStealthInRadius(nextUnits,2,{x:Number(cell.x),y:Number(cell.y)},card.radius||2,card.name);nextUnits=rev.units;removeCard();log=`J2 usa ${card.name}: revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`;
@@ -1660,7 +1660,7 @@ async function hallvallaRtAttackReadyUnits(now,maxAttacks=HALLVALLA_RT_CFG.maxAt
   const ids=hallvallaRtFairUnitIds(publicState?.units||[],{leaders:true,nonLeaders:true});
   for(const id of ids){
     if(attacks>=maxAttacks)break;
-    const live=(publicState?.units||[]).find(u=>u.id===id&&Number(u.hp||0)>0);if(!live||Number(live.rtExiledUntil||0)>now)continue;
+    const live=(publicState?.units||[]).find(u=>u.id===id&&Number(u.hp||0)>0);if(!live||Number(live.rtExiledUntil||0)>now||isRtTrapLocked(live,"attack",now))continue;
     // PERF v119: el cooldown se comprueba ANTES de buscar/ordenar objetivos.
     // Una unidad que aún no puede atacar no consume CPU en targeting 4 veces por segundo.
     const last=Number(hallvallaRtState.attackAt.get(live.id)||0);
@@ -1680,7 +1680,7 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
   const ids=hallvallaRtFairUnitIds(units,{leaders:false,nonLeaders:true});
   for(const id of ids){
     if(moves>=maxMoves)break;
-    const live=units.find(u=>u.id===id&&Number(u.hp||0)>0);if(!live)continue;
+    const live=units.find(u=>u.id===id&&Number(u.hp||0)>0);if(!live||isRtTrapLocked(live,"move",now))continue;
     const ownLeader=hallvallaRtGetOwnerLeader(live.owner,units);
     const inSpawnRing=!!ownLeader&&dist(live,ownLeader)<=1;
     const freshSpawn=live.rtSpawnExitPending===true||Number(live.rtSummonedAt||0)>0&&inSpawnRing;

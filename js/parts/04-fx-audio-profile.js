@@ -245,7 +245,9 @@ function makeSpellVisualEvent(event,prevMap=null,nextMap=null){
   return {type:"spell",key:`${gameId||"game"}:visual:spell:${event.eventId||key||Date.now()}`,cardKey:key,cardName:String(event.cardName||event.title||key||"Magia"),title:String(event.cardName||event.title||"Magia"),image:String(image||"")};
 }
 
+const HALLVALLA_BATTLE_EVENT_SPLASHES_ENABLED=false;
 function showNextEventSplash(){
+  if(!HALLVALLA_BATTLE_EVENT_SPLASHES_ENABLED){clearEventSplashOverlay(true);return;}
   if(eventSplashActive||!eventSplashQueue.length)return;
   const box=$("eventSplashOverlay");
   if(!box){eventSplashQueue=[];return;}
@@ -278,6 +280,10 @@ function showNextEventSplash(){
 }
 
 function queueEventSplashGroup(payloads){
+  // TR v130: los splash de ataque/invocación/estado se desactivan. En tiempo real
+  // se encadenaban más rápido de lo que el ojo humano podía procesarlos y tapaban
+  // el tablero. Se conservan FX de campo, estados, sonidos y el resultado final.
+  if(!HALLVALLA_BATTLE_EVENT_SPLASHES_ENABLED){clearEventSplashOverlay(true);return;}
   const list=(Array.isArray(payloads)?payloads:[payloads]).filter(item=>item&&item.type&&getEventSplashConfig(item.type));
   if(!list.length)return;
   const groupKey=list.map(item=>item.key||item.type).join("|");

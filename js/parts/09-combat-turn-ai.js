@@ -66,8 +66,8 @@ function resolveBeastCellTraps(moving,units,traps){
   if(!trap||isIgnoredByBeastTrap(moving,trap,out))return{units:out,traps:nextTraps,logs};
   let n={...moving};
   if(trap.trapKey==="iron_jaw"||trap.trapKey==="basic_hunt"){
-    n=applyDirectHpDamage(n,1);n.tempMovDebuff=Math.max(Number(n.tempMovDebuff||0),1);n.tempMovDebuffSource=trap.cardName;n.noMoveTurnKey=nextTurnKeyForOwner(n.owner);
-    logs.push(`${trap.cardName} se activa: ${moving.name} recibe 1 daño directo y pierde 1 MOV.`);
+    n=applyDirectHpDamage(n,1);const trapMs=getTrapTimedDurationMs(n,"minor");n=withRtTrapDebuff(n,"mov",1,trapMs,trap.cardName);
+    logs.push(`${trap.cardName} se activa: ${moving.name} recibe 1 daño directo y pierde 1 MOV durante ${Math.round(trapMs/1000)} s.`);
   }else if(trap.trapKey==="covered_pit"){
     const affectsPitTarget=!n.leader&&!n.aerial;
     if(!affectsPitTarget)return{units:out,traps:nextTraps,logs};
@@ -84,8 +84,7 @@ function resolveBeastCellTraps(moving,units,traps){
     logs.push(`${trap.cardName} se activa: ${moving.name} recibe 4 daño directo${n.hp>0?" y Sangrado 1 durante 2 turnos":" y cae"}.`);
   }else if(trap.trapKey==="rope_cage"){
     n=applyDirectHpDamage(n,3);
-    if(n.hp>0)n.noAttackTurnKey=nextTurnKeyForOwner(n.owner);
-    logs.push(`${trap.cardName} se activa: ${moving.name} recibe 3 daño directo${n.hp>0?" y no puede atacar durante el siguiente ciclo táctico":" y cae"}.`);
+    if(n.hp>0){const trapMs=getTrapTimedDurationMs(n,"hard");n=withRtTrapLock(n,"attack",trapMs,trap.cardName);logs.push(`${trap.cardName} se activa: ${moving.name} recibe 3 daño directo y no puede atacar durante ${Math.round(trapMs/1000)} s.`);}else logs.push(`${trap.cardName} se activa: ${moving.name} recibe 3 daño directo y cae.`);
   }else if(trap.trapKey==="blood_bait"){
     return{units:out,traps:nextTraps,logs};
   }
@@ -110,7 +109,7 @@ async function moveUnit(u,x,y){
   if(!mulanExecMove&&u.moved)return setHint(`${u.name} ya se movió durante el ciclo táctico actual.`);
   const movePath=getUnitMovementPath(u,x,y,publicState?.units||[],mulanExecMove?1:effectiveMov(u));
   if(!movePath)return setHint("Movimiento inválido: el destino supera el MOV disponible o está ocupado.");
-  if(!mulanExecMove&&u.noMoveTurnKey&&u.noMoveTurnKey===publicState.turnKey)return setHint(`${u.name} no puede moverse durante el ciclo táctico actual.`);
+  if(!mulanExecMove&&((u.noMoveTurnKey&&u.noMoveTurnKey===publicState.turnKey)||isRtTrapLocked(u,"move")))return setHint(`${u.name} no puede moverse ahora.`);
   hallvallaMoveActionInFlight=true;
   try{
   const moveStartUnits=JSON.parse(JSON.stringify(publicState.units||[]));
@@ -535,7 +534,7 @@ function inspectSharedAttackActionEligibility(attacker,defender,{turnKey="",runI
   const mulanChoiceAttack=inState(()=>isMulanExecutionChoiceReady(attacker));
   const khalidChainAttack=inState(()=>isKhalidChainAttackReady(attacker));
   if(attacker.acted&&!mulanChoiceAttack&&!khalidChainAttack)return{ok:false,code:"already_acted",mulanChoiceAttack,khalidChainAttack};
-  if(attacker.noAttackTurnKey&&attacker.noAttackTurnKey===turnKey)return{ok:false,code:"attack_locked",mulanChoiceAttack,khalidChainAttack};
+  if((attacker.noAttackTurnKey&&attacker.noAttackTurnKey===turnKey)||isRtTrapLocked(attacker,"attack"))return{ok:false,code:"attack_locked",mulanChoiceAttack,khalidChainAttack};
   const baseRange=inState(()=>getUnitAttackRange(attacker));
   const rg=baseRange+(attacker.key==="bengal_tiger"&&inState(()=>isStealthedUnit(attacker))?2:0);
   const distance=distanceFn(attacker,defender);
@@ -897,7 +896,7 @@ async function resolveSharedAttackOutcome({
   let miyamotoCounterBleedEvent=null;
   const arcaneAdeptRangedCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="arcane_adept"&&declaredRanged;
   const miyamotoMeleeCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="miyamoto_musashi"&&declaredMelee&&(!hit.hit||hpLoss>0);
-  const counterLocked=!!(defenderAfter?.noCounterTurnKey&&defenderAfter.noCounterTurnKey===turnKey);
+  const counterLocked=!!((defenderAfter?.noCounterTurnKey&&defenderAfter.noCounterTurnKey===turnKey)||isRtTrapLocked(defenderAfter,"counter"));
   const canSpecialCounter=defenderAfter&&attackerAfter&&!mods.noCounter&&!counterLocked&&!defenderAfter.counterUsedTurn&&(arcaneAdeptRangedCounter||miyamotoMeleeCounter);
   if(defenderAfter&&attackerAfter&&canSpecialCounter){
     const counterDefenseRemainder=runInState(()=>getCounterDefenseRemainder(a,d,mods),{units,legendaryTraps:resolvedLegendaryTraps,beastTraps});

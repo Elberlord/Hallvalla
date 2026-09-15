@@ -5021,7 +5021,6 @@ async function adventureEnemyTurn(){
     if(!card||card.trap!=="legendary_mark")return false;
     if(!target||target.owner!==1||target.leader||!canTargetStealth(card,target))return false;
     if(legendaryTraps.some(t=>t.owner===2&&t.cardKey===card.key))return false;
-    if(card.legendaryTrap==="traitors_bed"&&target.acted)return false;
     if(card.legendaryTrap==="ash_banquet"&&target.hp<effectiveMaxHp(target))return false;
     if(card.legendaryTrap==="shadow_cut"&&target.hp>=effectiveMaxHp(target))return false;
     return true;
@@ -5036,7 +5035,7 @@ async function adventureEnemyTurn(){
     if(tier==="special")score+=45;
     if(card.legendaryTrap==="false_crown")score+=(target.atk||0)*12+(target.acted?-60:30);
     if(card.legendaryTrap==="primordial_poison")score+=(effectiveMaxHp(target)||0)*10;
-    if(card.legendaryTrap==="traitors_bed")score+=target.acted?-999:75;
+    if(card.legendaryTrap==="traitors_bed")score+=75;
     if(card.legendaryTrap==="ash_banquet")score+=target.hp>=effectiveMaxHp(target)?90:-999;
     if(card.legendaryTrap==="shadow_cut")score+=target.hp<effectiveMaxHp(target)?95:-999;
     if(card.legendaryTrap==="thousand_banners")score+=enemyLeaderNow()?Math.max(0,8-d(target,enemyLeaderNow()))*10:0;
