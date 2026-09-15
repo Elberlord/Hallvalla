@@ -1,0 +1,870 @@
+{
+  "forgeWindow": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "mainClose": {
+    "x": 1,
+    "y": 453,
+    "scale": 80,
+    "width": 100,
+    "height": 100
+  },
+  "save": {
+    "x": 5,
+    "y": -3,
+    "scale": 95,
+    "width": 100,
+    "height": 100
+  },
+  "tabsGroup": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "tabWarrior": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "tabArcher": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "tabAssassin": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "tabMage": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "tabCavalry": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "tabAxe": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "filterGroup": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "filterType": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "filterOwnership": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "filterRarity": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "filterPower": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "filterSort": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "collectionSection": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "cards": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "pager": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "prev": {
+    "x": 16,
+    "y": 0,
+    "scale": 60,
+    "width": 100,
+    "height": 200
+  },
+  "next": {
+    "x": -7,
+    "y": 1,
+    "scale": 70,
+    "width": 100,
+    "height": 100
+  },
+  "deckGroup": {
+    "x": 13,
+    "y": -10,
+    "scale": 90,
+    "width": 100,
+    "height": 100
+  },
+  "deckCards": {
+    "x": -1,
+    "y": -13,
+    "scale": 110,
+    "width": 100,
+    "height": 130
+  },
+  "deckExtraCards": {
+    "x": -10,
+    "y": 0,
+    "scale": 100,
+    "width": 120,
+    "height": 150
+  },
+  "collectionCard1": {
+    "x": 1,
+    "y": -5,
+    "scale": 80,
+    "width": 110,
+    "height": 100
+  },
+  "collectionPlus1": {
+    "x": -6,
+    "y": 77,
+    "scale": 50,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard2": {
+    "x": -1,
+    "y": -5,
+    "scale": 50,
+    "width": 170,
+    "height": 150
+  },
+  "collectionPlus2": {
+    "x": -24,
+    "y": 125,
+    "scale": 70,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard3": {
+    "x": -2,
+    "y": -7,
+    "scale": 55,
+    "width": 160,
+    "height": 140
+  },
+  "collectionPlus3": {
+    "x": -20,
+    "y": 115,
+    "scale": 70,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard4": {
+    "x": -4,
+    "y": -5,
+    "scale": 70,
+    "width": 120,
+    "height": 100
+  },
+  "collectionPlus4": {
+    "x": -12,
+    "y": 84,
+    "scale": 75,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard5": {
+    "x": -7,
+    "y": -6,
+    "scale": 70,
+    "width": 115,
+    "height": 100
+  },
+  "collectionPlus5": {
+    "x": -6,
+    "y": 88,
+    "scale": 70,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard6": {
+    "x": 1,
+    "y": -10,
+    "scale": 70,
+    "width": 135,
+    "height": 100
+  },
+  "collectionPlus6": {
+    "x": -15,
+    "y": 82,
+    "scale": 70,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard7": {
+    "x": 1,
+    "y": -11,
+    "scale": 65,
+    "width": 140,
+    "height": 110
+  },
+  "collectionPlus7": {
+    "x": -16,
+    "y": 96,
+    "scale": 70,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard8": {
+    "x": -2,
+    "y": -11,
+    "scale": 100,
+    "width": 90,
+    "height": 70
+  },
+  "collectionPlus8": {
+    "x": -5,
+    "y": 57,
+    "scale": 60,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard9": {
+    "x": -5,
+    "y": -10,
+    "scale": 101,
+    "width": 100,
+    "height": 70
+  },
+  "collectionPlus9": {
+    "x": -4,
+    "y": 55,
+    "scale": 70,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard10": {
+    "x": -7,
+    "y": -12,
+    "scale": 75,
+    "width": 170,
+    "height": 95
+  },
+  "collectionPlus10": {
+    "x": -18,
+    "y": 80,
+    "scale": 70,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard11": {
+    "x": 1,
+    "y": -19,
+    "scale": 75,
+    "width": 120,
+    "height": 95
+  },
+  "collectionPlus11": {
+    "x": -9,
+    "y": 84,
+    "scale": 75,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard12": {
+    "x": -1,
+    "y": -18,
+    "scale": 70,
+    "width": 135,
+    "height": 100
+  },
+  "collectionPlus12": {
+    "x": -16,
+    "y": 83,
+    "scale": 70,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard13": {
+    "x": -2,
+    "y": -19,
+    "scale": 75,
+    "width": 120,
+    "height": 100
+  },
+  "collectionPlus13": {
+    "x": -11,
+    "y": 85,
+    "scale": 70,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard14": {
+    "x": -6,
+    "y": -19,
+    "scale": 75,
+    "width": 125,
+    "height": 95
+  },
+  "collectionPlus14": {
+    "x": -11,
+    "y": 79,
+    "scale": 70,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard15": {
+    "x": -6,
+    "y": -17,
+    "scale": 70,
+    "width": 130,
+    "height": 100
+  },
+  "collectionPlus15": {
+    "x": -14,
+    "y": 90,
+    "scale": 70,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard16": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "collectionPlus16": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard17": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "collectionPlus17": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard18": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "collectionPlus18": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard19": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "collectionPlus19": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "collectionCard20": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "collectionPlus20": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard1": {
+    "x": 1,
+    "y": -1,
+    "scale": 65,
+    "width": 120,
+    "height": 135
+  },
+  "deckRemove1": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard2": {
+    "x": 0,
+    "y": -3,
+    "scale": 70,
+    "width": 120,
+    "height": 120
+  },
+  "deckRemove2": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard3": {
+    "x": -1,
+    "y": -2,
+    "scale": 70,
+    "width": 135,
+    "height": 110
+  },
+  "deckRemove3": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard4": {
+    "x": -2,
+    "y": -3,
+    "scale": 70,
+    "width": 130,
+    "height": 115
+  },
+  "deckRemove4": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard5": {
+    "x": -5,
+    "y": -2,
+    "scale": 65,
+    "width": 130,
+    "height": 120
+  },
+  "deckRemove5": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard6": {
+    "x": 2,
+    "y": -28,
+    "scale": 70,
+    "width": 125,
+    "height": 115
+  },
+  "deckRemove6": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard7": {
+    "x": 0,
+    "y": -28,
+    "scale": 70,
+    "width": 125,
+    "height": 115
+  },
+  "deckRemove7": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard8": {
+    "x": -1,
+    "y": -29,
+    "scale": 65,
+    "width": 155,
+    "height": 125
+  },
+  "deckRemove8": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard9": {
+    "x": -3,
+    "y": -28,
+    "scale": 70,
+    "width": 145,
+    "height": 115
+  },
+  "deckRemove9": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard10": {
+    "x": -5,
+    "y": -28,
+    "scale": 70,
+    "width": 140,
+    "height": 110
+  },
+  "deckRemove10": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard11": {
+    "x": 2,
+    "y": -54,
+    "scale": 70,
+    "width": 120,
+    "height": 120
+  },
+  "deckRemove11": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard12": {
+    "x": 0,
+    "y": -56,
+    "scale": 70,
+    "width": 125,
+    "height": 125
+  },
+  "deckRemove12": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard13": {
+    "x": -1,
+    "y": -55,
+    "scale": 70,
+    "width": 130,
+    "height": 125
+  },
+  "deckRemove13": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard14": {
+    "x": -1,
+    "y": -55,
+    "scale": 90,
+    "width": 105,
+    "height": 90
+  },
+  "deckRemove14": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard15": {
+    "x": -4,
+    "y": -54,
+    "scale": 100,
+    "width": 105,
+    "height": 85
+  },
+  "deckRemove15": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard16": {
+    "x": 2,
+    "y": -78,
+    "scale": 75,
+    "width": 110,
+    "height": 110
+  },
+  "deckRemove16": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard17": {
+    "x": -1,
+    "y": -80,
+    "scale": 100,
+    "width": 85,
+    "height": 85
+  },
+  "deckRemove17": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard18": {
+    "x": -1,
+    "y": -81,
+    "scale": 75,
+    "width": 120,
+    "height": 95
+  },
+  "deckRemove18": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard19": {
+    "x": -1,
+    "y": -79,
+    "scale": 85,
+    "width": 100,
+    "height": 95
+  },
+  "deckRemove19": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard20": {
+    "x": -5,
+    "y": -80,
+    "scale": 65,
+    "width": 135,
+    "height": 115
+  },
+  "deckRemove20": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard21": {
+    "x": -2,
+    "y": 8,
+    "scale": 95,
+    "width": 95,
+    "height": 95
+  },
+  "deckRemove21": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard22": {
+    "x": -8,
+    "y": 8,
+    "scale": 85,
+    "width": 100,
+    "height": 100
+  },
+  "deckRemove22": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard23": {
+    "x": -11,
+    "y": 9,
+    "scale": 85,
+    "width": 100,
+    "height": 100
+  },
+  "deckRemove23": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard24": {
+    "x": -17,
+    "y": 8,
+    "scale": 85,
+    "width": 100,
+    "height": 100
+  },
+  "deckRemove24": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard25": {
+    "x": -26,
+    "y": 9,
+    "scale": 80,
+    "width": 100,
+    "height": 100
+  },
+  "deckRemove25": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard26": {
+    "x": -2,
+    "y": 4,
+    "scale": 100,
+    "width": 80,
+    "height": 95
+  },
+  "deckRemove26": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard27": {
+    "x": -9,
+    "y": 4,
+    "scale": 100,
+    "width": 85,
+    "height": 105
+  },
+  "deckRemove27": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard28": {
+    "x": -14,
+    "y": 4,
+    "scale": 100,
+    "width": 90,
+    "height": 95
+  },
+  "deckRemove28": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard29": {
+    "x": -19,
+    "y": 5,
+    "scale": 80,
+    "width": 100,
+    "height": 100
+  },
+  "deckRemove29": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  },
+  "deckCard30": {
+    "x": -26,
+    "y": 6,
+    "scale": 80,
+    "width": 100,
+    "height": 100
+  },
+  "deckRemove30": {
+    "x": 0,
+    "y": 0,
+    "scale": 100,
+    "width": 100,
+    "height": 100
+  }
+}

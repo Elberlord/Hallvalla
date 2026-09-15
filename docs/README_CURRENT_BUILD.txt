@@ -1,1 +1,1 @@
-20260914.118 · TR local performance gate · basado directamente en v116
+20260915.129 · DET por efectos + portraits canónicos + JSON constructor de mazos

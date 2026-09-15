@@ -33,10 +33,37 @@ const CARD_VISUALS_BY_KEY={
   ...Object.fromEntries(LEGENDARY_ALLY_CARDS.map(c=>[c.key,{portrait:c.portrait,icon:c.icon}])),
   saladin_archer_cavalry:{portrait:CARD_PORTRAITS.cavalry,icon:"🏹"}
 };
+function getCanonicalCardTemplateForHydration(key){
+  const safe=String(key||"");
+  if(!safe)return null;
+  const pools=[];
+  try{if(typeof CARD_TEMPLATES!=="undefined")pools.push(CARD_TEMPLATES||[]);}catch(_){}
+  try{if(typeof EQUIPMENT_CARD_TEMPLATES!=="undefined")pools.push(EQUIPMENT_CARD_TEMPLATES||[]);}catch(_){}
+  try{if(typeof BASIC_MAGIC_TRAP_PACK!=="undefined")pools.push(BASIC_MAGIC_TRAP_PACK||[]);}catch(_){}
+  try{if(typeof IMPROVED_MAGIC_TRAP_PACK!=="undefined")pools.push(IMPROVED_MAGIC_TRAP_PACK||[]);}catch(_){}
+  try{if(typeof LEGENDARY_TRAP_CARDS!=="undefined")pools.push(LEGENDARY_TRAP_CARDS||[]);}catch(_){}
+  try{if(typeof LEGENDARY_ALLY_CARDS!=="undefined")pools.push(LEGENDARY_ALLY_CARDS||[]);}catch(_){}
+  try{if(typeof BEAST_CARD_TEMPLATES!=="undefined")pools.push(BEAST_CARD_TEMPLATES||[]);}catch(_){}
+  try{if(typeof BEAST_TRAP_CARD_TEMPLATES!=="undefined")pools.push(BEAST_TRAP_CARD_TEMPLATES||[]);}catch(_){}
+  for(const pool of pools){
+    const hit=(pool||[]).find(entry=>String(entry?.key||"")===safe);
+    if(hit)return hit;
+  }
+  try{if(typeof getDragonCompanionCardTemplate==="function"){const dragon=getDragonCompanionCardTemplate(safe);if(dragon)return dragon;}}catch(_){}
+  try{if(typeof getAdventureDeckCardTemplateByKey==="function"){const adv=getAdventureDeckCardTemplateByKey(safe);if(adv)return adv;}}catch(_){}
+  return null;
+}
 function hydrateCardVisualData(card){
   if(!card||typeof card!=="object")return card;
+  const canonical=getCanonicalCardTemplateForHydration(card.key);
   const visual=CARD_VISUALS_BY_KEY[card.key]||null;
-  const merged=visual?{...card,...visual}:{...card};
+  // El registro guardado conserva cantidad/progreso/id, pero la definición vigente
+  // recupera reglas, texto y arte canónicos. Evita cartas antiguas con DET vacío o
+  // un portrait obsoleto que termine mostrando FALTA ASSET.
+  const merged={...(canonical||{}),...card,...(visual||{})};
+  if(canonical?.text&&!String(card?.text||"").trim())merged.text=canonical.text;
+  if(canonical?.portrait)merged.portrait=canonical.portrait;
+  if(canonical?.fieldFigure&&merged.type==="unit")merged.fieldFigure=canonical.fieldFigure;
   if(!merged.portrait)merged.portrait=getResolvedCardPortraitSource(merged);
   if(merged.type==="unit"&&!merged.fieldFigure)merged.fieldFigure=getResolvedFieldFigureSource(merged);
   if(merged.type==="unit")merged.battlePower=getUnitBattlePower(merged);

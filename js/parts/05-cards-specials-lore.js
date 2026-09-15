@@ -1749,13 +1749,166 @@ const DET_EFFECT_KIND_BY_TITLE={
 };
 function getDetAbilityVisual(section){
   const exactKey=normalizeDetEffectTitle(section?.title||"");
-  const exactIcon=DET_EFFECT_ICON_BY_TITLE[exactKey];
-  const kind=DET_EFFECT_KIND_BY_TITLE[exactKey]||classifyDetAbility(section);
+  const exactIcon=section?.icon||DET_EFFECT_ICON_BY_TITLE[exactKey];
+  const kind=section?.kind||DET_EFFECT_KIND_BY_TITLE[exactKey]||classifyDetAbility(section);
   const meta=getDetAbilityMeta(kind);
   if(exactIcon)return {icon:exactIcon,label:section?.title||meta.label,kind};
   return {icon:getDetEffectIconFromText(section)||meta.icon,label:section?.title||meta.label,kind};
 }
+const DET_CARD_EFFECT_SECTIONS={
+  // Magias y trampas básicas
+  bolt:[
+    {title:"DAÑO DIRECTO",body:"Hace 2 de daño a una unidad o líder rival.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"},
+    {title:"MALDICIÓN DE ARENA",body:"Si el objetivo es una unidad, pierde MOV según la regla vigente de Maldición de arena.",icon:"assets/ui/status_icons/status_debuff.webp",kind:"debuff"}
+  ],
+  blessing:[{title:"BENDICIÓN DE ATENEA",body:"La unidad aliada elegida obtiene +1 AT durante el ciclo táctico actual.",icon:"assets/ui/status_icons/status_buff.webp",kind:"buff"}],
+  fireball:[
+    {title:"DAÑO DE FUEGO",body:"Hace 2 de daño mágico de Fuego a una unidad o líder rival.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"},
+    {title:"QUEMADURA",body:"Si el objetivo es una unidad y puede arder, aplica Quemadura. Los líderes reciben el impacto directo pero no la Quemadura.",icon:"assets/ui/status_icons/status_burn.webp",kind:"debuff"}
+  ],
+  heal:[{title:"SANACIÓN",body:"Cura 3 HP a una unidad aliada sin superar su Vida máxima. No limpia estados.",icon:"assets/ui/status_icons/status_hp.webp",kind:"buff"}],
+  shield_wall:[{title:"MURO DE ESCUDOS",body:"Otorga +2 Guardia a una unidad aliada durante la duración táctica vigente.",icon:"assets/ui/status_icons/status_guard.webp",kind:"buff"}],
+  smoke_bomb:[
+    {title:"BOMBA DE HUMO",body:"Marca una invocación rival con una penalización temporal de movilidad.",icon:"assets/ui/effect_icons/bomba_de_humo.webp",kind:"debuff"},
+    {title:"MOV -1",body:"La unidad afectada pierde 1 MOV durante la duración vigente de la trampa.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"},
+    {title:"AGI -2",body:"La unidad afectada pierde 2 AGI durante la duración vigente de la trampa.",icon:"assets/ui/status_icons/status_debuff.webp",kind:"debuff"}
+  ],
+  inspiration:[{title:"INSPIRACIÓN",body:"Otorga +1 AT a una unidad aliada durante la duración táctica vigente.",icon:"assets/ui/status_icons/status_buff.webp",kind:"buff"}],
+  warning_rune:[
+    {title:"RUNA PREPARADA",body:"Se coloca sobre una unidad aliada y espera a que esa unidad sea atacada.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
+    {title:"GUARDIA +1",body:"En el primer ataque recibido, concede +1 Guardia durante ese combate y luego la runa se consume.",icon:"assets/ui/status_icons/status_guard.webp",kind:"buff"}
+  ],
+  paralysis_spell:[{title:"PARÁLISIS",body:"Paraliza una invocación rival; mientras dure no puede moverse, atacar, defender ni contraatacar. No afecta líderes.",icon:"assets/ui/status_icons/status_paralysis.webp",kind:"debuff"}],
+  poison_spell:[
+    {title:"VENENO",body:"Envenena una invocación rival. No afecta líderes y respeta inmunidades al Veneno.",icon:"assets/ui/status_icons/status_poison.webp",kind:"debuff"},
+    {title:"DAÑO ESCALABLE",body:"El daño de Veneno aumenta en cada pulso según la secuencia de la carta.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"}
+  ],
+
+  // Trampas de cacería / Beast Master
+  iron_jaw_trap:[
+    {title:"CEPO DE CELDA",body:"Se coloca en una celda libre y se consume cuando una unidad enemiga entra en ella.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
+    {title:"DAÑO DIRECTO",body:"La primera unidad enemiga que lo pisa recibe 1 daño directo.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"},
+    {title:"MOV -1",body:"La unidad afectada pierde 1 MOV durante la duración indicada por la regla de la trampa.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"}
+  ],
+  covered_pit:[
+    {title:"FOSO OCULTO",body:"Se coloca en una celda libre y se activa cuando una unidad enemiga terrestre entra caminando.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
+    {title:"ELIMINACIÓN",body:"La primera unidad terrestre enemiga que cae en el foso queda eliminada del juego.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
+    {title:"AÉREOS INMUNES",body:"Las unidades aéreas no activan ni sufren el Foso Cubierto.",icon:"assets/ui/effect_icons/aereo.webp",kind:"passive"}
+  ],
+  hunting_net:[
+    {title:"OBJETIVO EN RG 3",body:"Elige una unidad enemiga situada a 3 casillas o menos de tu líder.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
+    {title:"AGI -2",body:"La unidad elegida pierde 2 AGI durante la duración vigente de Red de Caza.",icon:"assets/ui/status_icons/status_debuff.webp",kind:"debuff"}
+  ],
+  blood_bait:[
+    {title:"CARNADA DE CELDA",body:"Se coloca en una celda y espera a que una Bestia aliada ataque a un enemigo adyacente a ella.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
+    {title:"AT +3",body:"La Bestia que activa la carnada obtiene +3 AT durante ese combate.",icon:"assets/ui/status_icons/status_buff.webp",kind:"buff"},
+    {title:"DX +2",body:"La Bestia que activa la carnada obtiene +2 DX durante ese combate.",icon:"assets/ui/effect_icons/ojo_del_cazador.webp",kind:"buff"},
+    {title:"CONSUMIBLE",body:"La Carnada Ámbar desaparece después de conceder su beneficio una vez.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"}
+  ],
+  tracking_smoke:[
+    {title:"ESTACAS DE CELDA",body:"Se colocan en una celda libre y se activan con la primera unidad terrestre enemiga que entra.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
+    {title:"4 DAÑO DIRECTO",body:"La unidad que activa las estacas recibe 4 de daño directo.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"},
+    {title:"SANGRADO",body:"Aplica Sangrado 1 durante 20 s según la regla actual de la carta.",icon:"assets/ui/status_icons/status_bleed.webp",kind:"debuff"},
+    {title:"AÉREOS INMUNES",body:"Las unidades aéreas no activan ni sufren Estacas de Bambú.",icon:"assets/ui/effect_icons/aereo.webp",kind:"passive"}
+  ],
+  rope_cage:[
+    {title:"JAULA DE CELDA",body:"Se coloca en una celda libre y se activa con la primera unidad enemiga que entra.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
+    {title:"3 DAÑO DIRECTO",body:"La unidad que activa la Jaula recibe 3 de daño directo.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"},
+    {title:"BLOQUEO DE ATAQUE",body:"La unidad afectada no puede atacar durante la duración indicada por la regla actual de la carta.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"}
+  ],
+
+  // Trampas mejoradas
+  snare_trap_plus:[
+    {title:"TRAMPA DE CADENAS",body:"Se activa sobre una unidad enemiga al cumplirse su condición de movimiento.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
+    {title:"MOV -2",body:"Reduce el MOV de la unidad afectada en 2 durante la duración táctica indicada.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"}
+  ],
+  warning_rune_plus:[
+    {title:"RUNA PREPARADA",body:"Se coloca sobre una unidad aliada y espera el primer ataque recibido.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
+    {title:"GUARDIA +3",body:"En el primer ataque recibido concede +3 Guardia durante ese combate y luego se consume.",icon:"assets/ui/status_icons/status_guard.webp",kind:"buff"}
+  ],
+  sand_curse_plus:[{title:"DAÑO DE ARENA",body:"Hace 4 de daño a una unidad o líder rival.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"}],
+  pharaoh_blessing_plus:[{title:"AT +3",body:"Otorga +3 AT a una unidad aliada durante el ciclo táctico actual.",icon:"assets/ui/status_icons/status_buff.webp",kind:"buff"}],
+  dust_guard_plus:[{title:"GUARDIA +4",body:"Otorga +4 Guardia a una unidad aliada hasta el final del ciclo táctico actual.",icon:"assets/ui/status_icons/status_guard.webp",kind:"buff"}],
+
+  // Trampas legendarias
+  false_alliance_legendary:[
+    {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga que no sea líder. Puede afectar unidades Básicas, Especiales y Legendarias.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
+    {title:"ACTIVACIÓN POR MOVIMIENTO",body:"Se activa cuando la unidad marcada declara movimiento hacia una de tus unidades.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
+    {title:"CAMBIO DE BANDO",body:"Cancela ese movimiento y la unidad marcada cambia de bando de forma permanente.",icon:"assets/ui/status_icons/status_control.webp",kind:"debuff"}
+  ],
+  primordial_serpent_poison:[
+    {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga que no sea líder.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
+    {title:"ACTIVACIÓN DIFERIDA",body:"La trampa se abre al comenzar el siguiente ciclo táctico.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
+    {title:"VENENO PRIMORDIAL",body:"Causa tres pulsos separados por 10 s: 2, luego 4 y luego 8 de daño.",icon:"assets/ui/status_icons/status_poison.webp",kind:"debuff"},
+    {title:"VENENO PREVIO",body:"Si la unidad ya estaba envenenada, se aplica la regla general de muerte por doble Veneno cuando corresponda.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"}
+  ],
+  traitors_bed:[
+    {title:"MARCA SELECTIVA",body:"Solo puede marcar una unidad enemiga no líder que cumpla la condición de ataque indicada por la carta.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
+    {title:"DORMIDA",body:"Al abrirse, la unidad no puede moverse, atacar ni contraatacar según el nivel del objetivo.",icon:"assets/ui/status_icons/status_paralysis.webp",kind:"debuff"},
+    {title:"VULNERABLE",body:"Contra una unidad Especial, el próximo daño ignora Guardia.",icon:"assets/ui/status_icons/status_defense.webp",kind:"debuff"},
+    {title:"EXPUESTA",body:"Contra una unidad Legendaria, el próximo daño se duplica e ignora Guardia.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"}
+  ],
+  broken_blood_oath:[
+    {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga y espera a que active un efecto o reciba un buff.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
+    {title:"CANCELACIÓN",body:"Cancela el efecto o buff que activa la trampa.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"},
+    {title:"PÉRDIDA DE STATS",body:"Aplica penalizaciones de Ataque y Guardia que aumentan según la rareza del objetivo.",icon:"assets/ui/status_icons/status_debuff.webp",kind:"debuff"},
+    {title:"SILENCIO",body:"Contra una unidad Legendaria también elimina buffs y aplica Silencio según la regla de la carta.",icon:"assets/ui/status_icons/status_silence.webp",kind:"debuff"}
+  ],
+  true_name_exile:[
+    {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga y espera a que derrote una de tus unidades.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
+    {title:"EXILIO",body:"La unidad marcada sale temporalmente del campo. La duración depende de su rareza.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"},
+    {title:"REGRESO DEBILITADO",body:"Cuando regresa, pierde Vida o vuelve con una fracción de su Vida máxima según su rareza.",icon:"assets/ui/status_icons/status_hp.webp",kind:"debuff"},
+    {title:"SIN BENEFICIOS",body:"La versión Legendaria impide atacar, bloquear, activar efectos o recibir buffs durante el Exilio y vuelve sin buffs.",icon:"assets/ui/status_icons/status_silence.webp",kind:"debuff"}
+  ],
+  ash_banquet:[
+    {title:"VIDA COMPLETA",body:"Solo puede marcar una unidad enemiga que esté con su Vida completa.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
+    {title:"PÉRDIDA DE VIDA",body:"Al abrirse hace 3 de daño directo o elimina un porcentaje de la Vida actual según la rareza.",icon:"assets/ui/status_icons/status_hp.webp",kind:"debuff"},
+    {title:"IGNORA GUARDIA",body:"Las versiones Especial y Legendaria ignoran la Guardia al aplicar la pérdida de Vida.",icon:"assets/ui/status_icons/status_defense.webp",kind:"debuff"},
+    {title:"SIN CURACIÓN",body:"Las versiones superiores impiden que la unidad marcada se cure durante la duración indicada.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"},
+    {title:"SIN REDUCCIÓN",body:"La versión Legendaria también impide recibir reducción de daño durante su duración.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"}
+  ],
+  thousand_banners_ambush:[
+    {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga y espera a que se acerque a tu líder.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
+    {title:"EMBOSCADA",body:"Se activa cuando la unidad marcada termina su movimiento a 2 casillas o menos de tu líder.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
+    {title:"DAÑO DIRECTO",body:"Hace 3 de daño a una unidad Básica y 5 a una Especial o Legendaria.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"},
+    {title:"EMPUJE",body:"Empuja 1 casilla a una Básica y 2 casillas a una Especial o Legendaria, si existe espacio válido.",icon:"assets/ui/effect_icons/empuje_salvaje.webp",kind:"debuff"},
+    {title:"CONTROL",body:"La Especial no puede atacar durante el ciclo indicado; la Legendaria queda Aturdida y no puede atacar ni contraatacar.",icon:"assets/ui/status_icons/status_paralysis.webp",kind:"debuff"}
+  ],
+  shadow_cut:[
+    {title:"MARCA A HERIDOS",body:"Solo marca una unidad enemiga que ya esté herida.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
+    {title:"ACTIVACIÓN POR DAÑO",body:"Se comprueba cada vez que la unidad marcada recibe daño.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
+    {title:"EJECUCIÓN",body:"Si después del daño queda por debajo de la mitad de su Vida máxima, muere. Exactamente a la mitad no muere.",icon:"assets/ui/status_icons/status_hp.webp",kind:"debuff"}
+  ],
+  false_crown:[
+    {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga y espera a que vaya a atacar.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
+    {title:"CANCELA ATAQUE",body:"El ataque original de la unidad marcada se cancela cuando la trampa se abre.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"},
+    {title:"ATAQUE ALIADO",body:"Las versiones Especial y Legendaria pueden obligarla a atacar a una unidad de su propio bando que esté en rango.",icon:"assets/ui/status_icons/status_control.webp",kind:"debuff"},
+    {title:"ATURDIMIENTO / DX",body:"Si la versión Legendaria no encuentra aliado propio en rango, queda Aturdida y recibe -3 DX según la duración de la carta.",icon:"assets/ui/status_icons/status_paralysis.webp",kind:"debuff"}
+  ],
+  fallen_kings_seal:[
+    {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga y espera una curación, buff o reducción de daño.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
+    {title:"CANCELA AYUDA",body:"Cancela la curación, buff o reducción de daño que activa el Sello.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"},
+    {title:"-5 GENERAL",body:"Aplica -5 a Guardia, Destreza, Agilidad, Movimiento, HP, Rango y demás valores aplicables según la regla vigente.",icon:"assets/ui/status_icons/status_debuff.webp",kind:"debuff"}
+  ],
+  camp_betrayal:[
+    {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
+    {title:"ACTIVACIÓN DE CAMPAMENTO",body:"Al inicio del ciclo indicado, comprueba si la unidad marcada tiene aliados adyacentes.",icon:"assets/ui/det_icons/trigger.webp",kind:"trigger"},
+    {title:"TRAICIÓN",body:"Si tiene aliados adyacentes, esas unidades atacan a la unidad marcada según la regla de la trampa.",icon:"assets/ui/status_icons/status_control.webp",kind:"debuff"}
+  ],
+  night_without_guard:[
+    {title:"MARCA LEGENDARIA",body:"Marca una unidad enemiga para preparar la apertura de la trampa.",icon:"assets/ui/status_icons/status_curse.webp",kind:"debuff"},
+    {title:"ATURDIMIENTO GLOBAL",body:"Cuando se abre, aturde a todas las unidades enemigas durante 10 s según la regla actual.",icon:"assets/ui/status_icons/status_paralysis.webp",kind:"debuff"}
+  ]
+};
+function getDetExplicitCardEffectSections(entity){
+  const key=String(entity?.key||"");
+  const sections=DET_CARD_EFFECT_SECTIONS[key];
+  return Array.isArray(sections)?sections.map(section=>({...section})):[];
+}
+
 function getDetAbilitySectionsForInspector(entity,effectText=""){
+  const explicitSections=getDetExplicitCardEffectSections(entity);
+  if(explicitSections.length)return explicitSections.slice(0,10);
   const obsoleteDetHeadings=new Set([
     "basica","especial","legendaria",
     "al_inicio_del_proximo_turno_enemigo","cuando_vaya_a_atacar",

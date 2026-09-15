@@ -1,0 +1,9 @@
+HallValla v129 · DET effects + deck builder JSON
+
+- Aplica exactamente el JSON de layout suministrado por el usuario al constructor de mazos.
+- Guarda copia editable en docs/DECK_BUILDER_LAYOUT_20260915_129.json.
+- Corrige hidratación de cartas guardadas: restaura texto/reglas/portrait canónicos por key para evitar DET vacío y FALTA ASSET por datos antiguos en localStorage.
+- Añade DET_CARD_EFFECT_SECTIONS: cada efecto de magias/trampas auditadas aparece como icono independiente en el espacio inferior derecho.
+- Click en cada icono abre la explicación individual del efecto usando el sistema DET ya existente.
+- Incluye docs/DET_CARD_EFFECTS_20260915_129.json como índice editable/auditable.
+- No cambia todavía las reglas TR de las trampas pendientes de aprobación; solo documenta el comportamiento vigente.
