@@ -1,6 +1,6 @@
 # HallValla — private source / public game distribution
 
-Repository layout prepared for HallValla v136 infrastructure.
+Repository layout prepared for HallValla v137 infrastructure.
 
 ## What stays private
 - `android/` — Android application source (v131 native Google Sign-In shell)
@@ -18,7 +18,7 @@ The APK signing key is deliberately NOT included in this repository package.
 
 ## Current versions
 - Browser/gameplay base: v134
-- Public distribution shell: v136 (Android icon centered on throne + icon-only transparent Home utility/navigation controls; no gameplay rebalance)
+- Public distribution shell: v137 (menu button/resource containers transparent + smaller Android icon moved to throne crest; no gameplay rebalance)
 - Android APK: v131 / versionCode 131 / `com.hallvalla.game`
 
 ## First setup

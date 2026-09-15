@@ -1,0 +1,13 @@
+HallValla v137 · CLEAN MENU CHROME
+
+Scope: visual UI cleanup only. Gameplay remains v134/v136 behavior.
+
+Changes
+- Android public-download glyph moved upward to the throne crest and reduced in size.
+- HOME profile and Gold/Gems/Fragments button containers are fully transparent: no rectangle, border, line, panel fill or box-shadow.
+- Existing friends/notifications/settings and Clanes/Ranking/Pase icon-only treatment retained.
+- Mine navigation rail, back button and resource pills lose their visible plates/rectangles; active/focus state is icon glow only.
+- Profile/Account/Friends/Notifications/Settings/Pass text menu buttons lose their decorative rectangle while preserving hit areas and focus/hover feedback.
+- Collection/deck paging controls lose decorative plates.
+- Main illustrated HOME buttons (Aventura, Online, Misiones, Mina, Colección, Forja, Tienda, Eventos), cards and battlefield controls are intentionally NOT stripped because their rectangular artwork is the actual button art rather than an extra container.
+- Android glyph remains hidden inside the Android APK via existing runtime detection.

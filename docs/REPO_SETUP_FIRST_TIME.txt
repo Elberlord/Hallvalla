@@ -5,7 +5,7 @@ HALLVALLA — FIRST-TIME PRIVATE REPOSITORY SETUP
 
 2. Extract this ZIP.
 
-3. Copy EVERYTHING INSIDE the folder HallValla_REPO_PRIVADO_LISTO_v136
+3. Copy EVERYTHING INSIDE the folder HallValla_REPO_PRIVADO_LISTO_v137
    into the ROOT of your HallValla repository.
    - Keep the hidden folder .github
    - Keep .gitignore and .gitattributes
@@ -53,11 +53,11 @@ mirror or another public host.
 
 GOOGLE SERVICES CLIENT CONFIG
 -----------------------------
-`android/google-services.json` is intentionally NOT included in v136.
+`android/google-services.json` is intentionally NOT included in v137.
 The current Android v131 shell does not use the Google Services Gradle plugin, and
 GitHub secret scanning flagged the client API key when the repository was public.
 If an older copy of that file is already tracked, delete it from the repo before
-committing v136. `.gitignore` now blocks future copies.
+committing v137. `.gitignore` now blocks future copies.
 
 DO NOT UPLOAD TO GITHUB
 -----------------------

@@ -28971,3 +28971,163 @@ body.hv-mobile-landscape #mainMenu .hv-android-public-download-mark{
   width:clamp(36px,6.6svh,48px)!important;
   height:clamp(36px,6.6svh,48px)!important;
 }
+
+
+/* === v137 CLEAN MENU CHROME ===============================================
+   Regla visual: los contenedores rectangulares de botones/recursos en menús
+   dejan de dibujarse. El área de interacción se conserva; solo el contenido
+   (icono, cifra o texto) y el feedback de foco/hover permanecen visibles.
+   No toca cartas, botones-artwork principales ni controles del campo de batalla.
+   ======================================================================== */
+
+/* HOME · perfil + recursos: sin tarjeta exterior. */
+#mainMenu .asset-profile,
+#mainMenu .asset-resource{
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  filter:none!important;
+}
+#mainMenu .asset-profile:hover,
+#mainMenu .asset-profile:focus-visible,
+#mainMenu .asset-resource:hover,
+#mainMenu .asset-resource:focus-visible{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+  filter:none!important;
+}
+#mainMenu .asset-profile:hover .asset-profile-img,
+#mainMenu .asset-profile:focus-visible .asset-profile-img,
+#mainMenu .asset-resource:hover img,
+#mainMenu .asset-resource:focus-visible img{
+  filter:brightness(1.10) drop-shadow(0 0 10px rgba(255,211,107,.34))!important;
+}
+#mainMenu .asset-resource{
+  min-width:auto!important;
+  padding-inline:7px!important;
+  gap:6px!important;
+}
+
+/* Android: más pequeño y en la cresta superior del trono. */
+#mainMenu .hv-android-public-download{
+  top:11.8%!important;
+  width:46px!important;
+  height:46px!important;
+}
+#mainMenu .hv-android-public-download-mark{
+  width:38px!important;
+  height:38px!important;
+}
+
+/* MINA · rail, volver y recursos sin cajas/placas. */
+#mineScreen .mine-nav,
+#mineScreen .mine-back-btn,
+#mineScreen .mine-resource-pill{
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+#mineScreen .mine-nav{
+  overflow:visible!important;
+}
+#mineScreen .mine-nav-btn,
+#mineScreen .mine-nav-btn.active,
+#mineScreen .mine-nav-btn:hover,
+#mineScreen .mine-nav-btn:focus-visible{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+}
+#mineScreen .mine-nav-btn.active img,
+#mineScreen .mine-nav-btn:hover img,
+#mineScreen .mine-nav-btn:focus-visible img{
+  filter:drop-shadow(0 0 11px rgba(255,209,102,.46)) drop-shadow(0 6px 11px rgba(0,0,0,.52)) saturate(1.10) brightness(1.06)!important;
+}
+#mineScreen .mine-back-btn:hover,
+#mineScreen .mine-back-btn:focus-visible,
+#mineScreen .mine-resource-pill:hover{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+
+/* Menús secundarios basados en texto: superficie invisible, interacción intacta. */
+#profilePanel .btn,
+#accountPanel .btn,
+#friendsPanel .btn,
+#notificationsPanel .btn,
+#settingsPanel .btn,
+#passPanel .btn,
+.hv-online-subtle-back{
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+  outline:0!important;
+}
+#profilePanel .btn:hover,
+#profilePanel .btn:focus-visible,
+#accountPanel .btn:hover,
+#accountPanel .btn:focus-visible,
+#friendsPanel .btn:hover,
+#friendsPanel .btn:focus-visible,
+#notificationsPanel .btn:hover,
+#notificationsPanel .btn:focus-visible,
+#settingsPanel .btn:hover,
+#settingsPanel .btn:focus-visible,
+#passPanel .btn:hover,
+#passPanel .btn:focus-visible,
+.hv-online-subtle-back:hover,
+.hv-online-subtle-back:focus-visible{
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+  outline:0!important;
+  filter:brightness(1.12) drop-shadow(0 0 8px rgba(255,209,102,.28))!important;
+}
+
+/* Navegación de mazo/colección: flechas sin placa. */
+#deckBuilderPanel.hv-forge-collection-v2 .deck-page-btn{
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+  outline:0!important;
+}
+#deckBuilderPanel.hv-forge-collection-v2 .deck-page-btn:hover:not(:disabled),
+#deckBuilderPanel.hv-forge-collection-v2 .deck-page-btn:focus-visible:not(:disabled){
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+  outline:0!important;
+  filter:brightness(1.12) drop-shadow(0 0 9px rgba(224,172,74,.34))!important;
+}
+
+/* Mobile landscape mantiene exactamente la misma filosofía sin placas. */
+body.hv-mobile-landscape #mainMenu .asset-profile,
+body.hv-mobile-landscape #mainMenu .asset-resource,
+body.hv-mobile-landscape #mineScreen .mine-nav,
+body.hv-mobile-landscape #mineScreen .mine-resource-pill,
+body.hv-mobile-landscape #mineScreen .mine-back-btn{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.hv-mobile-landscape #mainMenu .hv-android-public-download{
+  top:11.6%!important;
+  width:clamp(34px,5.8svh,44px)!important;
+  height:clamp(34px,5.8svh,44px)!important;
+}
+body.hv-mobile-landscape #mainMenu .hv-android-public-download-mark{
+  width:clamp(29px,5svh,37px)!important;
+  height:clamp(29px,5svh,37px)!important;
+}

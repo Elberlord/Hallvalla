@@ -1,1 +1,1 @@
-20260915.136 · gameplay v134 IA por Tier 10/15/20/25/30 · mínimo 70% unidades y mezcla libre de clases para IA · HOME icon-only (Android centrado sobre trono; Clanes/Ranking/Pase + iconos superiores sin contenedores visibles) · distribución pública desde repo privado
+20260915.137 · gameplay v134 IA por Tier 10/15/20/25/30 · mínimo 70% unidades y mezcla libre de clases para IA · UI limpia: contenedores de menú invisibles + Android pequeño en cresta del trono · distribución pública desde repo privado
