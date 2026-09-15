@@ -24,3 +24,5 @@ Thumbs.db
 # Temporary archives/logs
 *.tmp
 *.log
+android/google-services.json
+**/google-services.json

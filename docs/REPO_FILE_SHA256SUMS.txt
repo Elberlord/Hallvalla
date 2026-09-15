@@ -1,8 +1,9 @@
 5a69cfb13a8cac052ddc067cf99cbc2f4c1189508871437e6f98bed04de9f8ec  ./.gitattributes
 98b769dc612ca2e4875fbcab01cfe5b7ec0ea8a78fdbe4201470cb8bf1f378f8  ./.github/workflows/publish-hallvalla-public.yml
-365e7d719f78bdfdf883350dd3f4eb66a038d4923ad204e50e9a21493b1afad2  ./.gitignore
-965c3543430a9e83b5e2ece863cfa0f7274b91e5308173414496102d2e8b053b  ./README.md
-bcc0e7b649ad79d15ea781e9fe819161c8e4e32af20f445d27de93863744e557  ./REPO_SETUP_FIRST_TIME.txt
+ebd4ad314954c82a8e870c54fb04d8a1826e353add69fe10e790fea398ebc985  ./.gitignore
+ffce7a59e3a3b00f5039b0a54596972626b1f999d0ff9bee30a7ed7e2b70aa00  ./README.md
+8fd8439d1659ac7b08f804375972f79e5d741ca5680cca65b7bbcca9af130934  ./REPO_FILE_SHA256SUMS.txt
+19b536aa592f090073e38592c1a6c521f3de7bf4becc12c9d9bf3058ef3dafe8  ./REPO_SETUP_FIRST_TIME.txt
 428aa0be5cc9e2740a42307b950d737fcf52d6c569e9e6f2413785e33d9a4ede  ./SECURITY.md
 6bbd3395e80a1aac6b41628c679934556915db83bb58854947ef257fd058d902  ./android/README.md
 b4a6fee9c5eccc002a4094c38ed33d78ea759e278c6d996126428acc1afe1b34  ./android/app/build.gradle
@@ -10,7 +11,6 @@ e8499f1eab6a7b51efd46e70c16433ec2b8b924ad1591b39b34d2842bc9657a9  ./android/app/
 4d3df86e2b08a7a9f3cdc5081f5b405e36e79ac3cb2bcde7c3f7177e8a3f4b6d  ./android/app/src/main/java/com/hallvalla/game/MainActivity.java
 f0389b5f69b8ced5d08aabcc38a44beb278472699d3bcfba3e06d3b4e248ca24  ./android/app/src/main/res/drawable/hallvalla_icon.png
 c3c0cf04da0fc239f391c774554d97d890018ab6e37e87cc62f6070d0c8c9909  ./android/build.gradle
-e4da64ea5323be01e8b4f19df0f069fad8ac732819c3f0e5370c252459e0bf14  ./android/google-services.json
 e6b436ff6a08da8b8c05e0e2fc1a7f40f41701bb506cd80fc2ddfd7b6e3b3b2b  ./android/gradle.properties
 10d7b5c8f506b12e0df12894121389cc6c18742dd17fed89fbc583b156a49ab7  ./android/settings.gradle
 3da30926880832d90f3bd00885c978b9775266deb369a455a7be8ed77f81b12e  ./backend/firebase/.firebaserc
@@ -58,6 +58,7 @@ d90c49cc9e5434f09e6f4f344a1db95d2a60487c0fdc3d8e2871d2ef8b769e7a  ./docs/game-bu
 936ca6cbb87dfca8e7e9c377bbbfbf42f4379ff5dbf18cd93eb4cfd549bf1292  ./docs/game-build/BUILD_20260915_133_TIER_CLASS_DECKS.txt
 dfc148e2892a84ae463c299533cbc40fa2c3f9f1d82ddb3a1582cf1b63f5f515  ./docs/game-build/BUILD_20260915_134_AI_MIXED_70_UNITS.txt
 4a8d37afedbae14269a3f40201f7069faf78e14c4fc4de77c597d5d1ba1b21e7  ./docs/game-build/BUILD_20260915_135_PRIVATE_REPO_PUBLIC_DIST.txt
+def4caf320480b25333b6c80040697b18e2778e3c51f86399114f0c4a5d66edd  ./docs/game-build/BUILD_20260915_136_HOME_ICON_ONLY.txt
 97c3a9c6238b734e74e2a884de84aa6fb6202f3df4db903a291e337007aa47ef  ./docs/game-build/CHANGELOG_20260908_MENU_RELOJ.txt
 0a4e7407abff0d768e1f3da9fd2b75b250b7b04fe070e7026ef79003c814f7c3  ./docs/game-build/CHANGELOG_20260908_MOV_CACHE_FIX.txt
 df6296fcc58d3372ee3a101da0418bf6ad42e2e960aa9420f81ab38550c50a39  ./docs/game-build/CHANGELOG_20260912_53.txt
@@ -122,7 +123,7 @@ b1ec528f300ddc27c989a461abf557658f2705f3d43c9ebe1539a2a52d1cb752  ./docs/game-bu
 73a0e5eb395f3d6168af7e67adfd4139e33b89ff34d2128c74c85b2b305b6629  ./docs/game-build/PERF_FIELD_FIGURES_LIGHT_TEST_20260908_8.txt
 e1c9c65282ee1a5927e51ec7523cece98c8128aea3893baeef4904e036e2d90b  ./docs/game-build/PVP_CLOSED_LEAGUES_20260910_31.txt
 33c361bea456ffe825643e2e5cd1197e522591554a826b16a39515a63185cae7  ./docs/game-build/PVP_LEAGUE_BOTS_20260910_37.txt
-08128e3799a853911dde75236a285085c73f04bdb9487e1a8e44319dae9a8ddd  ./docs/game-build/README_CURRENT_BUILD.txt
+22bf73a0a7cd03aed6ac82795e41b15dc29d149cf1ff93c428d3230ef55bda8a  ./docs/game-build/README_CURRENT_BUILD.txt
 4518987dece1739354a68da84ba320f562adcd694178a1550497f48c9877a155  ./docs/game-build/REALTIME_EXPERIMENTAL_20260912_71.txt
 618364854dd5642624c9e35a660492b08d2b9811f63f1941a8116e7396f521d9  ./docs/game-build/RULETA_BALANCE_20260908_5.txt
 5e23a383f40fc5efd3086d7c17c39b636c76d186d038bfa0f920cb77394fdd83  ./docs/game-build/RULETA_BALANCE_20260910_34.txt
@@ -811,7 +812,7 @@ b6a77b8a932a43f36d57cb74e72d19557068d054c27605dc7af75fba0ad331f0  ./web/assets/u
 1090d99e7921e9d7d56867778f36bd19161d93a18ddf6d36d0a88b2bc16ec2e0  ./web/assets/ui/vs_intro/vs_battlefield.webp
 b343b63496fb1605eb9a25dc30c3ee330f05607adc1c3436b2c17eb3e656890b  ./web/assets/ui/vs_intro/vs_emblem.webp
 e2d82e9b8a805e735793fbc96d6290c0021972ccfbe421f51c9cbdc68578b893  ./web/firebase-config.js
-7cf4ef0598a05a5e4c957a209f3f7a45a56cf6b419928b75f07b61731caf1971  ./web/index.html
+6e3e5988032144f3bb1d86e55a8758b302d5f7b8be9120f787b7683a80a1f8b4  ./web/index.html
 8a795958349c3f973930a638dcef844e5d0a3b2479bd56dea69535a37628bdd0  ./web/js/bootstrap-loader.js
 a406b6fc31b3fcf7a53bf5dd8f408237129b6024e00cd151996c9b6bc4b5f29b  ./web/js/features/adventure.js
 58e6a324da411d15d29a5296749619221da7008013abdba0dda764817d5822d8  ./web/js/features/battle-layout.js
@@ -846,5 +847,5 @@ bdeabfec46a485fe98b08ff5576ce89fe930b5dca1bbdb0f895651e76f5f6187  ./web/js/parts
 f0e52063c31a878b029c1a5b97d7025e717c45341e577388c7c6bb6e1caa7295  ./web/js/parts/19-field-figures-3d.js
 0759e989750c7ff993fffd6d3bb26500f81f0a7c773154d354059c458404a9df  ./web/js/parts/20-gamepad-controls.js
 7f1101ae30d28e1c38412fe8c4d23f52e162979c69bbfb4bbf5657588821ca64  ./web/js/parts/21-realtime-experimental.js
-4537a0f830287014af43c567abe7e4adb05e6b2bba5a89e5cd66ef01e39b8524  ./web/service-worker.js
-9c426432cdab4dfc2f7150f9cc577a7017070b04be75e9974c35799be2ce4e30  ./web/styles.css
+e0d5a869df9ba829c776ab2c873d5e4eab9e6f99045446878f26fccffcef9983  ./web/service-worker.js
+a20c1ec8fbcfe914de0a8371991764ba37ddfbfe3bd53ea5066de84815ad782e  ./web/styles.css

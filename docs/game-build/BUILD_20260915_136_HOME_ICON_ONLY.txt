@@ -1,0 +1,10 @@
+HallValla v136 · HOME ICON-ONLY
+
+Cambios visuales exclusivamente en Home:
+- El acceso público de descarga Android ya no usa botón rectangular/texto.
+- Se muestra un glifo Android centrado sobre la parte alta del trono.
+- El acceso Android continúa ocultándose dentro de la APK (?apk / HallVallaAndroid).
+- Amigos, Notificaciones y Configuración mantienen su hitbox, pero sin fondo/borde/caja.
+- Clanes, Ranking y Pase de Honor mantienen su hitbox, pero sin fondo/borde/caja ni texto; solo arte del icono.
+- Hover/focus/active afectan únicamente brillo/escala del icono.
+- Sin cambios de gameplay, economía, Firebase ni APK.

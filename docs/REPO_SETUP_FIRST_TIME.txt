@@ -5,7 +5,7 @@ HALLVALLA — FIRST-TIME PRIVATE REPOSITORY SETUP
 
 2. Extract this ZIP.
 
-3. Copy EVERYTHING INSIDE the folder HallValla_REPO_PRIVADO_LISTO_v135
+3. Copy EVERYTHING INSIDE the folder HallValla_REPO_PRIVADO_LISTO_v136
    into the ROOT of your HallValla repository.
    - Keep the hidden folder .github
    - Keep .gitignore and .gitattributes
@@ -29,8 +29,8 @@ HALLVALLA — FIRST-TIME PRIVATE REPOSITORY SETUP
 9. Public output:
    - The browser game is the root of the Pages site.
    - APK: <YOUR-PAGES-URL>/downloads/HallValla-Android.apk
-   - The browser Home contains a "Descargar app Android" button.
-   - Inside the installed APK the download button hides itself because the app
+   - The browser Home contains a centered Android download icon over the throne.
+   - Inside the installed APK the Android download icon hides itself because the app
      opens the game with `?apk=131`.
 
 IMPORTANT ABOUT THE EXISTING APK
@@ -50,6 +50,14 @@ private-repository Pages (for personal accounts this is GitHub Pro or a higher
 eligible plan). If your account does not support that, do not make the live
 Pages repository private until we switch the deployment to a separate public
 mirror or another public host.
+
+GOOGLE SERVICES CLIENT CONFIG
+-----------------------------
+`android/google-services.json` is intentionally NOT included in v136.
+The current Android v131 shell does not use the Google Services Gradle plugin, and
+GitHub secret scanning flagged the client API key when the repository was public.
+If an older copy of that file is already tracked, delete it from the repo before
+committing v136. `.gitignore` now blocks future copies.
 
 DO NOT UPLOAD TO GITHUB
 -----------------------
