@@ -26,7 +26,7 @@ import com.google.android.gms.tasks.Task;
 import org.json.JSONObject;
 
 public class MainActivity extends Activity {
-    private static final String HOME_URL = "https://elberlord.github.io/Hallvalla/?apk=131";
+    private static final String HOME_URL = "https://elberlord.github.io/Hallvalla/?apk=132";
     private static final String TRUSTED_HOST = "elberlord.github.io";
     private static final String WEB_CLIENT_ID = "496903032464-mcru6mkdr99pgos2fdegarg08eb55ujf.apps.googleusercontent.com";
     private static final int RC_GOOGLE_SIGN_IN = 7311;
@@ -54,7 +54,15 @@ public class MainActivity extends Activity {
         webView.setBackgroundColor(Color.BLACK);
         webView.setFocusable(true);
         webView.setFocusableInTouchMode(true);
+        webView.setPadding(0, 0, 0, 0);
+        webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
         setContentView(webView);
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            WindowManager.LayoutParams params = getWindow().getAttributes();
+            params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            getWindow().setAttributes(params);
+        }
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -64,14 +72,18 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(false);
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setLoadsImagesAutomatically(true);
+        // Fullscreen real en APK: respetar el viewport del juego sin hacer
+        // "overview/fit-to-page" del WebView, que encogía toda la UI como si
+        // fuera una página de escritorio y terminaba recortando paneles.
         settings.setUseWideViewPort(true);
-        settings.setLoadWithOverviewMode(true);
+        settings.setLoadWithOverviewMode(false);
+        settings.setTextZoom(100);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setUserAgentString(settings.getUserAgentString() + " HallVallaAndroid/131");
+        settings.setUserAgentString(settings.getUserAgentString() + " HallVallaAndroid/132");
 
         CookieManager cookies = CookieManager.getInstance();
         cookies.setAcceptCookie(true);

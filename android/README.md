@@ -3,7 +3,7 @@
 - applicationId: `com.hallvalla.game`
 - versionCode: `131`
 - versionName: `1.0.131`
-- Sitio cargado: `https://elberlord.github.io/Hallvalla/?apk=131`
+- Sitio cargado: `https://elberlord.github.io/Hallvalla/?apk=132`
 - Firma: debe usar exactamente el mismo `hallvalla-release.p12` de v130.
 - OAuth Web Client usado por Firebase: `496903032464-mcru6mkdr99pgos2fdegarg08eb55ujf.apps.googleusercontent.com`
 
@@ -21,3 +21,9 @@ El proyecto Google/Firebase debe tener un cliente OAuth de tipo Android con:
 - SHA-1 release: `54:ED:93:B1:F9:14:30:D2:B7:E9:91:1D:04:D0:52:E7:EC:93:15:F5`
 
 Si falta esa asociación, Google Play Services devuelve `DEVELOPER_ERROR (10)` y la APK muestra una explicación específica.
+
+
+## Ajuste v132
+- Se desactiva `loadWithOverviewMode` en el WebView para evitar el escalado tipo "fit page" que encogía la interfaz dentro de la APK.
+- Se conserva el viewport web del juego y se fuerza `TextZoom=100`.
+- Se habilita mejor aprovechamiento del área útil/cutout en fullscreen.

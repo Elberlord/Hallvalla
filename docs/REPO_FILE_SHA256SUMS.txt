@@ -4,10 +4,10 @@ ebd4ad314954c82a8e870c54fb04d8a1826e353add69fe10e790fea398ebc985  ./.gitignore
 760798c83c3d3e452e1d2c7564d46d030aa639f54b3b17c61d8bd2c932e6701d  ./README.md
 4d1b8db12969bfe9988b601ca012e17a9ff5bbec1f6afd4ed767225fb44c1fa4  ./REPO_SETUP_FIRST_TIME.txt
 428aa0be5cc9e2740a42307b950d737fcf52d6c569e9e6f2413785e33d9a4ede  ./SECURITY.md
-6bbd3395e80a1aac6b41628c679934556915db83bb58854947ef257fd058d902  ./android/README.md
-b4a6fee9c5eccc002a4094c38ed33d78ea759e278c6d996126428acc1afe1b34  ./android/app/build.gradle
+93fce27023374e7a57b49a88c155f44f57725c6ff99e10e2af2ab7abb3f5c7da  ./android/README.md
+dbe913da057087420c668b8e05b6a34830387274b7a89bf9732ebe5d38aa3731  ./android/app/build.gradle
 e8499f1eab6a7b51efd46e70c16433ec2b8b924ad1591b39b34d2842bc9657a9  ./android/app/src/main/AndroidManifest.xml
-4d3df86e2b08a7a9f3cdc5081f5b405e36e79ac3cb2bcde7c3f7177e8a3f4b6d  ./android/app/src/main/java/com/hallvalla/game/MainActivity.java
+199f676c87eb2172704b8c4179d633a3d8e2362046a1dbe7a7e041973a22b77f  ./android/app/src/main/java/com/hallvalla/game/MainActivity.java
 f0389b5f69b8ced5d08aabcc38a44beb278472699d3bcfba3e06d3b4e248ca24  ./android/app/src/main/res/drawable/hallvalla_icon.png
 c3c0cf04da0fc239f391c774554d97d890018ab6e37e87cc62f6070d0c8c9909  ./android/build.gradle
 e6b436ff6a08da8b8c05e0e2fc1a7f40f41701bb506cd80fc2ddfd7b6e3b3b2b  ./android/gradle.properties
@@ -814,7 +814,7 @@ b6a77b8a932a43f36d57cb74e72d19557068d054c27605dc7af75fba0ad331f0  ./web/assets/u
 1090d99e7921e9d7d56867778f36bd19161d93a18ddf6d36d0a88b2bc16ec2e0  ./web/assets/ui/vs_intro/vs_battlefield.webp
 b343b63496fb1605eb9a25dc30c3ee330f05607adc1c3436b2c17eb3e656890b  ./web/assets/ui/vs_intro/vs_emblem.webp
 e2d82e9b8a805e735793fbc96d6290c0021972ccfbe421f51c9cbdc68578b893  ./web/firebase-config.js
-d11c2f90b703911961f0a59a164ee221ddb4a3a57be9ecc79c59c4f34b59dbdd  ./web/index.html
+8a410ed35fcc290c6a49e0cbe2e6f561d31fadafdf1c9ec3c79fe9555a689365  ./web/index.html
 734bae171d9e07b0fc87d07b11015a8c78f6bf3a2ac1fbdf6bfaa041b65705bb  ./web/js/bootstrap-loader.js
 77d6fc8aaf82a28ece106da6fe95d7e0c95d5e78b4ff743a7f12410a31003845  ./web/js/features/adventure.js
 58e6a324da411d15d29a5296749619221da7008013abdba0dda764817d5822d8  ./web/js/features/battle-layout.js
