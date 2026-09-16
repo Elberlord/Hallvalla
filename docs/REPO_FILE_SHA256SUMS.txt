@@ -1,7 +1,7 @@
 5a69cfb13a8cac052ddc067cf99cbc2f4c1189508871437e6f98bed04de9f8ec  ./.gitattributes
 98b769dc612ca2e4875fbcab01cfe5b7ec0ea8a78fdbe4201470cb8bf1f378f8  ./.github/workflows/publish-hallvalla-public.yml
 ebd4ad314954c82a8e870c54fb04d8a1826e353add69fe10e790fea398ebc985  ./.gitignore
-b8b62409130125bb176e84560c1e5e191c98f505e1c6f3055d925f61818bd864  ./README.md
+3fe3e16e09af0b7f2cd883fa118b7cfbc1f8d8b5272e4db2f18f98ddbfacb351  ./README.md
 4d1b8db12969bfe9988b601ca012e17a9ff5bbec1f6afd4ed767225fb44c1fa4  ./REPO_SETUP_FIRST_TIME.txt
 428aa0be5cc9e2740a42307b950d737fcf52d6c569e9e6f2413785e33d9a4ede  ./SECURITY.md
 93fce27023374e7a57b49a88c155f44f57725c6ff99e10e2af2ab7abb3f5c7da  ./android/README.md
@@ -65,6 +65,7 @@ def4caf320480b25333b6c80040697b18e2778e3c51f86399114f0c4a5d66edd  ./docs/game-bu
 b747835b3ebe8cf00a19ab0c3dae0452112d7d0b92473fd2a45bad9fd8a82cb2  ./docs/game-build/BUILD_20260915_137_CLEAN_MENU_CHROME.txt
 db48a88092461093869f4d40bf1123389ce37724a1cf4e79b43f8a2da4bdf225  ./docs/game-build/BUILD_20260915_138_MINE_DECK_FARM_BACK.txt
 366ec0ab5ce3624789ee32d4b30c54dd1f1e403dde76a46beabe473d46e0fca2  ./docs/game-build/BUILD_20260916_140_MAP1_STATUS_PACING.txt
+5faa711806f3c22b60503f443e6f158732b8a87039593b997af06b0aff4caa7d  ./docs/game-build/BUILD_20260916_148_DRAGON_CONTRACT_ARMY_XV.txt
 97c3a9c6238b734e74e2a884de84aa6fb6202f3df4db903a291e337007aa47ef  ./docs/game-build/CHANGELOG_20260908_MENU_RELOJ.txt
 0a4e7407abff0d768e1f3da9fd2b75b250b7b04fe070e7026ef79003c814f7c3  ./docs/game-build/CHANGELOG_20260908_MOV_CACHE_FIX.txt
 df6296fcc58d3372ee3a101da0418bf6ad42e2e960aa9420f81ab38550c50a39  ./docs/game-build/CHANGELOG_20260912_53.txt
@@ -129,7 +130,7 @@ b1ec528f300ddc27c989a461abf557658f2705f3d43c9ebe1539a2a52d1cb752  ./docs/game-bu
 73a0e5eb395f3d6168af7e67adfd4139e33b89ff34d2128c74c85b2b305b6629  ./docs/game-build/PERF_FIELD_FIGURES_LIGHT_TEST_20260908_8.txt
 e1c9c65282ee1a5927e51ec7523cece98c8128aea3893baeef4904e036e2d90b  ./docs/game-build/PVP_CLOSED_LEAGUES_20260910_31.txt
 33c361bea456ffe825643e2e5cd1197e522591554a826b16a39515a63185cae7  ./docs/game-build/PVP_LEAGUE_BOTS_20260910_37.txt
-15f2f08d177dc90f04b0f10e8714a5bc13dc9e6ff07c6300d605505e1a0a9320  ./docs/game-build/README_CURRENT_BUILD.txt
+5970481ba68b8fee71521baf5e2b2f6dd3c4c00657e5c887ef0eaa86a0c7fc48  ./docs/game-build/README_CURRENT_BUILD.txt
 4518987dece1739354a68da84ba320f562adcd694178a1550497f48c9877a155  ./docs/game-build/REALTIME_EXPERIMENTAL_20260912_71.txt
 618364854dd5642624c9e35a660492b08d2b9811f63f1941a8116e7396f521d9  ./docs/game-build/RULETA_BALANCE_20260908_5.txt
 5e23a383f40fc5efd3086d7c17c39b636c76d186d038bfa0f920cb77394fdd83  ./docs/game-build/RULETA_BALANCE_20260910_34.txt
@@ -819,14 +820,14 @@ b6a77b8a932a43f36d57cb74e72d19557068d054c27605dc7af75fba0ad331f0  ./web/assets/u
 1090d99e7921e9d7d56867778f36bd19161d93a18ddf6d36d0a88b2bc16ec2e0  ./web/assets/ui/vs_intro/vs_battlefield.webp
 b343b63496fb1605eb9a25dc30c3ee330f05607adc1c3436b2c17eb3e656890b  ./web/assets/ui/vs_intro/vs_emblem.webp
 e2d82e9b8a805e735793fbc96d6290c0021972ccfbe421f51c9cbdc68578b893  ./web/firebase-config.js
-b6a1ef91ba9e30eccb9b6a0d10df1bebea230e2675d0eaf14017999adadbdb2d  ./web/index.html
-4a3a3288aac6d0fb4715f7ee16dba26722aa63696f371c3288fd1ae11179ed83  ./web/js/bootstrap-loader.js
+ae95a1547258d426faad9f2c1074cda7c491b9f7bb448aa7f9bd1593c7c37d34  ./web/index.html
+a17ed186a0b4ac5fdae5de3e042c762887ce2d9e8ab4886ba2088b249843a0f3  ./web/js/bootstrap-loader.js
 77d6fc8aaf82a28ece106da6fe95d7e0c95d5e78b4ff743a7f12410a31003845  ./web/js/features/adventure.js
 58e6a324da411d15d29a5296749619221da7008013abdba0dda764817d5822d8  ./web/js/features/battle-layout.js
 9c0f488ad4efcc5af5dbf1f3b8e1658b0c499d9dea55945452cf75e60f2cc465  ./web/js/features/forge-layout.js
 c6f640f8f21344de146ec4271bb86afe2a7e69510f9c7b716f9201df29f8c54d  ./web/js/features/forge.js
 997a8bdef7f31b4bfd51128c4e5a018109766ce14d83c5ee320ada7503f658d0  ./web/js/features/hvdev.js
-5a963f4c581e7f7e86577ba25e27dcad78a59de5b5618d540a9733d9b4714cc6  ./web/js/features/pve.js
+c01be2e72323b23930a1313bbe65681acc0dce7d6a97ce8b14605264102ec5ca  ./web/js/features/pve.js
 16a8f150a3144b00da358b1889fd1cd00cbb2fda174415412901ab91c1cc1e3e  ./web/js/features/pvp.js
 9209a96ab2ea3112cd30a1e793962f4e9137ee330c193ffc6fe757d174374df5  ./web/js/features/shop.js
 88fc711a24deb0844b629ea644de2725c8aeb28c02b89de50a950c4f690f67f2  ./web/js/features/universal-layout-runtime.js
@@ -849,10 +850,10 @@ af5b489672e0f3e0e48ec1c1f255b9b03949e432bb4cbc33b4b0159f27b4fd9b  ./web/js/parts
 322def3378d54f6abf1ca5cc8a2f7ceb603e020bb0b5dd8d225170372241b3bd  ./web/js/parts/14-adventure-engine-ui.js
 e44fbdc500d946ce0e5acd1a395aecec460d33ec322fb69191f0a8cc266e7d8b  ./web/js/parts/15-settings-tuners-events.js
 b4c68feaa1c017293987287ac9a3079bdc7c1a995cf8db62f9f3f11e72e27ba3  ./web/js/parts/16-exact-guides-mobile.js
-9c8f645f730a26d62e403afc795c40b21720fb957f58209a040bc53a291bc34e  ./web/js/parts/17-dragon-contracts.js
+3ae83addf464a94f5e56881c8e078e0edcd4355eecf268608f36bee1d7a419ef  ./web/js/parts/17-dragon-contracts.js
 1ff144575b194ba2545d1bcf061e789a1cb647d679a3274fbce3de8d3d66de4a  ./web/js/parts/18-dragon-egg.js
 f0e52063c31a878b029c1a5b97d7025e717c45341e577388c7c6bb6e1caa7295  ./web/js/parts/19-field-figures-3d.js
 0759e989750c7ff993fffd6d3bb26500f81f0a7c773154d354059c458404a9df  ./web/js/parts/20-gamepad-controls.js
 86c32b1f81dd14a4668c9ab8e87266379ae9c4bdef2771313da7ad05f27c3494  ./web/js/parts/21-realtime-experimental.js
-5c4c0c6ee8393c756cc37a728ad753575f24875bbd409a837c288ab8020148b0  ./web/service-worker.js
+dd8296b68c96586792bf07364f19d8d4d8c2dead0262d4ce006cc1bb6f3adde3  ./web/service-worker.js
 5ced312e4ffce7e05923c4e63431d6c29f021df417d54394e52eebd5c77b9dab  ./web/styles.css

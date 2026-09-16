@@ -17,8 +17,8 @@ The workflow `.github/workflows/publish-hallvalla-public.yml` builds a Pages art
 The APK signing key is deliberately NOT included in this repository package.
 
 ## Current versions
-- Browser/gameplay base: v146
-- Public distribution shell: v146 (Mapas 4–6 Tier 5 + Aquiles extremo; conserva Mina/mazo, Volver universal y farmeo diario)
+- Browser/gameplay base: v148
+- Public distribution shell: v148 (Contratos de Dragón con ejército elemental XV; conserva Mapas 4–6, Aquiles, Mina/mazo, Volver universal y farmeo diario)
 - Android APK: v131 / versionCode 131 / `com.hallvalla.game`
 
 ## First setup
@@ -46,3 +46,12 @@ Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
 - A partir del Mapa 15 las unidades permanecen en Rango XV, por lo que la progresión puede continuar a 30+ mapas sin exceder el sistema actual de 15 rangos.
 - La regla se aplica al mazo enemigo completo, incluidos héroes y unidades de aperturas forzadas.
 - El evento Beastmaster conserva su regla especial de rango máximo.
+
+
+## v148 · Contratos de Dragón — ejército elemental XV
+- Cada uno de los tres jefes de contrato usa el mismo núcleo de 9 dragones: 1 Bebé, 1 Joven y 1 Adulto de Relámpago, Fuego e Hielo.
+- Las 9 invocaciones enemigas entran siempre con Maestría XV; los dragones del jugador continúan iniciando en Maestría I y progresan normalmente.
+- El mazo de contrato permanece en 25 cartas (Tier 4 actual): 9 dragones + 16 cartas exclusivamente de magia/trampa.
+- Arsenal de apoyo: 3 Fireball, 3 Maldición de arena, 2 Parálisis, 2 Veneno y las seis trampas de cacería (Cepo, Foso, Red, Carnada, Estacas y Jaula).
+- Apertura guiada: los tres Dragones Bebé y Parálisis quedan disponibles en la mano inicial del modo por turnos; en TR el mazo completo sigue funcionando como arsenal.
+- El constructor del contrato queda exento del normalizador general de 70% unidades para respetar exactamente esta composición.

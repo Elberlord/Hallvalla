@@ -1315,7 +1315,7 @@ function recordAdaptiveCampaignBattle(pub){
 // Mapa 1 = I, Mapa 2 = II ... Mapa 15+ = XV. El guardián previo queda en I.
 // Los eventos Beastmaster conservan su regla especial de rango máximo.
 function getAdventureEnemyUnitMasteryRank(battle){
-  if(battle?.beastEvent)return UNIT_MASTERY_MAX_RANK;
+  if(battle?.beastEvent||battle?.dragonContract)return UNIT_MASTERY_MAX_RANK;
   if(!battle||battle.isGuardian)return 1;
   const chapter=typeof getAdventureChapterForBattle==="function"?getAdventureChapterForBattle(battle):null;
   const major=Math.floor(parseFloat(String(chapter?.number||"1").replace(",","."))||1);
@@ -1332,6 +1332,33 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
   };
   const enemyLevel=typeof getAdventureEnemyLeaderLevel==="function"?getAdventureEnemyLeaderLevel(battle):Math.max(1,Number(battle?.aiLevel||1)||1);
   const targetDeckSize=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(enemyLevel):DECK_RULES.drawDeckSize;
+
+  // v148 · Los Contratos de Dragón no pasan por el normalizador 70% unidades.
+  // Su identidad exige exactamente 9 dragones + 16 magias/trampas (25 cartas).
+  // Las nueve invocaciones son veteranas XV; el dragón-jefe conserva sus stats
+  // especiales de contrato y no usa esta bonificación de maestría de unidad.
+  if(battle?.dragonContract&&Array.isArray(battle?.enemyFixedDeck)&&battle.enemyFixedDeck.length){
+    const templates=expandEnemyFixedDeck(battle.enemyFixedDeck).slice(0,targetDeckSize);
+    if(templates.length!==targetDeckSize){
+      console.warn(`[HallValla] Contrato dragón ${battle.id}: mazo ${templates.length}/${targetDeckSize}.`);
+    }
+    const makeContractCard=(template)=>{
+      const card=toEnemyCard(template);
+      return card?.type==="unit"?{...card,masteryRank:UNIT_MASTERY_MAX_RANK,eventMaxLevel:true,dragonContractArmy:true}:card;
+    };
+    const forced=[];
+    let pool=templates.slice();
+    for(const rawKey of (battle.enemyForcedOpeningCards||[])){
+      if(forced.length>=4)break;
+      const key=String(rawKey||"");
+      const index=pool.findIndex(card=>String(card?.key||"")===key);
+      if(index<0)continue;
+      forced.push(pool[index]);
+      pool.splice(index,1);
+    }
+    const draw=drawCards(shuffle(pool.map(makeContractCard)),[],Math.max(0,4-forced.length));
+    return{deck:draw.deck,hand:[...forced.map(makeContractCard),...draw.hand]};
+  }
   if(isAdventureAdaptiveCampaignBattle(battle)){
     const adaptiveTemplates=buildAdaptiveCampaignDeckTemplates(battle,enemyLeaderType,targetDeckSize);
     if(adaptiveTemplates.length!==targetDeckSize){

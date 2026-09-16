@@ -1,0 +1,10 @@
+HallValla v148 — Contratos de Dragón: ejército elemental Maestría XV
+
+- Cada contrato (Relámpago, Fuego, Hielo) usa exactamente 25 cartas.
+- 9 unidades: un Bebé, un Joven y un Adulto de cada elemento (Relámpago, Fuego, Hielo).
+- Las 9 unidades enemigas del contrato entran con Maestría XV.
+- 16 cartas de apoyo: 3 Fireball, 3 Maldición de arena, 2 Parálisis, 2 Veneno, Cepo de Hierro, Foso Cubierto, Red de Caza, Carnada Ámbar, Estacas de Bambú y Jaula de Cuerda.
+- Apertura por turnos: Bebé Relámpago, Bebé Fuego, Bebé Hielo y Parálisis.
+- En Tiempo Real el mazo completo permanece disponible como arsenal.
+- La bonificación XV es exclusiva del ejército enemigo del evento. Los dragones criados por el jugador conservan su progresión de Maestría normal desde Rango I.
+- El jefe adulto conserva sus estadísticas especiales del contrato; la Maestría XV se aplica a sus invocaciones de dragón.

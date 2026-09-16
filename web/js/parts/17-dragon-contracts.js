@@ -5,6 +5,22 @@ const DRAGON_CONTRACT_ELEMENT_ORDER=["lightning","fire","ice"];
 const DRAGON_CONTRACT_UNLOCK_LEVEL=7;
 const DRAGON_CONTRACT_ENTRY_GOLD_COST=1000;
 
+/* v148 · Ejército canónico de los Contratos de Dragón.
+   Cada jefe lleva exactamente 1 Bebé, 1 Joven y 1 Adulto de cada elemento
+   (Relámpago/Fuego/Hielo): 9 dragones. El resto del mazo son solo magias
+   y trampas. Las 9 invocaciones enemigas del contrato entran con Maestría XV. */
+const DRAGON_CONTRACT_ARMY_DECK=Object.freeze([
+  ["baby_lightning_dragon",1],["baby_fire_dragon",1],["baby_ice_dragon",1],
+  ["young_lightning_dragon",1],["young_fire_dragon",1],["young_ice_dragon",1],
+  ["adult_lightning_dragon",1],["adult_fire_dragon",1],["adult_ice_dragon",1],
+  ["fireball",3],["bolt",3],["paralysis_spell",2],["poison_spell",2],
+  ["iron_jaw_trap",1],["covered_pit",1],["hunting_net",1],
+  ["blood_bait",1],["tracking_smoke",1],["rope_cage",1]
+]);
+const DRAGON_CONTRACT_FORCED_OPENING=Object.freeze([
+  "baby_lightning_dragon","baby_fire_dragon","baby_ice_dragon","paralysis_spell"
+]);
+
 const DRAGON_CONTRACT_DEFS=Object.freeze({
   lightning:Object.freeze({
     id:"dragon_contract_lightning",
@@ -59,10 +75,13 @@ const DRAGON_CONTRACT_CHAPTER=Object.freeze({
     id:def.id,num:index+1,dragonContract:true,dragonElement:def.element,
     title:def.title,enemyName:def.enemyName,enemyLeaderType:def.leaderType,enemyLeaderLevel:9,
     enemyLeaderPortrait:def.portrait,image:def.fieldFigure,
-    enemyIntro:`${def.desc}\n\nEl dragón permanece anclado en su guarida. No atacará hasta que una unidad rival entre en su radio de 5 casillas. Después alternará dos ataques directos y un ataque elemental de área.`,
+    enemyIntro:`${def.desc}\n\nEl dragón jefe permanece anclado en su guarida y despierta cuando una unidad rival entra en su radio de 5 casillas. A su alrededor despliega un ejército elemental de nueve dragones veteranos —Bebé, Joven y Adulto de Relámpago, Fuego e Hielo— todos con Maestría XV, apoyados solo por magias y trampas.`,
     xp:def.xp,gold:def.gold,entryGoldCost:DRAGON_CONTRACT_ENTRY_GOLD_COST,rewardDragonEgg:true,cardPack:false,aiLevel:30,aiDrawBonus:0,aiHonorBonus:0,
-    aiStyle:"Jefe único inmóvil · Vuelo · ciclo directo/directo/elemental",
-    desc:def.desc
+    enemyFixedDeck:DRAGON_CONTRACT_ARMY_DECK.map(entry=>[entry[0],entry[1]]),
+    enemyForcedOpeningCards:[...DRAGON_CONTRACT_FORCED_OPENING],
+    dragonArmyMasteryRank:15,
+    aiStyle:"Jefe dragón + ejército elemental XV · 9 dragones · magia y trampas",
+    desc:`${def.desc} Lo acompaña un ejército de nueve dragones veteranos: Bebé, Joven y Adulto de Relámpago, Fuego e Hielo, todos con Maestría XV.`
   }))
 });
 const DRAGON_CONTRACT_BATTLES=Object.freeze(Object.fromEntries(DRAGON_CONTRACT_CHAPTER.battles.map(b=>[b.id,b])));
