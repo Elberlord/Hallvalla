@@ -1023,7 +1023,7 @@ const BASIC_MAGIC_TRAP_PACK = [
     damage:2,
     burnDamage:1,
     burnTurns:2,
-    text:"Hace 2 de daño a una unidad o líder rival. Si el objetivo es una unidad, aplica Quemadura: +1 daño directo al final de cada turno durante 2 turnos. No afecta líderes."
+    text:"Hace 2 de daño a una unidad o líder rival. Si el objetivo es una unidad, aplica Quemadura: +1 daño directo por ciclo hasta que sea curada o destruida. Mientras arde, su Destreza es 0. No afecta líderes."
   },
   {
     key:"heal",
@@ -1111,7 +1111,7 @@ const BASIC_MAGIC_TRAP_PACK = [
     spell:"poison",
     poisonTurns:3,
     poisonDamage:1,
-    text:"Envenena una invocación rival durante 3 turnos. Pierde 1 Vida al inicio de su turno y el daño se duplica en cada tick: 1 → 2 → 4. No afecta líderes."
+    text:"Envenena una invocación rival de forma persistente. El daño progresa 1 → 2 → 4 y después continúa causando 4 por ciclo hasta que sea curada o destruida. No afecta líderes."
   }
 ];
 

@@ -458,9 +458,9 @@ function resolveTaipanPoisonAfterHit(units,attacker,target,hit,hpLoss){
     out=out.map(u=>u.id===current.id?resolveBlessedArmorTransition(u,{...u,hp:0,damagedThisTurn:true}):u);
     return{units:out,text:` Mordida Letal: ${current.name} ya estaba envenenada y cae al recibir Veneno otra vez.`,statusFxEvent:makeStatusFxEvent("poison_apply",current,4),lethal:true};
   }
-  out=out.map(u=>u.id===current.id?{...u,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonSourceId:attacker.id,poisonSourceName:attacker.name}:u);
+  out=out.map(u=>u.id===current.id?{...u,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonBaseDamage:1,poisonMaxDamage:4,poisonPersistent:true,poisonSourceId:attacker.id,poisonSourceName:attacker.name}:u);
   const poisoned=out.find(u=>u.id===current.id)||current;
-  return{units:out,text:` ${current.name} queda envenenado: 1/2/4 durante 3 turnos.`,statusFxEvent:makeStatusFxEvent("poison_apply",poisoned,1),lethal:false};
+  return{units:out,text:` ${current.name} queda envenenado: 1/2/4 persistente; después continuará en 4 por ciclo hasta curación o muerte.`,statusFxEvent:makeStatusFxEvent("poison_apply",poisoned,1),lethal:false};
 }
 function hasBloodMist(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="assassin"&&hasActiveLeader(owner,units)&&getLeaderAbilityForOwner(owner,units)==="blood_mist"}
 function hasShadowMistAssassin(unit,units=publicState?.units||[]){
@@ -820,10 +820,10 @@ async function resolveSharedAttackOutcome({
     }else{
       units=units.map(u=>{
         if(u.id!==d.id)return u;
-        return {...u,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonSourceId:a.id,poisonSourceName:a.name};
+        return {...u,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonBaseDamage:1,poisonMaxDamage:4,poisonPersistent:true,poisonSourceId:a.id,poisonSourceName:a.name};
       });
       poisonStatusEvent=makeStatusFxEvent("poison_apply",units.find(u=>u.id===d.id)||d,1);
-      bleedText+=` ${d.name} queda envenenado por Flecha del Dharma: 1/2/4 durante 3 turnos.`;
+      bleedText+=` ${d.name} queda envenenado por Flecha del Dharma: 1/2/4 persistente; después continuará en 4 por ciclo hasta curación o muerte.`;
     }
   }
   if(hit.hit&&hpLoss>0&&ownerHasBeastmasterVenom(a.owner,units)&&units.some(u=>u.id===d.id)){

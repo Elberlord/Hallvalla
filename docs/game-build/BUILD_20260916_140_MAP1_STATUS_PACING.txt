@@ -1,0 +1,38 @@
+HallValla v140 — 2026-09-16
+
+CAMBIOS DE JUEGO (solo WEB; no requiere recompilar APK)
+
+1. AVENTURA MAPA 1
+- 1-2 Guerrero del puente:
+  - Lancero solar: 2 -> 1
+  - Samurai Naginata: 1 -> 0
+  - Samurai Katana: 1 -> 3
+  - Total del mazo: 10 cartas.
+- 1-5 Richard Corazón de León:
+  - Guardia de piedra: 2 -> 0
+  - Samurai Katana: 1 -> 3
+  - Total del mazo: 10 cartas.
+- 1-1, 1-3 y 1-4: sin cambios.
+
+2. QUEMADURA
+- Ya no desaparece por tiempo.
+- Hace daño en cada ciclo táctico hasta que la unidad sea curada/limpiada o muera.
+- Una unidad con Quemadura tiene Destreza efectiva 0 mientras arde.
+- Los líderes siguen sin recibir Quemadura.
+
+3. VENENO
+- Ya no desaparece por tiempo.
+- Mantiene progresión 1/2/4 (o 2/4/8 según fuente) y después permanece en el daño máximo hasta curación o muerte.
+- Las curaciones con limpieza pueden remover Veneno; los estados especiales que bloquean curación mantienen su restricción.
+
+4. CURACIÓN
+- Las cartas/habilidades que tengan limpieza de estados pueden eliminar Sangrado, Veneno y Quemadura; curar HP por sí solo no elimina estos estados.
+- Purificación de la Acólita sigue pudiendo eliminar Veneno y Quemadura.
+
+5. RITMO TR
+- Ataque automático: 10 s -> 12 s.
+- Movimiento base automático: 8 s -> 10 s (la fórmula por MOV se conserva).
+- MANÁ, IA de despliegue, soporte, estados y Firebase: sin cambios.
+
+APK
+- No se modifica Android. La APK de v139 puede probar este build después de publicar web/.

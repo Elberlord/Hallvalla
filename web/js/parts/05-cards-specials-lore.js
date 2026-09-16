@@ -91,7 +91,7 @@ const BEAST_CARD_TEMPLATES=[
   {key:"constrictor_snake",name:"Serpiente Constrictora",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.constrictor,rarity:"Básica",cost:2,hp:3,atk:2,guard:1,dex:1,agi:9,mov:2,range:1,beast:true,text:"Constricción: si hace daño real, el objetivo pierde -1 MOV y -1 AGI hasta el siguiente ciclo táctico. Agarre: si ya tenía MOV reducido, no podrá moverse durante el siguiente ciclo táctico."},
   {key:"african_buffalo",name:"Búfalo Africano",type:"unit",icon:"🐃",portrait:CARD_PORTRAITS.buffalo,rarity:"Épica",cost:3,hp:9,atk:9,guard:5,dex:1,agi:5,mov:2,range:1,beast:true,text:"Instinto de Cornada: cuando una unidad enemiga adyacente declare un ataque cuerpo a cuerpo contra él, hace 2 daño primero. Si el atacante cae, su ataque se cancela."},
   {key:"peregrine_falcon",name:"Halcón Peregrino",type:"unit",icon:"🦅",portrait:CARD_PORTRAITS.peregrineFalcon,rarity:"Gloriosa",cost:3,hp:1,atk:2,guard:0,dex:2,agi:15,mov:4,range:1,beast:true,aerial:true,text:"Aéreo: solo unidades con rango mayor a 3 o Antiaéreo pueden atacarlo. Ataque en Picada: si se movió 3+ casillas antes de atacar, siempre golpea y hace 3 daño; no usa PREC/EVA. Si impacta contra Guardia, recibe daño igual a la Guardia actual del objetivo."},
-  {key:"inland_taipan",name:"Taipán del Interior",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.inlandTaipan,rarity:"Gloriosa",cost:3,hp:1,atk:1,guard:0,dex:1,agi:13,mov:2,range:1,beast:true,text:"Mordida Letal: si hace daño real, aplica Veneno 1/2/4 durante 30 s. Si una unidad normal ya estaba envenenada y recibe Veneno otra vez, muere. El líder sí se envenena, pero no muere automáticamente por doble mordida de la misma unidad."},
+  {key:"inland_taipan",name:"Taipán del Interior",type:"unit",icon:"🐍",portrait:CARD_PORTRAITS.inlandTaipan,rarity:"Gloriosa",cost:3,hp:1,atk:1,guard:0,dex:1,agi:13,mov:2,range:1,beast:true,text:"Mordida Letal: si hace daño real, aplica Veneno 1/2/4. Después de alcanzar 4, el Veneno sigue causando 4 por ciclo hasta curación o muerte. Si una unidad normal ya estaba envenenada y recibe Veneno otra vez, muere. El líder sí se envenena, pero no muere automáticamente por doble mordida de la misma unidad."},
   {key:"african_lion",name:"León Africano",type:"unit",icon:"🦁",portrait:CARD_PORTRAITS.africanLion,rarity:"Mítica",cost:4,hp:6,atk:7,guard:2,dex:3,agi:11,mov:3,range:1,beast:true,text:"Rugido del Rey: EFFECT revela unidades enemigas con Sigilo en radio 3. Presencia Alfa: las unidades enemigas en rango 1 alrededor del León reciben Miedo (-3 AT hasta el siguiente ciclo táctico). Liderazgo de Manada: unidades aliadas en rango 2 alrededor del León obtienen +2 AT."},
   {key:"bengal_tiger",name:"Tigre de Bengala",type:"unit",icon:"🐅",portrait:CARD_PORTRAITS.bengalTiger,rarity:"Mítica",cost:4,hp:7,atk:8,guard:2,dex:3,agi:12,mov:3,range:1,beast:true,stealth:true,text:"Sigilo de Depredador: no puede ser objetivo directo mientras esté oculto. Salto de Emboscada: desde Sigilo puede atacar con +2 alcance de movimiento. Desgarro Salvaje: 50% de Sangrado al hacer daño real; 100% si atacó desde Sigilo."},
   {key:"white_rhino",name:"Rinoceronte Blanco",type:"unit",icon:"🦏",portrait:CARD_PORTRAITS.whiteRhino,rarity:"Legendaria",cost:5,hp:12,atk:12,guard:9,dex:1,agi:4,mov:2,range:1,beast:true,text:"Embestida Devastadora: si se mueve 2 casillas en línea recta antes de atacar, usa AT 22. Después de atacar con Embestida, impacte o no, el Rinoceronte Blanco queda Aturdido hasta el siguiente ciclo táctico: no puede moverse, defenderse ni atacar; su Guardia no cambia y su Destreza/Agilidad se reducen a la mitad. Bestia Torpe: no se beneficia de bonos de DX ni AGI."},
@@ -373,7 +373,7 @@ function applyBeastmasterVenomToTarget(target,source,turns=5){
   const adjusted=applyInstinctCollarDuration(target,turns);
   target=adjusted.unit;turns=adjusted.turns;
   const existingTurns=Math.max(0,Number(target.poisonTurns||0));
-  return {...target,poisonTurns:Math.max(existingTurns,turns),poisonStage:target.poisonStage||1,poisonDamage:Math.max(1,Number(target.poisonDamage||0)||1),poisonSourceId:source.id,poisonSourceName:source.name||"Veneno de la Manada"};
+  return {...target,poisonTurns:Math.max(existingTurns,turns),poisonStage:target.poisonStage||1,poisonDamage:Math.max(1,Number(target.poisonDamage||0)||1),poisonBaseDamage:Math.max(1,Number(target.poisonBaseDamage||1)),poisonMaxDamage:Math.max(4,Number(target.poisonMaxDamage||0)),poisonPersistent:true,poisonSourceId:source.id,poisonSourceName:source.name||"Veneno de la Manada"};
 }
 function isIgnoredByBeastTrap(unit,trap,units=publicState?.units||[]){return !!(trap&&unit&&unit.owner===trap.owner&&isBeastUnit(unit)&&ownerHasBeastmaster(trap.owner,units));}
 function getCellBeastTrapAt(x,y,state=publicState){return getBeastTraps(state).find(t=>t.x===x&&t.y===y)||null;}
@@ -400,7 +400,8 @@ function applyBasicPoisonSpell(target,sourceName="Veneno",turns=3,startDamage=1)
   if(isPoisonImmuneUnit(target))return clearPoisonStatus(target);
   const existingTurns=Math.max(0,Number(target.poisonTurns||0));
   const existingDamage=Math.max(0,Number(target.poisonDamage||0));
-  return {...target,poisonTurns:Math.max(existingTurns,Math.max(1,Number(turns)||3)),poisonStage:target.poisonStage||1,poisonDamage:Math.max(existingDamage,Math.max(1,Number(startDamage)||1)),poisonSourceName:sourceName};
+  const baseDamage=Math.max(1,Number(target.poisonBaseDamage||startDamage)||1);
+  return {...target,poisonTurns:Math.max(existingTurns,Math.max(1,Number(turns)||3)),poisonStage:target.poisonStage||1,poisonDamage:Math.max(existingDamage,Math.max(1,Number(startDamage)||1)),poisonBaseDamage:baseDamage,poisonMaxDamage:Math.max(Number(target.poisonMaxDamage||0),baseDamage*4),poisonPersistent:true,poisonSourceName:sourceName};
 }
 function canDirectlyTarget(source,target){if(!canTargetStealth(source,target))return false;if(source?.spell==="damage"&&source?.leaderType==="mage"&&target?.leader)return false;return true;}
 
@@ -767,7 +768,7 @@ function applyErictoUpkeepAtTurnEnd(units,owner){
 }
 function resetErictoReanimatedTransientState(snapshot){
   const n={...(snapshot||{})};
-  ["id","x","y","nexoX","nexoY","owner","hp","moved","acted","defenseModeReady","damagedThisTurn","lastMoveStraightDistance","lastMoveDistance","lastMoveDx","lastMoveDy","lastMoveTurnKey","summonedTurnKey","summonedTurn","summonedPhase","yiSunDebuffed","tempAtkBuff","tempGuardBuff","tempDexBuff","tempAgiBuff","tempMovBuff","tempAtkDebuff","tempGuardDebuff","tempDexDebuff","tempAgiDebuff","tempMovDebuff","burnTurns","burnDamage","burnSource","bleedTurns","bleedDamage","bleedSource","poisonTurns","poisonDamage","poisonSource","stunnedUntilTurnKey","noDefTurnKey","noHealTurnKey","solomonOrder","solomonUsedEntities","solomonCurrentEntity","solomonPending","solomonSummon","solomonSourceId","solomonSealSourceId"].forEach(k=>delete n[k]);
+  ["id","x","y","nexoX","nexoY","owner","hp","moved","acted","defenseModeReady","damagedThisTurn","lastMoveStraightDistance","lastMoveDistance","lastMoveDx","lastMoveDy","lastMoveTurnKey","summonedTurnKey","summonedTurn","summonedPhase","yiSunDebuffed","tempAtkBuff","tempGuardBuff","tempDexBuff","tempAgiBuff","tempMovBuff","tempAtkDebuff","tempGuardDebuff","tempDexDebuff","tempAgiDebuff","tempMovDebuff","burnTurns","burnDamage","burnPersistent","burnSource","bleedTurns","bleedDamage","bleedSource","poisonTurns","poisonDamage","poisonBaseDamage","poisonMaxDamage","poisonPersistent","poisonSource","stunnedUntilTurnKey","noDefTurnKey","noHealTurnKey","solomonOrder","solomonUsedEntities","solomonCurrentEntity","solomonPending","solomonSummon","solomonSourceId","solomonSealSourceId"].forEach(k=>delete n[k]);
   return n;
 }
 function makeErictoReanimatedUnit(ericto,record,cell){
@@ -1780,8 +1781,8 @@ const DET_CARD_EFFECT_SECTIONS={
   ],
   paralysis_spell:[{title:"PARÁLISIS",body:"Paraliza una invocación rival; mientras dure no puede moverse, atacar, defender ni contraatacar. No afecta líderes.",icon:"assets/ui/status_icons/status_paralysis.webp",kind:"debuff"}],
   poison_spell:[
-    {title:"VENENO",body:"Envenena una invocación rival. No afecta líderes y respeta inmunidades al Veneno.",icon:"assets/ui/status_icons/status_poison.webp",kind:"debuff"},
-    {title:"DAÑO ESCALABLE",body:"El daño de Veneno aumenta en cada pulso según la secuencia de la carta.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"}
+    {title:"VENENO",body:"Envenena una invocación rival. No afecta líderes y respeta inmunidades al Veneno. El estado no desaparece por tiempo: exige curación/limpieza o termina con la muerte de la unidad.",icon:"assets/ui/status_icons/status_poison.webp",kind:"debuff"},
+    {title:"DAÑO ESCALABLE",body:"El daño de Veneno aumenta hasta el máximo de su secuencia y luego continúa infligiendo ese valor en cada ciclo.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"}
   ],
 
   // Trampas de cacería / Beast Master
@@ -2049,7 +2050,7 @@ function sanitizeUndeadReviveSnapshot(u){
   if(!u)return null;
   const n={...u};
   for(const k of [
-    "burnTurns","burnDamage","burnSourceName","bleedDamage","bleedSourceName","bleedTurnsRemaining","poisonTurns","poisonDamage","poisonStage","poisonSourceId","poisonSourceName","noHealWhilePoisoned",
+    "burnTurns","burnDamage","burnPersistent","burnSourceName","bleedDamage","bleedSourceName","bleedTurnsRemaining","poisonTurns","poisonDamage","poisonStage","poisonBaseDamage","poisonMaxDamage","poisonPersistent","poisonSourceId","poisonSourceName","noHealWhilePoisoned",
     "frozenSource","dragonFrostTurns","dragonFrostFresh","dragonFrostSource","electrocutionTurns","electrocutionFresh","electrocutionSource","paralysisTurns","paralysisSource",
     "noMoveTurnKey","noAttackTurnKey","noDefTurnKey","noCounterTurnKey","incineratedOnDeath","lastFatalDamageType","damagedThisTurn","fullPlateReducedDamage"
   ])delete n[k];
@@ -2137,6 +2138,9 @@ function clearPoisonStatus(u){
   delete n.poisonStage;
   delete n.poisonSourceId;
   delete n.poisonSourceName;
+  delete n.poisonBaseDamage;
+  delete n.poisonMaxDamage;
+  delete n.poisonPersistent;
   delete n.noHealWhilePoisoned;
   return n;
 }
@@ -2315,7 +2319,7 @@ function applyBleedingToOwnerAtTurnStart(units,owner){
   return {units:out,logs,statusFxEvent,floatFxEvent};
 }
 
-function hasBurning(u){return !!u&&!u.leader&&Number(u.burnTurns||0)>0&&Number(u.burnDamage||0)>0;}
+function hasBurning(u){return !!u&&!u.leader&&Number(u.burnDamage||0)>0&&(Number(u.burnTurns||0)>0||u.burnPersistent===true);}
 function applyBurnToUnit(target,sourceName="Fireball",turns=2,damage=1){
   if(!target||target.leader)return target;
   if(typeof getUnitElementalAffinity==="function"&&getUnitElementalAffinity(target,"fire")===0)return target;
@@ -2324,6 +2328,7 @@ function applyBurnToUnit(target,sourceName="Fireball",turns=2,damage=1){
   const next={...target};
   next.burnTurns=Math.max(Number(next.burnTurns||0),Math.max(1,Number(turns||2)));
   next.burnDamage=Math.max(Number(next.burnDamage||0),Math.max(1,Number(damage||1)));
+  next.burnPersistent=true;
   next.burnSourceName=sourceName||next.burnSourceName||"Quemadura";
   return next;
 }
@@ -2339,7 +2344,7 @@ function applyArcaneAdeptRandomStatus(target,source){
   if(roll===1){
     if(isPoisonImmuneUnit(target))return {unit:clearPoisonStatus(target),label:"ignora el Veneno"};
     const adjusted=applyInstinctCollarDuration(target,3);
-    return {unit:{...adjusted.unit,poisonTurns:adjusted.turns,poisonStage:1,poisonDamage:1,poisonSourceId:source?.id||"",poisonSourceName:source?.name||"Adepto Arcano"},label:"queda con Veneno leve"};
+    return {unit:{...adjusted.unit,poisonTurns:adjusted.turns,poisonStage:1,poisonDamage:1,poisonBaseDamage:1,poisonMaxDamage:4,poisonPersistent:true,poisonSourceId:source?.id||"",poisonSourceName:source?.name||"Adepto Arcano"},label:"queda con Veneno leve"};
   }
   if(roll===2){
     return {unit:applyBurnToUnit(target,source?.name||"Adepto Arcano",2,1),label:"queda con Quemadura leve"};
@@ -2364,14 +2369,12 @@ function applyBurnAtTurnEnd(units){
   let out=(units||[]).map(u=>{
     if(!hasBurning(u))return u;
     const dmg=Math.max(1,Number(u.burnDamage||1));
-    const turnsBefore=Math.max(1,Number(u.burnTurns||1));
     if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("burn_tick",u,dmg);
     if(!floatFxEvent)floatFxEvent=makeFloatFxEvent("damage",u,dmg,{iconText:"🔥"});
-    logs.push(`${u.name} sufre ${dmg} daño directo por Quemadura (${turnsBefore} ciclo${turnsBefore===1?"":"s"} táctico${turnsBefore===1?"":"s"} restante${turnsBefore===1?"":"s"}).`);
+    logs.push(`${u.name} sufre ${dmg} daño directo por Quemadura. La Quemadura persiste hasta ser curada o hasta destruir la unidad; mientras arde, su Destreza es 0.`);
     let next=(typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(u,dmg).unit:resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,damagedThisTurn:true}));
-    next={...next,burnTurns:turnsBefore-1};
+    next={...next,burnTurns:Math.max(1,Number(u.burnTurns||1)),burnPersistent:true};
     if(isUndeadUnit(next)&&Number(next.hp||0)<=0)next={...next,incineratedOnDeath:true,lastFatalDamageType:"fire"};
-    if(next.burnTurns<=0){delete next.burnTurns;delete next.burnDamage;delete next.burnSourceName;}
     return next;
   });
   const fallenIds=out.filter(u=>u.hp<=0).map(u=>u.id);

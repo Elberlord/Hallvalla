@@ -5863,7 +5863,7 @@ async function adventureEnemyTurn(){
     removeCard(choice.card);
     markAiSpellVisual(choice.card);
     const affinityText=spellAffinityMultiplier===0?" · INMUNE al elemento":spellAffinityMultiplier>1?` · DEBILIDAD elemental ×${spellAffinityMultiplier}`:spellAffinityMultiplier<1?` · RESISTENCIA elemental ×${spellAffinityMultiplier}`:"";
-    logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} recibe ${actualSpellDamage} daño mágico directo${affinityText}${originalTarget.key==="honey_badger"?" tras Armadura Natural":""}${fatalSaveTriggered?". Último Aliento evita la derrota":""}${appliesBurn&&damagedTarget?" y queda con Quemadura: +1 daño directo al final de cada turno durante 2 turnos":""}${appliesSandSlow&&damagedTarget?` y pierde -${sandSlowAmount} MOV permanente`:""}.${bloodVictory.logs.length?` ${bloodVictory.logs.join(" ")}`:""}`);
+    logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} recibe ${actualSpellDamage} daño mágico directo${affinityText}${originalTarget.key==="honey_badger"?" tras Armadura Natural":""}${fatalSaveTriggered?". Último Aliento evita la derrota":""}${appliesBurn&&damagedTarget?" y queda con Quemadura persistente: +1 daño directo por ciclo y Destreza 0 hasta curación o muerte":""}${appliesSandSlow&&damagedTarget?` y pierde -${sandSlowAmount} MOV permanente`:""}.${bloodVictory.logs.length?` ${bloodVictory.logs.join(" ")}`:""}`);
     return true;
   };
 
@@ -5973,7 +5973,7 @@ async function adventureEnemyTurn(){
     honor-=effectiveCardCost(choice.card,2);
     removeCard(choice.card);
     markAiSpellVisual(choice.card);
-    logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} recibe Veneno durante ${choice.card.poisonTurns||3} turnos. El daño inicia en ${choice.card.poisonDamage||1} y se duplica en cada tick.`);
+    logs.push(`Rival usa ${choice.card.name}: ${originalTarget.name} recibe Veneno persistente. El daño inicia en ${choice.card.poisonDamage||1}, escala hasta su máximo y luego continúa por ciclo hasta curación o muerte.`);
     return true;
   };
 

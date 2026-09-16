@@ -668,8 +668,8 @@ function purifyAcolyteStatus(unit,statusKey){
   const n={...(unit||{})};
   const del=(...keys)=>keys.forEach(key=>delete n[key]);
   if(statusKey==="bleed")del("bleedDamage","bleedSourceName","bleedTurnsRemaining","bleedTurns","bleedSource");
-  else if(statusKey==="poison")del("poisonDamage","poisonTurns","poisonStage","poisonSourceId","poisonSourceName","poisonSource","noHealWhilePoisoned");
-  else if(statusKey==="burn")del("burnTurns","burnDamage","burnSourceName","burnSource");
+  else if(statusKey==="poison")del("poisonDamage","poisonTurns","poisonStage","poisonBaseDamage","poisonMaxDamage","poisonPersistent","poisonSourceId","poisonSourceName","poisonSource","noHealWhilePoisoned");
+  else if(statusKey==="burn")del("burnTurns","burnDamage","burnPersistent","burnSourceName","burnSource");
   else if(statusKey==="veil_curse")return clearVeilCurseStatus(n);
   else if(statusKey==="fear"){
     n.tempAtkDebuff=Math.max(0,Number(n.tempAtkDebuff||0)-3);del("fearTurnKey","fearSourceName","lionFearAppliedTurnKey");
