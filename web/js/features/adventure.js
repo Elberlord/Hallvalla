@@ -43,11 +43,13 @@ function openAdventureMap(specialKey=pendingAdventureSpecial||getAdventureProgre
   }
   adventureViewedChapterId=getCurrentAdventureChapter(progress)?.id||"";
   renderAdventureMap();
+  prepareAdventureFarmMap();
   showAdventureStage("adventureMapIntroStage");
 }
 function showAdventureMapOnly(){
   renderAdventureMap();
   showAdventureStage("adventureMapStage");
+  prepareAdventureFarmMap();
 }
 function getAdventureMapTheme(chapter){
   const major=String(chapter?.number||"1").split(".")[0]||"1";
@@ -75,6 +77,277 @@ function getAdventureMapTheme(chapter){
 function getAdventureBattleCode(chapter,battle){
   const major=String(chapter?.number||"1").split(".")[0]||"1";
   return `${major}-${battle?.num||1}`;
+}
+
+/* ---------------------------------------------------------------------------
+   FARME0 DIARIO DE NODOS COMPLETADOS · v138
+   - Cada nodo completado puede reclamarse 1 vez por ciclo UTC fijo de 24 h.
+   - Coste: 2 gemas.
+   - No acumula intentos si un día no se reclama.
+   - Firebase valida el ciclo usando `now`, por lo que cambiar el reloj del PC
+     no vuelve a habilitar un nodo.
+   --------------------------------------------------------------------------- */
+const HALLVALLA_ADVENTURE_FARM_COST_GEMS=2;
+const HALLVALLA_ADVENTURE_FARM_DAY_MS=24*60*60*1000;
+const HALLVALLA_ADVENTURE_FARM_CACHE_VERSION=1;
+const HALLVALLA_ADVENTURE_FARM_CACHE_PREFIX="hallvalla_adventure_farm_cache_v1";
+const HALLVALLA_ADVENTURE_FARM_RARITIES=Object.freeze(["basic","epic","glorious","mythic","legendary","demigod"]);
+let adventureFarmServerOffsetMs=0;
+let adventureFarmClockReady=false;
+let adventureFarmRemoteReady=false;
+let adventureFarmSyncPromise=null;
+let adventureFarmTicker=0;
+let adventureFarmLastRenderedCycle=-1;
+
+function getAdventureFarmUid(){return String(auth?.currentUser?.uid||uid||"").trim();}
+function getAdventureFarmCacheKey(){return `${HALLVALLA_ADVENTURE_FARM_CACHE_PREFIX}_${getAdventureFarmUid()||"pending"}`;}
+function normalizeAdventureFarmClaim(raw={}){
+  return {
+    cycleId:Math.max(0,Math.floor(Number(raw?.cycleId||0))),
+    claimedAt:Math.max(0,Number(raw?.claimedAt||0)),
+    rewardKind:String(raw?.rewardKind||""),
+    rewardKey:String(raw?.rewardKey||""),
+    rewardAmount:Math.max(0,Math.floor(Number(raw?.rewardAmount||0))),
+    costGems:Math.max(0,Math.floor(Number(raw?.costGems||0))),
+    chapterId:String(raw?.chapterId||""),
+    battleId:String(raw?.battleId||"")
+  };
+}
+function getAdventureFarmClaims(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(getAdventureFarmCacheKey())||"null");
+    const claims=raw?.version===HALLVALLA_ADVENTURE_FARM_CACHE_VERSION&&raw?.claims&&typeof raw.claims==="object"?raw.claims:{};
+    return Object.fromEntries(Object.entries(claims).map(([key,value])=>[key,normalizeAdventureFarmClaim(value)]));
+  }catch(_){return {};}
+}
+function cacheAdventureFarmClaims(claims={}){
+  const safe=Object.fromEntries(Object.entries(claims||{}).map(([key,value])=>[String(key),normalizeAdventureFarmClaim(value)]));
+  localStorage.setItem(getAdventureFarmCacheKey(),JSON.stringify({version:HALLVALLA_ADVENTURE_FARM_CACHE_VERSION,claims:safe}));
+  return safe;
+}
+async function syncAdventureFarmClock(){
+  try{
+    const snapshot=await new Promise((resolve,reject)=>onValue(ref(db,".info/serverTimeOffset"),resolve,reject,{onlyOnce:true}));
+    adventureFarmServerOffsetMs=Number(snapshot?.val?.()||0)||0;
+    adventureFarmClockReady=true;
+    return true;
+  }catch(error){
+    adventureFarmClockReady=false;
+    console.warn("[HallValla][Aventura][Farmeo] No se pudo sincronizar la hora del servidor:",error);
+    return false;
+  }
+}
+function getAdventureFarmNow(){return Date.now()+adventureFarmServerOffsetMs;}
+function getAdventureFarmCycleId(now=getAdventureFarmNow()){return Math.floor(Math.max(0,Number(now||0))/HALLVALLA_ADVENTURE_FARM_DAY_MS);}
+function getAdventureFarmNextResetAt(now=getAdventureFarmNow()){return (getAdventureFarmCycleId(now)+1)*HALLVALLA_ADVENTURE_FARM_DAY_MS;}
+function formatAdventureFarmRemaining(ms=0){
+  const total=Math.max(0,Math.ceil(Number(ms||0)/1000)),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+function isAdventureFarmClaimed(nodeCode,claims=getAdventureFarmClaims(),now=getAdventureFarmNow()){
+  const claim=claims?.[String(nodeCode||"")];
+  return !!claim&&Number(claim.cycleId)===getAdventureFarmCycleId(now);
+}
+async function syncAdventureFarmClaims(){
+  if(adventureFarmSyncPromise)return adventureFarmSyncPromise;
+  adventureFarmSyncPromise=(async()=>{
+    const authOk=typeof waitForFirebaseAuthReady==="function"?await waitForFirebaseAuthReady(8000):!!auth?.currentUser;
+    const userId=getAdventureFarmUid();
+    if(!authOk||!userId){adventureFarmRemoteReady=false;return false;}
+    if(!adventureFarmClockReady&&!(await syncAdventureFarmClock())){adventureFarmRemoteReady=false;return false;}
+    try{
+      const snapshot=await get(ref(db,`users/${userId}/adventureFarm`));
+      const raw=snapshot?.exists?.()?snapshot.val()||{}:{};
+      const safe=Object.fromEntries(Object.entries(raw).map(([key,value])=>[key,normalizeAdventureFarmClaim(value)]));
+      cacheAdventureFarmClaims(safe);
+      adventureFarmRemoteReady=true;
+      return true;
+    }catch(error){
+      adventureFarmRemoteReady=false;
+      console.warn("[HallValla][Aventura][Farmeo] No se pudo sincronizar el estado:",error);
+      return false;
+    }
+  })();
+  try{return await adventureFarmSyncPromise;}finally{adventureFarmSyncPromise=null;}
+}
+function getAdventureFarmMapLevel(chapter){return Math.max(1,Math.min(6,Math.floor(Number(String(chapter?.number||"1").split(".")[0])||1)));}
+function getAdventureFarmThemeLabel(battle={}){
+  return {archer:"Arqueros",warrior:"Guerreros",cavalry:"Caballería",axe:"Hacheros",mage:"Arcanos",assassin:"Asesinos",beastmaster:"Bestias"}[String(battle?.enemyLeaderType||"").toLowerCase()]||"Unidades del combate";
+}
+function adventureFarmCardMatchesTheme(card,battle={}){
+  if(!card||card.type!=="unit"||card.leader||card.token||card.mineExclusive)return false;
+  const theme=String(battle?.enemyLeaderType||"").toLowerCase();
+  try{
+    if(theme==="archer")return typeof isArcherUnit==="function"?isArcherUnit(card):String(card.name||"").toLowerCase().includes("arquer");
+    if(theme==="warrior")return typeof isHeavyInfantryUnit==="function"?isHeavyInfantryUnit(card):(card.leaderBuffGroups||[]).includes("warrior");
+    if(theme==="cavalry")return typeof isLightCavalryUnit==="function"?isLightCavalryUnit(card):(card.leaderBuffGroups||[]).includes("cavalry");
+    if(theme==="axe")return typeof isAxeUnitCardLike==="function"?isAxeUnitCardLike(card):(card.leaderBuffGroups||[]).includes("axe");
+    if(theme==="mage")return typeof isMageUnitCardLike==="function"?isMageUnitCardLike(card):!!card.caster;
+    if(theme==="assassin")return typeof isAssassinUnit==="function"?isAssassinUnit(card):!!(card.stealth||card.ninjutsu);
+    if(theme==="beastmaster")return !!card.beast;
+  }catch(_){ }
+  return true;
+}
+function getAdventureFarmUnitPool(battle={}){
+  const byKey=new Map();
+  const addPool=pool=>(pool||[]).forEach(card=>{
+    if(!card||card.type!=="unit"||card.leader||card.token||card.mineExclusive||card.dragonCompanion||card.dragonEgg)return;
+    const key=String(card.key||"").trim();
+    if(!key)return;
+    try{if(typeof ADVENTURE_SPECIALS!=="undefined"&&Object.prototype.hasOwnProperty.call(ADVENTURE_SPECIALS,key))return;}catch(_){ }
+    if(adventureFarmCardMatchesTheme(card,battle))byKey.set(key,card);
+  });
+  try{addPool(CARD_TEMPLATES);}catch(_){ }
+  try{addPool(LEGENDARY_ALLY_CARDS);}catch(_){ }
+  const explicit=[];
+  for(const entry of (battle?.enemyFixedDeck||[])){
+    const key=Array.isArray(entry)?String(entry[0]||""):String(entry?.key||"");
+    const card=key&&typeof getCanonicalCardTemplateForHydration==="function"?getCanonicalCardTemplateForHydration(key):null;
+    if(card&&adventureFarmCardMatchesTheme(card,battle)&&!card.mineExclusive&&!card.token)explicit.push(card);
+  }
+  return {all:[...byKey.values()],explicit};
+}
+function randomAdventureFarmInt(max=1){
+  const safe=Math.max(1,Math.floor(Number(max)||1));
+  try{const data=new Uint32Array(1);crypto.getRandomValues(data);return Number(data[0]%safe);}catch(_){return Math.floor(Math.random()*safe);}
+}
+function chooseAdventureFarmRarity(maxIndex=0,available=new Set(["basic"])){
+  const tables=[
+    [100],
+    [76,24],
+    [62,25,13],
+    [54,25,14,7],
+    [49,24,14,8,5],
+    [46,23,14,9,5,3]
+  ];
+  const weights=(tables[Math.max(0,Math.min(5,maxIndex))]||tables[0]).slice();
+  const options=weights.map((weight,index)=>({index,weight,key:HALLVALLA_ADVENTURE_FARM_RARITIES[index]})).filter(entry=>available.has(entry.key)&&entry.weight>0);
+  if(!options.length)return "basic";
+  const total=options.reduce((sum,entry)=>sum+entry.weight,0),roll=randomAdventureFarmInt(total);
+  let cursor=0;
+  for(const entry of options){cursor+=entry.weight;if(roll<cursor)return entry.key;}
+  return options[0].key;
+}
+function chooseAdventureFarmCard(chapter,battle){
+  const mapLevel=getAdventureFarmMapLevel(chapter),maxIndex=Math.max(0,mapLevel-1),pool=getAdventureFarmUnitPool(battle);
+  const allowed=pool.all.filter(card=>{
+    const rarity=typeof getCraftRarityKey==="function"?getCraftRarityKey(card):"basic";
+    const index=HALLVALLA_ADVENTURE_FARM_RARITIES.indexOf(rarity);
+    return index>=0&&index<=maxIndex;
+  });
+  if(!allowed.length)return null;
+  const availableRarities=new Set(allowed.map(card=>typeof getCraftRarityKey==="function"?getCraftRarityKey(card):"basic"));
+  const selectedRarity=chooseAdventureFarmRarity(maxIndex,availableRarities);
+  let candidates=allowed.filter(card=>(typeof getCraftRarityKey==="function"?getCraftRarityKey(card):"basic")===selectedRarity);
+  const explicitKeys=new Set(pool.explicit.map(card=>String(card.key||"")));
+  const preferred=candidates.filter(card=>explicitKeys.has(String(card.key||"")));
+  if(preferred.length&&randomAdventureFarmInt(100)<70)candidates=preferred;
+  return candidates[randomAdventureFarmInt(candidates.length)]||allowed[randomAdventureFarmInt(allowed.length)]||null;
+}
+function rollAdventureFarmReward(chapter,battle){
+  const mapLevel=getAdventureFarmMapLevel(chapter),roll=randomAdventureFarmInt(1000);
+  if(roll<550){
+    const min=[0,60,100,160,240,340,480][mapLevel]||60,max=[0,140,220,340,500,700,1000][mapLevel]||140;
+    const steps=Math.max(1,Math.floor((max-min)/10)+1),amount=min+randomAdventureFarmInt(steps)*10;
+    return {kind:"gold",key:"",amount,display:`${amount} de oro`};
+  }
+  if(roll<700)return {kind:"free_spin",key:"mine_wheel",amount:1,display:"1 tiro gratis de la ruleta"};
+  const card=chooseAdventureFarmCard(chapter,battle);
+  if(card)return {kind:"card",key:String(card.key||""),amount:1,display:`${card.name||"Carta"} · ${typeof getCraftRarityLabel==="function"?getCraftRarityLabel(getCraftRarityKey(card)):String(card.rarity||"Básica")}`};
+  const fallback=80+mapLevel*60;
+  return {kind:"gold",key:"",amount:fallback,display:`${fallback} de oro`};
+}
+async function applyAdventureFarmReward(reward,chapter,battle){
+  if(reward.kind==="gold"){
+    const profile=getPlayerProfile();profile.gold=Math.max(0,Number(profile.gold||0))+reward.amount;savePlayerProfile(profile);
+    return {text:`+${reward.amount} de oro`,kind:"gold"};
+  }
+  if(reward.kind==="card"){
+    const card=typeof getCanonicalCardTemplateForHydration==="function"?getCanonicalCardTemplateForHydration(reward.key):null;
+    if(card&&typeof addCardsToCollection==="function"){
+      addCardsToCollection([card]);
+      const rarity=typeof getCraftRarityLabel==="function"?getCraftRarityLabel(getCraftRarityKey(card)):String(card.rarity||"Básica");
+      return {text:`${card.name} · ${rarity}`,kind:"card"};
+    }
+  }
+  if(reward.kind==="free_spin"&&typeof globalThis.grantHallvallaMineWheelFreeSpins==="function"){
+    const spin=await globalThis.grantHallvallaMineWheelFreeSpins(1);
+    if(spin?.committed&&spin.granted>0)return {text:"+1 tiro gratis de la ruleta de la Mina",kind:"free_spin"};
+  }
+  const fallback=80+getAdventureFarmMapLevel(chapter)*60;
+  const profile=getPlayerProfile();profile.gold=Math.max(0,Number(profile.gold||0))+fallback;savePlayerProfile(profile);
+  return {text:`+${fallback} de oro (compensación)`,kind:"gold"};
+}
+async function farmCompletedAdventureNode(chapter,battle){
+  const nodeCode=getAdventureBattleCode(chapter,battle);
+  if(!adventureFarmRemoteReady){
+    const synced=await syncAdventureFarmClaims();
+    if(!synced){await hvAlert("No se pudo sincronizar el reloj/estado de farmeo con Firebase. No se descontaron gemas.","Farmeo no disponible");return;}
+  }
+  if(!(await syncAdventureFarmClock())){await hvAlert("No se pudo verificar la hora del servidor. No se descontaron gemas.","Farmeo no disponible");return;}
+  const now=getAdventureFarmNow(),claims=getAdventureFarmClaims();
+  if(isAdventureFarmClaimed(nodeCode,claims,now)){
+    await hvAlert(`Este nodo ya fue farmeado en el ciclo actual.\n\nSe restaura en ${formatAdventureFarmRemaining(getAdventureFarmNextResetAt(now)-now)}.`,`Nodo ${nodeCode} · En espera`);return;
+  }
+  const profile=getPlayerProfile();
+  if(Math.max(0,Number(profile.gems||0))<HALLVALLA_ADVENTURE_FARM_COST_GEMS){await hvAlert(`Necesitas ${HALLVALLA_ADVENTURE_FARM_COST_GEMS} gemas para farmear este nodo.`,`Nodo ${nodeCode} · Gemas insuficientes`);return;}
+  const theme=getAdventureFarmThemeLabel(battle),mapLevel=getAdventureFarmMapLevel(chapter);
+  const ok=await hvConfirm(`Nodo ${nodeCode} · ${battle.title}\n\nCosto: ${HALLVALLA_ADVENTURE_FARM_COST_GEMS}💎\nPremios posibles: oro, tiro gratis de ruleta o una carta del ámbito ${theme}.\nMapa ${mapLevel}: las cartas respetan la progresión de rareza del mapa.\n\nEste intento se restaura en el próximo reinicio global de 24 horas y no se acumula si no lo usas.`,`Farmear nodo ${nodeCode}`,"FARMEAR","CANCELAR");
+  if(!ok)return;
+  const fresh=getPlayerProfile();
+  if(Math.max(0,Number(fresh.gems||0))<HALLVALLA_ADVENTURE_FARM_COST_GEMS){await hvAlert("Tus gemas cambiaron antes de confirmar. No se realizó el farmeo.","Gemas insuficientes");return;}
+  if(!(await syncAdventureFarmClock())){await hvAlert("No se pudo volver a verificar la hora del servidor. No se realizó el farmeo.","Farmeo no confirmado");return;}
+  const claimNow=getAdventureFarmNow(),cycleId=getAdventureFarmCycleId(claimNow);
+  if(isAdventureFarmClaimed(nodeCode,getAdventureFarmClaims(),claimNow)){await hvAlert("Este nodo ya fue farmeado en el ciclo actual.",`Nodo ${nodeCode} · Ya reclamado`);renderAdventureMap();return;}
+  const reward=rollAdventureFarmReward(chapter,battle),claimedAt=Math.max(0,Math.floor(claimNow-250));
+  const record={cycleId,claimedAt,rewardKind:reward.kind,rewardKey:reward.key||"",rewardAmount:reward.amount,costGems:HALLVALLA_ADVENTURE_FARM_COST_GEMS,chapterId:String(chapter.id||""),battleId:String(battle.id||"")};
+  try{
+    const nodeRef=ref(db,`users/${getAdventureFarmUid()}/adventureFarm/${nodeCode}`);
+    const result=await runTransaction(nodeRef,current=>{
+      const previous=current?normalizeAdventureFarmClaim(current):null;
+      if(previous&&previous.cycleId>=cycleId)return;
+      return record;
+    },{applyLocally:false});
+    if(!result?.committed){
+      await syncAdventureFarmClaims();
+      renderAdventureMap();
+      const currentNow=getAdventureFarmNow();
+      await hvAlert(`Este nodo ya fue farmeado en otro dispositivo o la operación ya estaba registrada.\n\nSe restaura en ${formatAdventureFarmRemaining(getAdventureFarmNextResetAt(currentNow)-currentNow)}.`,`Nodo ${nodeCode} · Ya reclamado`);return;
+    }
+    const updatedClaims=getAdventureFarmClaims();updatedClaims[nodeCode]=normalizeAdventureFarmClaim(result.snapshot.val()||record);cacheAdventureFarmClaims(updatedClaims);
+    fresh.gems=Math.max(0,Number(fresh.gems||0))-HALLVALLA_ADVENTURE_FARM_COST_GEMS;savePlayerProfile(fresh);
+    const applied=await applyAdventureFarmReward(reward,chapter,battle);
+    try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(getPlayerProfile());}catch(_){ }
+    renderAdventureMap();
+    await hvAlert(`Gastaste ${HALLVALLA_ADVENTURE_FARM_COST_GEMS}💎.\n\nPremio: ${applied.text}\n\nEl nodo volverá a estar disponible en el próximo reinicio global.`,`Nodo ${nodeCode} · Premio`);
+  }catch(error){
+    console.warn("[HallValla][Aventura][Farmeo] Transacción fallida:",error);
+    await hvAlert("Firebase no pudo confirmar el farmeo. No se descontaron gemas ni se entregó premio.","Farmeo no confirmado");
+  }
+}
+function updateAdventureFarmBadges(){
+  const nodes=document.querySelectorAll("#adventureMapNodes .map-node.completed[data-node-code]");
+  if(!nodes.length)return;
+  const now=getAdventureFarmNow(),claims=getAdventureFarmClaims(),remaining=formatAdventureFarmRemaining(getAdventureFarmNextResetAt(now)-now);
+  nodes.forEach(node=>{
+    const code=String(node.dataset.nodeCode||""),badge=node.querySelector(".map-node-farm-badge"),claimed=isAdventureFarmClaimed(code,claims,now);
+    node.classList.toggle("hv-farm-ready",!claimed);node.classList.toggle("hv-farm-claimed",claimed);
+    if(badge){badge.classList.toggle("is-claimed",claimed);badge.textContent=claimed?`⏳ ${remaining}`:`${HALLVALLA_ADVENTURE_FARM_COST_GEMS}💎`;}
+  });
+}
+function ensureAdventureFarmTicker(){
+  if(adventureFarmTicker)return;
+  adventureFarmLastRenderedCycle=getAdventureFarmCycleId();
+  adventureFarmTicker=setInterval(()=>{
+    const stage=$("adventureMapStage");if(!stage||stage.classList.contains("hidden"))return;
+    const cycle=getAdventureFarmCycleId();
+    if(cycle!==adventureFarmLastRenderedCycle){adventureFarmLastRenderedCycle=cycle;renderAdventureMap();return;}
+    updateAdventureFarmBadges();
+  },1000);
+}
+function prepareAdventureFarmMap(){
+  ensureAdventureFarmTicker();
+  void syncAdventureFarmClaims().then(ok=>{if(ok){const stage=$("adventureMapStage");if(stage&&!stage.classList.contains("hidden"))renderAdventureMap();}});
 }
 function renderAdventureMap(){
   const progress=getAdventureProgress();
@@ -115,12 +388,15 @@ function renderAdventureMap(){
       const unlocked=b.num<=chapter.unlockedBattle;
       const state=completed?"completed":unlocked?"unlocked":"locked";
       const optional=!isBattleRequiredForChapter(b);
-      const label=completed?"Completada":unlocked?(optional?"Extra opcional":"Iniciar combate"):"Bloqueada";
       const bossClass=b.id===boss?.id?" boss":optional?" optional":"";
       const nodeCode=getAdventureBattleCode(activeChapter,b);
-      return `<button class="map-node ${state}${bossClass}" type="button" data-battle-id="${b.id}" data-node-code="${escapeHtml(nodeCode)}" style="left:${point.x}%;top:${point.y}%;" ${(!unlocked||completed)?"disabled":""} aria-disabled="${(!unlocked||completed)?"true":"false"}" title="${escapeHtml(b.title)} · ${escapeHtml(label)}">
+      const farmClaimed=completed&&isAdventureFarmClaimed(nodeCode);
+      const label=completed?(farmClaimed?"Completada · farmeo usado hasta el próximo reinicio":`Completada · farmear por ${HALLVALLA_ADVENTURE_FARM_COST_GEMS} gemas`):unlocked?(optional?"Extra opcional":"Iniciar combate"):"Bloqueada";
+      const farmBadge=completed?`<span class="map-node-farm-badge${farmClaimed?" is-claimed":""}">${farmClaimed?`⏳ ${formatAdventureFarmRemaining(getAdventureFarmNextResetAt()-getAdventureFarmNow())}`:`${HALLVALLA_ADVENTURE_FARM_COST_GEMS}💎`}</span>`:"";
+      return `<button class="map-node ${state}${bossClass}${completed?(farmClaimed?" hv-farm-claimed":" hv-farm-ready"):""}" type="button" data-battle-id="${b.id}" data-node-code="${escapeHtml(nodeCode)}" style="left:${point.x}%;top:${point.y}%;" ${(!unlocked&&!completed)?"disabled":""} aria-disabled="${(!unlocked&&!completed)?"true":"false"}" title="${escapeHtml(b.title)} · ${escapeHtml(label)}">
         <span class="map-node-ring"></span>
         <span class="map-node-number">${nodeCode}</span>
+        ${farmBadge}
       </button>`;
     }).join("")}
   </div>`;
@@ -132,6 +408,11 @@ function renderAdventureMap(){
   nodes.querySelectorAll(".map-node.unlocked:not(:disabled)").forEach(btn=>{
     btn.addEventListener("click",()=>showAdventureGuardianIntro(pendingAdventureSpecial,btn.dataset.battleId));
   });
+  nodes.querySelectorAll(".map-node.completed:not(:disabled)").forEach(btn=>{
+    const battle=(activeChapter.battles||[]).find(entry=>String(entry.id||"")===String(btn.dataset.battleId||""));
+    if(battle)btn.addEventListener("click",()=>farmCompletedAdventureNode(activeChapter,battle));
+  });
+  updateAdventureFarmBadges();
 }
 
 /* ---------------------------------------------------------------------------

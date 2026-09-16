@@ -1661,6 +1661,69 @@ function getHallvallaMineFreeCopyCount(card,mineState=getHallvallaMineState(),de
   const inMine=Math.max(0,Math.floor(Number(mineCounts.get(key)||0)));
   return Math.max(0,owned-inDeck-inMine);
 }
+/* v138 · El mazo tiene prioridad absoluta sobre Producción.
+   Si al guardar un mazo una copia deja de estar libre, se retiran de la Mina
+   únicamente las asignaciones excedentes de esa carta. Cualquier gema ya
+   terminada se recoge antes de liberar la ranura. */
+async function reconcileHallvallaMineAssignmentsWithDeck(options={}){
+  const reason=String(options?.reason||"manual");
+  const userId=getHallvallaMineUserUid();
+  if(HALLVALLA_LOCALHOST_TEST_MODE!==true&&!userId)return {committed:false,removed:0,earned:0,reason:"NO_USER"};
+  if(!hallvallaMineOnlineReady()){
+    const synced=await syncHallvallaMineRemoteState();
+    if(!synced&&HALLVALLA_LOCALHOST_TEST_MODE!==true)return {committed:false,removed:0,earned:0,reason:"NOT_READY"};
+  }
+  const deckCounts=getHallvallaDeckReservedCounts();
+  const ownedCounts=new Map();
+  getHallvallaMineCollectionPool().forEach(card=>{
+    const key=String(card?.key||"").trim();
+    if(key)ownedCounts.set(key,Math.max(0,Math.floor(Number(card?.qty||0))));
+  });
+  const now=getHallvallaMineNow();
+  let committedSummary={removed:[],earned:0};
+  const tx=await transactHallvallaMineStateRemote(current=>{
+    const next=normalizeHallvallaMineState(current);
+    const keptByKey=new Map();
+    const removed=[];
+    let earned=0;
+    next.slots=next.slots.map((slot,index)=>{
+      const safe=normalizeHallvallaMineSlot(slot);
+      const key=String(safe.cardKey||"").trim();
+      if(!key)return safe;
+      const owned=Math.max(0,Math.floor(Number(ownedCounts.get(key)||0)));
+      const reserved=Math.max(0,Math.floor(Number(deckCounts.get(key)||0)));
+      const allowedInMine=Math.max(0,owned-reserved);
+      const alreadyKept=Math.max(0,Math.floor(Number(keptByKey.get(key)||0)));
+      if(alreadyKept<allowedInMine){keptByKey.set(key,alreadyKept+1);return safe;}
+      const view=getHallvallaMineSlotView(safe,current,now);
+      const pending=Math.max(0,Math.floor(Number(view.pending||0)));
+      earned+=pending;
+      removed.push({index,key,name:String(safe.cardName||"Unidad"),pending});
+      return createHallvallaMineSlot();
+    });
+    committedSummary={removed,earned};
+    return next;
+  });
+  if(!tx.committed)return {committed:false,removed:0,earned:0,reason:tx.reason||"ABORTED"};
+  const removedCount=committedSummary.removed.length;
+  const earned=Math.max(0,Math.floor(Number(committedSummary.earned||0)));
+  if(earned>0){
+    const profile=getPlayerProfile();
+    profile.gems=Math.max(0,Number(profile.gems||0))+earned;
+    savePlayerProfile(profile);
+    void recordHallvallaMineMissionStat("collected_gems",earned);
+    try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
+  }
+  if(removedCount>0){
+    const names=[...new Set(committedSummary.removed.map(entry=>entry.name).filter(Boolean))];
+    const suffix=earned>0?` Se recogieron ${earned} gema${earned===1?"":"s"} ya producida${earned===1?"":"s"}.`:"";
+    setHallvallaMineStatus(`${removedCount} unidad${removedCount===1?"":"es"} retirada${removedCount===1?"":"s"} de Producción porque ahora está${removedCount===1?"":"n"} reservada${removedCount===1?"":"s"} por el mazo.${suffix}`);
+    console.info("[HallValla][Mina] Mazo > Producción",{reason,removed:committedSummary.removed,earned,names});
+    try{if($("mineScreen")&&!$("mineScreen").classList.contains("hidden"))renderMineScreen();}catch(_){ }
+  }
+  return {committed:true,removed:removedCount,earned,entries:committedSummary.removed,reason:"OK"};
+}
+globalThis.reconcileHallvallaMineAssignmentsWithDeck=reconcileHallvallaMineAssignmentsWithDeck;
 const HALLVALLA_MINE_EVENTS_STORAGE_KEY="hallvalla_mine_events_v1";
 const HALLVALLA_MINE_EVENT_CHECK_MS=30*24*60*60*1000;
 const HALLVALLA_MINE_EVENT_CHANCE=1;
@@ -2879,6 +2942,44 @@ async function syncHallvallaMineWheelRemote(){
   })();
   try{return await hallvallaMineWheelRemoteSyncPromise;}finally{hallvallaMineWheelRemoteSyncPromise=null;}
 }
+async function grantHallvallaMineWheelFreeSpins(amount=1){
+  const requested=Math.max(0,Math.floor(Number(amount)||0));
+  if(!requested)return {committed:true,granted:0,state:getHallvallaMineWheelState(),reason:"ZERO"};
+  if(!hallvallaMineOnlineReady()){
+    const synced=await syncHallvallaMineRemoteState();
+    if(!synced&&HALLVALLA_LOCALHOST_TEST_MODE!==true)return {committed:false,granted:0,state:getHallvallaMineWheelState(),reason:"NOT_READY"};
+  }
+  const seed=await syncHallvallaMineWheelRemote();
+  if(HALLVALLA_LOCALHOST_TEST_MODE===true){
+    const state=refreshHallvallaMineWheelState(seed),before=state.freeSpins;
+    state.freeSpins=Math.min(HALLVALLA_MINE_WHEEL_FREE_MAX,before+requested);
+    cacheHallvallaMineWheelState(state);
+    try{renderHallvallaMineWheel(state);}catch(_){ }
+    return {committed:true,granted:state.freeSpins-before,state,reason:"OK"};
+  }
+  const userId=getHallvallaMineUserUid();
+  if(!userId)return {committed:false,granted:0,state:seed,reason:"NO_USER"};
+  let beforeFree=0,afterFree=0;
+  try{
+    const wheelRef=ref(db,`users/${userId}/mine/rewardsWheel`);
+    const result=await runTransaction(wheelRef,current=>{
+      const state=refreshHallvallaMineWheelState(current||seed);
+      beforeFree=state.freeSpins;
+      state.freeSpins=Math.min(HALLVALLA_MINE_WHEEL_FREE_MAX,state.freeSpins+requested);
+      afterFree=state.freeSpins;
+      return state;
+    },{applyLocally:false});
+    if(!result?.committed)return {committed:false,granted:0,state:seed,reason:"ABORTED"};
+    const state=cacheHallvallaMineWheelState(result.snapshot.val()||seed);
+    const granted=Math.max(0,Math.min(requested,afterFree-beforeFree));
+    try{renderHallvallaMineWheel(state);}catch(_){ }
+    return {committed:true,granted,state,reason:"OK"};
+  }catch(error){
+    console.warn("[HallValla][Mina][Ruleta] No se pudo acreditar el tiro gratis:",error);
+    return {committed:false,granted:0,state:seed,reason:"FIREBASE"};
+  }
+}
+globalThis.grantHallvallaMineWheelFreeSpins=grantHallvallaMineWheelFreeSpins;
 function randomHallvallaMineWheelIndex(length){
   const max=Math.max(1,Math.floor(Number(length||1)));
   try{const data=new Uint32Array(1);crypto.getRandomValues(data);return Number(data[0]%max);}catch(_){return Math.floor(Math.random()*max);}
@@ -3690,6 +3791,7 @@ async function openMineScreen(section="production"){
   stopHallvallaMineTick();
   setHallvallaMineStatus("Sincronizando la Mina con el servidor...");
   const synced=await syncHallvallaMineRemoteState();
+  if(synced||HALLVALLA_LOCALHOST_TEST_MODE===true)await reconcileHallvallaMineAssignmentsWithDeck({reason:"mine-open"});
   renderMineScreen();
   setMineSection(section);
   setHallvallaMineStatus(synced||HALLVALLA_LOCALHOST_TEST_MODE===true?"":"No se pudo conectar con Firebase. La Mina queda en modo de solo lectura.");

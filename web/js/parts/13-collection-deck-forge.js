@@ -386,7 +386,20 @@ function closePackOpening(){
 const HALLVALLA_PRINCIPAL_UNIT_KEY="hallvalla_principal_unit_v1";
 const HALLVALLA_PRINCIPAL_UNITS_KEY="hallvalla_principal_units_v2";
 function getSavedDeck(){try{const deck=JSON.parse(localStorage.getItem("hallvalla_current_deck")||"[]");return Array.isArray(deck)?deck.map(hydrateCardVisualData):[]}catch(e){return[]}}
-function saveDeck(deck){localStorage.setItem("hallvalla_current_deck",JSON.stringify((deck||[]).map(hydrateCardVisualData)))}
+function saveDeck(deck){
+  localStorage.setItem("hallvalla_current_deck",JSON.stringify((deck||[]).map(hydrateCardVisualData)));
+  try{
+    if(typeof globalThis.reconcileHallvallaMineAssignmentsWithDeck==="function"){
+      const task=Promise.resolve(globalThis.reconcileHallvallaMineAssignmentsWithDeck({reason:"deck-save"})).catch(error=>{
+        console.warn("[HallValla][Mina] No se pudo reconciliar el mazo con producción:",error);
+        return {committed:false,removed:0,earned:0,reason:"ERROR"};
+      });
+      globalThis.__HALLVALLA_MINE_DECK_RECONCILE_PROMISE__=task;
+      return task;
+    }
+  }catch(error){console.warn("[HallValla][Mina] Error preparando reconciliación de mazo:",error);}
+  return Promise.resolve({committed:false,removed:0,earned:0,reason:"NOT_AVAILABLE"});
+}
 // 8D86 · Compatibilidad con partidas antiguas: Principales ya no existen.
 function normalizePrincipalKeys(){return [];}
 function getSavedPrincipalKeys(){return [];}
@@ -1117,7 +1130,7 @@ async function saveCurrentDeck(){
   const deckValidation=validateDeckList(currentDeckDraft,{leaderType:getSelectedLeaderType?.()||"",deckSize:requiredDeckSize});
   const errors=[...deckValidation.errors];
   if(errors.length){hvAlert(`No se puede guardar todavía: ${errors.join(" ")}`,"Mazo inválido");renderDeckBuilder();return;}
-  saveDeck(currentDeckDraft);
+  await saveDeck(currentDeckDraft);
   savePrincipalKeys([]);
   closeDeckBuilder();
   hvAlert(`Mazo guardado: Nivel ${leaderLevel} · Tier ${leaderTier} · ${requiredDeckSize} cartas. Todas las cartas forman parte del mazo normal; ya no existen Personajes Principales.`,"Mazo guardado");

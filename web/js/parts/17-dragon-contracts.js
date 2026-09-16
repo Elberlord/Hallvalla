@@ -1848,7 +1848,7 @@ registerHallvallaHook("deck.save",async()=>{
   const errors=[...deckValidation.errors];
   if(errors.length){await hvAlert(`No se puede iniciar todavía: ${errors.join(" ")}`,"Mazo inválido");renderDeckBuilder();return{handled:true,value:undefined};}
   const battleId=pendingDragonContractBattleId;pendingDragonContractBattleId="";
-  saveDeck(currentDeckDraft);savePrincipalKeys([]);closeDeckBuilder();
+  await saveDeck(currentDeckDraft);savePrincipalKeys([]);closeDeckBuilder();
   await hvAlert(`Mazo guardado con ${requiredDeckSize} cartas. Todas entran al mazo normal; no hay Personajes Principales desplegados.`,"Contrato preparado");
   const special=getAdventureProgress().selectedSpecial||pendingAdventureSpecial||"mulan";
   await startAdventure(special,battleId);

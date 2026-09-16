@@ -1,0 +1,12 @@
+HallValla v138 · MINE / DECK EXCLUSION + DAILY MAP FARM + UNIVERSAL BACK
+
+Cambios:
+- Mina Producción: solo copias libres = colección - mazo - producción.
+- Guardar un mazo retira automáticamente de Producción cualquier asignación que ya no tenga una copia libre; el mazo tiene prioridad.
+- Si una retirada automática tenía gemas terminadas pendientes, se recogen antes de liberar la ranura.
+- Shop (Tienda/Sobres/Oro/Gemas) y Mina reutilizan un único asset del botón Volver con el arte exacto de la Forja de mazos.
+- Nodos de Aventura ya completados pueden farmearse por 2 gemas una vez por ciclo global UTC de 24 h.
+- El ciclo no depende de la hora del PC y no acumula intentos no usados.
+- Premios: oro, tiro gratis de ruleta de Mina o carta temática del nodo.
+- Rareza de cartas escalada por mapa: M1 Básica; M2 hasta Épica; M3 hasta Gloriosa; M4 hasta Mítica; M5 hasta Legendaria; M6 hasta Semidiós.
+- Firebase RTDB valida ciclo diario, timestamp y coste declarado del registro de farmeo.

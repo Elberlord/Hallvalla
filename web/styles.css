@@ -29131,3 +29131,107 @@ body.hv-mobile-landscape #mainMenu .hv-android-public-download-mark{
   width:clamp(29px,5svh,37px)!important;
   height:clamp(29px,5svh,37px)!important;
 }
+
+
+/* === v138 · BOTÓN VOLVER UNIVERSAL + FARME0 DIARIO DE AVENTURA ============
+   El arte de volver proviene exactamente del botón de la Forja de mazos.
+   El <button> conserva únicamente la hitbox/función; la imagen es el asset visual.
+   ========================================================================== */
+#packShopPanel .hv-shop-back.hv-universal-back-btn,
+#mineScreen .mine-back-btn.hv-universal-back-btn{
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  outline:0!important;
+  overflow:visible!important;
+  display:grid!important;
+  place-items:center!important;
+  cursor:pointer!important;
+  color:transparent!important;
+}
+#packShopPanel .hv-shop-back.hv-universal-back-btn{
+  width:clamp(72px,8.2vw,118px)!important;
+  height:auto!important;
+  aspect-ratio:170/105!important;
+  left:2.15%!important;
+  top:1.55%!important;
+}
+#mineScreen .mine-back-btn.hv-universal-back-btn{
+  width:clamp(72px,5.8vw,84px)!important;
+  height:auto!important;
+  aspect-ratio:170/105!important;
+  left:18px!important;
+  top:15px!important;
+}
+.hv-universal-back-art{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  pointer-events:none!important;
+  user-select:none!important;
+  -webkit-user-drag:none!important;
+  filter:drop-shadow(0 7px 12px rgba(0,0,0,.48));
+  transition:filter .16s ease,transform .16s ease;
+}
+.hv-universal-back-btn:hover .hv-universal-back-art,
+.hv-universal-back-btn:focus-visible .hv-universal-back-art{
+  filter:brightness(1.13) drop-shadow(0 0 10px rgba(233,185,85,.34)) drop-shadow(0 7px 12px rgba(0,0,0,.48));
+  transform:translateY(-1px);
+}
+.map-node.completed{
+  cursor:pointer!important;
+  overflow:visible!important;
+}
+.map-node.completed.hv-farm-ready .map-node-ring{
+  filter:brightness(1.14) drop-shadow(0 0 9px rgba(255,204,77,.52));
+}
+.map-node-farm-badge{
+  position:absolute;
+  left:50%;
+  top:calc(100% + 5px);
+  transform:translateX(-50%);
+  min-width:42px;
+  max-width:98px;
+  padding:3px 7px;
+  border:1px solid rgba(239,188,71,.78);
+  border-radius:999px;
+  background:rgba(7,7,8,.94);
+  box-shadow:0 5px 12px rgba(0,0,0,.64),inset 0 0 8px rgba(226,169,65,.10);
+  color:#f5d77e;
+  font:900 10px/1.05 Arial,sans-serif;
+  letter-spacing:.02em;
+  white-space:nowrap;
+  pointer-events:none;
+  z-index:8;
+}
+.map-node-farm-badge.is-claimed{
+  min-width:78px;
+  border-color:rgba(124,159,190,.55);
+  color:#b7c9d8;
+  background:rgba(8,12,16,.94);
+  font-size:9px;
+}
+.map-node.completed.hv-farm-claimed{filter:saturate(.78) brightness(.88);}
+body.hv-mobile-landscape #packShopPanel .hv-shop-back.hv-universal-back-btn{
+  width:clamp(62px,12svh,88px)!important;
+  height:auto!important;
+}
+body.hv-mobile-landscape #mineScreen .mine-back-btn.hv-universal-back-btn{
+  width:clamp(62px,11svh,84px)!important;
+  height:auto!important;
+  left:8px!important;
+  top:8px!important;
+}
+body.hv-mobile-landscape .map-node-farm-badge{font-size:8px;padding:2px 5px;top:calc(100% + 3px);}
+
+@media(max-width:700px) and (orientation:portrait){
+  #mineScreen .mine-back-btn.hv-universal-back-btn{
+    width:56px!important;
+    height:auto!important;
+    left:6px!important;
+    top:8px!important;
+  }
+}

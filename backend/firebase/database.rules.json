@@ -305,6 +305,39 @@
               ".validate": false
             }
           }
+        },
+        "adventureFarm": {
+          "$nodeCode": {
+            ".write": "auth != null && auth.uid === $uid && newData.exists() && (!data.exists() || newData.child('cycleId').val() > data.child('cycleId').val())",
+            ".validate": "newData.hasChildren(['cycleId','claimedAt','rewardKind','rewardKey','rewardAmount','costGems','chapterId','battleId']) && newData.child('cycleId').isNumber() && newData.child('cycleId').val() % 1 === 0 && newData.child('cycleId').val() === ((now - (now % 86400000)) / 86400000) && newData.child('claimedAt').isNumber() && newData.child('claimedAt').val() >= now - 60000 && newData.child('claimedAt').val() <= now + 10000 && newData.child('rewardKind').isString() && (newData.child('rewardKind').val() === 'gold' || newData.child('rewardKind').val() === 'free_spin' || newData.child('rewardKind').val() === 'card') && newData.child('rewardKey').isString() && newData.child('rewardAmount').isNumber() && newData.child('rewardAmount').val() % 1 === 0 && newData.child('rewardAmount').val() >= 1 && newData.child('rewardAmount').val() <= 1000 && ((newData.child('rewardKind').val() === 'gold' && newData.child('rewardKey').val() === '') || (newData.child('rewardKind').val() === 'free_spin' && newData.child('rewardKey').val() === 'mine_wheel' && newData.child('rewardAmount').val() === 1) || (newData.child('rewardKind').val() === 'card' && newData.child('rewardAmount').val() === 1)) && newData.child('costGems').isNumber() && newData.child('costGems').val() === 2 && newData.child('chapterId').isString() && newData.child('battleId').isString()",
+            "cycleId": {
+              ".validate": "newData.isNumber() && newData.val() % 1 === 0"
+            },
+            "claimedAt": {
+              ".validate": "newData.isNumber() && newData.val() >= 0"
+            },
+            "rewardKind": {
+              ".validate": "newData.isString()"
+            },
+            "rewardKey": {
+              ".validate": "newData.isString()"
+            },
+            "rewardAmount": {
+              ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 1"
+            },
+            "costGems": {
+              ".validate": "newData.isNumber() && newData.val() === 2"
+            },
+            "chapterId": {
+              ".validate": "newData.isString()"
+            },
+            "battleId": {
+              ".validate": "newData.isString()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
         }
       }
     },

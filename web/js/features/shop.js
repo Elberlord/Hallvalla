@@ -50,7 +50,7 @@ function shopWallet(profile){
     <span class="hv-shop-wallet-item hv-shop-wallet-gems" title="Gemas disponibles"><img src="assets/home/icon_gems.webp" alt="Gemas"><b>${gems}</b></span>
   </div>`;
 }
-function shopBackButton(action="go-back",label="Volver"){return `<button class="hv-shop-back" type="button" data-shop-action="${escapeHtml(action)}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}"><span aria-hidden="true">←</span></button>`;}
+function shopBackButton(action="go-back",label="Volver"){return `<button class="hv-shop-back hv-universal-back-btn" type="button" data-shop-action="${escapeHtml(action)}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}"><img class="hv-universal-back-art" src="assets/ui/btn_back_hallvalla.webp" alt="" aria-hidden="true"></button>`;}
 function shopStage(background,content="",profile=null,view="main"){
   return `<div class="hv-shop-stage-shell"><div id="hvShopStage" class="hv-shop-stage hv-shop-view-${view}" data-shop-view="${view}"><img class="hv-shop-background" src="${background}" alt="">${profile?shopWallet(profile):""}${content}</div></div>`;
 }
