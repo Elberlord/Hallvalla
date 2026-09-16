@@ -1,0 +1,14 @@
+HallValla v153 · Contratos de Dragón — ejército elemental activo
+
+Corrección
+- Los Contratos de Dragón ya definían desde v148 un mazo de 25 cartas:
+  9 dragones (Bebé/Joven/Adulto de Relámpago, Fuego e Hielo) + 16 magias/trampas.
+- Un hook legacy `adventure.makeEnemyDeck` seguía devolviendo deck/mano vacíos y anulaba por completo ese mazo.
+- Se eliminó esa anulación. El constructor PvE usa ahora su rama específica `dragonContract`.
+
+Resultado
+- J2 recibe las 25 cartas del contrato en TR.
+- Apertura forzada: Bebé Relámpago, Bebé Fuego, Bebé Hielo y Parálisis.
+- Las 9 unidades dragón del contrato entran con Maestría XV.
+- El jefe dragón conserva sus estadísticas y ataques especiales propios; no se le aplica la maestría de unidad.
+- No se modifican los dragones del jugador, APK, Firebase ni economía.

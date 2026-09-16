@@ -69,6 +69,7 @@ db48a88092461093869f4d40bf1123389ce37724a1cf4e79b43f8a2da4bdf225  ./docs/game-bu
 5faa711806f3c22b60503f443e6f158732b8a87039593b997af06b0aff4caa7d  ./docs/game-build/BUILD_20260916_148_DRAGON_CONTRACT_ARMY_XV.txt
 e70ed28254fe3f5dd53acce699354132497b7070554385d19a8c0690df141618  ./docs/game-build/BUILD_20260916_149_PVP_15_BOTS_PER_LEVEL.txt
 563b7485252646cfd94b919ecb941119368a8d99ef1e7b8f3695cee647a0def4  ./docs/game-build/BUILD_20260916_151_UI_RESTORE_WHEEL_ICONS.txt
+740c905411051f6c540e1b5aee1569ad1a133ae1979ad4102a4156b342cb1381  ./docs/game-build/BUILD_20260916_153_DRAGON_CONTRACT_ARMY_FIX.txt
 97c3a9c6238b734e74e2a884de84aa6fb6202f3df4db903a291e337007aa47ef  ./docs/game-build/CHANGELOG_20260908_MENU_RELOJ.txt
 0a4e7407abff0d768e1f3da9fd2b75b250b7b04fe070e7026ef79003c814f7c3  ./docs/game-build/CHANGELOG_20260908_MOV_CACHE_FIX.txt
 df6296fcc58d3372ee3a101da0418bf6ad42e2e960aa9420f81ab38550c50a39  ./docs/game-build/CHANGELOG_20260912_53.txt
@@ -133,7 +134,7 @@ b1ec528f300ddc27c989a461abf557658f2705f3d43c9ebe1539a2a52d1cb752  ./docs/game-bu
 73a0e5eb395f3d6168af7e67adfd4139e33b89ff34d2128c74c85b2b305b6629  ./docs/game-build/PERF_FIELD_FIGURES_LIGHT_TEST_20260908_8.txt
 e1c9c65282ee1a5927e51ec7523cece98c8128aea3893baeef4904e036e2d90b  ./docs/game-build/PVP_CLOSED_LEAGUES_20260910_31.txt
 33c361bea456ffe825643e2e5cd1197e522591554a826b16a39515a63185cae7  ./docs/game-build/PVP_LEAGUE_BOTS_20260910_37.txt
-8a3dbb45fcb61b71d8d1ef526ab3f1e8d45f72753ca2ed0f2f387392f9cb8c41  ./docs/game-build/README_CURRENT_BUILD.txt
+edf8dc16ddcb4675456f50058a8e0a7b943a693704b38b44b4f0f152105499dc  ./docs/game-build/README_CURRENT_BUILD.txt
 4518987dece1739354a68da84ba320f562adcd694178a1550497f48c9877a155  ./docs/game-build/REALTIME_EXPERIMENTAL_20260912_71.txt
 618364854dd5642624c9e35a660492b08d2b9811f63f1941a8116e7396f521d9  ./docs/game-build/RULETA_BALANCE_20260908_5.txt
 5e23a383f40fc5efd3086d7c17c39b636c76d186d038bfa0f920cb77394fdd83  ./docs/game-build/RULETA_BALANCE_20260910_34.txt
@@ -833,8 +834,8 @@ b6a77b8a932a43f36d57cb74e72d19557068d054c27605dc7af75fba0ad331f0  ./web/assets/u
 1090d99e7921e9d7d56867778f36bd19161d93a18ddf6d36d0a88b2bc16ec2e0  ./web/assets/ui/vs_intro/vs_battlefield.webp
 b343b63496fb1605eb9a25dc30c3ee330f05607adc1c3436b2c17eb3e656890b  ./web/assets/ui/vs_intro/vs_emblem.webp
 e2d82e9b8a805e735793fbc96d6290c0021972ccfbe421f51c9cbdc68578b893  ./web/firebase-config.js
-a5ae01d022f638aa2976c9baf3bfc1c345992bd45655ff152134a20c20ed28e9  ./web/index.html
-b0d4501f3db4049ba3d4241fba1fd3b550e1613b19857d94769b83ede0e67932  ./web/js/bootstrap-loader.js
+212485cbfaad21bbf077fa069ae2c67cb79f02d6dc63c614231b05a8b662634a  ./web/index.html
+7e1e235802cff59f333a370e1e76d328fa5f0060b7e9cdda0b63fb288183b780  ./web/js/bootstrap-loader.js
 77d6fc8aaf82a28ece106da6fe95d7e0c95d5e78b4ff743a7f12410a31003845  ./web/js/features/adventure.js
 58e6a324da411d15d29a5296749619221da7008013abdba0dda764817d5822d8  ./web/js/features/battle-layout.js
 9c0f488ad4efcc5af5dbf1f3b8e1658b0c499d9dea55945452cf75e60f2cc465  ./web/js/features/forge-layout.js
@@ -863,10 +864,10 @@ e3ddf342dc9172cb9cb34bbd705149c2d8ba683bcfed577fc6f4bc4f6896dd68  ./web/js/parts
 322def3378d54f6abf1ca5cc8a2f7ceb603e020bb0b5dd8d225170372241b3bd  ./web/js/parts/14-adventure-engine-ui.js
 2bc6301d59a5a873af0c172763d42e19c566f0c6528d4f6ecba06752fc9fb336  ./web/js/parts/15-settings-tuners-events.js
 b4c68feaa1c017293987287ac9a3079bdc7c1a995cf8db62f9f3f11e72e27ba3  ./web/js/parts/16-exact-guides-mobile.js
-0b964654d118580b874bf075247aadb0f0eea0a09d56951555a9756e2cab9f44  ./web/js/parts/17-dragon-contracts.js
+32050079344eeb1e9c384a3b9d568f32881225f9aed4cf016b9421c0c6951a3e  ./web/js/parts/17-dragon-contracts.js
 1ff144575b194ba2545d1bcf061e789a1cb647d679a3274fbce3de8d3d66de4a  ./web/js/parts/18-dragon-egg.js
 f0e52063c31a878b029c1a5b97d7025e717c45341e577388c7c6bb6e1caa7295  ./web/js/parts/19-field-figures-3d.js
-0759e989750c7ff993fffd6d3bb26500f81f0a7c773154d354059c458404a9df  ./web/js/parts/20-gamepad-controls.js
+0a90e299501193d978594d90e2d23753b4ee2c8367b0e15f829f35a4a0206863  ./web/js/parts/20-gamepad-controls.js
 ad15212f42d2cb5af6e0a478d7335c216e645c3233d8eaad06ee54a1594a1198  ./web/js/parts/21-realtime-experimental.js
-423c6bb2adc39b5f97199fad170ebaee8340d5dbae32a874138b3d43df15ad7d  ./web/service-worker.js
+711f225d2c6978af728e25e84abe91dced61197d790a559124a3dc5c69a8d393  ./web/service-worker.js
 93c830a386a1d887a0793510c68bbf99401fbd3531d26660cc0434c1a7d3001a  ./web/styles.css

@@ -56,10 +56,10 @@ function hvGamepadInstallStyles(){
   const style=document.createElement("style");
   style.id="hallvallaGamepadStyles";
   style.textContent=`
-    #hallvallaGamepadBadge{position:fixed;z-index:2147482000;right:max(10px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top));width:46px;height:28px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0;border:1px solid rgba(201,157,72,.72);border-radius:999px;background:rgba(8,8,10,.86);box-shadow:0 0 13px rgba(0,0,0,.42),inset 0 0 8px rgba(201,157,72,.10);pointer-events:none;opacity:0;transform:translateY(-4px);transition:opacity .18s ease,transform .18s ease;backdrop-filter:blur(4px)}
+    #hallvallaGamepadBadge{position:fixed;z-index:2147482000;right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));top:auto;width:36px;height:22px;display:flex;align-items:center;justify-content:center;gap:4px;padding:0;border:1px solid rgba(201,157,72,.62);border-radius:999px;background:rgba(8,8,10,.78);box-shadow:0 0 10px rgba(0,0,0,.38),inset 0 0 6px rgba(201,157,72,.08);pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .18s ease,transform .18s ease;backdrop-filter:blur(3px)}
     #hallvallaGamepadBadge.show{opacity:.94;transform:translateY(0)}
-    #hallvallaGamepadBadge .hv-gp-dot{width:8px;height:8px;border-radius:50%;background:#69db87;box-shadow:0 0 9px #69db87;flex:none}
-    #hallvallaGamepadBadge .hv-gp-icon{font:400 15px/1 system-ui,sans-serif;color:#f3ddb1;transform:translateY(-.5px)}
+    #hallvallaGamepadBadge .hv-gp-dot{width:6px;height:6px;border-radius:50%;background:#69db87;box-shadow:0 0 7px #69db87;flex:none}
+    #hallvallaGamepadBadge .hv-gp-icon{font:400 12px/1 system-ui,sans-serif;color:#f3ddb1;transform:translateY(-.5px)}
     #hallvallaGamepadBadge.disconnected .hv-gp-dot{background:#d44f4f;box-shadow:0 0 9px #d44f4f}
     .cell.hv-gamepad-cursor{outline:3px solid rgba(255,225,126,.96)!important;outline-offset:-4px;box-shadow:inset 0 0 0 2px rgba(25,13,2,.84),inset 0 0 20px rgba(255,211,79,.20),0 0 13px rgba(255,211,79,.52)!important;z-index:24}
     .cell.hv-gamepad-cursor::after{content:"";position:absolute;inset:5px;border:1px dashed rgba(255,242,185,.9);pointer-events:none;z-index:90}
@@ -71,7 +71,7 @@ function hvGamepadInstallStyles(){
     #hallvallaGamepadPointer svg{display:block;width:27px;height:34px;overflow:visible}
     #hallvallaGamepadPointer .hv-gp-pointer-fill{fill:#ffe083}
     #hallvallaGamepadPointer .hv-gp-pointer-stroke{stroke:#160f05;stroke-width:2.2;stroke-linejoin:round}
-    @media(max-width:720px){#hallvallaGamepadBadge{width:42px;height:26px;gap:5px}}
+    @media(max-width:720px){#hallvallaGamepadBadge{width:32px;height:20px;gap:3px;right:max(6px,env(safe-area-inset-right));bottom:max(6px,env(safe-area-inset-bottom))}#hallvallaGamepadBadge .hv-gp-icon{font-size:11px}#hallvallaGamepadBadge .hv-gp-dot{width:5px;height:5px}}
   `;
   document.head.appendChild(style);
 }

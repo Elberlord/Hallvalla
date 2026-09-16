@@ -279,7 +279,11 @@ function applyDragonFrost(unit,sourceName="Dragón de Hielo",stacks=1,state=publ
   registerHallvallaHook("adventure.aiPrincipalAllowed",({battle})=>isDragonContractBattle(battle)?{handled:true,value:false}:{handled:false},{id:"dragon-contract:ai-principal-allowed"});
   registerHallvallaHook("adventure.aiPrincipalSlots",({battle})=>isDragonContractBattle(battle)?{handled:true,value:0}:{handled:false},{id:"dragon-contract:ai-principal-slots"});
   registerHallvallaHook("adventure.aiPrincipalKeys",({battle})=>isDragonContractBattle(battle)?{handled:true,value:[]}:{handled:false},{id:"dragon-contract:ai-principal-keys"});
-  registerHallvallaHook("adventure.makeEnemyDeck",({battle})=>isDragonContractBattle(battle)?{handled:true,value:{deck:[],hand:[]}}:{handled:false},{id:"dragon-contract:enemy-deck"});
+  /* v153: NO vaciar el mazo del Contrato de Dragón.
+     El constructor normal de PvE ya tiene una rama dragonContract dedicada que
+     conserva exactamente las 25 cartas (9 dragones XV + 16 magias/trampas)
+     y fuerza la apertura definida. Este hook legacy era el que anulaba todo
+     ese mazo y hacía que el jefe peleara completamente solo. */
   registerHallvallaHook("adventure.rewardLabel",({battle})=>isDragonContractBattle(battle)?{handled:true,value:`${battle.xp} EXP · ${battle.gold} Oro · Huevo de Dragón x1`}:{handled:false},{id:"dragon-contract:reward-label"});
   registerHallvallaHook("adventure.nextBattle",({battle})=>isDragonContractBattle(battle)?{handled:true,value:null}:{handled:false},{id:"dragon-contract:next-battle"});
   registerHallvallaHook("adventure.nextBattleId",({state})=>isDragonContractBattle(state?.adventureBattleId)?{handled:true,value:""}:{handled:false},{id:"dragon-contract:next-battle-id"});
@@ -516,6 +520,7 @@ registerHallvallaHook("adventure.enemyTurn",async({state,gameId:currentGameId})=
 
 const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v21_fire_cleanup";
 const HALLVALLA_EVENT_UI_LAYOUT_FIX_151_KEY="hallvalla_event_ui_layout_fix_151";
+const HALLVALLA_EVENT_UI_LAYOUT_FIX_152_KEY="hallvalla_event_ui_layout_fix_152";
 
 const HALLVALLA_HUD_DEFAULT=Object.freeze({x:0,y:0,scale:100,width:100,height:100,padding:0,gap:0});
 /* Configuración DE FÁBRICA confirmada por el usuario (2026-08-08). */
@@ -539,9 +544,9 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.gear": {
-    "x": 0,
-    "y": 0,
-    "scale": 100,
+    "x": 21,
+    "y": -20,
+    "scale": 70,
     "width": 100,
     "height": 100,
     "padding": 0,
@@ -1228,6 +1233,20 @@ function getHallvallaEventUiSettings(){
         if(oldGear&&near(oldGear.x,21,4)&&near(oldGear.y,-20,4))raw.hud["beast.gear"]={...oldGear,x:0,y:0,scale:100};
         if(stored)localStorage.setItem(HALLVALLA_EVENT_UI_STORAGE_KEY,JSON.stringify(raw));
         localStorage.setItem(HALLVALLA_EVENT_UI_LAYOUT_FIX_151_KEY,"1");
+      }
+    }catch(_){ }
+    /* v152: en v151 se interpretó "control" como el engranaje del Beast Master.
+       El usuario se refería al indicador de gamepad. Restauramos SOLO el engranaje
+       a su calibración anterior y preservamos la corrección de los tres tabs. */
+    try{
+      if(localStorage.getItem(HALLVALLA_EVENT_UI_LAYOUT_FIX_152_KEY)!=="1"){
+        raw.hud=raw.hud&&typeof raw.hud==="object"?{...raw.hud}:{};
+        const gear=raw.hud["beast.gear"];
+        if(localStorage.getItem(HALLVALLA_EVENT_UI_LAYOUT_FIX_151_KEY)==="1"&&gear&&Math.abs(Number(gear.x||0))<=2&&Math.abs(Number(gear.y||0))<=2&&Math.abs(Number(gear.scale||100)-100)<=3){
+          raw.hud["beast.gear"]={...gear,x:21,y:-20,scale:70};
+          localStorage.setItem(HALLVALLA_EVENT_UI_STORAGE_KEY,JSON.stringify(raw));
+        }
+        localStorage.setItem(HALLVALLA_EVENT_UI_LAYOUT_FIX_152_KEY,"1");
       }
     }catch(_){ }
     const hud={};
@@ -1919,7 +1938,6 @@ registerHallvallaHook("deck.save",async()=>{
   .hallvalla-events-close,.hallvalla-events-gear{position:absolute;top:18px;width:42px;height:42px;border-radius:999px;border:1px solid rgba(228,191,105,.52);background:rgba(10,10,12,.95);color:#efd596;display:grid;place-items:center;font-size:28px;line-height:1;cursor:pointer;box-shadow:0 12px 28px rgba(0,0,0,.28);z-index:12}
   .hallvalla-events-close{right:18px}
   .hallvalla-events-gear{right:68px;font-size:20px}
-  .hallvalla-events-shell--beast>.hallvalla-events-gear{top:auto;right:14px;bottom:14px;width:30px;height:30px;font-size:14px;border-color:rgba(228,191,105,.38);box-shadow:0 7px 16px rgba(0,0,0,.30)}
   .hallvalla-events-tabs--beast{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:10061;pointer-events:none;overflow:visible}.hallvalla-events-tabs--persistent{isolation:isolate}
   .hallvalla-beast-tab-btn{position:fixed;width:340px;max-width:32vw;padding:0!important;border:0!important;background:transparent!important;background-color:transparent!important;box-shadow:none!important;appearance:none!important;-webkit-appearance:none!important;outline:none;cursor:pointer;pointer-events:auto;filter:drop-shadow(0 10px 24px rgba(0,0,0,.45));transition:filter .18s ease,opacity .18s ease;transform-origin:center center}
   .hallvalla-beast-tab-btn img{display:block;width:100%;height:auto;background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:none;user-select:none}
