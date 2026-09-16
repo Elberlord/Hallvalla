@@ -1,0 +1,10 @@
+HALLVALLA v141 — MAPA 2 / TIER 2 / IA
+
+- Los tres encuentros del Mapa 2 usan recetas competitivas reales de 15 cartas.
+- 2-1 Guerrero: Richard + Wallace + Hua Lan, núcleo Samurai Katana/Legionario y utilidades Warrior.
+- 2-2 Arquero: Richard + Wallace + Hua Lan como pantalla/flanco, batería de arqueros y control (Quemadura/Veneno/Parálisis).
+- 2-3 Simo: Simo + héroes ya obtenibles en Mapa 1, arqueros de precisión y setup de ejecución.
+- adaptiveFixedDeck hace que el constructor adaptativo parta de estos decks y no del arquetipo genérico.
+- adaptiveCoreMin conserva las piezas esenciales; la IA aún puede cambiar algunos slots según el expediente del jugador.
+- La IA de Aventura ya opera con ADVENTURE_AI_BEST_SKILL_LEVEL=20; se añadió prioridad explícita para que Simo busque golpes letales y active Muerte Blanca/Sigilo.
+- No cambia APK ni Firebase. Es un cambio web.

@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"/>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260916.140">
-<meta name="hallvalla-build" content="v8_MODULAR_20260916.140">
-<meta name="hallvalla-build-name" content="Mapa 1 IA · estados persistentes · ritmo TR · 20260916.140">
-<link rel="stylesheet" href="styles.css?h=51c4f88cd271"/>
+<meta name="hallvalla-version" content="20260916.142">
+<meta name="hallvalla-build" content="v8_MODULAR_20260916.142">
+<meta name="hallvalla-build-name" content="Mapa 2 Tier 2 competitivo · IA de ejecución · 20260916.141">
+<link rel="stylesheet" href="styles.css?h=5ced312e4ffc"/>
 
 <link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.90">
 <link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.90">
@@ -1058,20 +1058,15 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<div id="notificationsPanel" class="overlay-panel hidden">
-  <div class="modal-card notifications-card">
-    <h2>Notificaciones</h2>
+<div id="notificationsPanel" class="overlay-panel hidden" aria-label="Notificaciones">
+  <div class="modal-card notifications-card" role="dialog" aria-modal="true">
     <div id="notificationsList" class="notifications-list"></div>
-    <div class="adventure-actions">
-      <button id="openPacksFromNotificationsBtn" class="btn primary hidden" type="button">Abrir paquetes</button>
-      <button id="openMissionsFromNotificationsBtn" class="btn primary hidden" type="button">Reclamar maestrías</button>
-      <button id="openDeckBuilderFromNotificationsBtn" class="btn ghost hidden" type="button">Ir a mazos</button>
+    <div class="notification-quick-actions" aria-label="Acciones rápidas">
+      <button id="openPacksFromNotificationsBtn" class="notification-quick-icon notification-pack-icon hidden" type="button" aria-label="Abrir paquetes" title="Abrir paquetes"><span class="hv-sr-only">Abrir paquetes</span></button>
+      <button id="openDeckBuilderFromNotificationsBtn" class="notification-quick-icon notification-deck-icon hidden" type="button" aria-label="Ir a mazos" title="Ir a mazos"><span class="hv-sr-only">Ir a mazos</span></button>
     </div>
-    <div class="deck-rule-box">
-      <b>Regla de mazo</b>
-      <p>Cartas básicas: máximo 3 copias por mazo. Todas las demás rarezas: máximo 1 copia por mazo. El tamaño depende del Tier del líder: Tier 1 = 10 cartas, Tier 2 = 15, Tier 3 = 20, Tier 4 = 25 y Tier 5 = 30 cartas. El nivel del líder determina su Tier actual.</p>
-    </div>
-    <button id="closeNotificationsBtn" class="btn primary full" type="button">Cerrar</button>
+    <button id="openMissionsFromNotificationsBtn" class="hidden" type="button" aria-hidden="true" tabindex="-1"></button>
+    <button id="closeNotificationsBtn" class="hidden" type="button" aria-hidden="true" tabindex="-1"></button>
   </div>
 </div>
 
@@ -1512,6 +1507,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=7336233ca058"></script>
+<script type="module" src="js/bootstrap-loader.js?h=12ad02f427fb"></script>
 </body>
 </html>

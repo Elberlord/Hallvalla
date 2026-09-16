@@ -1,0 +1,8 @@
+HallValla v142 — Notificaciones compactas
+
+- Se elimina la caja visual grande del modal de Notificaciones.
+- Se elimina del modal la sección "Regla de mazo".
+- Las acciones visibles pasan a ser iconos: abrir paquetes e ir a mazos.
+- La notificación de paquetes queda como aviso flotante compacto.
+- El botón textual Cerrar deja de mostrarse; se cierra tocando fuera o con Escape.
+- No modifica gameplay, Firebase, APK ni reglas de mazo.

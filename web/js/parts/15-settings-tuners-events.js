@@ -62,6 +62,13 @@ on("startAdventureBattleBtn","click",startPendingAdventureBattle);
 document.querySelectorAll("[data-adventure-special]").forEach(btn=>btn.addEventListener("click",()=>showAdventureWoundedIntro(btn.dataset.adventureSpecial)));
 on("notificationsBtn","click",openNotifications);
 on("closeNotificationsBtn","click",closeNotifications);
+const notificationsOverlay=$("notificationsPanel");
+if(notificationsOverlay){
+  notificationsOverlay.addEventListener("click",event=>{if(event.target===notificationsOverlay)closeNotifications();});
+}
+document.addEventListener("keydown",event=>{
+  if(event.key==="Escape"&&notificationsOverlay&&!notificationsOverlay.classList.contains("hidden"))closeNotifications();
+});
 
 const packObject=$("packOpeningObject");
 if(packObject){packObject.addEventListener("click",revealActivePack);packObject.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();revealActivePack();}});}

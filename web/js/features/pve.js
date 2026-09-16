@@ -1005,6 +1005,33 @@ function adaptiveCampaignCounterCandidates(profile,enemyLeaderType="",battle=nul
 }
 function getAdaptiveCampaignBaseDeckTemplates(battle,enemyLeaderType,targetDeckSize,principalKeys=[]){
   const target=Math.max(1,Number(targetDeckSize)||DECK_RULES.drawDeckSize);
+
+  // v141 · Encuentros diseñados a mano.
+  // Un adaptiveFixedDeck es la receta competitiva REAL del duelo. La IA puede
+  // evolucionar algunos slots después, pero siempre parte del mazo que diseñamos
+  // para esa clase/Tier en vez del arquetipo genérico.
+  if(Array.isArray(battle?.adaptiveFixedDeck)&&battle.adaptiveFixedDeck.length){
+    const templates=[];
+    for(const entry of battle.adaptiveFixedDeck){
+      const key=Array.isArray(entry)?entry[0]:entry?.key||entry;
+      const count=Math.max(1,Number(Array.isArray(entry)?entry[1]:entry?.count)||1);
+      const card=getAdventureDeckCardTemplateByKey(key);
+      if(!card||!isAdaptiveBaseCardAllowedForBattle(card,battle,enemyLeaderType))continue;
+      const cap=Math.min(3,typeof maxCopiesForCard==="function"?maxCopiesForCard(card):3);
+      for(let i=0;i<Math.min(count,cap);i++)templates.push(card);
+    }
+    if(templates.length===target)return templates.slice(0,target);
+    console.warn(`[HallValla][AI Deck] adaptiveFixedDeck ${battle?.id}: ${templates.length}/${target}. Se completa con el arquetipo canónico.`);
+    const filler=getAdaptiveCanonicalClassDeckTemplates(enemyLeaderType,target);
+    for(const card of filler){
+      if(templates.length>=target)break;
+      const copies=templates.filter(c=>String(c?.key||"")===String(card?.key||"")).length;
+      if(copies>=Math.min(3,typeof maxCopiesForCard==="function"?maxCopiesForCard(card):3))continue;
+      templates.push(card);
+    }
+    if(templates.length>=target)return templates.slice(0,target);
+  }
+
   // Mapa 1 conserva su identidad, pero una doctrina de mazo puede publicar una
   // base mejorada explícita sin tocar el enemyFixedDeck legacy del encuentro.
   if(isAdaptiveMap1Battle(battle)){
@@ -1083,6 +1110,13 @@ function getAdaptiveCampaignCoreMin(battle,enemyLeaderType,base=[],principalKeys
     return ADAPTIVE_MAP1_CORE_MIN[battle?.id]||{};
   }
   const core=doctrineCore&&typeof doctrineCore==="object"?{...doctrineCore}:{};
+  // Los encuentros bespoke pueden congelar las piezas que hacen funcionar su combo
+  // y dejar el resto de slots libres para la adaptación contra el jugador.
+  if(battle?.adaptiveCoreMin&&typeof battle.adaptiveCoreMin==="object"){
+    for(const [key,value] of Object.entries(battle.adaptiveCoreMin)){
+      core[String(key)]=Math.max(Number(core[String(key)]||0),Math.max(0,Number(value)||0));
+    }
+  }
   const counts={};
   const principalSet=new Set((principalKeys||[]).map(String));
   for(const card of base||[]){
@@ -3983,7 +4017,12 @@ async function adventureEnemyTurn(){
       :0;
     const cavalryLeaderPenalty=cavalryRangedCrisis&&target.leader?-900:0;
     const moraleInvaderBonus=aiMoraleTargetBonus(target);
-    return leaderBonus+lethalBonus+lowHpBonus+valueBonus+proximityBonus+hitReliability+expectedHp*36+weaponMatch+fireSupport+exposedTargetBonus+doctrineBonus+tempoBonus+rangedSuppressionBonus+cavalryRangedBonus+cavalryLeaderPenalty+moraleInvaderBonus;
+    // Muerte Blanca necesita el golpe final. Simo no desperdicia un remate que pueda
+    // convertirlo inmediatamente en Sigilo; prioriza esa ejecución sobre daño bruto.
+    const simoExecutionBonus=attacker?.key==="simo_hayha"&&!target.leader&&lethal
+      ?(isStealthedUnit(attacker)?820:680)
+      :0;
+    return leaderBonus+lethalBonus+lowHpBonus+valueBonus+proximityBonus+hitReliability+expectedHp*36+weaponMatch+fireSupport+exposedTargetBonus+doctrineBonus+tempoBonus+rangedSuppressionBonus+cavalryRangedBonus+cavalryLeaderPenalty+moraleInvaderBonus+simoExecutionBonus;
   };
 
   const aiCavalryRangedCrisisTarget=(attacker)=>{
