@@ -1,0 +1,15 @@
+HallValla v151 · 2026-09-16
+
+UI ONLY / NO GAMEPLAY CHANGES
+
+1. Beast Master
+- Restored the three main tab buttons to their base positions (no inherited extreme XY offsets).
+- Added one-time migration for the known broken preset values only.
+- Beast Master HUD-control gear moved to the lower-right corner and reduced in size.
+
+2. Mine > Rewards
+- Rewards-pool opener is now a small icon in the lower-right corner.
+- Removed the large all-at-once reward cards from the visible UX.
+- The pool opens as 10 exact wheel-art icon buttons.
+- Clicking an icon shows only that category description and its currently available outcomes.
+- Category icon crops are derived from the canonical wheel artwork, so no unrelated glyphs are used.

@@ -515,6 +515,7 @@ registerHallvallaHook("adventure.enemyTurn",async({state,gameId:currentGameId})=
    ------------------------------------------------------------------------- */
 
 const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v21_fire_cleanup";
+const HALLVALLA_EVENT_UI_LAYOUT_FIX_151_KEY="hallvalla_event_ui_layout_fix_151";
 
 const HALLVALLA_HUD_DEFAULT=Object.freeze({x:0,y:0,scale:100,width:100,height:100,padding:0,gap:0});
 /* Configuración DE FÁBRICA confirmada por el usuario (2026-08-08). */
@@ -538,9 +539,9 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.gear": {
-    "x": 21,
-    "y": -20,
-    "scale": 70,
+    "x": 0,
+    "y": 0,
+    "scale": 100,
     "width": 100,
     "height": 100,
     "padding": 0,
@@ -556,8 +557,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.tab.info": {
-    "x": 622.5027465820312,
-    "y": -186.97576141357422,
+    "x": 0,
+    "y": 0,
     "scale": 70,
     "width": 100,
     "height": 100,
@@ -565,8 +566,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.tab.rewards": {
-    "x": 237.705322265625,
-    "y": -73.6231689453125,
+    "x": 0,
+    "y": 0,
     "scale": 70,
     "width": 100,
     "height": 100,
@@ -574,8 +575,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.tab.global": {
-    "x": -144.6907958984375,
-    "y": 47.3621826171875,
+    "x": 0,
+    "y": 0,
     "scale": 70,
     "width": 100,
     "height": 100,
@@ -1214,6 +1215,21 @@ function getHallvallaEventUiSettings(){
   try{
     const stored=localStorage.getItem(HALLVALLA_EVENT_UI_STORAGE_KEY);
     const raw=stored?JSON.parse(stored):{};
+    /* v151: corrige únicamente la calibración defectuosa que quedó grabada como
+       preset en builds previas. Preserva cualquier ajuste manual diferente. */
+    try{
+      if(localStorage.getItem(HALLVALLA_EVENT_UI_LAYOUT_FIX_151_KEY)!=="1"){
+        raw.hud=raw.hud&&typeof raw.hud==="object"?{...raw.hud}:{};
+        const near=(value,target,tol=3)=>Math.abs(Number(value||0)-Number(target||0))<=tol;
+        const oldInfo=raw.hud["beast.tab.info"],oldRewards=raw.hud["beast.tab.rewards"],oldGlobal=raw.hud["beast.tab.global"],oldGear=raw.hud["beast.gear"];
+        if(oldInfo&&near(oldInfo.x,622.5027,4)&&near(oldInfo.y,-186.9757,4))raw.hud["beast.tab.info"]={...oldInfo,x:0,y:0,scale:70};
+        if(oldRewards&&near(oldRewards.x,237.7053,4)&&near(oldRewards.y,-73.6231,4))raw.hud["beast.tab.rewards"]={...oldRewards,x:0,y:0,scale:70};
+        if(oldGlobal&&near(oldGlobal.x,-144.6908,4)&&near(oldGlobal.y,47.3622,4))raw.hud["beast.tab.global"]={...oldGlobal,x:0,y:0,scale:70};
+        if(oldGear&&near(oldGear.x,21,4)&&near(oldGear.y,-20,4))raw.hud["beast.gear"]={...oldGear,x:0,y:0,scale:100};
+        if(stored)localStorage.setItem(HALLVALLA_EVENT_UI_STORAGE_KEY,JSON.stringify(raw));
+        localStorage.setItem(HALLVALLA_EVENT_UI_LAYOUT_FIX_151_KEY,"1");
+      }
+    }catch(_){ }
     const hud={};
     Object.keys(HALLVALLA_HUD_TARGETS).forEach(key=>{
       const saved=raw?.hud?.[key];
@@ -1903,6 +1919,7 @@ registerHallvallaHook("deck.save",async()=>{
   .hallvalla-events-close,.hallvalla-events-gear{position:absolute;top:18px;width:42px;height:42px;border-radius:999px;border:1px solid rgba(228,191,105,.52);background:rgba(10,10,12,.95);color:#efd596;display:grid;place-items:center;font-size:28px;line-height:1;cursor:pointer;box-shadow:0 12px 28px rgba(0,0,0,.28);z-index:12}
   .hallvalla-events-close{right:18px}
   .hallvalla-events-gear{right:68px;font-size:20px}
+  .hallvalla-events-shell--beast>.hallvalla-events-gear{top:auto;right:14px;bottom:14px;width:30px;height:30px;font-size:14px;border-color:rgba(228,191,105,.38);box-shadow:0 7px 16px rgba(0,0,0,.30)}
   .hallvalla-events-tabs--beast{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:10061;pointer-events:none;overflow:visible}.hallvalla-events-tabs--persistent{isolation:isolate}
   .hallvalla-beast-tab-btn{position:fixed;width:340px;max-width:32vw;padding:0!important;border:0!important;background:transparent!important;background-color:transparent!important;box-shadow:none!important;appearance:none!important;-webkit-appearance:none!important;outline:none;cursor:pointer;pointer-events:auto;filter:drop-shadow(0 10px 24px rgba(0,0,0,.45));transition:filter .18s ease,opacity .18s ease;transform-origin:center center}
   .hallvalla-beast-tab-btn img{display:block;width:100%;height:auto;background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:none;user-select:none}

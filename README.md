@@ -17,8 +17,8 @@ The workflow `.github/workflows/publish-hallvalla-public.yml` builds a Pages art
 The APK signing key is deliberately NOT included in this repository package.
 
 ## Current versions
-- Browser/gameplay base: v150
-- Public distribution shell: v150 (Tutorial V2 TR + recorrido guiado de sistemas; conserva PvP BOT por nivel, Contratos de Dragón XV y progresión de mapas)
+- Browser/gameplay base: v151
+- Public distribution shell: v151 (restauración visual Beast Master + premios de ruleta por iconos; conserva Tutorial V2, PvP BOT por nivel, Contratos de Dragón XV y progresión de mapas)
 - Android APK: v131 / versionCode 131 / `com.hallvalla.game`
 
 ## First setup
@@ -75,3 +75,13 @@ Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
 - Cada paso nuevo entrega 5 Oro y completar cada módulo por primera vez entrega 20 Oro adicionales; repetir tutoriales no vuelve a pagar recompensas.
 - Mina enseña la regla de unidades libres: una unidad en mazo no puede producir y una unidad que entra al mazo sale automáticamente de producción.
 - El progreso del nuevo recorrido se conserva en almacenamiento local/nube mediante `hallvalla_tutorial_systems_v1`.
+
+
+## v151 · Restauración de UI + Recompensas de ruleta por iconos
+- Beast Master: se corrige la calibración heredada que desplazó Información, Recompensas y Eventos globales; vuelven a usar su fila base sin offsets extremos.
+- Se añade migración puntual para navegadores que ya tenían guardado el preset defectuoso, sin borrar otros ajustes manuales.
+- El icono de edición/control del Beast Master pasa a la esquina inferior derecha y se reduce.
+- Mina > Recompensas: el control de premios posibles se convierte en un icono pequeño en la esquina inferior derecha.
+- El panel de premios deja de mostrar las tarjetas grandes: primero aparecen 10 iconos exactos recortados del arte de la ruleta.
+- Al tocar cada icono se abre únicamente la explicación de esa familia y sus premios todavía disponibles.
+- Los iconos de explicación proceden del mismo asset `wheel_mine_grouped_final.webp`, para que coincidan visualmente con lo que el jugador ve en la rueda.
