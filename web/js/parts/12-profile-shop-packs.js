@@ -815,7 +815,13 @@ function getUnitMasteryRankFromKills(kills){
 function getUnitMasteryRank(entity){
   if(!entity||entity.leader||isUnitServiceProgression(entity))return 1;
   if(Number(entity.masteryRank)>0)return Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(entity.masteryRank)||1));
-  if(entity.owner&&myPlayer&&Number(entity.owner)!==Number(myPlayer))return 1;
+  if(entity.owner&&myPlayer&&Number(entity.owner)!==Number(myPlayer)){
+    // v147: cualquier unidad generada/reanimada por la IA durante Aventura
+    // hereda el Rango del mapa, incluso si no vino directamente del mazo.
+    const adventureRank=publicState?.mode==="adventure"?Number(publicState?.adventureEnemyUnitMasteryRank||0):0;
+    if(adventureRank>0)return Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,adventureRank));
+    return 1;
+  }
   return getUnitMasteryRankFromKills(getUnitMasteryRecord(entity).kills);
 }
 function getUnitMasteryStatBonusByRank(rank){return Math.max(0,(Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(rank)||1))-1)*2);}

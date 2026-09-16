@@ -1311,10 +1311,25 @@ function recordAdaptiveCampaignBattle(pub){
   }catch(e){console.warn("[HallValla] La campaña no pudo registrar la experiencia táctica del duelo:",e);return false;}
 }
 
+// v147 · Maestría de campaña de la IA: cada mapa sube exactamente un rango.
+// Mapa 1 = I, Mapa 2 = II ... Mapa 15+ = XV. El guardián previo queda en I.
+// Los eventos Beastmaster conservan su regla especial de rango máximo.
+function getAdventureEnemyUnitMasteryRank(battle){
+  if(battle?.beastEvent)return UNIT_MASTERY_MAX_RANK;
+  if(!battle||battle.isGuardian)return 1;
+  const chapter=typeof getAdventureChapterForBattle==="function"?getAdventureChapterForBattle(battle):null;
+  const major=Math.floor(parseFloat(String(chapter?.number||"1").replace(",","."))||1);
+  return Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,major));
+}
 function makeEnemyDeckForBattle(battle,enemyLeaderType){
   const override=resolveHallvallaOverride("adventure.makeEnemyDeck",{battle,enemyLeaderType});
   if(override.handled)return override.value;
   const principalSlots=0;
+  const enemyMasteryRank=getAdventureEnemyUnitMasteryRank(battle);
+  const toEnemyCard=(template)=>{
+    const card=makeCard(template,2,enemyLeaderType);
+    return card?.type==="unit"?{...card,masteryRank:enemyMasteryRank,adventureEnemyMastery:true}:card;
+  };
   const enemyLevel=typeof getAdventureEnemyLeaderLevel==="function"?getAdventureEnemyLeaderLevel(battle):Math.max(1,Number(battle?.aiLevel||1)||1);
   const targetDeckSize=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(enemyLevel):DECK_RULES.drawDeckSize;
   if(isAdventureAdaptiveCampaignBattle(battle)){
@@ -1332,7 +1347,7 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
         console.error(`[HallValla] CAP CAMPAÑA ${battle.id} (${ADAPTIVE_CAMPAIGN_VISIBLE_RARITY[cap]||cap}): cartas no autorizadas: ${forbidden.map(c=>c?.key||c?.name).join(", ")}`);
       }
     }
-    const adaptiveDeck=shuffle(adaptiveTemplates.map(card=>makeCard(card,2,enemyLeaderType)));
+    const adaptiveDeck=shuffle(adaptiveTemplates.map(card=>toEnemyCard(card)));
     const draw=drawCards(adaptiveDeck,[],4);
     return{deck:draw.deck,hand:draw.hand};
   }
@@ -1352,7 +1367,7 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
       }
     }
     const maxedCards=beastDeck.map(template=>{
-      const card=makeCard(template,2,enemyLeaderType);
+      const card=toEnemyCard(template);
       return card.type==="unit"?{...card,masteryRank:UNIT_MASTERY_MAX_RANK,eventMaxLevel:true}:card;
     });
     const draw=drawCards(shuffle(maxedCards),[],4);
@@ -1379,15 +1394,34 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
     if(mixedFixedTemplates.length!==targetDeckSize){
       console.warn(`[HallValla] El mazo fijo de ${battle.id||battle.enemyName||"IA"} quedó ${mixedFixedTemplates.length}/${targetDeckSize} tras aplicar Tier y mínimo 70% unidades.`);
     }
+    // v146 · Apertura guionizada para duelos extremos.
+    // Permite garantizar hasta 4 cartas ya presentes en el mazo fijo sin crear
+    // copias extra ni saltarse el tamaño/Tier. Aquiles usa esto para empezar
+    // con artillería y frontline superior en vez de depender de un robo aleatorio.
+    if(Array.isArray(battle?.enemyForcedOpeningCards)&&battle.enemyForcedOpeningCards.length){
+      const forced=[];
+      let pool=mixedFixedTemplates.slice();
+      for(const rawKey of battle.enemyForcedOpeningCards){
+        if(forced.length>=4)break;
+        const key=String(rawKey||"");
+        const index=pool.findIndex(card=>String(card?.key||"")===key);
+        if(index<0)continue;
+        forced.push(pool[index]);
+        pool.splice(index,1);
+      }
+      const draw=drawCards(shuffle(pool.map(card=>toEnemyCard(card))),[],Math.max(0,4-forced.length));
+      return{deck:draw.deck,hand:[...forced.map(card=>toEnemyCard(card)),...draw.hand]};
+    }
+
     // El primer Hechicero conserva su enseñanza tutorial con un Adepto Arcano garantizado en mano.
     if(battle?.id==="guardian_mage"){
       const forcedUnit=mixedFixedTemplates.find(card=>card?.key==="arcane_adept")||mixedFixedTemplates.find(card=>card?.type==="unit");
       let pool=forcedUnit?removeOneTemplateByKey(mixedFixedTemplates,forcedUnit.key):mixedFixedTemplates;
       pool=pool.slice(0,Math.max(0,targetDeckSize-(forcedUnit?1:0)));
-      const draw=drawCards(shuffle(pool.map(card=>makeCard(card,2,enemyLeaderType))),[],forcedUnit?3:4);
-      return{deck:draw.deck,hand:[...(forcedUnit?[makeCard(forcedUnit,2,enemyLeaderType)]:[]),...draw.hand]};
+      const draw=drawCards(shuffle(pool.map(card=>toEnemyCard(card))),[],forcedUnit?3:4);
+      return{deck:draw.deck,hand:[...(forcedUnit?[toEnemyCard(forcedUnit)]:[]),...draw.hand]};
     }
-    const fixedDeck=shuffle(mixedFixedTemplates.slice(0,targetDeckSize).map(card=>makeCard(card,2,enemyLeaderType)));
+    const fixedDeck=shuffle(mixedFixedTemplates.slice(0,targetDeckSize).map(card=>toEnemyCard(card)));
     const draw=drawCards(fixedDeck,[],4);
     return{deck:draw.deck,hand:draw.hand};
   }
@@ -1398,8 +1432,8 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
   if(battle?.id==="guardian_mage"){
     const forcedUnit=baseTemplates.find(c=>c.key==="arcane_adept")||baseTemplates.find(c=>c.type==="unit");
     let pool=forcedUnit?removeOneTemplateByKey(baseTemplates,forcedUnit.key):baseTemplates;
-    const draw=drawCards(shuffle(pool).map(c=>makeCard(c,2,enemyLeaderType)),[],forcedUnit?3:4);
-    return{deck:draw.deck,hand:[...(forcedUnit?[makeCard(forcedUnit,2,enemyLeaderType)]:[]),...draw.hand]};
+    const draw=drawCards(shuffle(pool).map(c=>toEnemyCard(c)),[],forcedUnit?3:4);
+    return{deck:draw.deck,hand:[...(forcedUnit?[toEnemyCard(forcedUnit)]:[]),...draw.hand]};
   }
   const legendaryTemplates=[];
   if(battle?.richardInDeck)legendaryTemplates.push(RICHARD_CARD);
@@ -1412,10 +1446,10 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
     const forced=uniqueLegendary.slice(0,Math.min(4,uniqueLegendary.length));
     let pool=fullTemplates;
     forced.forEach(card=>{pool=removeOneTemplateByKey(pool,card.key);});
-    const draw=drawCards(shuffle(pool).map(c=>makeCard(c,2,enemyLeaderType)),[],Math.max(0,4-forced.length));
-    return{deck:draw.deck,hand:[...forced.map(c=>makeCard(c,2,enemyLeaderType)),...draw.hand]};
+    const draw=drawCards(shuffle(pool).map(c=>toEnemyCard(c)),[],Math.max(0,4-forced.length));
+    return{deck:draw.deck,hand:[...forced.map(c=>toEnemyCard(c)),...draw.hand]};
   }
-  const draw=drawCards(shuffle(fullTemplates.map(c=>makeCard(c,2,enemyLeaderType))),[],4);
+  const draw=drawCards(shuffle(fullTemplates.map(c=>toEnemyCard(c))),[],4);
   return{deck:draw.deck,hand:draw.hand};
 }
 

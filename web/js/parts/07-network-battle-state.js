@@ -1396,11 +1396,13 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   if(realtimeExperimental)principalLogs.push("TR: la batalla inicia directamente en tiempo real; las cartas del mazo se gestionan desde el arsenal.");
   if(playerPrincipalUnits.length)principalLogs.push(`Tus Personajes Principales son ${playerPrincipalUnits.map(u=>u.name).join(", ")}: comienzan convocados sin pagar Honor.`);
   if(enemyPrincipalUnits.length)principalLogs.push(`Personajes Principales enemigos: ${enemyPrincipalUnits.map(u=>u.name).join(", ")}, ya convocados al iniciar.`);
+  const enemyUnitMasteryRank=typeof getAdventureEnemyUnitMasteryRank==="function"?getAdventureEnemyUnitMasteryRank(battle):(battle.beastEvent?UNIT_MASTERY_MAX_RANK:1);
   if(battle.beastEvent){
     principalLogs.push(`El Beastmaster iguala tu nivel ${leaderLevel}; todas sus unidades y principales entran con Maestría ${romanUnitRank(UNIT_MASTERY_MAX_RANK)}.`);
     if(battle.beastmasterGlobalDuelNumber)principalLogs.push(`Duelo global del Beastmaster #${battle.beastmasterGlobalDuelNumber}. Entrada pagada: ${battle.beastmasterEntryGoldCost||BEASTMASTER_DUEL_GOLD_COST} de oro.`);
     if(battle.beastmasterYoungDragon)principalLogs.push(`Hito global cada ${BEASTMASTER_YOUNG_DRAGON_INTERVAL} duelos: el Beastmaster incorporó un Dragón Joven de ${dragonElementLabel?.(battle.beastmasterYoungDragonElement)||battle.beastmasterYoungDragonElement} a su mazo.`);
   }
+  if(!battle.beastEvent)principalLogs.push(`Maestría enemiga del mapa: Rango ${romanUnitRank(enemyUnitMasteryRank)}.`);
   principalLogs.push(...entryEffects.logs);
   const playerProfileName=getLocalProfileName();
   const pub={
@@ -1415,7 +1417,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     adventureAdaptiveRarityCap:adaptiveCampaignBattle?(typeof isAdaptiveMap1Battle==="function"&&isAdaptiveMap1Battle(battle)?(battle.id==="battle5"?"Richard: básicas + núcleo especial":"Solo básicas"):(typeof isAdaptiveMap2Battle==="function"&&isAdaptiveMap2Battle(battle)?"Mapa 2: básicas + excepciones guionizadas":"Núcleo del encuentro + counters básicos")):"",
     adventureAiLevel:ADVENTURE_AI_BEST_SKILL_LEVEL,adventureAiDrawBonus:battle.aiDrawBonus||0,adventureAiHonorBonus:battle.aiHonorBonus||0,
     adventureAiStyle:adaptiveMagePilot?"Cañón Arcano · adaptación global":(adaptiveCampaignBattle?`${battle.aiStyle||"Máxima"} · adaptación global`:(battle.aiStyle||"Máxima")),
-    adventureEnemyUnitMasteryRank:battle.beastEvent?UNIT_MASTERY_MAX_RANK:0,
+    adventureEnemyUnitMasteryRank:enemyUnitMasteryRank,
     beastmasterGlobalDuelNumber:battle.beastmasterGlobalDuelNumber||0,
     beastmasterGlobalBlock:battle.beastmasterGlobalBlock||0,
     beastmasterGlobalBlockPosition:battle.beastmasterGlobalBlockPosition||0,
