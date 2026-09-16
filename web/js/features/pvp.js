@@ -332,18 +332,17 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   let randomAutoReadyTimer=null;
   let randomAutoReadyCode="";
 
-  /* PvP bots · relleno de ligas cerradas ----------------------------------
-     - Solo usan líderes PvP elegibles: Guerrero, Arquero, Caballería,
-       Caudillo del Hacha y Asesino.
-     - Todos los líderes bot juegan en Nivel XV (Tier 5) con su habilidad
-       canónica de Nivel 5.
-     - 25 perfiles base (5 por líder), disponibles en las 12 ligas.
-     - La rareza del mazo escala por liga; Piedra/Madera son básicas y los
-       rangos altos incorporan Épicas, Gloriosas, Míticas, Legendarias y
-       Semidiós de forma progresiva.
+  /* PvP bots · 15 rivales por cada nivel -----------------------------------
+     - 15 arquetipos por nivel: 3 Guerrero, 3 Arquero, 3 Caballería,
+       3 Hacha y 3 Asesino.
+     - Niveles 1..15 = 225 variantes reales de BOT.
+     - El BOT copia el nivel del líder humano para que un jugador nuevo no
+       reciba un rival de endgame.
+     - Nivel controla Tier/tamaño del mazo, maestría y techo de progresión.
+     - Liga conserva el techo competitivo de rareza; se usa el límite más
+       estricto entre nivel y liga.
   ------------------------------------------------------------------------- */
   const PVP_BOT_FALLBACK_MS=9000;
-  const PVP_BOT_LEADER_LEVEL=15;
   const PVP_BOT_ALLOWED_LEADERS=Object.freeze(["warrior","archer","cavalry","axe","assassin"]);
   const PVP_BOT_LEAGUE_POLICIES=Object.freeze([
     Object.freeze({key:"stone",maxRarity:0,rareSlots:0}),
@@ -366,37 +365,32 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     axe:Object.freeze(["boudica","ragnar_lodbrok","lu_bu","beowulf","hector_troy","attila_hun","cu_chulainn","gilgamesh","alexander_magnus","julius_caesar"]),
     assassin:Object.freeze(["fuma_kotaro","hattori_hanzo","miyamoto_musashi","simo_hayha","morgana","shadow_cut","false_crown","true_name_exile","broken_blood_oath","arjuna"])
   });
-  const PVP_BOT_PROFILES=Object.freeze([
+  const PVP_BOT_ARCHETYPES=Object.freeze([
     Object.freeze({id:"war_ironwall",name:"Hroald",leaderType:"warrior",style:"defense",signature:["guardian","greek_hoplite","roman_legionary","armored_man_at_arms","shield_wall","heal"]}),
-    Object.freeze({id:"war_vanguard",name:"Torsten",leaderType:"warrior",style:"pressure",signature:["samurai_katana","berserker_de_oso","cavalry","inspiration","fireball","roman_legionary"]}),
+    Object.freeze({id:"war_vanguard",name:"Torsten",leaderType:"warrior",style:"pressure",signature:["samurai_katana","berserker_de_oso","cavalry_light","inspiration","fireball","roman_legionary"]}),
     Object.freeze({id:"war_pike",name:"Einar",leaderType:"warrior",style:"control",signature:["spearman","greek_hoplite","guardian","warning_rune","paralysis_spell","new_kingdom_archer"]}),
-    Object.freeze({id:"war_kingsguard",name:"Sigrun",leaderType:"warrior",style:"defense",signature:["armored_man_at_arms","guardia_varega_hacha","huscarl_anglosajon_hacha","war_visor","heal","shield_wall"]}),
-    Object.freeze({id:"war_lionbanner",name:"Bjorn",leaderType:"warrior",style:"balanced",signature:["guardian","samurai_naginata","roman_legionary","new_kingdom_archer","marching_greaves","inspiration"]}),
 
     Object.freeze({id:"arc_desert",name:"Astrid",leaderType:"archer",style:"pressure",signature:["archer","egyptian_line_archer","new_kingdom_archer","roman_auxiliary_sagittarius","bolt","inspiration"]}),
     Object.freeze({id:"arc_steppe",name:"Runa",leaderType:"archer",style:"mobility",signature:["scythian_horse_archer","mongol_explorer","numidian_javelin_rider","archer","retreat_strap","skirmisher_cloak"]}),
     Object.freeze({id:"arc_suppression",name:"Eydis",leaderType:"archer",style:"control",signature:["new_kingdom_archer","roman_auxiliary_sagittarius","warning_rune","paralysis_spell","fireball","shield_wall"]}),
-    Object.freeze({id:"arc_skirmish",name:"Skadi",leaderType:"archer",style:"mobility",signature:["archer","scout","cossack_rider","skirmisher_cloak","retreat_strap","smoke_bomb"]}),
-    Object.freeze({id:"arc_eagle",name:"Yrsa",leaderType:"archer",style:"balanced",signature:["roman_auxiliary_sagittarius","samurai_yabusame","new_kingdom_archer","archer","bolt","heal"]}),
 
-    Object.freeze({id:"cav_charge",name:"Leif",leaderType:"cavalry",style:"pressure",signature:["cavalry","hungarian_hussar","cossack_rider","numidian_javelin_rider","inspiration","light_barding"]}),
-    Object.freeze({id:"cav_steppe",name:"Sten",leaderType:"cavalry",style:"mobility",signature:["scythian_horse_archer","mongol_explorer","cossack_rider","cavalry","retreat_strap","withdrawal_stirrups"]}),
-    Object.freeze({id:"cav_hussar",name:"Halvar",leaderType:"cavalry",style:"balanced",signature:["hungarian_hussar","cavalry","withdrawal_stirrups","light_barding","inspiration","heal"]}),
-    Object.freeze({id:"cav_horsearcher",name:"Freydis",leaderType:"cavalry",style:"control",signature:["scythian_horse_archer","samurai_yabusame","mongol_explorer","numidian_javelin_rider","retreat_strap","warning_rune"]}),
-    Object.freeze({id:"cav_raider",name:"Knut",leaderType:"cavalry",style:"pressure",signature:["cossack_rider","numidian_javelin_rider","skipar_del_drakkar","cavalry","fireball","inspiration"]}),
+    Object.freeze({id:"cav_charge",name:"Leif",leaderType:"cavalry",style:"pressure",signature:["cavalry_light","hungarian_hussar","cossack_rider","numidian_javelin_rider","inspiration","light_barding"]}),
+    Object.freeze({id:"cav_steppe",name:"Sten",leaderType:"cavalry",style:"mobility",signature:["scythian_horse_archer","mongol_explorer","cossack_rider","cavalry_light","retreat_strap","withdrawal_stirrups"]}),
+    Object.freeze({id:"cav_hussar",name:"Halvar",leaderType:"cavalry",style:"balanced",signature:["hungarian_hussar","cavalry_light","withdrawal_stirrups","light_barding","inspiration","heal"]}),
 
-    Object.freeze({id:"axe_berserk",name:"Gunnar",leaderType:"axe",style:"pressure",signature:["berserker","berserker_de_oso","ulfhednar","gallowglass_irlandes_hacha","inspiration","fireball"]}),
+    Object.freeze({id:"axe_berserk",name:"Gunnar",leaderType:"axe",style:"pressure",signature:["berserker_north","berserker_de_oso","ulfhednar","gallowglass_irlandes_hacha","inspiration","fireball"]}),
     Object.freeze({id:"axe_varangian",name:"Ulf",leaderType:"axe",style:"defense",signature:["guardia_varega_hacha","huscarl_anglosajon_hacha","caballero_poleaxe","guardian","shield_wall","heal"]}),
     Object.freeze({id:"axe_thrower",name:"Ragnvald",leaderType:"axe",style:"control",signature:["guerrero_franco_hacha","ulfhednar","new_kingdom_archer","warning_rune","paralysis_spell","bolt"]}),
-    Object.freeze({id:"axe_breaker",name:"Viggo",leaderType:"axe",style:"pressure",signature:["berserker","gallowglass_irlandes_hacha","caballero_poleaxe","berserker_de_oso","fireball","inspiration"]}),
-    Object.freeze({id:"axe_drakkar",name:"Hakon",leaderType:"axe",style:"balanced",signature:["skipar_del_drakkar","ulfhednar","huscarl_anglosajon_hacha","samurai_katana","guardian","heal"]}),
 
-    Object.freeze({id:"asn_iga",name:"Svala",leaderType:"assassin",style:"pressure",signature:["saboteador_iga","geisha_encubierta","samurai_katana","scout","smoke_bomb","inspiration"]}),
-    Object.freeze({id:"asn_shadow",name:"Kaisa",leaderType:"assassin",style:"control",signature:["scout","saboteador_iga","smoke_bomb","paralysis_spell","poison_spell","warning_rune"]}),
-    Object.freeze({id:"asn_execution",name:"Varek",leaderType:"assassin",style:"pressure",signature:["samurai_katana","executioner_mantle","rupture_bracers","saboteador_iga","berserker","fireball"]}),
-    Object.freeze({id:"asn_silentarrow",name:"Nott",leaderType:"assassin",style:"mobility",signature:["scout","archer","geisha_encubierta","smoke_bomb","new_kingdom_archer","skirmisher_cloak"]}),
-    Object.freeze({id:"asn_bloodmist",name:"Fenja",leaderType:"assassin",style:"balanced",signature:["saboteador_iga","geisha_encubierta","samurai_katana","fireball","inspiration","rupture_bracers"]})
+    Object.freeze({id:"asn_iga",name:"Svala",leaderType:"assassin",style:"pressure",signature:["saboteador_iga","geisha_encubierta","samurai_katana","rogue","smoke_bomb","inspiration"]}),
+    Object.freeze({id:"asn_shadow",name:"Kaisa",leaderType:"assassin",style:"control",signature:["rogue","saboteador_iga","smoke_bomb","paralysis_spell","poison_spell","warning_rune"]}),
+    Object.freeze({id:"asn_silentarrow",name:"Nott",leaderType:"assassin",style:"mobility",signature:["rogue","archer","geisha_encubierta","smoke_bomb","new_kingdom_archer","skirmisher_cloak"]})
   ]);
+  function pvpBotRomanLevel(level){return ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV"][Math.max(1,Math.min(15,Number(level)||1))-1];}
+  const PVP_BOT_PROFILES=Object.freeze(Array.from({length:15},(_,idx)=>{
+    const level=idx+1;
+    return PVP_BOT_ARCHETYPES.map(base=>Object.freeze({...base,id:`${base.id}_l${String(level).padStart(2,"0")}`,name:`${base.name} ${pvpBotRomanLevel(level)}`,level}));
+  }).flat());
   let pvpBotFallbackInFlight=false;
   let activePvpBotProfile=null;
 
@@ -809,6 +803,20 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function getPvpBotLeaguePolicy(leagueKey="stone"){
     return PVP_BOT_LEAGUE_POLICIES.find(item=>item.key===String(leagueKey||""))||PVP_BOT_LEAGUE_POLICIES[0];
   }
+  function getPvpBotLevelPolicy(level=1){
+    const lv=Math.max(1,Math.min(15,Math.floor(Number(level)||1)));
+    if(lv<=4)return {level:lv,maxRarity:0,rareSlots:0,minUnitRatio:.82};
+    if(lv<=6)return {level:lv,maxRarity:1,rareSlots:lv===5?1:2,minUnitRatio:.80};
+    if(lv<=9)return {level:lv,maxRarity:2,rareSlots:lv-4,minUnitRatio:.78};
+    if(lv<=11)return {level:lv,maxRarity:3,rareSlots:lv-4,minUnitRatio:.76};
+    if(lv<=13)return {level:lv,maxRarity:4,rareSlots:lv-4,minUnitRatio:.74};
+    return {level:lv,maxRarity:5,rareSlots:lv===14?10:12,minUnitRatio:.72};
+  }
+  function getPvpBotDeckPolicy(leagueKey="stone",level=1){
+    const league=getPvpBotLeaguePolicy(leagueKey);
+    const levelPolicy=getPvpBotLevelPolicy(level);
+    return {...league,level:levelPolicy.level,maxRarity:Math.min(Number(league.maxRarity||0),Number(levelPolicy.maxRarity||0)),rareSlots:Math.min(Number(league.rareSlots||0),Number(levelPolicy.rareSlots||0)),minUnitRatio:levelPolicy.minUnitRatio};
+  }
   function getPvpBotCatalog(){
     const pools=[];
     try{ if(Array.isArray(CARD_TEMPLATES))pools.push(CARD_TEMPLATES); }catch(_){ }
@@ -848,11 +856,20 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const style=String(profile?.style||"balanced");
     const type=String(card?.type||"");
     const atk=Number(card?.atk||0),guard=Number(card?.guard||0),hp=Number(card?.hp||0),dex=Number(card?.dex||0),agi=Number(card?.agi||0),mov=Number(card?.mov||0),range=Number(card?.range||0),cost=Number(card?.cost||0);
+    const level=Math.max(1,Math.min(15,Number(profile?.level)||1));
+    const rtCost=type==="unit"?(cost<=2?1:(cost<=5?2:3)):Math.max(0,cost);
     let score=0;
     if(type==="unit")score+=42+atk*4+guard*2.4+hp*3+dex*1.7+agi*1.5+mov*4+range*4-cost*2;
     if(type==="spell")score+=30+Number(card?.damage||0)*8+Number(card?.buff||0)*5+Number(card?.guard||0)*4-cost*1.5;
     if(type==="trap")score+=34+Number(card?.guard||0)*4+Number(card?.slow||0)*5-cost;
     if(type==="equipment")score+=32-cost;
+    // Early PvP debe ser jugable desde 2 de maná. Los niveles bajos valoran
+    // fuertemente cartas de coste efectivo 1-2; en late se permite ahorrar 3.
+    if(type==="unit"){
+      if(rtCost===1)score+=level<=4?46:(level<=9?30:16);
+      else if(rtCost===2)score+=level<=4?34:(level<=9?24:18);
+      else score+=level>=10?12:-36;
+    }else if(level<=6&&rtCost>2)score-=26*(rtCost-2);
     if(style==="pressure")score+=atk*6+dex*2.5+mov*3+(type==="spell"&&card?.spell==="damage"?28:0)+(type==="unit"?8:0)-guard*.4;
     else if(style==="defense")score+=guard*5+hp*4+(card?.spell==="heal"?32:0)+(card?.spell==="shield"?26:0)+(type==="trap"?10:0);
     else if(style==="control")score+=(type==="trap"?28:0)+(card?.spell==="paralysis"||card?.trap==="slow"?32:0)+range*5+dex*1.5;
@@ -874,15 +891,16 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }
   function pvpBotNoise(seed,key){return (hashText6c(`${seed}|${key}`)%10000)/10000;}
   function buildPvpBotDeck(profile,league){
-    const policy=getPvpBotLeaguePolicy(league?.key||league||"stone");
-    const seed=`${profile.id}|${policy.key}|${profile.leaderType}`;
+    const botLevel=Math.max(1,Math.min(15,Math.floor(Number(profile?.level)||1)));
+    const policy=getPvpBotDeckPolicy(league?.key||league||"stone",botLevel);
+    const seed=`${profile.id}|${policy.key}|L${botLevel}|${profile.leaderType}`;
     const catalog=getPvpBotCatalog().filter(card=>pvpBotCardAllowed(card,profile.leaderType,policy));
     const scored=catalog.map(card=>({card,rank:pvpBotRarityRank(card),score:pvpBotStyleScore(card,profile)+pvpBotNoise(seed,card.key)*17}));
     const rare=scored.filter(x=>x.rank>0).sort((a,b)=>(b.rank-a.rank)||(b.score-a.score)||String(a.card.key).localeCompare(String(b.card.key)));
     const basics=scored.filter(x=>x.rank===0).sort((a,b)=>(b.score-a.score)||String(a.card.key).localeCompare(String(b.card.key)));
     const selected=[];
     const counts=new Map();
-    const targetDeckSize=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(PVP_BOT_LEADER_LEVEL):30;
+    const targetDeckSize=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(botLevel):(botLevel>=15?30:botLevel>=10?25:botLevel>=7?20:botLevel>=5?15:10);
     const add=(card)=>{
       if(!card)return false;
       const key=String(card.key||"");
@@ -923,7 +941,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }
     if(selected.length!==targetDeckSize)throw new Error(`Bot ${profile.id}: mazo incompleto ${selected.length}/${targetDeckSize}.`);
     // v134: la IA nunca baja del 70% de unidades, independientemente del líder.
-    const minUnitCards=Math.ceil(targetDeckSize*.70);
+    const minUnitCards=Math.ceil(targetDeckSize*Number(policy.minUnitRatio||.72));
     let unitCards=selected.filter(card=>card?.type==="unit").length;
     if(unitCards<minUnitCards){
       const unitCandidates=scored.filter(entry=>entry.card?.type==="unit")
@@ -959,35 +977,42 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }
     return {keys:selected.map(card=>String(card.key)),keyCounts,principalKeys,rarityCounts,policy};
   }
-  function selectPvpBotProfile(leagueKey="stone"){
-    const candidates=PVP_BOT_PROFILES.filter(profile=>PVP_BOT_ALLOWED_LEADERS.includes(profile.leaderType));
-    if(!candidates.length)throw new Error("No existen perfiles PvP bot elegibles.");
+  function selectPvpBotProfile(level=1,leagueKey="stone"){
+    const botLevel=Math.max(1,Math.min(15,Math.floor(Number(level)||1)));
+    const candidates=PVP_BOT_PROFILES.filter(profile=>Number(profile.level)===botLevel&&PVP_BOT_ALLOWED_LEADERS.includes(profile.leaderType));
+    if(candidates.length!==15)throw new Error(`Se esperaban 15 BOT para nivel ${botLevel}; hay ${candidates.length}.`);
     let recent=[];
-    try{recent=JSON.parse(localStorage.getItem(`hallvalla_pvp_bot_recent_${leagueKey}_v1`)||"[]");if(!Array.isArray(recent))recent=[];}catch(_){recent=[];}
-    const available=candidates.filter(profile=>!recent.slice(-4).includes(profile.id));
+    const recentKey=`hallvalla_pvp_bot_recent_${leagueKey}_L${botLevel}_v2`;
+    try{recent=JSON.parse(localStorage.getItem(recentKey)||"[]");if(!Array.isArray(recent))recent=[];}catch(_){recent=[];}
+    const available=candidates.filter(profile=>!recent.slice(-5).includes(profile.id));
     const pool=available.length?available:candidates;
     const picked=pool[Math.floor(Math.random()*pool.length)]||candidates[0];
-    try{localStorage.setItem(`hallvalla_pvp_bot_recent_${leagueKey}_v1`,JSON.stringify([...recent,picked.id].slice(-4)));}catch(_){ }
+    try{localStorage.setItem(recentKey,JSON.stringify([...recent,picked.id].slice(-5)));}catch(_){ }
     return picked;
   }
   function getPvpBotPublicName(profile){return `${String(profile?.name||"Guerrero")} · BOT`;}
   function getPvpBotUid(profile,leagueKey){return `BOT_PVP_${String(leagueKey||"stone").toUpperCase()}_${String(profile?.id||"bot").toUpperCase()}`.replace(/[^A-Z0-9_:-]/g,"_");}
   function auditPvpBotDefinitions(){
     const errors=[];
-    if(PVP_BOT_PROFILES.length<20)errors.push(`Solo existen ${PVP_BOT_PROFILES.length} perfiles bot.`);
+    if(PVP_BOT_ARCHETYPES.length!==15)errors.push(`Arquetipos base: ${PVP_BOT_ARCHETYPES.length}/15.`);
+    if(PVP_BOT_PROFILES.length!==225)errors.push(`Perfiles nivelados: ${PVP_BOT_PROFILES.length}/225.`);
+    for(let level=1;level<=15;level++){
+      const levelProfiles=PVP_BOT_PROFILES.filter(profile=>Number(profile.level)===level);
+      if(levelProfiles.length!==15)errors.push(`Nivel ${level}: ${levelProfiles.length}/15 BOT.`);
+    }
     for(const profile of PVP_BOT_PROFILES){
       if(!PVP_BOT_ALLOWED_LEADERS.includes(profile.leaderType))errors.push(`${profile.id}: líder no permitido ${profile.leaderType}.`);
       for(const league of (globalThis.HALLVALLA_PVP_LEAGUES||[])){
         try{
           const deck=buildPvpBotDeck(profile,league);
-          const expected=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(PVP_BOT_LEADER_LEVEL):30;
+          const expected=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(profile.level):(profile.level>=15?30:profile.level>=10?25:profile.level>=7?20:profile.level>=5?15:10);
           if(deck.keys.length!==expected)errors.push(`${profile.id}/${league.key}: ${deck.keys.length}/${expected}.`);
           if(deck.principalKeys.length!==0)errors.push(`${profile.id}/${league.key}: no debe tener Principales.`);
           if(deck.keys.some(key=>!getPvpBotCatalog().some(card=>String(card?.key||"")===key)))errors.push(`${profile.id}/${league.key}: carta sin catálogo.`);
         }catch(error){errors.push(`${profile.id}/${league.key}: ${error?.message||error}`);}
       }
     }
-    return {valid:errors.length===0,profiles:PVP_BOT_PROFILES.length,leagues:(globalThis.HALLVALLA_PVP_LEAGUES||[]).length,combinations:PVP_BOT_PROFILES.length*(globalThis.HALLVALLA_PVP_LEAGUES||[]).length,errors};
+    return {valid:errors.length===0,archetypes:PVP_BOT_ARCHETYPES.length,profiles:PVP_BOT_PROFILES.length,levels:15,botsPerLevel:15,totalBots:225,leagues:(globalThis.HALLVALLA_PVP_LEAGUES||[]).length,errors};
   }
   globalThis.hvPvpBotAudit=auditPvpBotDefinitions;
 
@@ -2431,13 +2456,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       if(typeof adventureEnemyTurn!=="function")throw new Error("La IA táctica no está disponible para el BOT PvP.");
       if(typeof makeLeader!=="function")throw new Error("El motor TR de HallValla no está listo para crear el BOT PvP.");
 
-      const profile=selectPvpBotProfile(leagueKey);
-      if(!PVP_BOT_ALLOWED_LEADERS.includes(profile.leaderType))throw new Error(`Líder BOT no permitido: ${profile.leaderType}.`);
-      const botDeck=buildPvpBotDeck(profile,league);
-      const botUid=getPvpBotUid(profile,leagueKey);
-      const botName=getPvpBotPublicName(profile);
-      const botAbility=String((typeof getLeaderDefaultLevel5Ability==="function"&&getLeaderDefaultLevel5Ability(profile.leaderType))||"");
-
       const ownPrivateRef=ref(db,`games/${code}/private/player1`);
       const ownSnap=await withTimeout(get(ownPrivateRef),`Leer mazo privado antes del BOT ${code}`,5000);
       if(!ownSnap.exists())throw new Error("No se encontró el mazo privado del jugador.");
@@ -2445,6 +2463,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       if(!validateOwnPrivateSnapshot(ownPayload,myUid,1))throw new Error("El mazo privado del jugador dejó de ser válido.");
       const humanBuilt=buildRealPrivateState6e(ownPayload,code,1);
       const human=humanBuilt.enginePrivate;
+      const botLevel=Math.max(1,Math.min(15,Math.floor(Number(human.leaderLevel)||1)));
+      const profile=selectPvpBotProfile(botLevel,leagueKey);
+      if(!PVP_BOT_ALLOWED_LEADERS.includes(profile.leaderType))throw new Error(`Líder BOT no permitido: ${profile.leaderType}.`);
+      const botDeck=buildPvpBotDeck(profile,league);
+      const botUid=getPvpBotUid(profile,leagueKey);
+      const botName=getPvpBotPublicName(profile);
+      const botAbility=botLevel>=5?String((typeof getLeaderDefaultLevel5Ability==="function"&&getLeaderDefaultLevel5Ability(profile.leaderType))||""):"";
 
       const allBotCards=botDeck.keys.map(key=>buildRealCard6e(key,2,profile.leaderType));
       const botArsenal=[...allBotCards].sort((a,b)=>(effectiveCardCost(a,2)-effectiveCardCost(b,2))||String(a?.name||"").localeCompare(String(b?.name||"")));
@@ -2454,7 +2479,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const cols=typeof COLS!=="undefined"?Number(COLS):5;
       let units=[
         makeLeader(1,Math.floor(cols/2),rows-1,human.leaderType,human.leaderLevel,human.leaderAbility),
-        makeLeader(2,Math.floor(cols/2),0,profile.leaderType,PVP_BOT_LEADER_LEVEL,botAbility)
+        makeLeader(2,Math.floor(cols/2),0,profile.leaderType,botLevel,botAbility)
       ];
       let entryEffects={units,logs:[],statusFxEvent:null,floatFxEvent:null};
       units=entryEffects.units||units;
@@ -2471,7 +2496,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const pub={
         schema:"hallvalla-pvp-bot-v1",
         code,boardRows:rows,boardCols:cols,mode:"adventure",entryMode:"random",
-        pvpBotMatch:true,pvpBotProfileId:profile.id,pvpBotLeagueKey:leagueKey,pvpBotLeagueName:String(league?.name||"Piedra"),
+        pvpBotMatch:true,pvpBotProfileId:profile.id,pvpBotLevel:botLevel,pvpBotMasteryRank:botLevel,pvpBotLeagueKey:leagueKey,pvpBotLeagueName:String(league?.name||"Piedra"),
         pvpBotStyle:String(profile.style||"balanced"),pvpBotRarityCap:rarityCap,pvpBotRarityCounts:botDeck.rarityCounts,
         adventureBattleTitle:`PvP · Liga ${String(league?.name||"Piedra")}`,
         adventureEnemyName:botName,
@@ -2479,7 +2504,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         adventureAiLevel:typeof ADVENTURE_AI_BEST_SKILL_LEVEL!=="undefined"?ADVENTURE_AI_BEST_SKILL_LEVEL:5,
         adventureAiDrawBonus:0,adventureAiHonorBonus:0,
         adventureAiStyle:`BOT PvP · ${String(profile.style||"balanced")} · Liga ${String(league?.name||"Piedra")}`,
-        adventureEnemyUnitMasteryRank:0,
+        adventureEnemyUnitMasteryRank:botLevel,
         realtimeExperimental:true,
         adventurePrincipalKeys:{1:[],2:[]},
         principalSlots:{1:0,2:0},
@@ -2488,9 +2513,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         createdAt:Date.now(),currentPlayer:0,turn:1,phase:"active",turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:Date.now(),
         clockRulesetVersion:clockVersion,playerClockMs:{1:duelLimit,2:duelLimit},
         playerSlots:{player1Uid:myUid,player2Uid:botUid},
-        playerNames:{1:getProfileNameSafe(1),2:botName},playerLevels:{1:getProfileLevelSafe(),2:PVP_BOT_LEADER_LEVEL},
+        playerNames:{1:getProfileNameSafe(1),2:botName},playerLevels:{1:getProfileLevelSafe(),2:botLevel},
         playerShowcase:publicShowcase,playerPrepared:{1:true,2:true},lobbyReady:{1:true,2:true},
-        playerLeaders:{1:human.leaderType,2:profile.leaderType},playerLeaderLevels:{1:Number(human.leaderLevel||1),2:PVP_BOT_LEADER_LEVEL},playerLeaderAbilities:{1:String(human.leaderAbility||""),2:botAbility},
+        playerLeaders:{1:human.leaderType,2:profile.leaderType},playerLeaderLevels:{1:Number(human.leaderLevel||1),2:botLevel},playerLeaderAbilities:{1:String(human.leaderAbility||""),2:botAbility},
         settings:buildDefaultRules(),matchSettings:{timerEnabled:false,stakeMode:"none",goldAmount:500,cardEntryFee:500,economyState:"not_required"},
         playerStats:{
           1:{hp:Number(p1Leader?.hp||0),honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),deck:0,hand:human.hand.length,hasHiddenUnits:countHiddenKeys6e([...normalizeFirebaseArray(humanBuilt.combat6c?.deckKeys),...normalizeFirebaseArray(humanBuilt.combat6c?.handKeys)])>0},
@@ -2500,7 +2525,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         battleEnded:false,winner:0,loser:0,
         log:[
           `PvP de Liga ${String(league?.name||"Piedra")}: ${botName} cubre la plaza mientras no hay otro jugador disponible.`,
-          `${botName}: ${profile.leaderType} Nivel XV · Tier 5 · mazo con techo ${rarityCap}.`,
+          `${botName}: ${profile.leaderType} Nivel ${pvpBotRomanLevel(botLevel)} · maestría ${pvpBotRomanLevel(botLevel)} · ${botDeck.keys.length} cartas · techo ${rarityCap}.`,
           `El resultado cuenta para tus puntos PvP; el BOT no ocupa puestos del ranking.`,
           ...(entryEffects.logs||[])
         ].slice(0,18)
@@ -2531,7 +2556,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       await withTimeout(remove(publicRef),`Cerrar sala de espera antes del BOT ${code}`,5000);
 
       renderRandomMatchmakingUi({playerShowcase:publicShowcase,playerSlots:pub.playerSlots});
-      setText("pvpRoomMessage",`${botName} encontrado · Liga ${String(league?.name||"Piedra")} · líder Nivel XV.`);
+      setText("pvpRoomMessage",`${botName} encontrado · Liga ${String(league?.name||"Piedra")} · líder Nivel ${pvpBotRomanLevel(botLevel)} · maestría ${pvpBotRomanLevel(botLevel)}.`);
       if(typeof globalThis.showHallvallaPreBattleVs==="function"){
         await globalThis.showHallvallaPreBattleVs(pub,{key:`pvpbot:${code}`,leftOwner:1,rightOwner:2});
       }

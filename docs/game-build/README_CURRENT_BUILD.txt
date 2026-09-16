@@ -1,5 +1,5 @@
-HallValla CURRENT BUILD: v148 / 20260916.148
+HallValla CURRENT BUILD: v149 / 20260916.149
 
-Contratos de Dragón: ejército elemental de 9 dragones con Maestría XV + 16 magias/trampas.
+PvP: 15 BOT por nivel (225 total), líder/maestría/deck escalados al nivel humano.
 
 20260915.137 · gameplay v134 IA por Tier 10/15/20/25/30 · mínimo 70% unidades y mezcla libre de clases para IA · UI limpia: contenedores de menú invisibles + Android pequeño en cresta del trono · distribución pública desde repo privado

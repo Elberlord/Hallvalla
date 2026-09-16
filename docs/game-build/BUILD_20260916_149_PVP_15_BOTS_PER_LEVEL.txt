@@ -1,0 +1,9 @@
+HallValla v149 — PvP: 15 BOT por cada nivel
+
+- 15 arquetipos por nivel, niveles 1..15 = 225 BOT.
+- 3 Guerrero, 3 Arquero, 3 Caballería, 3 Hacha y 3 Asesino por nivel.
+- El fallback PvP empareja BOT al mismo nivel de líder del jugador.
+- Nivel controla líder, Tier/tamaño de mazo y Maestría.
+- Liga + nivel controlan techo de rareza; se aplica el límite más restrictivo.
+- Early levels priorizan coste TR 1–2 y alta proporción de unidades.
+- No se modifica Android, Firebase ni la economía de maná.

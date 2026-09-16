@@ -48,7 +48,9 @@ const HALLVALLA_ACCOUNT_STORAGE_KEYS=new Set([
   "hallvalla_tutorial_home_complete_v1",
   "hallvalla_tutorial_home_rewards_v1",
   "hallvalla_tutorial_tactics_complete_v1",
-  "hallvalla_tutorial_tactics_rewards_v1"
+  "hallvalla_tutorial_tactics_rewards_v1",
+  "hallvalla_tutorial_systems_v1",
+  "hallvalla_tutorial_basic_completion_reward_v1"
 ]);
 const HALLVALLA_ACCOUNT_STORAGE_PREFIXES=Object.freeze([
   "hallvalla_reward_claimed_",

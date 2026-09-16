@@ -1184,6 +1184,249 @@ document.addEventListener("keydown",event=>{
 });
 
 
+
+/* ============================================================
+   TUTORIAL V2 · RECORRIDO DE SISTEMAS
+   Orden canónico después del combate:
+   Home → Mina → Mazo → Eventos → Aventura → PvP → Tienda → Forja → Misiones.
+   Cada paso nuevo entrega 5 Oro y cada tutorial terminado por primera vez +20 Oro.
+   ============================================================ */
+const HALLVALLA_SYSTEM_TUTORIAL_STATE_KEY="hallvalla_tutorial_systems_v1";
+const HALLVALLA_SYSTEM_TUTORIAL_STEP_GOLD=5;
+const HALLVALLA_SYSTEM_TUTORIAL_COMPLETE_GOLD=20;
+const HALLVALLA_SYSTEM_TUTORIAL_ORDER=Object.freeze(["home","mine","deck","events","adventure","pvp","shop","forge","missions"]);
+const HALLVALLA_SYSTEM_TUTORIAL_NAMES=Object.freeze({
+  home:"Home",mine:"Mina",deck:"Armar el mazo",events:"Eventos",adventure:"Aventura",pvp:"PvP",shop:"Tienda",forge:"Forja",missions:"Misiones y maestrías"
+});
+let hallvallaSystemTutorialState={active:false,key:"",index:0};
+
+function getHallvallaSystemTutorialBook(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(HALLVALLA_SYSTEM_TUTORIAL_STATE_KEY)||"null")||{};
+    return {completed:{...(saved.completed||{})},rewardedSteps:{...(saved.rewardedSteps||{})},completionRewarded:{...(saved.completionRewarded||{})}};
+  }catch(_){return{completed:{},rewardedSteps:{},completionRewarded:{}};}
+}
+function saveHallvallaSystemTutorialBook(book){
+  try{localStorage.setItem(HALLVALLA_SYSTEM_TUTORIAL_STATE_KEY,JSON.stringify(book||{}));}catch(_){ }
+}
+function hallvallaSystemTutorialIsComplete(key){return !!getHallvallaSystemTutorialBook().completed?.[key];}
+function hallvallaSystemTutorialCompletedCount(){const b=getHallvallaSystemTutorialBook();return HALLVALLA_SYSTEM_TUTORIAL_ORDER.filter(k=>b.completed?.[k]).length;}
+function awardHallvallaSystemTutorialStep(key,index){
+  const book=getHallvallaSystemTutorialBook();
+  const rewarded=new Set(Array.isArray(book.rewardedSteps?.[key])?book.rewardedSteps[key]:[]);
+  if(rewarded.has(index))return false;
+  rewarded.add(index);book.rewardedSteps[key]=[...rewarded].sort((a,b)=>a-b);saveHallvallaSystemTutorialBook(book);
+  const profile=getPlayerProfile();profile.gold=(Number(profile.gold)||0)+HALLVALLA_SYSTEM_TUTORIAL_STEP_GOLD;savePlayerProfile(profile);renderPlayerProfile?.(profile);
+  return true;
+}
+function awardHallvallaSystemTutorialCompletion(key){
+  const book=getHallvallaSystemTutorialBook();
+  if(book.completionRewarded?.[key])return false;
+  book.completionRewarded[key]=true;saveHallvallaSystemTutorialBook(book);
+  const profile=getPlayerProfile();profile.gold=(Number(profile.gold)||0)+HALLVALLA_SYSTEM_TUTORIAL_COMPLETE_GOLD;savePlayerProfile(profile);renderPlayerProfile?.(profile);
+  return true;
+}
+function markHallvallaSystemTutorialComplete(key){
+  const book=getHallvallaSystemTutorialBook();book.completed[key]=true;saveHallvallaSystemTutorialBook(book);
+  if(key==="home"||key==="deck")try{localStorage.setItem(HALLVALLA_HOME_DECK_TUTORIAL_COMPLETE_KEY,"true");}catch(_){ }
+}
+function hallvallaSystemTutorialEscape(value){return String(value==null?"":value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[ch]));}
+function hallvallaSystemTutorialCanStart(key){
+  const idx=HALLVALLA_SYSTEM_TUTORIAL_ORDER.indexOf(key);if(idx<0)return false;
+  if(key==="home")return isBasicTutorialComplete?.()===true;
+  for(let i=0;i<idx;i++)if(!hallvallaSystemTutorialIsComplete(HALLVALLA_SYSTEM_TUTORIAL_ORDER[i]))return false;
+  if(key==="deck"&&typeof canAccessDecks==="function"&&!canAccessDecks())return false;
+  return true;
+}
+function hallvallaSystemTutorialNextKey(){
+  for(const key of HALLVALLA_SYSTEM_TUTORIAL_ORDER){if(!hallvallaSystemTutorialIsComplete(key))return key;}
+  return "";
+}
+async function hallvallaTutorialEnsureFeature(name){
+  try{if(typeof globalThis.hvEnsureFeature==="function")await globalThis.hvEnsureFeature(name);}catch(error){console.warn(`[HallValla][Tutorial] No se pudo precargar ${name}`,error);}
+}
+function hallvallaTutorialCloseSurfaces(){
+  try{closeMineScreen?.();}catch(_){ }
+  try{closeDeckBuilder?.();}catch(_){ }
+  try{closeHallvallaEventModals?.();}catch(_){ }
+  try{closePackShop?.();}catch(_){ }
+  try{closeForgeHub?.();}catch(_){ }
+  try{closeMissionsPanel?.();}catch(_){ }
+  try{$("adventurePanel")?.classList.add("hidden");}catch(_){ }
+  try{$("onlineLobby")?.classList.add("hidden");}catch(_){ }
+  try{$("mainMenu")?.classList.remove("hidden");}catch(_){ }
+}
+async function hallvallaTutorialPrepareModule(key){
+  hallvallaTutorialCloseSurfaces();
+  if(key==="home")return true;
+  if(key==="mine"){await openMineScreen?.("production");return true;}
+  if(key==="deck"){
+    if(typeof canAccessDecks==="function"&&!canAccessDecks())return false;
+    await Promise.resolve(openDeckBuilder?.());return true;
+  }
+  if(key==="events"){openHallvallaEvents?.();return true;}
+  if(key==="adventure"){
+    await hallvallaTutorialEnsureFeature("adventure");
+    const progress=typeof getAdventureProgress==="function"?getAdventureProgress():null;
+    if(progress?.guardianDefeated&&typeof openAdventureMap==="function")openAdventureMap();
+    else if(typeof openAdventureStory==="function")openAdventureStory();
+    else $("adventurePanel")?.classList.remove("hidden");
+    return true;
+  }
+  if(key==="pvp"){
+    await hallvallaTutorialEnsureFeature("pvp");
+    if(typeof openCleanRoom==="function")openCleanRoom();else $("onlineLobby")?.classList.remove("hidden");
+    return true;
+  }
+  if(key==="shop"){
+    await hallvallaTutorialEnsureFeature("shop");
+    if(typeof openPackShop==="function")openPackShop("main");return true;
+  }
+  if(key==="forge"){
+    await hallvallaTutorialEnsureFeature("forge");
+    if(typeof openForgeHub==="function")openForgeHub();return true;
+  }
+  if(key==="missions"){openMissionsPanel?.();return true;}
+  return false;
+}
+
+const HALLVALLA_SYSTEM_TUTORIALS=Object.freeze({
+  home:Object.freeze([
+    {selector:"#mainMenu .asset-logo",title:"Home: el centro de HallValla",body:`Desde el Home accedes a todos los sistemas. El recorrido completo está dividido en tutoriales cortos para que aprendas una cosa cada vez. Cada paso nuevo da <b>5 Oro</b> y terminar cada tutorial por primera vez da <b>20 Oro extra</b>.`},
+    {selector:"#profileBtn",title:"Perfil, nivel y líderes",body:`Aquí ves tu nivel de cuenta y EXP. Tus líderes también suben de nivel: su Tier determina el tamaño exacto del mazo que puedes llevar.`},
+    {selector:".asset-resource-row",title:"Oro, Gemas y Fragmentos",body:`<b>Oro</b> sostiene compras y actividades; <b>Gemas</b> son el recurso premium y sirven también para ciertas actividades; <b>Fragmentos</b> alimentan sistemas de progresión y creación.`},
+    {selector:".asset-left-column",title:"Aventura, PvP, Misiones y Mina",body:`El lado izquierdo concentra progreso y juego: <b>Aventura</b>, <b>Competir en línea</b>, <b>Misiones</b> y <b>Mina</b>. Los veremos uno por uno.`},
+    {selector:".asset-right-column",title:"Colección, Forja, Tienda y Eventos",body:`El lado derecho concentra preparación y economía: <b>Colección/Mazo</b>, <b>Forja</b>, <b>Tienda</b> y <b>Eventos</b>.`},
+    {selector:".asset-bottom",title:"Progreso competitivo y social",body:`En la parte inferior están sistemas de largo plazo como Clanes, Ranking y Pase de Honor. Algunas funciones pueden aparecer como BETA mientras se terminan.`}
+  ]),
+  mine:Object.freeze([
+    {selector:".mine-nav",title:"Mina: cinco secciones",body:`La Mina tiene <b>Producción, Eventos, Misiones, Tienda y Recompensas</b>. Puedes cambiar entre ellas desde esta barra.`},
+    {selector:"#mineRosterRow",title:"Solo trabajan unidades libres",body:`La lista muestra únicamente unidades que <b>no están en tu mazo</b> y <b>no están produciendo</b>. Si una unidad que trabaja entra luego al mazo, la Mina la retira automáticamente de producción.`},
+    {selector:"#mineMinerGrid",title:"Espacios de producción",body:`Asigna unidades libres a los espacios. Cada trabajador produce con el tiempo. Los espacios adicionales se desbloquean secuencialmente.`},
+    {selector:".hv50-mine-actions",title:"Recoger, retirar y ampliar",body:`<b>Recoger todo</b> entrega la producción disponible. <b>Retirar</b> libera un trabajador. <b>Nuevo espacio</b> amplía la capacidad de la Mina.`},
+    {selector:'.mine-panel[data-mine-panel="events"] .mine-event-grid',title:"Eventos de la Mina",body:`Los eventos pueden ser positivos o negativos. Algunos dañan la producción y otros entregan recompensas.`,before:()=>setMineSection?.("events")},
+    {selector:'.mine-panel[data-mine-panel="rewards"] .mine-wheel-stage',title:"Ruleta y tiros gratis",body:`La sección Recompensas usa la ruleta. Los premios restantes se muestran en <b>Premios posibles</b>; los que ya salieron quedan oscurecidos.`,before:()=>setMineSection?.("rewards")}
+  ]),
+  deck:Object.freeze([
+    {selector:"#deckCollectionGrid",fallbackSelector:".deckbuilder-collection",title:"Tu colección",body:`Aquí aparecen las cartas que posees y las que todavía no has conseguido. Solo las copias realmente poseídas pueden entrar en un mazo válido.`},
+    {selector:"#deckFilterGroup",fallbackSelector:".deckbuilder-filters",title:"Filtra antes de construir",body:`Usa tipo, posesión, rareza y Poder de Batalla para encontrar rápido la carta que buscas.`},
+    {selector:"#currentDeckList",fallbackSelector:"#deckBuilderDeckPanel",title:"Tamaño exacto por Tier",body:()=>{const r=getHomeDeckTutorialDeckSummary();return `Tu líder está en <b>Nivel ${r.level} · Tier ${r.tier}</b>. Este mazo necesita exactamente <b>${r.total} cartas</b>. Tier 1=10, Tier 2=15, Tier 3=20, Tier 4=25 y Tier 5=30.`;}},
+    {selector:"#currentDeckList",fallbackSelector:"#deckBuilderDeckPanel",title:"Copias y unidades de Mina",body:`Las Básicas admiten hasta <b>3 copias</b>; las rarezas superiores normalmente 1. Una unidad que añades al mazo deja de estar disponible para producción en la Mina.`},
+    {selector:"#deckBuilderActionGroup",fallbackSelector:"#saveDeckBtn",title:"Guardar hace efectivo el mazo",body:`Cuando cumples todas las reglas, guarda. <b>Aventura y PvP usan el mazo guardado actual</b>; cerrar sin guardar no debe sustituirlo.`}
+  ]),
+  events:Object.freeze([
+    {selector:"#hallvallaEventsModal .hallvalla-events-shell--beast",fallbackSelector:"#eventsBtn",title:"Eventos especiales",body:`Eventos contiene desafíos separados de la campaña. Algunos exigen pagar una entrada y están diseñados para ser mucho más difíciles que una batalla normal.`},
+    {selector:"#hallvallaEventsModal .hallvalla-events-tabs--beast",fallbackSelector:"#hallvallaEventsModal",title:"Beast Master",body:`Beast Master utiliza reglas y recompensas propias. Revisa siempre el coste, el tiempo restante y el premio antes de entrar.`},
+    {selector:"#hallvallaEventsModal [data-beast-fight]",fallbackSelector:"#hallvallaEventsModal",title:"Pagar para enfrentar",body:`Los contratos consumen el recurso indicado cuando confirmas el combate. No gastes la entrada si tu mazo todavía no está listo.`},
+    {selector:"#hallvallaEventsModal [data-open-dragons]",fallbackSelector:"#hallvallaEventsModal",title:"Contratos de Dragones",body:`Los Dragones son contenido de alta dificultad. Los enemigos del evento pueden usar dragones Bebé, Joven y Adulto con <b>Maestría XV</b>; los dragones que obtiene el jugador empiezan su propia experiencia desde Maestría I.`}
+  ]),
+  adventure:Object.freeze([
+    {selector:"#adventurePanel",fallbackSelector:"#adventureBtn",title:"Aventura: campaña y desbloqueos",body:`Aventura es la progresión principal. Ganas combates, desbloqueas cartas y abres nuevos mapas. La dificultad aumenta con mejores mazos, nivel del líder y Maestría enemiga.`},
+    {selector:"#adventureMapNodes",fallbackSelector:"#adventurePanel",title:"Burbujas del mapa",body:`Cada burbuja es un combate. Los nodos bloqueados se abren al avanzar; los completados quedan registrados para que puedas volver a ellos.`},
+    {selector:"#adventureMapNodes",fallbackSelector:"#adventurePanel",title:"Farm diario de nodos completados",body:`Un nodo ya superado puede farmearse por <b>2 Gemas</b> una vez por ciclo fijo de 24 horas. El premio puede ser Oro, tiro de ruleta o una carta relacionada con el tipo de enemigo de esa burbuja.`},
+    {selector:".adventure-story-footer",fallbackSelector:"#adventurePanel",title:"Historia y mapa",body:`Puedes volver a la historia o al mapa desde los controles inferiores. El progreso importante queda asociado a tu cuenta.`}
+  ]),
+  pvp:Object.freeze([
+    {selector:"#onlineModeSelect",fallbackSelector:"#onlineLobby",title:"Competir en línea",body:`PvP usa tu mazo guardado y tu líder actual. El sistema intenta mantener el emparejamiento dentro de tu <b>liga</b> y con niveles razonables.`},
+    {selector:"#onlineModeMatchBtn",fallbackSelector:"#onlineLobby",title:"Matchmaking",body:`Matchmaking busca rival. Si necesita completar con un BOT, ahora existen bots de <b>Nivel 1 a 15</b> con Tier, mazo y Maestría acordes al nivel.`},
+    {selector:"#onlineModeWagerBtn",fallbackSelector:"#onlineLobby",title:"Apuestas",body:`Apuestas permite crear o unirte mediante código cuando el modo está disponible. Revisa siempre la cantidad antes de confirmar.`},
+    {selector:"#onlineModeSelect",fallbackSelector:"#onlineLobby",title:"Ligas y nivel",body:`La liga representa tu progreso competitivo; el nivel limita la potencia razonable del rival. Los BOT no deberían ser todos de nivel máximo.`}
+  ]),
+  shop:Object.freeze([
+    {selector:"#packShopContent",fallbackSelector:"#packShopPanel",title:"Tienda",body:`La Tienda separa <b>Sobres, Oro y Gemas</b>. Revisa siempre qué moneda usa cada compra antes de confirmar.`},
+    {selector:'[data-shop-action="view-packs"]',fallbackSelector:"#packShopContent",title:"Sobres",body:`Los sobres entregan cartas según su tabla de rareza. Los paquetes comprados pendientes se abren desde el icono de sobres.`},
+    {selector:'[data-shop-action="view-gold"]',fallbackSelector:"#packShopContent",title:"Oro",body:`El Oro es la moneda de juego para muchas actividades y compras normales.`},
+    {selector:'[data-shop-action="view-gems"]',fallbackSelector:"#packShopContent",title:"Gemas",body:`Las Gemas se usan en contenido premium y funciones como el farm diario de Aventura. Las compras con dinero real deben pasar por el proveedor de pagos configurado.`}
+  ]),
+  forge:Object.freeze([
+    {selector:"#hallvallaForgeSystem",fallbackSelector:"#forgeBtn",title:"Forja",body:`Forja transforma tu colección. Sus dos rutas principales son <b>Fundir</b> y <b>Construir</b>.`},
+    {selector:'[data-forge-system-mode="salvage"]',fallbackSelector:"#hallvallaForgeSystem",title:"Fundir",body:`Fundir convierte cartas o materiales permitidos en recursos de Forja. Revisa la selección antes de confirmar para no destruir algo que quieras conservar.`},
+    {selector:'[data-forge-system-mode="craft"]',fallbackSelector:"#hallvallaForgeSystem",title:"Construir",body:`Construir utiliza materiales y requisitos de receta para crear la carta o unidad elegida.`}
+  ]),
+  missions:Object.freeze([
+    {selector:"#tutorialMissionList",fallbackSelector:"#missionsVisualShell",title:"Tutoriales",body:`Aquí puedes iniciar o repetir tutoriales. Repetirlos sirve para repasar, pero <b>el Oro solo se entrega la primera vez</b>.`},
+    {selector:"#accountMasteryList",fallbackSelector:"#missionsVisualShell",title:"Maestrías de cuenta",body:`Invocar, eliminar unidades, coleccionar, usar magia, trampas y equipo alimenta Maestrías acumulativas con hitos y recompensas.`},
+    {selector:"#claimAllMasteryRewardsBtn",fallbackSelector:"#missionsVisualShell",title:"Reclamar recompensas",body:`Cuando haya hitos listos, puedes reclamar uno por uno o usar <b>Reclamar todo</b>. El progreso acumulado no se reinicia al reclamar.`}
+  ])
+});
+
+function getHallvallaSystemTutorialSteps(key){return HALLVALLA_SYSTEM_TUTORIALS[key]||[];}
+function ensureHallvallaSystemTutorialUi(){
+  let root=$("hallvallaSystemTutorial");if(root)return root;
+  root=document.createElement("div");root.id="hallvallaSystemTutorial";root.className="home-deck-tutorial hidden";
+  root.innerHTML=`<div class="home-deck-tutorial-shield" aria-hidden="true"></div><div id="hallvallaSystemTutorialFocus" class="home-deck-tutorial-focus" aria-hidden="true"></div><section id="hallvallaSystemTutorialCard" class="home-deck-tutorial-card" role="dialog" aria-modal="true"><div class="home-deck-tutorial-top"><span id="hallvallaSystemTutorialStep" class="home-deck-tutorial-step">TUTORIAL</span><button id="hallvallaSystemTutorialClose" class="home-deck-tutorial-close" type="button" aria-label="Salir del tutorial">×</button></div><h2 id="hallvallaSystemTutorialTitle"></h2><div id="hallvallaSystemTutorialBody" class="home-deck-tutorial-body"></div><div class="home-deck-tutorial-actions"><button id="hallvallaSystemTutorialPrev" class="home-deck-tutorial-btn ghost" type="button">Anterior</button><button id="hallvallaSystemTutorialNext" class="home-deck-tutorial-btn primary" type="button">Continuar</button></div></section>`;
+  document.body.appendChild(root);
+  $("hallvallaSystemTutorialClose")?.addEventListener("click",exitHallvallaSystemTutorial);
+  $("hallvallaSystemTutorialPrev")?.addEventListener("click",()=>showHallvallaSystemTutorialStep(hallvallaSystemTutorialState.index-1));
+  $("hallvallaSystemTutorialNext")?.addEventListener("click",()=>{void advanceHallvallaSystemTutorial();});
+  return root;
+}
+function getHallvallaSystemTutorialTarget(step){
+  const a=step?.selector?document.querySelector(step.selector):null;if(a&&a.getBoundingClientRect().width>0&&a.getBoundingClientRect().height>0)return a;
+  const b=step?.fallbackSelector?document.querySelector(step.fallbackSelector):null;return b||null;
+}
+function positionHallvallaSystemTutorial(step){
+  if(!hallvallaSystemTutorialState.active)return;
+  const focus=$("hallvallaSystemTutorialFocus"),card=$("hallvallaSystemTutorialCard"),target=getHallvallaSystemTutorialTarget(step);if(!focus||!card)return;
+  if(!target){focus.classList.add("hidden");return;}
+  let rect=target.getBoundingClientRect();
+  if(rect.bottom<0||rect.top>innerHeight||rect.right<0||rect.left>innerWidth){try{target.scrollIntoView({block:"center",inline:"center"});}catch(_){ }rect=target.getBoundingClientRect();}
+  const pad=Math.max(7,Math.min(16,Math.round(Math.min(rect.width,rect.height)*.05)));
+  focus.classList.remove("hidden");focus.style.left=`${Math.max(6,rect.left-pad)}px`;focus.style.top=`${Math.max(6,rect.top-pad)}px`;focus.style.width=`${Math.min(innerWidth-12,rect.width+pad*2)}px`;focus.style.height=`${Math.min(innerHeight-12,rect.height+pad*2)}px`;
+  card.style.left="auto";card.style.right="24px";card.style.top="auto";card.style.bottom="24px";
+  const centerX=rect.left+rect.width/2,centerY=rect.top+rect.height/2;if(centerX>innerWidth*.54){card.style.left="24px";card.style.right="auto";}if(centerY>innerHeight*.62){card.style.top="24px";card.style.bottom="auto";}
+}
+async function showHallvallaSystemTutorialStep(index=0){
+  if(!hallvallaSystemTutorialState.active)return;
+  const key=hallvallaSystemTutorialState.key,steps=getHallvallaSystemTutorialSteps(key),safe=Math.max(0,Math.min(steps.length-1,Number(index)||0)),step=steps[safe];if(!step)return;
+  hallvallaSystemTutorialState.index=safe;
+  try{if(typeof step.before==="function")await Promise.resolve(step.before());}catch(_){ }
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  $("hallvallaSystemTutorialTitle").textContent=step.title||HALLVALLA_SYSTEM_TUTORIAL_NAMES[key]||"Tutorial";
+  $("hallvallaSystemTutorialBody").innerHTML=typeof step.body==="function"?step.body():(step.body||"");
+  $("hallvallaSystemTutorialStep").textContent=`${String(HALLVALLA_SYSTEM_TUTORIAL_NAMES[key]||key).toUpperCase()} · ${safe+1}/${steps.length}`;
+  const prev=$("hallvallaSystemTutorialPrev"),next=$("hallvallaSystemTutorialNext");if(prev)prev.disabled=safe===0;if(next)next.textContent=safe===steps.length-1?"Finalizar tutorial":"Continuar";
+  requestAnimationFrame(()=>positionHallvallaSystemTutorial(step));
+}
+async function startHallvallaSystemTutorial(key){
+  if(hallvallaSystemTutorialState.active)return false;
+  if(!hallvallaSystemTutorialCanStart(key)){
+    if(key==="deck"&&typeof canAccessDecks==="function"&&!canAccessDecks())setHint?.("El tutorial de mazo se desbloquea cuando Aventura habilite la edición de mazos.");
+    return false;
+  }
+  const root=ensureHallvallaSystemTutorialUi();
+  if(!(await hallvallaTutorialPrepareModule(key)))return false;
+  hallvallaSystemTutorialState={active:true,key,index:0};root.classList.remove("hidden");document.body.classList.add("home-deck-tutorial-active");await showHallvallaSystemTutorialStep(0);return true;
+}
+async function advanceHallvallaSystemTutorial(){
+  if(!hallvallaSystemTutorialState.active)return;
+  const key=hallvallaSystemTutorialState.key,steps=getHallvallaSystemTutorialSteps(key),i=hallvallaSystemTutorialState.index;
+  awardHallvallaSystemTutorialStep(key,i);
+  if(i>=steps.length-1){finishHallvallaSystemTutorial();return;}
+  await showHallvallaSystemTutorialStep(i+1);
+}
+function exitHallvallaSystemTutorial(){
+  if(!hallvallaSystemTutorialState.active)return;
+  hallvallaSystemTutorialState={active:false,key:"",index:0};$("hallvallaSystemTutorial")?.classList.add("hidden");$("hallvallaSystemTutorialFocus")?.classList.add("hidden");document.body.classList.remove("home-deck-tutorial-active");hallvallaTutorialCloseSurfaces();renderTutorialMissions?.();
+}
+function finishHallvallaSystemTutorial(){
+  if(!hallvallaSystemTutorialState.active)return;
+  const key=hallvallaSystemTutorialState.key;
+  markHallvallaSystemTutorialComplete(key);const rewarded=awardHallvallaSystemTutorialCompletion(key);
+  hallvallaSystemTutorialState={active:false,key:"",index:0};$("hallvallaSystemTutorial")?.classList.add("hidden");$("hallvallaSystemTutorialFocus")?.classList.add("hidden");document.body.classList.remove("home-deck-tutorial-active");hallvallaTutorialCloseSurfaces();renderTutorialMissions?.();
+  setHint?.(`${HALLVALLA_SYSTEM_TUTORIAL_NAMES[key]} completado${rewarded?` · +${HALLVALLA_SYSTEM_TUTORIAL_COMPLETE_GOLD} Oro`:""}.`);
+  const next=hallvallaSystemTutorialNextKey();
+  if(next&&hallvallaSystemTutorialCanStart(next))setTimeout(()=>{void startHallvallaSystemTutorial(next);},420);
+  else if(next==="deck")setHint?.("Siguiente: Armar el mazo. Se habilitará cuando desbloquees la edición de mazos en Aventura.");
+}
+async function startNextHallvallaSystemTutorial(preferred=""){
+  const key=preferred&&!hallvallaSystemTutorialIsComplete(preferred)?preferred:hallvallaSystemTutorialNextKey();if(!key)return false;return startHallvallaSystemTutorial(key);
+}
+globalThis.startHallvallaSystemTutorial=startHallvallaSystemTutorial;
+globalThis.startNextHallvallaSystemTutorial=startNextHallvallaSystemTutorial;
+window.addEventListener("resize",()=>{if(!hallvallaSystemTutorialState.active)return;const step=getHallvallaSystemTutorialSteps(hallvallaSystemTutorialState.key)[hallvallaSystemTutorialState.index];requestAnimationFrame(()=>positionHallvallaSystemTutorial(step));});
+document.addEventListener("keydown",event=>{if(event.key==="Escape"&&hallvallaSystemTutorialState.active){event.preventDefault();exitHallvallaSystemTutorial();}});
+
 /* ============================================================
    TUTORIAL · TÁCTICAS AVANZADAS
    - Consejos estratégicos propios de HallValla.
@@ -1197,7 +1440,7 @@ let tacticsTutorialState={active:false,index:0};
 const TACTICS_TUTORIAL_STEPS=[
   {
     title:"La magia es una herramienta de eliminación",
-    body:`Hechizos como <b>Veneno</b> y <b>Fireball</b> suelen obtener mucho más valor cuando se usan contra unidades con <b>muy poca Vida</b>.<br><br><b>Magos, Arqueros y Asesinos</b> pueden ser frágiles, pero si sobreviven varios turnos pueden convertirse en amenazas muy molestas. No gastes una magia solo porque puedes hacer daño: úsala cuando puedas quitar del campo una pieza que seguirá generando valor.`
+    body:`Hechizos como <b>Veneno</b> y <b>Fireball</b> suelen obtener mucho más valor cuando se usan contra unidades con <b>muy poca Vida</b>.<br><br><b>Magos, Arqueros y Asesinos</b> pueden ser frágiles, pero si sobreviven durante bastante tiempo pueden convertirse en amenazas muy molestas. No gastes una magia solo porque puedes hacer daño: úsala cuando puedas quitar del campo una pieza que seguirá generando valor.`
   },
   {
     title:"En batalla, elimina primero los DPS",
@@ -1213,7 +1456,7 @@ const TACTICS_TUTORIAL_STEPS=[
   },
   {
     title:"Protege el DPS que está ganando la batalla",
-    body:`No todas tus unidades tienen el mismo valor en cada momento. Si una pieza está produciendo gran parte de tu daño, puede ser correcto protegerla incluso si eso significa sacrificar una unidad secundaria.<br><br>Una fuente de daño que sobrevive varios turnos puede generar mucho más valor que una unidad que simplemente aguanta un ataque adicional.`
+    body:`No todas tus unidades tienen el mismo valor en cada momento. Si una pieza está produciendo gran parte de tu daño, puede ser correcto protegerla incluso si eso significa sacrificar una unidad secundaria.<br><br>Una fuente de daño que sobrevive durante bastante tiempo puede generar mucho más valor que una unidad que simplemente aguanta un ataque adicional.`
   },
   {
     title:"Termina de eliminar las amenazas",
@@ -1221,7 +1464,7 @@ const TACTICS_TUTORIAL_STEPS=[
   },
   {
     title:"No permitas una masa crítica de DPS",
-    body:`Un Arquero, Mago o Asesino aislado puede ser manejable. Varios DPS acumulados durante muchos turnos pueden producir más daño del que tu primera línea puede absorber.<br><br>No esperes hasta que el ejército rival esté completamente armado. Si ves que está acumulando amenazas ofensivas, <b>corta su crecimiento antes de que alcance masa crítica</b>.`
+    body:`Un Arquero, Mago o Asesino aislado puede ser manejable. Varios DPS acumulados durante demasiado tiempo pueden producir más daño del que tu primera línea puede absorber.<br><br>No esperes hasta que el ejército rival esté completamente armado. Si ves que está acumulando amenazas ofensivas, <b>corta su crecimiento antes de que alcance masa crítica</b>.`
   },
   {
     title:"Obliga al rival a atacar objetivos malos",
@@ -1341,8 +1584,6 @@ document.addEventListener("keydown",event=>{
 function renderTutorialMissions(){
   const list=$("tutorialMissionList");if(!list)return;
   const basic=isBasicTutorialComplete();
-  const homeAvailable=typeof canAccessDecks==="function"?canAccessDecks():isChapterOneCompleteForTutorial();
-  const homeDone=localStorage.getItem(HALLVALLA_HOME_DECK_TUTORIAL_COMPLETE_KEY)==="true";
   let basicDone=basic?1:0,basicTotal=1;
   try{
     if(typeof getTutorialRewardedSteps==="function"&&typeof BASIC_TUTORIAL_STEPS!=="undefined"){
@@ -1351,22 +1592,31 @@ function renderTutorialMissions(){
     }
   }catch(_){ }
   const basicPct=(basicDone/basicTotal)*100;
-  const homePct=homeDone?100:0;
+
+  const systemsTotal=HALLVALLA_SYSTEM_TUTORIAL_ORDER.length;
+  const systemsDone=hallvallaSystemTutorialCompletedCount();
+  const systemsPct=(systemsDone/systemsTotal)*100;
+  const systemsComplete=systemsDone>=systemsTotal;
+  const nextKey=hallvallaSystemTutorialNextKey();
+  const systemsAvailable=basic&&(!nextKey||hallvallaSystemTutorialCanStart(nextKey));
+
   const tacticsDone=localStorage.getItem(HALLVALLA_TACTICS_TUTORIAL_COMPLETE_KEY)==="true";
-  const tacticsAvailable=homeDone;
+  const tacticsAvailable=systemsComplete;
   const tacticsTotal=TACTICS_TUTORIAL_STEPS.length;
   const tacticsRewarded=Math.min(tacticsTotal,getTacticsTutorialRewardedSteps().size||0);
   const tacticsPct=tacticsDone?100:(tacticsRewarded/tacticsTotal)*100;
+
   list.innerHTML=[
     hvMissionCompletedShadeHtml("tutorial",basic)+hvVisualProgressHtml("tutorial",basicPct,`${basicDone}/${basicTotal}`)+hvMissionActionHtml("tutorial","missionBasicBtn",basic?"Repetir":"Comenzar",false),
-    hvMissionCompletedShadeHtml("home",homeDone)+hvVisualProgressHtml("home",homePct,`${homeDone?1:0}/1`)+hvMissionActionHtml("home","missionHomeBtn",homeDone?"Revisar":homeAvailable?"Iniciar":"Bloqueado",!homeAvailable),
+    hvMissionCompletedShadeHtml("home",systemsComplete)+hvVisualProgressHtml("home",systemsPct,`${systemsDone}/${systemsTotal}`)+hvMissionActionHtml("home","missionHomeBtn",systemsComplete?"Revisar":systemsAvailable?"Continuar":"Bloqueado",!systemsAvailable&& !systemsComplete),
     hvMissionCompletedShadeHtml("tactics",tacticsDone)+hvVisualProgressHtml("tactics",tacticsPct,`${tacticsDone?tacticsTotal:tacticsRewarded}/${tacticsTotal}`)+hvMissionActionHtml("tactics","missionTacticsBtn",tacticsDone?"Revisar":tacticsAvailable?"Iniciar":"Bloqueado",!tacticsAvailable)
   ].join("");
   const b=$("missionBasicBtn");if(b)b.onclick=()=>{closeMissionsPanel();startBasicTutorialBattle();};
-  const h=$("missionHomeBtn");if(h&&!h.disabled)h.onclick=startHomeDeckTutorial;
+  const h=$("missionHomeBtn");if(h&&!h.disabled)h.onclick=()=>{closeMissionsPanel();void (systemsComplete?startHallvallaSystemTutorial("home"):startNextHallvallaSystemTutorial());};
   const t=$("missionTacticsBtn");if(t&&!t.disabled)t.onclick=startTacticsTutorial;
   applyHvMissionsLayout();
 }
+
 function openMissionsPanel(){const p=$("missionsPanel");if(!p)return;renderAccountMasteries();renderTutorialMissions();p.classList.remove("hidden");applyHvMissionsLayout();syncHvMissionsTunerControls();}
 function closeMissionsPanel(){const p=$("missionsPanel");if(p)p.classList.add("hidden");}
 

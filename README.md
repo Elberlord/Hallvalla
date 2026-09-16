@@ -1,6 +1,6 @@
 # HallValla — private source / public game distribution
 
-Repository layout prepared for HallValla v138 infrastructure.
+Repository layout prepared for HallValla private-source/public-game distribution.
 
 ## What stays private
 - `android/` — Android application source (v131 native Google Sign-In shell)
@@ -17,8 +17,8 @@ The workflow `.github/workflows/publish-hallvalla-public.yml` builds a Pages art
 The APK signing key is deliberately NOT included in this repository package.
 
 ## Current versions
-- Browser/gameplay base: v148
-- Public distribution shell: v148 (Contratos de Dragón con ejército elemental XV; conserva Mapas 4–6, Aquiles, Mina/mazo, Volver universal y farmeo diario)
+- Browser/gameplay base: v150
+- Public distribution shell: v150 (Tutorial V2 TR + recorrido guiado de sistemas; conserva PvP BOT por nivel, Contratos de Dragón XV y progresión de mapas)
 - Android APK: v131 / versionCode 131 / `com.hallvalla.game`
 
 ## First setup
@@ -55,3 +55,23 @@ Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
 - Arsenal de apoyo: 3 Fireball, 3 Maldición de arena, 2 Parálisis, 2 Veneno y las seis trampas de cacería (Cepo, Foso, Red, Carnada, Estacas y Jaula).
 - Apertura guiada: los tres Dragones Bebé y Parálisis quedan disponibles en la mano inicial del modo por turnos; en TR el mazo completo sigue funcionando como arsenal.
 - El constructor del contrato queda exento del normalizador general de 70% unidades para respetar exactamente esta composición.
+
+
+## v149 · PvP — 15 BOT por cada nivel
+- Se sustituyen los antiguos BOT fijos de Nivel XV por 225 variantes: 15 rivales para cada nivel del I al XV.
+- Cada nivel dispone de 3 Guerrero, 3 Arquero, 3 Caballería, 3 Hacha y 3 Asesino.
+- El BOT de relleno toma exactamente el nivel del líder humano; ese nivel determina HP/AT del líder, Tier, tamaño del mazo y Maestría de sus unidades.
+- Maestría PvP BOT = nivel del BOT: I en nivel 1, II en nivel 2 ... XV en nivel 15.
+- Tamaño del mazo usa la regla canónica del líder: Tier 1/2/3/4/5 = 10/15/20/25/30 cartas.
+- La rareza queda limitada simultáneamente por la liga y por el nivel para evitar cartas de endgame en rivales bajos.
+- Los niveles bajos priorizan unidades de coste efectivo 1–2 para poder defenderse desde el inicio del TR; los niveles altos permiten mayor inversión y variedad.
+- El BOT conserva la IA táctica máxima, sin recibir maná extra por esta modificación.
+
+
+## v150 · Tutorial V2 — combate TR y recorrido completo
+- El tutorial de combate antiguo se adapta al TR canónico: recoger orbe de MANÁ, convocar desde el Arsenal, comprender movimiento/ataque automático, lanzar Fireball y activar el escudo del líder.
+- El escudo del líder se puede practicar tocando/clicando el propio líder en móvil/PC; con mando continúa disponible mediante RB.
+- Tras el combate se añade un recorrido por Home, Mina, Armar el mazo, Eventos, Aventura, PvP, Tienda, Forja y Misiones/Maestrías.
+- Cada paso nuevo entrega 5 Oro y completar cada módulo por primera vez entrega 20 Oro adicionales; repetir tutoriales no vuelve a pagar recompensas.
+- Mina enseña la regla de unidades libres: una unidad en mazo no puede producir y una unidad que entra al mazo sale automáticamente de producción.
+- El progreso del nuevo recorrido se conserva en almacenamiento local/nube mediante `hallvalla_tutorial_systems_v1`.

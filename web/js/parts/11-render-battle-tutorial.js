@@ -984,6 +984,15 @@ function ensureLeaderBasesLayer(){
       const u=getUnit(source.dataset.leaderId);
       const x=Number(source.dataset.x),y=Number(source.dataset.y);
       if(handleDirectBoardTargetEvent(ev,x,y))return;
+      // TR canónico: tocar/clicar tu propio líder activa el escudo de 3 s.
+      // Esto hace accesible la defensa tanto en móvil/PC como con mando (RB).
+      if(u&&u.leader&&Number(u.owner)===Number(myPlayer||0)&&typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()&&typeof hallvallaRtActivateLeaderShield==="function"){
+        ev.preventDefault();
+        ev.stopPropagation();
+        flashBoardSelectedCell(x,y);
+        hallvallaRtActivateLeaderShield(myPlayer);
+        return;
+      }
       ev.preventDefault();
       ev.stopPropagation();
       flashBoardSelectedCell(x,y);
@@ -1322,7 +1331,7 @@ async function startBasicTutorialBattle(){
   if(!(await ensureFirebaseAuthReady("tutorial")))return;
   basicTutorialCoachStep=0;
   basicTutorialProgressStep=0;
-  basicTutorialFlags={allowInitialDraw:false,inspectedCardKey:"",completionHandled:false};
+  basicTutorialFlags={orbCollected:false,summoned:false,spellPlayed:false,leaderShielded:false,completionHandled:false};
   clearBasicTutorialTargetHighlight();
   const oldCoach=$("basicTutorialCoach");if(oldCoach)oldCoach.classList.add("hidden");
   const leaderType=getSelectedLeaderType()||"warrior";
@@ -1330,38 +1339,39 @@ async function startBasicTutorialBattle(){
   const leaderAbility=getLocalLeaderAbility(leaderType)||"";
   const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);
   const code=`TUT${code4()}`;
-  // Orden intencional: el primer robo entrega una unidad y una magia, exactamente
-  // las dos piezas que necesita el recorrido básico.
-  const deck=["spearman","bolt"].map(k=>getTutorialCardTemplate(k)).filter(Boolean).map(card=>makeCard(card,1,leaderType));
+  // Tutorial TR canónico: el mazo completo se convierte en Arsenal.
+  // Dos unidades baratas + una magia permiten practicar la secuencia real del juego.
+  const deck=["spearman","archer","fireball"].map(k=>getTutorialCardTemplate(k)).filter(Boolean).map(card=>makeCard(card,1,leaderType));
   const hand=[];
   const enemyLeaderType="warrior";
   const enemyLeaderStats=getLeaderBattleStats(enemyLeaderType,1,"");
   const center=Math.floor(COLS/2);
-  const attackX=Math.max(0,center-2);
-  const attackY=Math.max(1,ROWS-3);
-  const targetY=Math.max(1,attackY-2);
-  const practiceArcher=makeBasicTutorialPracticeUnit("archer",1,attackX,attackY,leaderType,"attack-demo");
-  if(practiceArcher){practiceArcher.name="Arquera de práctica";practiceArcher.acted=false;practiceArcher.moved=false;}
-  const enemyTarget=makeBasicTutorialPracticeUnit("guardian",2,attackX,targetY,enemyLeaderType,"target-demo");
-  if(enemyTarget){enemyTarget.name="Guardia de práctica";enemyTarget.hp=8;enemyTarget.maxHp=8;enemyTarget.guard=2;enemyTarget.baseGuard=2;enemyTarget.acted=true;enemyTarget.moved=true;}
-  const units=[
-    makeLeader(1,center,ROWS-1,leaderType,leaderLevel,leaderAbility),
-    makeLeader(2,center,0,enemyLeaderType,1,""),
-    practiceArcher,
-    enemyTarget
-  ].filter(Boolean);
+  const enemyTarget=makeBasicTutorialPracticeUnit("guardian",2,Math.max(0,center-1),Math.max(1,Math.floor(ROWS/2)-1),enemyLeaderType,"target-demo");
+  if(enemyTarget){
+    enemyTarget.name="Guardia de práctica";
+    enemyTarget.hp=24;enemyTarget.maxHp=24;enemyTarget.guard=4;enemyTarget.baseGuard=4;
+    enemyTarget.mov=0;enemyTarget.baseMov=0;enemyTarget.acted=false;enemyTarget.moved=true;
+  }
+  const playerLeader=makeLeader(1,center,ROWS-1,leaderType,leaderLevel,leaderAbility);
+  const enemyLeader=makeLeader(2,center,0,enemyLeaderType,1,"");
+  if(enemyLeader){enemyLeader.hp=Math.max(40,Number(enemyLeader.hp||0));enemyLeader.maxHp=enemyLeader.hp;}
+  const units=[playerLeader,enemyLeader,enemyTarget].filter(Boolean);
+  const now=Date.now();
   const pub={
     code,
     boardRows:ROWS,
     boardCols:COLS,
     mode:"tutorial",
     tutorialBasic:true,
-    createdAt:Date.now(),
-    currentPlayer:1,
+    realtimeExperimental:true,
+    createdAt:now,
+    // El primer orbe debe estar visible al entrar para que el jugador aprenda la mecánica sin esperar 14 s.
+    engineStartedAt:now-15050,
+    currentPlayer:0,
     turn:1,
     phase:"active",
-    turnPhase:"draw",
-    turnKey:"1-1",
+    turnPhase:"realtime",
+    turnKey:"RT-1",
     turnStartedAt:serverTimestamp(),
     clockRulesetVersion:CLOCK_RULESET_VERSION,
     playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},
@@ -1370,16 +1380,17 @@ async function startBasicTutorialBattle(){
     playerLeaders:{1:leaderType,2:enemyLeaderType},
     playerLeaderLevels:{1:leaderLevel,2:1},
     playerLeaderAbilities:{1:leaderAbility,2:""},
-    playerStats:{1:{hp:leaderStats.hp,honor:4,maxHonor:4,deck:deck.length,hand:0},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:0,hand:0}},
+    playerStats:{1:{hp:leaderStats.hp,honor:2,maxHonor:2,deck:deck.length,hand:0},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:0,hand:0}},
     erictoGraveyard:[],
     units,
-    log:["Tutorial básico: sigue el texto flotante. No necesitas aprender nada que no uses en este recorrido."]
+    log:["Tutorial TR: recoge MANÁ, convoca, usa magia y aprende a bloquear daño con tu líder."]
   };
   await set(ref(db,`games/${code}/public`),pub);
-  await set(getGamePrivatePlayerRef(code,1),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:4,maxHonor:4,lastTurnStarted:"",skipFirstTurnDraw:false});
+  await set(getGamePrivatePlayerRef(code,1),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:2,maxHonor:2,lastTurnStarted:"RT",skipFirstTurnDraw:true});
   const main=$("mainMenu");if(main)main.classList.add("hidden");
   enterGame(code,1);
 }
+
 function ensureBasicTutorialCoach(){
   let coach=$("basicTutorialCoach");
   if(coach)return coach;
@@ -1390,7 +1401,7 @@ function ensureBasicTutorialCoach(){
   coach.innerHTML=`
     <div class="basic-tutorial-coach-card">
       <div class="basic-tutorial-coach-top">
-        <div id="basicTutorialStepText" class="basic-tutorial-step">TUTORIAL BÁSICO · 1/9</div>
+        <div id="basicTutorialStepText" class="basic-tutorial-step">TUTORIAL DE COMBATE · 1/7</div>
         <button id="basicTutorialCloseCoachBtn" class="basic-tutorial-close" type="button" aria-label="Salir del tutorial" title="Salir del tutorial">×</button>
       </div>
       <h3 id="basicTutorialCoachTitle">Tutorial básico</h3>
@@ -1410,29 +1421,39 @@ function ensureBasicTutorialCoach(){
 }
 function ensureBasicTutorialFocusRing(){let ring=$("basicTutorialFocusRing");if(ring)return ring;ring=document.createElement("div");ring.id="basicTutorialFocusRing";ring.className="basic-tutorial-focus-ring hidden";document.body.appendChild(ring);return ring;}
 let basicTutorialCurrentTarget=null;
-let basicTutorialFlags={allowInitialDraw:false,inspectedCardKey:"",completionHandled:false};
+let basicTutorialFlags={orbCollected:false,summoned:false,spellPlayed:false,leaderShielded:false,completionHandled:false};
 function clearBasicTutorialTargetHighlight(){if(basicTutorialCurrentTarget&&basicTutorialCurrentTarget.classList)basicTutorialCurrentTarget.classList.remove("tutorial-target-active");basicTutorialCurrentTarget=null;const ring=$("basicTutorialFocusRing");if(ring)ring.classList.add("hidden");}
-function isBasicTutorialInitialDrawBlocked(){return !!(publicState?.mode==="tutorial"&&publicState?.tutorialBasic&&!basicTutorialFlags.allowInitialDraw);}
+function isBasicTutorialInitialDrawBlocked(){return false;}
 function getBasicTutorialPlayerUnits(){return (publicState?.units||[]).filter(u=>u&&u.owner===myPlayer&&!u.leader&&u.hp>0);}
-function getBasicTutorialSummonedUnit(){return getBasicTutorialPlayerUnits().find(u=>u.key==="spearman"&&u.summonOrigin==="hand")||null;}
-function getBasicTutorialAttackUnit(){return getBasicTutorialPlayerUnits().find(u=>u.tutorialRole==="attack-demo")||null;}
+function getBasicTutorialSummonedUnit(){return getBasicTutorialPlayerUnits().find(u=>u.summonOrigin==="hand")||null;}
 function getBasicTutorialEnemyUnit(){return (publicState?.units||[]).find(u=>u&&u.owner!==myPlayer&&!u.leader&&u.hp>0&&u.tutorialRole==="target-demo")||null;}
 function getBasicTutorialEnemyLeader(){return (publicState?.units||[]).find(u=>u&&u.owner!==myPlayer&&u.leader&&u.hp>0)||null;}
-function getBasicTutorialUnitContextButton(action,unit){if(unit&&unitContextSelection?.unitId!==unit.id)return null;return document.querySelector(`#unitContextMenu .unit-context-btn[data-action="${action}"]:not([disabled])`);}
+function getBasicTutorialPlayerLeader(){return (publicState?.units||[]).find(u=>u&&u.owner===myPlayer&&u.leader&&u.hp>0)||null;}
 function getBasicTutorialBoardUnitEl(unit){if(!unit)return null;return document.querySelector(`.unit-card[data-x="${unit.x}"][data-y="${unit.y}"]`)||document.querySelector(`.leader-base[data-x="${unit.x}"][data-y="${unit.y}"]`)||null;}
-function getBasicTutorialHandCardEl(key){const card=(privateState?.hand||[]).find(c=>c?.key===key);if(!card)return null;return [...document.querySelectorAll("#handRow .hand-card")].find(el=>el.dataset.id===card.id)||null;}
-function getBasicTutorialVisibleDetPlayButton(key){const modal=$("cardInspectModal");if(!modal||modal.classList.contains("hidden")||cardInspectSelection?.key!==key)return null;const btn=$("detPlayCardBtn");return btn&&!btn.disabled&&!btn.classList.contains("is-hidden")?btn:null;}
+function getBasicTutorialRtCardEl(key){const card=(privateState?.hand||[]).find(c=>c?.key===key);if(!card)return null;return [...document.querySelectorAll("#rtArsenalCards [data-rt-card-id]")].find(el=>String(el.dataset.rtCardId||"")===String(card.id||""))||null;}
 function getBasicTutorialTargetElement(step){if(!step)return null;try{const el=typeof step.targetResolver==="function"?step.targetResolver():null;return el&&el.nodeType===1?el:null;}catch(e){return null;}}
+function hallvallaBasicTutorialOnManaOrbCollected(){if(publicState?.mode!=="tutorial"||!publicState?.tutorialBasic)return;basicTutorialFlags.orbCollected=true;battleRequestAnimationFrame(()=>renderBasicTutorialCoach(false),"tutorial-orb-progress");}
+function hallvallaBasicTutorialOnLeaderShield(){if(publicState?.mode!=="tutorial"||!publicState?.tutorialBasic)return;basicTutorialFlags.leaderShielded=true;battleRequestAnimationFrame(()=>renderBasicTutorialCoach(false),"tutorial-shield-progress");}
+function hallvallaBasicTutorialOnSpellPlayed(){if(publicState?.mode!=="tutorial"||!publicState?.tutorialBasic)return;basicTutorialFlags.spellPlayed=true;battleRequestAnimationFrame(()=>renderBasicTutorialCoach(false),"tutorial-spell-progress");}
+globalThis.hallvallaBasicTutorialOnManaOrbCollected=hallvallaBasicTutorialOnManaOrbCollected;
+globalThis.hallvallaBasicTutorialOnLeaderShield=hallvallaBasicTutorialOnLeaderShield;
+globalThis.hallvallaBasicTutorialOnSpellPlayed=hallvallaBasicTutorialOnSpellPlayed;
 function getTutorialRewardedSteps(){try{return new Set(JSON.parse(localStorage.getItem(HALLVALLA_BASIC_TUTORIAL_REWARDS_KEY)||"[]"));}catch(e){return new Set();}}
 function awardBasicTutorialStep(stepIndex){const rewarded=getTutorialRewardedSteps();if(rewarded.has(stepIndex))return;rewarded.add(stepIndex);try{localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_REWARDS_KEY,JSON.stringify([...rewarded]));}catch(e){}const profile=getPlayerProfile();profile.gold=(profile.gold||0)+5;savePlayerProfile(profile);renderPlayerProfile(profile);}
-function setBasicTutorialComplete(){try{localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_COMPLETE_KEY,"true");localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_KEY,"true");localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_STEP_KEY,String(BASIC_TUTORIAL_STEPS.length));}catch(e){}renderHomeProgress();}
-function isBasicTutorialComplete(){try{return localStorage.getItem(HALLVALLA_BASIC_TUTORIAL_COMPLETE_KEY)==="true";}catch(e){return false;}}
-function getBasicTutorialPhaseGate(phase){
-  if(!publicState?.tutorialBasic)return {allowed:true};
-  if(phase==="main"&&basicTutorialCoachStep<5)return {allowed:false,message:"Sigue el Tutorial básico: primero revisa la mano, convoca y juega la magia."};
-  if(phase==="actions")return {allowed:false,message:"No necesitas terminar el turno. Completa MOV, DEF y ATTK del Tutorial básico."};
-  return {allowed:true};
+function setBasicTutorialComplete(){
+  try{localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_COMPLETE_KEY,"true");localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_KEY,"true");localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_STEP_KEY,String(BASIC_TUTORIAL_STEPS.length));}catch(e){}
+  try{
+    const rewardKey="hallvalla_tutorial_basic_completion_reward_v1";
+    if(localStorage.getItem(rewardKey)!=="true"){
+      localStorage.setItem(rewardKey,"true");
+      const profile=getPlayerProfile();profile.gold=(Number(profile.gold)||0)+20;savePlayerProfile(profile);renderPlayerProfile?.(profile);
+    }
+  }catch(_){ }
+  renderHomeProgress();
 }
+function isBasicTutorialComplete(){try{return localStorage.getItem(HALLVALLA_BASIC_TUTORIAL_COMPLETE_KEY)==="true";}catch(e){return false;}}
+function getBasicTutorialPhaseGate(){return {allowed:true};}
+
 function getBasicTutorialProtectedRects(target){
   const selectors=[
     ".action-img-btn",
@@ -1475,7 +1496,7 @@ function positionBasicTutorialCoach(step,target){
 
   if(!target||target.offsetParent===null){placeCoach(margin,Math.max(margin,vh-ch-margin),"free");return;}
 
-  if(step&&(step.id==="turn-start"||step.id==="draw")){
+  if(step&&(step.id==="intro"||step.id==="mana")){
     const hudRect=$("hudP1")?.getBoundingClientRect?.();
     const honorRect=$("turnHonorHud")?.getBoundingClientRect?.();
     const handRect=$("handDrawer")?.getBoundingClientRect?.();
@@ -1530,27 +1551,21 @@ function applyBasicTutorialTarget(step){
   ring.style.left=`${Math.max(4,rect.left-pad)}px`;ring.style.top=`${Math.max(4,rect.top-pad)}px`;ring.style.width=`${Math.max(24,rect.width+pad*2)}px`;ring.style.height=`${Math.max(24,rect.height+pad*2)}px`;ring.classList.remove("hidden");
   positionBasicTutorialCoach(step,el);
 }
-function isBasicTutorialDrawComplete(){return !!(privateState&&publicState&&privateState.lastTurnStarted===publicState.turnKey&&getTurnPhase()==="main"&&(privateState.hand||[]).length>=2);}
 function basicTutorialSpellWasPlayed(){
-  // La carta solo sale de la mano cuando commitCardPlay confirma la jugada.
-  // Para el tutorial, eso es la señal fiable de que la magia ya se lanzó.
-  // Usamos también el contador público porque su listener puede llegar antes que
-  // el estado privado; así la guía no queda atrapada en 5/9 por una carrera de Firebase.
-  const privateCardGone=Array.isArray(privateState?.hand)&&!privateState.hand.some(c=>c?.key==="bolt");
-  const publicHandEmpty=Number(publicState?.playerStats?.[myPlayer]?.hand??-1)===0;
-  return privateCardGone||publicHandEmpty;
+  if(basicTutorialFlags.spellPlayed)return true;
+  const fireballGone=Array.isArray(privateState?.hand)&&!privateState.hand.some(c=>c?.key==="fireball");
+  return fireballGone;
 }
 const BASIC_TUTORIAL_STEPS=[
-  {id:"turn-start",manual:true,title:"Inicio del turno",body:"Tu turno empieza en Robo. Después entra a Main, donde puedes jugar cartas.",hint:"Pulsa Comenzar para ver el robo real.",button:"Comenzar",targetResolver:()=>$("phaseBanner")||$("p1Badge")},
-  {id:"draw",manual:true,title:"Robo",body:"Al iniciar, robas 2 cartas. También aumenta tu recurso máximo y se recarga Honor o Mana. El juego lo hace automáticamente.",hint:"Espera a que aparezcan las 2 cartas.",button:"Continuar",canContinue:()=>isBasicTutorialDrawComplete(),targetResolver:()=>$("p1Deck")||$("handBtn")},
-  {id:"details",title:"Ver detalles en la mano",body:"Abre Mano y toca Lancero solar. DET te muestra costo, estadísticas y efecto.",hint:"Solo necesitas saber dónde consultar la carta.",targetResolver:()=>handOpen?(getBasicTutorialHandCardEl("spearman")||$("handBtn")):$("handBtn"),done:()=>basicTutorialFlags.inspectedCardKey==="spearman"},
-  {id:"summon",title:"Convocar desde la mano",body:"Pulsa Jugar en el Lancero y elige una casilla resaltada junto a tu líder.",hint:"El costo se descuenta al confirmar la invocación.",targetResolver:()=>selectedCard?.key==="spearman"?document.querySelector(".cell.summonable"):(getBasicTutorialVisibleDetPlayButton("spearman")||(handOpen?getBasicTutorialHandCardEl("spearman"):$("handBtn"))),done:()=>!!getBasicTutorialSummonedUnit()},
-  {id:"spell",title:"Jugar una magia",body:"Abre Mano, toca Maldición de arena, pulsa Jugar y elige la Guardia rival marcada.",hint:"Las magias resuelven su efecto y salen de tu mano.",targetResolver:()=>selectedCard?.key==="bolt"?(getBasicTutorialBoardUnitEl(getBasicTutorialEnemyUnit())||document.querySelector(".cell.attackable")):(getBasicTutorialVisibleDetPlayButton("bolt")||(handOpen?getBasicTutorialHandCardEl("bolt"):$("handBtn"))),done:()=>basicTutorialSpellWasPlayed()},
-  {id:"move",title:"Movimiento",body:"Pulsa Siguiente fase. Luego toca tu Lancero y una casilla verde. MOV sigue disponible como alternativa.",hint:"MV indica cuántas casillas puede recorrer.",targetResolver:()=>getTurnPhase()==="main"?$("endBtn"):(selectedUnitId===getBasicTutorialSummonedUnit()?.id?(document.querySelector(".cell.move-range-preview,.cell.valid")||getBasicTutorialUnitContextButton("mov",getBasicTutorialSummonedUnit())):getBasicTutorialBoardUnitEl(getBasicTutorialSummonedUnit())),done:()=>!!getBasicTutorialSummonedUnit()?.moved},
-  {id:"defense",title:"Defensa",body:"Toca el Lancero y pulsa DEF: gana +2 Guardia y el primer ataque contra él tiene -10% Precisión.",hint:"DEF consume su acción de combate de este turno.",targetResolver:()=>getBasicTutorialUnitContextButton("def",getBasicTutorialSummonedUnit())||getBasicTutorialBoardUnitEl(getBasicTutorialSummonedUnit()),done:()=>!!getBasicTutorialSummonedUnit()?.defenseModeReady},
-  {id:"attack",title:"Ataque",body:"Toca la Arquera de práctica y luego toca directamente la Guardia rival marcada en rojo. ATTK sigue disponible como alternativa.",hint:"Solo puedes atacar objetivos dentro de RG.",targetResolver:()=>selectedUnitId===getBasicTutorialAttackUnit()?.id?(document.querySelector(".cell.attack-range-preview,.cell.attackable")||getBasicTutorialBoardUnitEl(getBasicTutorialEnemyUnit())):getBasicTutorialBoardUnitEl(getBasicTutorialAttackUnit()),done:()=>!!getBasicTutorialAttackUnit()?.acted},
-  {id:"victory",manual:true,final:true,title:"Condiciones de victoria",body:"Ganas al llevar la Vida del líder rival a 0. Pierdes si tu líder llega a 0; no necesitas eliminar todas las unidades.",hint:"Con esto ya tienes lo necesario para jugar una partida básica.",button:"Finalizar tutorial",targetResolver:()=>getBasicTutorialBoardUnitEl(getBasicTutorialEnemyLeader())}
+  {id:"intro",manual:true,title:"Combate en tiempo real",body:"HallValla ahora se juega en tiempo real: no hay turnos. Tus unidades avanzan y atacan automáticamente; tu trabajo es administrar MANÁ, elegir qué convocar y cuándo usar magia, trampas y defensa del líder.",hint:"Pulsa Comenzar para practicar las cuatro acciones esenciales.",button:"Comenzar",targetResolver:()=>$("hallvallaRtStatus")||$("phaseBanner")},
+  {id:"mana",title:"Recoge el orbe de MANÁ",body:"Empiezas con 2/2 de MANÁ y recuperas 1 cada 9 segundos. El orbe aparece cada 14 segundos: al recogerlo aumenta en +1 tu capacidad máxima y también te entrega 1 MANÁ.",hint:"Toca el orbe brillante de tu lado. Con mando también puedes usar LB.",targetResolver:()=>document.querySelector('.rt-mana-orb.own')||$("hallvallaRtStatus"),done:()=>!!basicTutorialFlags.orbCollected},
+  {id:"summon",title:"Convoca una unidad",body:"Abre UNIDADES y toca una carta que puedas pagar. La invocación aparece automáticamente en una casilla libre de tu zona y desde ahí se mueve y combate por sí sola.",hint:"No necesitas moverla manualmente. El coste se descuenta al convocarla.",targetResolver:()=>hallvallaRtState?.arsenalLevel==="cards"&&hallvallaRtState?.arsenalCategory==="unit"?(getBasicTutorialRtCardEl("spearman")||getBasicTutorialRtCardEl("archer")):document.querySelector('#rtArsenalPanel [data-rt-category="unit"]'),done:()=>!!getBasicTutorialSummonedUnit()},
+  {id:"auto",manual:true,title:"Movimiento y ataque automáticos",body:"Una vez invocada, la unidad busca enemigos, avanza y ataca automáticamente según su MOV y RG. En TR no seleccionas MOV ni ATTK: tú construyes la presión desde el Arsenal.",hint:"Observa cómo tu unidad abandona la zona de aparición y busca a la Guardia de práctica.",button:"Entendido",targetResolver:()=>getBasicTutorialBoardUnitEl(getBasicTutorialSummonedUnit())||$("grid")},
+  {id:"spell",title:"Usa una magia",body:"Las magias se lanzan desde su categoría y HallValla selecciona automáticamente un objetivo válido cercano. Fireball causa daño y Quemadura; recuerda que la Quemadura ya no desaparece sola y deja la DX de la víctima en 0.",hint:"Abre MAGIAS y lanza Fireball contra la Guardia de práctica.",targetResolver:()=>hallvallaRtState?.arsenalLevel==="cards"&&hallvallaRtState?.arsenalCategory==="spell"?(getBasicTutorialRtCardEl("fireball")||document.querySelector('#rtArsenalCards .rt-arsenal-card')):document.querySelector('#rtArsenalPanel [data-rt-category="spell"]'),done:()=>basicTutorialSpellWasPlayed()},
+  {id:"shield",title:"Bloquea daño con tu líder",body:"Tu líder puede activar un escudo durante 3 segundos que reduce en 50% el daño recibido. En móvil o PC toca/clica tu propio líder; con mando usa RB. El escudo no se puede prolongar mientras ya está activo.",hint:"Activa ahora el escudo de tu líder.",targetResolver:()=>getBasicTutorialBoardUnitEl(getBasicTutorialPlayerLeader()),done:()=>!!basicTutorialFlags.leaderShielded},
+  {id:"victory",manual:true,final:true,title:"Cómo ganas",body:"Ganas cuando la Vida del líder rival llega a 0. No necesitas eliminar todas sus unidades. Mantén presión con unidades baratas, recoge orbes, reserva MANÁ cuando puedas y protege tu líder cuando el golpe importante vaya a entrar.",hint:"Tutorial de combate completado. Esta recompensa solo se obtiene la primera vez.",button:"Finalizar tutorial",targetResolver:()=>getBasicTutorialBoardUnitEl(getBasicTutorialEnemyLeader())}
 ];
+
 let basicTutorialCoachStep=0;
 let basicTutorialProgressStep=0;
 function storeBasicTutorialStep(){try{localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_STEP_KEY,String(basicTutorialCoachStep));}catch(e){}}
@@ -1571,7 +1586,6 @@ function advanceBasicTutorialManualStep(){
   if(!publicState||publicState.mode!=="tutorial")return;
   const step=BASIC_TUTORIAL_STEPS[basicTutorialCoachStep];if(!step?.manual)return;
   if(typeof step.canContinue==="function"&&!step.canContinue())return;
-  if(step.id==="turn-start"){basicTutorialFlags.allowInitialDraw=true;}
   awardBasicTutorialStep(basicTutorialCoachStep);
   if(step.final){completeBasicTutorial();return;}
   basicTutorialCoachStep=Math.min(BASIC_TUTORIAL_STEPS.length-1,basicTutorialCoachStep+1);
@@ -1587,8 +1601,11 @@ function completeBasicTutorial(){
   markBasicBattleTutorialSeen();
   clearBasicTutorialTargetHighlight();
   const coach=$("basicTutorialCoach");if(coach)coach.classList.add("hidden");
-  setHint("Tutorial básico completado.");
-  battleSetTimeout(()=>backToMainMenu(),220,"tutorial-basic-finish");
+  setHint("Tutorial de combate completado.");
+  battleSetTimeout(()=>{
+    backToMainMenu();
+    setTimeout(()=>{try{globalThis.startNextHallvallaSystemTutorial?.("home");}catch(_){ }},420);
+  },220,"tutorial-basic-finish");
 }
 function exitBasicTutorialBattle(){
   clearBasicTutorialTargetHighlight();
@@ -1607,7 +1624,7 @@ document.addEventListener("click",ev=>{
 function renderBasicTutorialCoach(forceShow=false){
   if(!publicState||publicState.mode!=="tutorial"){clearBasicTutorialTargetHighlight();const coach=$("basicTutorialCoach");if(coach)coach.classList.add("hidden");return;}
   const coach=ensureBasicTutorialCoach();syncBasicTutorialProgress();const step=BASIC_TUTORIAL_STEPS[basicTutorialCoachStep]||BASIC_TUTORIAL_STEPS[0];
-  setText("basicTutorialStepText",`TUTORIAL BÁSICO · ${basicTutorialCoachStep+1}/${BASIC_TUTORIAL_STEPS.length}`);
+  setText("basicTutorialStepText",`TUTORIAL DE COMBATE · ${basicTutorialCoachStep+1}/${BASIC_TUTORIAL_STEPS.length}`);
   setText("basicTutorialCoachTitle",step.title);
   setText("basicTutorialCoachBody",step.body);
   setText("basicTutorialCoachHint",step.hint||"");

@@ -1,0 +1,27 @@
+HALLVALLA v150 — TUTORIAL V2
+Fecha: 2026-09-16
+
+1. Tutorial de combate actualizado a Tiempo Real (TR)
+- Recoger orbe de MANÁ.
+- Convocar una unidad desde el Arsenal.
+- Explicar movimiento y ataque automáticos.
+- Lanzar Fireball y explicar la Quemadura persistente / DX 0.
+- Activar el escudo del líder (3 s, -50% daño): toque/clic sobre el líder propio o RB con mando.
+- Explicar condición de victoria.
+
+2. Recorrido posterior de sistemas
+Home -> Mina -> Armar el mazo -> Eventos -> Aventura -> PvP -> Tienda -> Forja -> Misiones/Maestrías.
+
+3. Recompensas de primera vez
+- +5 Oro por cada paso nuevo completado.
+- +20 Oro por terminar por primera vez cada módulo.
+- Repetir un tutorial no vuelve a pagar.
+- El progreso se conserva con hallvalla_tutorial_systems_v1 y se incluye en la sincronización de cuenta.
+
+4. Mina
+- El tutorial explica que solo trabajan unidades libres.
+- Mazo y producción son excluyentes; si una unidad entra al mazo, sale de producción.
+
+5. Compatibilidad
+- No requiere APK nueva.
+- Cache/build web actualizado a 20260916.150.

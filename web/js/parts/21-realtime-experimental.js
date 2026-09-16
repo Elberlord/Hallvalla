@@ -526,6 +526,7 @@ async function hallvallaRtCollectManaOrb(owner=null,source='gamepad'){
   if(collector===Number(myPlayer||0)&&publicState?.mode==='online')hallvallaRtQueueOnlineCastCheckpoint(publicPatch,privatePatch,stealing?'resource:mana-orb-steal':'resource:mana-orb');
   if(source!=='ai')setHint(stealing?`Orbe rival robado · MANÁ ${manaAfter}/${maxAfter}.`:`Orbe recogido · MANÁ ${manaAfter}/${maxAfter}.`);
   hallvallaRtRenderManaOrbs();
+  if(source!=='ai'&&publicState?.mode==='tutorial'&&publicState?.tutorialBasic)globalThis.hallvallaBasicTutorialOnManaOrbCollected?.();
   return true;
 }
 function hallvallaRtActivateLeaderShield(owner=myPlayer){
@@ -543,6 +544,7 @@ function hallvallaRtActivateLeaderShield(owner=myPlayer){
   setHint('RB · Escudo del líder activo 3 s · daño recibido -50%.');
   const expireRender=()=>{if(typeof requestBattleRender==='function')requestBattleRender('rt-leader-shield-expire');else if(typeof render==='function')render();};
   if(typeof battleSetTimeout==='function')battleSetTimeout(expireRender,HALLVALLA_RT_CFG.leaderShieldDurationMs+40,'rt-leader-shield-expire');else setTimeout(expireRender,HALLVALLA_RT_CFG.leaderShieldDurationMs+40);
+  if(who===Number(myPlayer||0)&&publicState?.mode==='tutorial'&&publicState?.tutorialBasic)globalThis.hallvallaBasicTutorialOnLeaderShield?.();
   return true;
 }
 globalThis.hallvallaRtCollectManaOrb=hallvallaRtCollectManaOrb;
@@ -726,7 +728,10 @@ async function hallvallaRtPlayAutoCard(card){
   try{
     await playCardOn(auto.x,auto.y,auto.target||null);
     consumed=before&&!(privateState?.hand||[]).some(c=>c.id===card.id);
-    if(consumed)setHint(`${card.name} se resolvió automáticamente.`);else setHint(`No se pudo resolver ${card.name} automáticamente.`);
+    if(consumed){
+      setHint(`${card.name} se resolvió automáticamente.`);
+      if(publicState?.mode==='tutorial'&&publicState?.tutorialBasic)globalThis.hallvallaBasicTutorialOnSpellPlayed?.();
+    }else setHint(`No se pudo resolver ${card.name} automáticamente.`);
     return consumed;
   }catch(error){
     console.error("[HallValla][RT] carta automática falló",error);
