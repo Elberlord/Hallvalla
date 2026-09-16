@@ -23,3 +23,11 @@ The APK signing key is deliberately NOT included in this repository package.
 
 ## First setup
 Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
+
+
+## v145 — Mapa 3 competitivo
+- Mapa 3 pasa a Tier 3 real (líder enemigo nivel mínimo 7, mazo de 20 cartas).
+- 3-1 Guerrero, 3-2 Arquera y 3-3 Sun Tzu reciben `adaptiveFixedDeck` diseñados a mano.
+- Mantienen acceso a Richard, Hua Lan, Wallace y Simo; Sun Tzu se garantiza en 3-3.
+- Se aprovechan cartas Épicas del paquete mejorado que el jugador ya pudo obtener antes del Mapa 3.
+- Se conserva una curva TR con abundancia de unidades y la adaptación puede modificar slots secundarios sin destruir el núcleo táctico.

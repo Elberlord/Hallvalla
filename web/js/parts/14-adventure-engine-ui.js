@@ -25,8 +25,11 @@ function getAdventureEnemyLeaderLevel(battle,playerLevelOverride=null){
   if(Number.isFinite(chapterNumber)&&chapterNumber>=4){
     return LEADER_LEVEL_MAX;
   }
+  if(Number.isFinite(chapterNumber)&&chapterNumber>=3){
+    return Math.max(explicitLevel,7); // Mapa 3 = Tier 3 = 20 cartas
+  }
   if(Number.isFinite(chapterNumber)&&chapterNumber>=2){
-    return Math.max(explicitLevel,5);
+    return Math.max(explicitLevel,5); // Mapa 2 = Tier 2 = 15 cartas
   }
   return explicitLevel;
 }
