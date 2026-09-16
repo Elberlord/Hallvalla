@@ -1,0 +1,22 @@
+HALLVALLA v144 — COMPRESIÓN DE COSTE DE UNIDADES EN TR
+
+Objetivo:
+Evitar que clases con unidades naturalmente caras (especialmente Hacha/Berserker) queden inutilizadas por el ritmo rápido del TR.
+
+Regla TR para UNIDADES:
+- coste canónico 1–2 -> coste efectivo 1
+- coste canónico 3–5 -> coste efectivo 2
+- coste canónico 6+  -> coste efectivo 3
+
+Magias, trampas y equipo mantienen su coste canónico.
+Sabotaje de Iga y demás modificadores se aplican después de esta base efectiva.
+
+Ejemplos Hacha:
+- Ulfhednar 2 -> 1
+- Berserker de Oso 3 -> 2
+- Berserker del norte 4 -> 2
+- Húscarl 4 -> 2
+- Guardia varega 4 -> 2
+- Guerrero franco 3 -> 2
+- Gallowglass 4 -> 2
+- Caballero de poleaxe 4 -> 2

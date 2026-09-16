@@ -1,0 +1,28 @@
+HallValla v143 — Mapa 2: decks Tier 2 de curva baja
+
+Objetivo
+- Mantener 15 cartas (Tier 2).
+- Conservar acceso a Hua Lan, William Wallace y Richard desde Mapa 2.
+- Evitar que la IA se atasque temprano con demasiadas cartas de coste 3.
+- No modificar tiempos de MANÁ ni cerebro TR en esta build.
+
+2-1 Vanguardia Pagada
+- Coste 1: 5 cartas
+- Coste 2: 9 cartas
+- Coste 3: 1 carta (Richard)
+
+2-2 Paso Silencioso
+- Coste 1: 7 cartas
+- Coste 2: 6 cartas
+- Coste 3: 2 cartas (Richard + 1 Yabusame)
+
+2-3 Simo Häyhä
+- Coste 1: 8 cartas
+- Coste 2: 5 cartas
+- Coste 3: 2 cartas (Simo + Richard)
+
+MANÁ TR actual
+- Ambos lados empiezan 2/2.
+- Ambos recuperan +1 MANÁ cada 9 s, hasta su capacidad actual.
+- El orbe aparece cada 14 s y aumenta capacidad +1 (y MANÁ actual +1 al recogerlo).
+- La IA recoge automáticamente su propio orbe 1 s después de aparecer; el humano debe recoger manualmente el suyo.
