@@ -1,0 +1,32 @@
+HallValla build 20260917.161
+
+Objetivo:
+Convertir en layout canónico exclusivamente los ajustes enviados por el usuario para CONSTRUIR, conservando FUNDIR exactamente como quedó aprobado en v160.
+
+Construir canónico:
+- Vista completa: X 0 / Y 0 / 100%
+- Título: X -476 / Y -39 / 36%
+- Contenedor de fragmentos: X 0 / Y -79 / 70%
+- Iconos de fragmentos: 100%
+- Cantidad de fragmentos: 100%
+- Toolbar: 100%
+- Botón superior: 100%
+- Contenedor de unidades: 72%
+- Contenedor de cada unidad: 89%
+- Imagen/carta de unidad: 100%
+- Nombre, coste e icono bajo carta: 100%
+- Botón +: 100%
+- Paginación: 90%
+- Flechas y número de página: 100%
+- Flecha regresar: 70%
+- Estado: 100%
+
+Fundir:
+- Sin cambios respecto a v160.
+
+DEV:
+- Construir y Fundir usan sus valores canónicos como baseline real.
+- Nueva clave local v4 para evitar que un override de calibraciones anteriores tape el layout aprobado.
+- RESET ELEMENTO/PANTALLA vuelve a los valores canónicos correspondientes.
+
+Sin cambios de gameplay, economía, mapas, Mina, combate o APK.

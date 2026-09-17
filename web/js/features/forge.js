@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla · FORJA v160
+/* HallValla · FORJA v161
    - Hub visual + Fundir + Construir.
    - Solo usa arte existente de HallValla e iconos; no abre modales de Forja.
    - Fundir solo muestra copias libres: no están reservadas por el mazo ni por Mina.
@@ -28,11 +28,11 @@
   let lastStatus="";
   const pageByView={salvage:0,craft:0};
 
-  /* DEV v160 · calibrador dedicado de Fundir / Construir.
+  /* DEV v161 · calibrador dedicado de Fundir / Construir.
      Solo existe con ?dev. Guarda ajustes localmente y exporta un JSON pequeño
      para poder convertir después exactamente esa calibración en layout canónico. */
   const FORGE_DEV_ENABLED=globalThis.__HALLVALLA_DEV_TOOLS__===true;
-  const FORGE_DEV_STORAGE_KEY="hallvalla_forge_system_layout_dev_v3";
+  const FORGE_DEV_STORAGE_KEY="hallvalla_forge_system_layout_dev_v4";
   const FORGE_DEV_GROUPS=Object.freeze([
     {key:"view",label:"Vista completa",selector:".hv-forge-view",size:true},
     {key:"title",label:"Título Fundir / Construir",selector:".hv-forge-view-title",size:true},
@@ -56,10 +56,30 @@
   ]);
   const FORGE_DEV_GROUP_BY_KEY=Object.fromEntries(FORGE_DEV_GROUPS.map(group=>[group.key,group]));
   const FORGE_DEV_BASE=Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0});
-  // v160: la calibración aprobada de FUNDIR es ahora el baseline real del editor.
-  // Así ?dev no vuelve a imponer 0/100 encima del layout canónico cuando no hay JSON guardado.
+  // v161: Fundir y Construir usan como baseline real exactamente la calibración aprobada.
+  // Abrir ?dev o hacer RESET ELEMENTO conserva el layout canónico de cada pantalla.
   const FORGE_DEV_BASELINES=Object.freeze({
-    craft:Object.freeze({}),
+    craft:Object.freeze({
+      view:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0}),
+      title:Object.freeze({x:-476,y:-39,scale:36,width:0,height:0,gap:0}),
+      materials:Object.freeze({x:0,y:-79,scale:70,width:0,height:0,gap:0}),
+      materialIcon:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0}),
+      materialCount:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0}),
+      toolbar:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0}),
+      toolbarButton:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0}),
+      grid:Object.freeze({x:0,y:0,scale:72,width:0,height:0,gap:0}),
+      unit:Object.freeze({x:0,y:0,scale:89,width:0,height:0,gap:0}),
+      art:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0}),
+      unitName:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0}),
+      unitSub:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0}),
+      unitSubIcon:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0}),
+      unitAction:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0}),
+      pager:Object.freeze({x:0,y:0,scale:90,width:0,height:0,gap:0}),
+      pagerButton:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0}),
+      pagerCount:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0}),
+      back:Object.freeze({x:0,y:0,scale:70,width:0,height:0,gap:0}),
+      status:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0})
+    }),
     salvage:Object.freeze({
       view:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0}),
       title:Object.freeze({x:-456,y:-33,scale:46,width:0,height:0,gap:0}),
@@ -169,7 +189,7 @@
   function forgeDevExportJson(){
     return JSON.stringify({
       version:2,
-      note:"HallValla Forja DEV v160 · valores efectivos absolutos; Fundir incluye el baseline aprobado",
+      note:"HallValla Forja DEV v161 · valores efectivos absolutos; Fundir y Construir incluyen el baseline aprobado",
       views:{
         craft:Object.fromEntries(FORGE_DEV_GROUPS.map(group=>[group.key,forgeDevState("craft",group.key)])),
         salvage:Object.fromEntries(FORGE_DEV_GROUPS.map(group=>[group.key,forgeDevState("salvage",group.key)]))
@@ -455,9 +475,16 @@
       #${PANEL_ID} .hv-forge-empty{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(620px,80vw);text-align:center;color:#ecd5a3;font-size:clamp(15px,1.6vw,23px);text-shadow:0 3px 8px #000;}
       #${PANEL_ID} .hv-forge-status{position:absolute;left:50%;bottom:2.8vh;transform:translateX(-50%);z-index:6;max-width:70vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ffe3a2;font:600 clamp(12px,1vw,15px)/1.2 Arial,sans-serif;text-shadow:0 2px 6px #000;pointer-events:none;}
 
-      /* v160 · FUNDIR canónico según la calibración enviada por el usuario.
-         El editor DEV usa exactamente estos mismos valores como baseline, por lo que abrir ?dev
-         ya no restaura visualmente la versión anterior. Construir sigue independiente. */
+      /* v161 · FORJA canónica según el JSON aprobado por el usuario.
+         Fundir conserva su calibración anterior y Construir toma únicamente los valores nuevos.
+         El editor DEV usa estos mismos valores como baseline para no alterar la vista al abrir ?dev. */
+      #${PANEL_ID} [data-forge-screen="craft"] .hv-forge-view-title{translate:-476px -39px!important;scale:.36!important;}
+      #${PANEL_ID} [data-forge-screen="craft"] .hv-forge-materials{translate:0 -79px!important;scale:.70!important;}
+      #${PANEL_ID} [data-forge-screen="craft"] .hv-forge-grid{scale:.72!important;}
+      #${PANEL_ID} [data-forge-screen="craft"] .hv-forge-unit{scale:.89!important;}
+      #${PANEL_ID} [data-forge-screen="craft"] .hv-forge-pager{scale:.90!important;}
+      #${PANEL_ID} [data-forge-screen="craft"] .hv-forge-back{scale:.70!important;}
+
       #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-view-title{translate:-456px -33px!important;scale:.46!important;}
       #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-materials{translate:0 -65px!important;scale:.73!important;}
       #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-icon-btn{scale:.80!important;}
