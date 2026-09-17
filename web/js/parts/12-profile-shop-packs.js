@@ -86,6 +86,7 @@ const defaultPlayerProfile = {
   leaderLevels: {warrior:1, archer:1, mage:1},
   leaderLevel5Abilities: {},
   leaderRecords: {},
+  leaderMastery: {},
   actionMasteries: {},
   testPromo: null
 };
@@ -134,6 +135,38 @@ function recordLocalLeaderBattleOutcome(outcome,mode=publicState?.mode||"pvp"){
   }catch(e){console.warn("[HallValla] No se pudo registrar historial del líder:",e);}
 }
 
+const PVP_PLAYER_XP_REWARDS=Object.freeze({win:25,draw:15,loss:10});
+const PVP_XP_EVENT_STORAGE_KEY="hallvalla_pvp_xp_events_v1";
+function getPvpXpEventBook(){try{return JSON.parse(localStorage.getItem(PVP_XP_EVENT_STORAGE_KEY)||"{}")||{};}catch(e){return{};}}
+function hasPvpXpEventKey(key){try{return !!getPvpXpEventBook()[key];}catch(e){return false;}}
+function markPvpXpEventKey(key){
+  try{
+    const book=getPvpXpEventBook();book[key]=Date.now();
+    const recent=Object.entries(book).sort((a,b)=>Number(b[1]||0)-Number(a[1]||0)).slice(0,180);
+    localStorage.setItem(PVP_XP_EVENT_STORAGE_KEY,JSON.stringify(Object.fromEntries(recent)));
+  }catch(e){}
+}
+function getPvpPlayerXpReward(state=publicState,player=myPlayer){
+  if(!state||(state.mode!=="online"&&state.pvpBotMatch!==true)||state.phase!=="ended"||!state.endedAt)return 0;
+  const winner=Number(state.winner||0),local=Number(player||0);
+  if(!winner)return PVP_PLAYER_XP_REWARDS.draw;
+  return winner===local?PVP_PLAYER_XP_REWARDS.win:PVP_PLAYER_XP_REWARDS.loss;
+}
+function awardLocalPvpXpOnce(state=publicState,code=gameId){
+  try{
+    const amount=getPvpPlayerXpReward(state,myPlayer);
+    if(amount<=0||!myPlayer)return{awarded:false,xp:0,levelUps:0};
+    const key=`${code||state?.code||"local"}:pvp-xp:${myPlayer}:${Number(state.endedAt||0)}`;
+    if(hasPvpXpEventKey(key))return{awarded:false,xp:0,levelUps:0,duplicate:true};
+    const before=getPlayerProfile();
+    const atMax=Number(before.level||1)>=PLAYER_LEVEL_MAX;
+    const result=addPlayerXp(amount);
+    markPvpXpEventKey(key);
+    if(typeof globalThis.hallvallaUploadCloudSave==="function")void globalThis.hallvallaUploadCloudSave(typeof auth!=="undefined"?auth?.currentUser:null,{force:true,reason:"pvp_xp"}).catch(error=>console.warn("[HallValla][PvP XP] EXP guardada localmente; la nube reintentará la sincronización.",error));
+    return{awarded:true,xp:atMax?0:amount,levelUps:result?.levelUps||0,atMax};
+  }catch(error){console.warn("[HallValla][PvP XP] No se pudo entregar EXP:",error);return{awarded:false,xp:0,levelUps:0,error};}
+}
+
 function getShopPackDefinition(packKey="basic"){
   return (PACK_SHOP_ITEMS||[]).find(pack=>pack.key===packKey)||null;
 }
@@ -173,6 +206,7 @@ function getPlayerProfile(){
     const needsCollectionMasteryMigration=!Object.prototype.hasOwnProperty.call(rawActionMasteries,"collection");
     profile.leaderLevel5Abilities=normalizeLeaderLevel5Abilities(profile.leaderLevel5Abilities||{},profile.leaderLevels);
     profile.leaderRecords=normalizeLeaderRecords(profile.leaderRecords||{});
+    profile.leaderMastery=normalizeLeaderMasteryBook(profile.leaderMastery||{});
     profile.unitMastery=normalizeUnitMasteryBook(profile.unitMastery||{});
     profile.unitService=normalizeUnitServiceBook(profile.unitService||{});
     profile.actionMasteries=normalizeAccountMasteries(rawActionMasteries);
@@ -186,6 +220,7 @@ function getPlayerProfile(){
     profile.leaderLevels=normalizeLeaderLevels(profile.leaderLevels||{},profile.level);
     profile.leaderLevel5Abilities=normalizeLeaderLevel5Abilities(profile.leaderLevel5Abilities||{},profile.leaderLevels);
     profile.leaderRecords=normalizeLeaderRecords(profile.leaderRecords||{});
+    profile.leaderMastery=normalizeLeaderMasteryBook(profile.leaderMastery||{});
     profile.unitMastery=normalizeUnitMasteryBook(profile.unitMastery||{});
     profile.unitService=normalizeUnitServiceBook(profile.unitService||{});
     profile.actionMasteries=normalizeAccountMasteries(profile.actionMasteries||{});
@@ -466,7 +501,7 @@ function registerAccountMasteryKillsFromUnitDiff(beforeUnits,afterUnits,sourcePa
     const sourceEvent=String(sourcePatch?.battleFxEvent?.eventId||sourcePatch?.statusFxEvent?.eventId||sourcePatch?.cardVisualEvent?.eventId||sourcePatch?.floatFxEvent?.eventId||"");
     let credited=0;
     beforeUnits.forEach(victim=>{
-      if(!victim||victim.leader||Number(victim.hp||0)<=0)return;
+      if(!victim||Number(victim.hp||0)<=0)return;
       const id=String(victim.id||"");if(!id||ignored.has(id))return;
       const after=afterMap.get(id);
       if(after&&Number(after.hp||0)>0)return;
@@ -781,6 +816,67 @@ function annotateUnitWithServiceProgress(unit){
   return {...unit,servicePoints:getUnitServicePoints(unit),masteryRank:1,masteryHpBonus:0,masteryStatBonus:0};
 }
 
+const LEADER_MASTERY_MAX_RANK=15;
+function normalizeLeaderMasteryBook(book={}){
+  const out={};
+  try{
+    Object.keys(LEADER_DATA||{}).forEach(type=>{
+      const rec=book?.[type]||{};
+      out[type]={kills:Math.max(0,Math.floor(Number(rec?.kills||0)))};
+    });
+  }catch(e){}
+  return out;
+}
+function getLeaderMasteryRecord(type,profile=getPlayerProfile()){
+  const safeType=String(type||"");
+  const book=normalizeLeaderMasteryBook(profile?.leaderMastery||{});
+  return book[safeType]||{kills:0};
+}
+function getLeaderMasteryRankFromKills(kills){
+  const safeKills=Math.max(0,Math.floor(Number(kills)||0));
+  let rank=1;
+  for(let candidate=2;candidate<=LEADER_MASTERY_MAX_RANK;candidate++){
+    if(safeKills<getUnitMasteryKillsForRank(candidate))break;
+    rank=candidate;
+  }
+  return rank;
+}
+function getLeaderMasteryProgressText(type,profile=getPlayerProfile()){
+  const rec=getLeaderMasteryRecord(type,profile);
+  const rank=getLeaderMasteryRankFromKills(rec.kills);
+  if(rank>=LEADER_MASTERY_MAX_RANK)return `Maestría ${romanUnitRank(rank)} · ${rec.kills} bajas · Rango máximo`;
+  return `Maestría ${romanUnitRank(rank)} · ${rec.kills}/${getUnitMasteryKillsForRank(rank+1)} bajas`;
+}
+function registerLocalLeaderMasteryKill(killer,victim){
+  try{
+    if(!killer?.leader||!victim||!myPlayer||Number(killer.owner)!==Number(myPlayer)||Number(killer.owner)===Number(victim.owner))return null;
+    const fallbackType=typeof getSelectedLeaderType==="function"?getSelectedLeaderType():"warrior";
+    const type=String(killer.leaderType||fallbackType||"warrior");
+    if(!LEADER_DATA?.[type])return null;
+    const profile=getPlayerProfile();
+    const book=normalizeLeaderMasteryBook(profile.leaderMastery||{});
+    const before=book[type]||{kills:0};
+    const beforeKills=Math.max(0,Number(before.kills||0));
+    const beforeRank=getLeaderMasteryRankFromKills(beforeKills);
+    const afterKills=beforeKills+1;
+    const afterRank=getLeaderMasteryRankFromKills(afterKills);
+    const levels=normalizeLeaderLevels(profile.leaderLevels||{},profile.level||1);
+    const beforeLeaderLevel=getProfileLeaderLevel(type,{...profile,leaderLevels:levels});
+    const afterLeaderLevel=Math.max(beforeLeaderLevel,Math.min(LEADER_LEVEL_MAX,afterRank));
+    levels[type]=afterLeaderLevel;
+    book[type]={kills:afterKills};
+    profile.leaderMastery=book;
+    profile.leaderLevels=levels;
+    profile.leaderLevel5Abilities=normalizeLeaderLevel5Abilities(profile.leaderLevel5Abilities||{},levels);
+    savePlayerProfile(profile);
+    return {
+      kind:"leader",type,name:LEADER_DATA[type]?.name||killer.name||type,kills:afterKills,
+      beforeRank,afterRank,rankedUp:afterRank>beforeRank,
+      beforeLeaderLevel,afterLeaderLevel,leaderLevelUp:afterLeaderLevel>beforeLeaderLevel,
+      leaderAbility:getProfileLeaderAbility(type,profile)
+    };
+  }catch(e){console.warn("[HallValla] No se pudo registrar maestría del líder:",e);return null;}
+}
 const UNIT_MASTERY_MAX_RANK=15;
 function getUnitMasteryKillsForRank(rank){
   const safeRank=Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Math.floor(Number(rank)||1)));
@@ -846,7 +942,8 @@ function getUnitMasteryProgressText(entity){
 }
 function registerLocalUnitMasteryKill(killer,victim){
   try{
-    if(!killer||!victim||killer.leader||victim.leader||isUnitServiceProgression(killer))return null;
+    if(!killer||!victim||isUnitServiceProgression(killer))return null;
+    if(killer.leader)return registerLocalLeaderMasteryKill(killer,victim);
     let creditedKiller=killer;
     if(killer.reanimated&&killer.reanimatedByErictoId){
       const source=(publicState?.units||[]).find(u=>u.id===killer.reanimatedByErictoId&&u.key==="ericto"&&u.hp>0);
@@ -901,6 +998,23 @@ function maybeProcessVeilCurseKillEvent(prevState,nextState){
 
 function applyUnitMasteryRankUpToUnits(units,killer,result){
   if(!result||!result.rankedUp||!killer||!Array.isArray(units))return units;
+  if(result.kind==="leader"){
+    if(!result.leaderLevelUp)return units;
+    const type=String(result.type||killer.leaderType||"warrior");
+    const beforeLevel=normalizeLeaderLevel(result.beforeLeaderLevel||killer.leaderLevel||1);
+    const afterLevel=normalizeLeaderLevel(result.afterLeaderLevel||beforeLevel);
+    const ability=result.leaderAbility||getProfileLeaderAbility(type);
+    const beforeStats=getLeaderBattleStats(type,beforeLevel,killer.leaderAbility||"");
+    const afterStats=getLeaderBattleStats(type,afterLevel,ability);
+    const hpGain=Math.max(0,Number(afterStats.hp||0)-Number(beforeStats.hp||0));
+    const atkGain=Number(afterStats.atk||0)-Number(beforeStats.atk||0);
+    const guardGain=getLeaderGuard(type,afterLevel)-getLeaderGuard(type,beforeLevel);
+    return units.map(u=>{
+      if(!u?.leader||String(u.id)!==String(killer.id)||Number(u.owner)!==Number(killer.owner))return u;
+      const nextMax=Math.max(Number(u.maxHp||u.hp||0),Number(u.maxHp||u.hp||0)+hpGain);
+      return {...u,leaderLevel:afterLevel,leaderAbility:ability,maxHp:nextMax,hp:Math.min(nextMax,Number(u.hp||0)+hpGain),atk:Number(u.atk||0)+atkGain,baseGuard:Number(u.baseGuard??u.guard??0)+guardGain,guard:Number(u.guard||0)+Math.max(0,guardGain),range:getLeaderRange(type,afterLevel)};
+    });
+  }
   const statGain=Math.max(0,Number(result.statGain??result.hpGain??0));
   if(statGain<=0)return units;
   const key=result.key||getUnitMasteryKey(killer);
@@ -928,6 +1042,7 @@ function applyUnitMasteryRankUpToUnits(units,killer,result){
 }
 function unitMasteryRankUpText(result){
   if(!result||!result.rankedUp)return "";
+  if(result.kind==="leader")return ` Maestría de líder: ${result.name} sube a Rango ${romanUnitRank(result.afterRank)} con ${result.kills} bajas${result.leaderLevelUp?` y alcanza Nv. ${result.afterLeaderLevel}`:""}.`;
   const gain=Math.max(0,Number(result.statGain??result.hpGain??0));
   return ` Maestría: ${result.name} sube a Rango ${romanUnitRank(result.afterRank)} y las unidades con ese mismo nombre ganan +${gain} DX, +${gain} GD, +${gain} HP, +${gain} AT y +${gain} AG.`;
 }

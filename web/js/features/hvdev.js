@@ -867,6 +867,7 @@
   const STORAGE_KEY="hallvalla_universal_layout_dev_v1";
   const PANEL_KEY="hallvalla_universal_layout_panel_v1";
   const EVENT_TABS_FIX_KEY="hallvalla_universal_layout_dev_fix_163_event_tabs";
+  const STALE_HUA_LAN_FIX_KEY="hallvalla_universal_layout_dev_fix_164_remove_stale_hua_lan";
   const $=(s,r=document)=>r.querySelector(s);
   const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const clamp=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
@@ -904,6 +905,19 @@
         localStorage.setItem(EVENT_TABS_FIX_KEY,"1");
       }
     }catch(error){console.warn("[HallValla][UniversalDev] No se pudo sincronizar el layout v163 del evento.",error);}
+    /* v164: elimina únicamente el selector residual del constructor de mazos que
+       quedó etiquetado como Hua Lan. El selector era posicional, por lo que podía
+       terminar moviendo +5 px a cualquier carta que ocupara el índice 20. */
+    try{
+      if(localStorage.getItem(STALE_HUA_LAN_FIX_KEY)!=="1"){
+        const staleSelector='div[data-draft-index="20"]:nth-of-type(21)';
+        if(Object.prototype.hasOwnProperty.call(config.items,staleSelector)){
+          delete config.items[staleSelector];
+          writeConfig();
+        }
+        localStorage.setItem(STALE_HUA_LAN_FIX_KEY,"1");
+      }
+    }catch(error){console.warn("[HallValla][UniversalDev] No se pudo limpiar el registro residual de Hua Lan.",error);}
   }
   function writeConfig(){
     try{localStorage.setItem(STORAGE_KEY,JSON.stringify(config));}

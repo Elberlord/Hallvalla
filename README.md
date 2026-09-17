@@ -17,8 +17,8 @@ The workflow `.github/workflows/publish-hallvalla-public.yml` builds a Pages art
 The APK signing key is deliberately NOT included in this repository package.
 
 ## Current versions
-- Browser/gameplay base: v154
-- Public distribution shell: v154 (probabilidades individuales de sobres visibles antes de comprar/abrir para cumplimiento Xsolla; conserva Contratos de Dragón XV, Tutorial V2 y PvP BOT por nivel)
+- Browser/gameplay base: v166
+- Public distribution shell: v166 (PvP con EXP de cuenta y bajas válidas para Maestría de unidades/líderes; conserva Mapas 12–20 Nv.34–60, Mapa 11, Grimorio narrativo, limpieza DEV de Hua Lan, corrección v163 de tabs del evento, Xsolla, Contratos de Dragón XV, Tutorial V2 y PvP BOT por nivel)
 - Android APK: v131 / versionCode 131 / `com.hallvalla.game`
 
 ## First setup
@@ -93,3 +93,35 @@ Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
 - Cada carta muestra su probabilidad individual como Carta 1, Carta 2 y de aparecer en el sobre.
 - Los porcentajes se calculan desde los mismos pools y pesos usados por el RNG real.
 - Cambio web compatible con el APK remoto anterior al publicarse en GitHub Pages.
+
+
+## v164 · Mapa 11 — La segunda llave + limpieza DEV
+- Se añade el Mapa 11.1 “La segunda llave”, desbloqueado al completar el Mapa 10.1.
+- Rango de progresión: Nv. 31–33; cinco nodos con mazos Tier 5 de 30 cartas e IA adaptativa.
+- La historia continúa desde el Primer Juramento: el jugador busca la segunda de siete llaves mientras Satanyahu falsifica órdenes de la Vigilia.
+- El jefe final es Juana de Arco; al derrotarla se obtiene su carta y la segunda llave queda integrada en la trama.
+- La narración permanece fuera de la pantalla principal y se consulta desde el Grimorio.
+- DEV: se elimina una sola vez el selector residual `div[data-draft-index="20"]:nth-of-type(21)` etiquetado como Hua Lan, evitando que el desplazamiento +5 px termine afectando a cualquier carta que ocupe ese índice.
+- Se conservan intactas las posiciones v163 de Información, Recompensas y Eventos globales del evento Beast Master.
+
+
+## v165 — Mapas 12–20 · Las siete llaves
+- Se añaden nueve mapas completos, del 12.1 al 20.1, con 45 encuentros nuevos.
+- Progresión continua: Nv.34–60, cinco nodos por mapa.
+- Mapas 12–16: llaves tercera a séptima.
+- Mapa 17: Satanyahu activa la trampa de resonancia y copia la huella de las siete llaves.
+- Mapas 18–19: persecución por el subsuelo de HallValla y siete cerraduras defensivas.
+- Mapa 20: cierre del arco con Satanyahu.
+- Todos los encuentros usan mazos Tier 5 de 30 cartas y adaptación IA.
+- La historia permanece en el Grimorio y no invade la UI principal del mapa.
+
+
+## v166 — PvP EXP + Maestría por bajas
+- Todo duelo PvP terminado otorga EXP de cuenta una sola vez por jugador y resultado: 25 por victoria, 15 por empate y 10 por derrota.
+- La entrega se procesa desde el snapshot final local de cada jugador, por lo que ganador y perdedor reciben su EXP aunque solo un cliente haya escrito el cierre en Firebase.
+- Se añade protección local contra duplicados por partida/rematch y sincronización forzada con la nube.
+- Las bajas de unidades en PvP continúan alimentando su Maestría individual y ahora también cuenta rematar al líder enemigo.
+- Los líderes obtienen un contador propio de bajas y Maestría I–XV con la misma curva de bajas de las unidades.
+- Ataques básicos, magias de daño lanzadas por el líder y habilidades automáticas de líder (Barrido de Guerra, Lluvia de flechas y Descarga arcana) pueden acreditar bajas al líder.
+- El panel del líder muestra su progreso de Maestría por bajas.
+- La Maestría acumulativa de cuenta también reconoce la derrota del líder rival como una baja válida.

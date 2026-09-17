@@ -1,0 +1,28 @@
+HallValla v166 · 2026-09-17
+
+PvP EXP + Maestría por bajas
+
+1. EXP de cuenta PvP
+- Victoria: +25 EXP.
+- Empate: +15 EXP.
+- Derrota: +10 EXP.
+- Se entrega una sola vez por jugador y endedAt.
+- Se procesa en el snapshot final de cada cliente para que ambos lados reciban recompensa.
+- Incluye PvP online y PvP BOT.
+
+2. Maestría de unidades
+- Se conserva el sistema existente de bajas por unidad.
+- Las bajas realizadas en PvP siguen contando.
+- Rematar al líder rival ahora también cuenta como una baja de la unidad que lo derrota.
+
+3. Maestría de líderes
+- Nuevo libro persistente leaderMastery dentro del perfil.
+- Cada líder registra sus propias bajas.
+- Rangos I-XV usan la misma curva que las unidades: II=20, III=50, IV=90 ... XV=1190 bajas acumuladas.
+- El progreso se muestra en la información del líder.
+- Si la Maestría por bajas supera el nivel actual del líder, puede elevar su nivel hasta ese rango.
+- Se acreditan ataques directos, magias de daño lanzadas por el líder y habilidades automáticas letales de Guerrero/Arquero/Hechicero.
+
+4. Persistencia
+- Perfil local y cloud save conservan leaderMastery al estar integrado en hallvalla_player_profile.
+- El cierre PvP fuerza sincronización para no perder EXP/bajas al salir inmediatamente.

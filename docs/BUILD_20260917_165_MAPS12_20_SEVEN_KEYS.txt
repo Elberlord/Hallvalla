@@ -1,0 +1,34 @@
+HallValla v165 · 2026-09-17
+
+MAPAS 12–20
+- 9 mapas nuevos / 45 encuentros.
+- Cinco nodos por mapa.
+- Nivel continuo desde 34 hasta 60.
+- Tier 5 / 30 cartas en todos los encuentros.
+- IA adaptativa conservada; principal IA declarado por batalla.
+- Desbloqueo estrictamente secuencial: chapter12_1 requiere chapter11_1 y así hasta chapter20_1.
+
+ARCO NARRATIVO
+- Mapa 12: tercera llave / Yi Sun-sin.
+- Mapa 13: cuarta llave / Saladino.
+- Mapa 14: quinta llave / Tomoe Gozen.
+- Mapa 15: sexta llave / Gilgamesh.
+- Mapa 16: séptima llave / Merlín.
+- Mapa 17: resonancia de las siete llaves; Satanyahu copia su huella; Morgana rompe con él.
+- Morgana queda registrada como recompensa obtenible y se entrega al completar 17-5.
+- Mapa 18: persecución del eco bajo HallValla / Subotai.
+- Mapa 19: siete cerraduras de seguridad / Beowulf.
+- Mapa 20: cámara del Primer Juramento y enfrentamiento final con Satanyahu.
+- Cú Chulainn se libera en 20-4; Satanyahu no usa una carta falsa como recompensa.
+- 20-5 entrega recompensa reforzada, EXP y oro.
+
+UI / DATOS
+- Puntos propios para los cinco nodos de cada mapa 12–20.
+- La narrativa sigue opcional en Grimorio.
+- No se modifican sistemas de evento, PvP, mina, ruleta, Xsolla ni Control Universal.
+- Se conserva la migración v164 que elimina exclusivamente el selector residual de Hua Lan.
+
+AUDITORÍA DE RECOMPENSAS
+- Revisadas todas las rewardCard de la aventura y, específicamente, los jefes de Mapas 12–20.
+- Morgana era la única carta usada en combate que estaba fuera de LEGENDARY_ALLY_CARDS; corregido sin duplicar su definición.
+- Yi Sun-sin, Saladino, Tomoe Gozen, Gilgamesh, Merlín, Subotai, Beowulf y Cú Chulainn ya resolvían correctamente.

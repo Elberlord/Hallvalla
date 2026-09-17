@@ -571,7 +571,7 @@ const SPECIAL_HUMAN_CARD_DATA=[
   {key:"arjuna",name:"Arjuna",type:"unit",icon:"🏹",portrait:CARD_PORTRAITS.arjuna,cost:5,hp:4,atk:5,guard:3,dex:11,agi:8,mov:1,range:2,rarity:"Semidiós",special:true,text:"Flecha del Dharma: una vez por ciclo táctico (10 s), cuando Arjuna falle un ataque a distancia, puede repetir la tirada con +6 Destreza. Si acierta con esa repetición, provoca Veneno."},
   {key:"achilles",name:"Aquiles",type:"unit",icon:"⚔️",portrait:CARD_PORTRAITS.achilles,cost:5,hp:5,atk:6,guard:6,dex:11,agi:9,mov:1,range:1,rarity:"Semidiós",special:true,leaderBuffGroups:["warrior"],text:"Cólera del Pélida: la primera vez por ciclo táctico (10 s) que Aquiles ataca, obtiene +5 Ataque durante ese combate. Concentración del Pélida: si tiene 2 o más enemigos adyacentes, obtiene +6 Guardia. Sangre del Pélida: cada 10 s, Aquiles recupera 1 Vida."}
 ];
-const LEGENDARY_ALLY_CARDS=SPECIAL_HUMAN_CARD_DATA.map(c=>({...c}));
+const LEGENDARY_ALLY_CARDS=[...SPECIAL_HUMAN_CARD_DATA,MORGANA_CARD].map(c=>({...c}));
 
 
 

@@ -1,0 +1,18 @@
+HallValla v164 · 2026-09-17
+
+MAPA 11.1 — LA SEGUNDA LLAVE
+- Desbloqueo: requiere completar chapter10_1.
+- Rango: Nv.31–33.
+- 5 encuentros; todos usan estructura Tier 5 / 30 cartas.
+- Niveles IA declarados: 31, 31, 32, 32, 33.
+- Principal IA por nodo: Julio César, Simo Häyhä, Hattori Hanzō, Rey Salomón, Juana de Arco.
+- Recompensa final: carta Juana de Arco.
+- Historia: Satanyahu falsifica una orden de la Vigilia usando la firma del padre; el Bastión del Alba custodia la segunda llave. Al final se revela que concentrar las llaves en una sola mano también puede beneficiar a Satanyahu.
+- La historia se mantiene opcional mediante Grimorio; no vuelve a ocupar la UI principal.
+
+LIMPIEZA DEV
+- Se elimina exclusivamente `div[data-draft-index="20"]:nth-of-type(21)` del localStorage `hallvalla_universal_layout_dev_v1`.
+- El registro tenía etiqueta Hua Lan y desplazamiento Y +5, pero era posicional y podía afectar a la carta que ocupara el índice 20.
+- La limpieza usa una migración v164 de una sola ejecución.
+- No se borran otros ajustes del Control Universal.
+- Se conservan las coordenadas v163 de los tres tabs del evento.

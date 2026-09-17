@@ -193,6 +193,22 @@ function resolveWarriorLeaderSweep(units,attacker,primaryDefender,{runInState=(f
   out=applyLegendaryFatalSaves(out,affectedIds).filter(u=>Number(u.hp||0)>0);
   return{units:out,triggered:hits.length>0,text:hits.length?` Barrido de Guerra: ${hits.join(" · ")}.`:"",hits};
 }
+function creditLocalLeaderMasteryKillsFromDiff(beforeUnits,afterUnits,leader){
+  let out=[...(afterUnits||[])];
+  const rankLogs=[];
+  if(!leader?.leader||!myPlayer||Number(leader.owner)!==Number(myPlayer)||typeof registerLocalLeaderMasteryKill!=="function")return{units:out,rankLogs};
+  const aliveAfter=new Set(out.filter(u=>u&&Number(u.hp||0)>0).map(u=>String(u.id||"")));
+  (beforeUnits||[]).forEach(victim=>{
+    if(!victim||Number(victim.hp||0)<=0||Number(victim.owner)===Number(leader.owner)||aliveAfter.has(String(victim.id||"")))return;
+    const mastery=registerLocalLeaderMasteryKill(leader,victim);
+    if(mastery?.rankedUp){
+      out=applyUnitMasteryRankUpToUnits(out,leader,mastery);
+      const text=unitMasteryRankUpText(mastery).trim();
+      if(text)rankLogs.push(text);
+    }
+  });
+  return{units:out,rankLogs};
+}
 function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=[],beastTraps=[],runInState=null}={}){
   let out=[...(units||[])];
   const leader=out.find(u=>u&&u.owner===owner&&u.leader&&Number(u.hp||0)>0);
@@ -215,6 +231,8 @@ function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=
     const before=[...out];
     const sweep=resolveWarriorLeaderSweep(out,liveLeader,null,{runInState:inState,legendaryTraps,beastTraps});
     out=sweep.units;
+    const leaderMastery=creditLocalLeaderMasteryKillsFromDiff(before,out,liveLeader);
+    out=leaderMastery.units;
     const blood=applyBloodVictoryForDeaths(before,out);
     out=blood.units;
     const visibleTargets=targets.filter(target=>!isHidden(target));
@@ -222,6 +240,7 @@ function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=
     if(!isPrivateStealth||visibleTargets.length>0){
       logs.push(`${liveLeader.name} activa Barrido de Guerra al cerrar el ciclo táctico y golpea únicamente a los enemigos dentro de su alcance.`);
       if(blood.logs.length)logs.push(...blood.logs);
+      if(leaderMastery.rankLogs.length)logs.push(...leaderMastery.rankLogs);
     }
     return{units:out,logs,triggered:!!sweep.triggered,battleFxEvent:null};
   }
@@ -239,6 +258,8 @@ function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=
     });
     out=applyLegendaryFatalSaves(out,[...targetIds]);
     out=out.filter(unit=>Number(unit.hp||0)>0);
+    const leaderMastery=creditLocalLeaderMasteryKillsFromDiff(before,out,liveLeader);
+    out=leaderMastery.units;
     const blood=applyBloodVictoryForDeaths(before,out);
     out=blood.units;
     const visibleTargets=targets.filter(target=>!isHidden(target));
@@ -246,6 +267,7 @@ function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=
     if(!isPrivateStealth||visibleTargets.length>0){
       logs.push(`${liveLeader.name} activa automáticamente Lluvia de flechas al cerrar el ciclo táctico: 1 daño directo a las unidades enemigas a rango 3 o menos, ignorando Guardia y stats.`);
       if(blood.logs.length)logs.push(...blood.logs);
+      if(leaderMastery.rankLogs.length)logs.push(...leaderMastery.rankLogs);
     }
     return{units:out,logs,triggered:true,battleFxEvent:null};
   }
@@ -254,10 +276,13 @@ function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=
     const liveLeader=out.find(u=>u.id===leader.id)||leader;
     const enemyLeader=out.find(unit=>unit&&unit.owner===enemyOwner&&unit.leader&&Number(unit.hp||0)>0);
     if(!enemyLeader)return{units:out,logs:[],triggered:false,battleFxEvent:null};
+    const before=[...out];
     out=out.map(unit=>unit.id===enemyLeader.id?resolveBlessedArmorTransition(unit,{...unit,hp:Number(unit.hp||0)-2,damagedThisTurn:true}):unit);
     out=applyLegendaryFatalSaves(out,[enemyLeader.id]).filter(unit=>Number(unit.hp||0)>0);
+    const leaderMastery=creditLocalLeaderMasteryKillsFromDiff(before,out,liveLeader);
+    out=leaderMastery.units;
     const battleFxEvent=typeof makeMagicFxEvent==="function"?makeMagicFxEvent(liveLeader,out.find(unit=>unit.id===enemyLeader.id)||enemyLeader,"arcane",{type:"spell",spellKey:"arcane_bolt",effectAction:"damage",impactScale:1.15,hit:true}):null;
-    return{units:out,logs:[`${liveLeader.name} activa automáticamente Descarga arcana al cerrar el ciclo táctico: inflige 2 de daño directo al líder enemigo, ignorando Guardia y stats de combate.`],triggered:true,battleFxEvent};
+    return{units:out,logs:[`${liveLeader.name} activa automáticamente Descarga arcana al cerrar el ciclo táctico: inflige 2 de daño directo al líder enemigo, ignorando Guardia y stats de combate.`,...leaderMastery.rankLogs],triggered:true,battleFxEvent};
   }
 
   if(leader.leaderType==="cavalry"&&ability==="cavalry_call"){

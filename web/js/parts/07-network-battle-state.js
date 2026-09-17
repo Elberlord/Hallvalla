@@ -572,6 +572,19 @@ function renderBattleOutcomeRewards(result,adventure){
   panel.innerHTML=`<div class="battle-outcome-reward-title">Recompensas de "${battleTitle}"</div><div class="battle-outcome-reward-list">${entries.map(entry=>`<div class="battle-outcome-reward-item"><span class="battle-outcome-reward-label">${escapeHtml?.(entry.label)||entry.label}</span><strong class="battle-outcome-reward-value">${escapeHtml?.(entry.value)||entry.value}</strong></div>`).join("")}</div>`;
   panel.setAttribute("aria-hidden","false");
 }
+function renderPvpBattleOutcomeRewards(reward){
+  const overlay=document.getElementById("battleOutcomeSplash");
+  const panel=overlay?.querySelector(".battle-outcome-rewards");
+  if(!panel)return;
+  panel.innerHTML="";
+  panel.setAttribute("aria-hidden","true");
+  if(!reward?.awarded)return;
+  const rows=[];
+  rows.push(`<div class="battle-outcome-reward-item"><span class="battle-outcome-reward-label">EXP PvP</span><strong class="battle-outcome-reward-value">+${Math.max(0,Number(reward.xp||0))}</strong></div>`);
+  if(Number(reward.levelUps||0)>0)rows.push(`<div class="battle-outcome-reward-item"><span class="battle-outcome-reward-label">Nivel</span><strong class="battle-outcome-reward-value">+${Number(reward.levelUps||0)}</strong></div>`);
+  panel.innerHTML=`<div class="battle-outcome-reward-title">Recompensa PvP</div><div class="battle-outcome-reward-list">${rows.join("")}</div>`;
+  panel.setAttribute("aria-hidden","false");
+}
 function hideBattleOutcomeSplash(immediate=false){
   battleClearTimeout(showBattleOutcomeSplash._timer);
   const overlay=document.getElementById("battleOutcomeSplash");
@@ -986,7 +999,9 @@ function maybeShowBattleResult(){
     const botPvp=publicState?.pvpBotMatch===true;
     const adventure=publicState.mode==="adventure"&&!botPvp;
     const online=publicState.mode==="online"||botPvp;
+    const pvpXpReward=online&&typeof awardLocalPvpXpOnce==="function"?awardLocalPvpXpOnce(publicState,gameId):null;
     showBattleOutcomeSplash(draw?"draw":(win?"victory":"defeat"),{adventure,online,botPvp});
+    if(online)renderPvpBattleOutcomeRewards(pvpXpReward);
     if(online&&typeof globalThis.hvPvpRankingRecordResult==="function"){
       void globalThis.hvPvpRankingRecordResult(publicState,gameId);
     }
