@@ -866,6 +866,7 @@
 
   const STORAGE_KEY="hallvalla_universal_layout_dev_v1";
   const PANEL_KEY="hallvalla_universal_layout_panel_v1";
+  const EVENT_TABS_FIX_KEY="hallvalla_universal_layout_dev_fix_163_event_tabs";
   const $=(s,r=document)=>r.querySelector(s);
   const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const clamp=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
@@ -886,6 +887,23 @@
       const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");
       if(raw&&typeof raw==="object"&&raw.items&&typeof raw.items==="object")config={version:1,items:{...raw.items}};
     }catch(error){console.warn("[HallValla][UniversalDev] No se pudo leer la configuración.",error);}
+    /* v163: sincroniza una sola vez los tres tabs del evento con el layout
+       aprobado. No toca Hua Lan ni ningún otro ajuste del Control Universal. */
+    try{
+      if(localStorage.getItem(EVENT_TABS_FIX_KEY)!=="1"){
+        const fixes={
+          'button[data-beast-tab="global"]:nth-of-type(3)':{x:103,y:0},
+          'button[data-beast-tab="rewards"]:nth-of-type(2)':{x:421.739013671875,y:-109.52177429199219},
+          'button[data-beast-tab="info"]:nth-of-type(1)':{x:687.8261108398438,y:-220.00001525878906}
+        };
+        for(const [selector,pos] of Object.entries(fixes)){
+          const current=config.items[selector]&&typeof config.items[selector]==="object"?config.items[selector]:{};
+          config.items[selector]=normalizeState({...current,...pos,label:current.label||"button"});
+        }
+        writeConfig();
+        localStorage.setItem(EVENT_TABS_FIX_KEY,"1");
+      }
+    }catch(error){console.warn("[HallValla][UniversalDev] No se pudo sincronizar el layout v163 del evento.",error);}
   }
   function writeConfig(){
     try{localStorage.setItem(STORAGE_KEY,JSON.stringify(config));}

@@ -1,0 +1,11 @@
+HallValla · BUILD 20260917.163 · Beast Master tabs
+
+- Se restauran únicamente los tres botones superiores del evento Beast Master con las coordenadas aprobadas por el usuario:
+  - Información: X 687.8261108398438 · Y -220.00001525878906
+  - Recompensas: X 421.739013671875 · Y -109.52177429199219
+  - Eventos globales: X 103 · Y 0
+- Se conserva la escala existente del sistema de HUD del evento (70%); el JSON universal recibido usaba 100% relativo y no requiere cambiar tamaño.
+- PROD usa esas posiciones como preset canónico y migra una sola vez configuraciones locales antiguas.
+- ?dev sincroniza una sola vez exactamente esos tres selectores del Control Universal para evitar que un localStorage viejo vuelva a desplazarlos.
+- No se integra el ajuste de Hua Lan incluido en el JSON recibido porque el usuario solicitó tocar solamente los tres botones del evento.
+- No hay cambios de gameplay, economía, cartas, combate, Mina, Forja ni APK.

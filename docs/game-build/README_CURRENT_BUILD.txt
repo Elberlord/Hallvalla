@@ -1,3 +1,10 @@
+HallValla · CURRENT BUILD 20260917.163
+
+- Beast Master: Información, Recompensas y Eventos globales recuperan exactamente las posiciones aprobadas.
+- La corrección queda compartida entre producción y ?dev; se migran solo esos tres botones.
+- Hua Lan y el resto del layout permanecen sin cambios.
+- Sin cambios de gameplay, economía, cartas, combate, Mina, Forja o APK.
+
 HallValla · CURRENT BUILD 20260917.161
 
 - Forja/Construir: aplica exactamente el JSON aprobado por el usuario.
