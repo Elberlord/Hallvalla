@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla · FORJA v157
+/* HallValla · FORJA v158
    - Hub visual + Fundir + Construir.
    - Solo usa arte existente de HallValla e iconos; no abre modales de Forja.
    - Fundir solo muestra copias libres: no están reservadas por el mazo ni por Mina.
@@ -27,6 +27,233 @@
   let showUnavailable=false;
   let lastStatus="";
   const pageByView={salvage:0,craft:0};
+
+  /* DEV v158 · calibrador dedicado de Fundir / Construir.
+     Solo existe con ?dev. Guarda ajustes localmente y exporta un JSON pequeño
+     para poder convertir después exactamente esa calibración en layout canónico. */
+  const FORGE_DEV_ENABLED=globalThis.__HALLVALLA_DEV_TOOLS__===true;
+  const FORGE_DEV_STORAGE_KEY="hallvalla_forge_system_layout_dev_v1";
+  const FORGE_DEV_GROUPS=Object.freeze([
+    {key:"view",label:"Vista completa",selector:".hv-forge-view",size:true},
+    {key:"title",label:"Título Fundir / Construir",selector:".hv-forge-view-title",size:true},
+    {key:"materials",label:"Contenedor de fragmentos",selector:".hv-forge-materials",size:true,gap:true},
+    {key:"materialIcon",label:"Iconos de fragmentos",selector:".hv-forge-material img",size:true},
+    {key:"materialCount",label:"Cantidad de fragmentos",selector:".hv-forge-material b"},
+    {key:"toolbar",label:"Contenedor botón superior",selector:".hv-forge-toolbar",size:true,gap:true},
+    {key:"toolbarButton",label:"Botón superior (ojo / fundir todo)",selector:".hv-forge-icon-btn",size:true},
+    {key:"grid",label:"Contenedor de unidades",selector:".hv-forge-grid",size:true,gap:true,box:true},
+    {key:"unit",label:"Contenedor de cada unidad",selector:".hv-forge-unit",size:true,unit:true},
+    {key:"art",label:"Imagen / carta de unidad",selector:".hv-forge-unit-art",size:true,art:true},
+    {key:"unitName",label:"Nombre de unidad",selector:".hv-forge-unit-name"},
+    {key:"unitSub",label:"Coste / fragmentos bajo carta",selector:".hv-forge-unit-sub"},
+    {key:"unitSubIcon",label:"Icono fragmento bajo carta",selector:".hv-forge-unit-sub img",size:true},
+    {key:"unitAction",label:"Botón + / − de cada unidad",selector:".hv-forge-unit-action",size:true},
+    {key:"pager",label:"Contenedor paginación",selector:".hv-forge-pager",size:true,gap:true},
+    {key:"pagerButton",label:"Flechas de página",selector:".hv-forge-page-btn",size:true},
+    {key:"pagerCount",label:"Número de página",selector:".hv-forge-page-count"},
+    {key:"back",label:"Flecha regresar",selector:".hv-forge-back",size:true,sizeSelector:"img"},
+    {key:"status",label:"Texto de estado",selector:".hv-forge-status"}
+  ]);
+  const FORGE_DEV_GROUP_BY_KEY=Object.fromEntries(FORGE_DEV_GROUPS.map(group=>[group.key,group]));
+  const FORGE_DEV_BASE=Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0});
+  let forgeDevConfig={version:1,views:{craft:{},salvage:{}}};
+  let forgeDevPanelDrag=null;
+
+  function forgeDevNormalize(raw={}){
+    const n=(value,fallback)=>Number.isFinite(Number(value))?Number(value):fallback;
+    return {
+      x:Math.max(-1600,Math.min(1600,n(raw.x,0))),
+      y:Math.max(-1200,Math.min(1200,n(raw.y,0))),
+      scale:Math.max(10,Math.min(400,n(raw.scale,100))),
+      width:Math.max(0,Math.min(1800,n(raw.width,0))),
+      height:Math.max(0,Math.min(1200,n(raw.height,0))),
+      gap:Math.max(0,Math.min(180,n(raw.gap,0)))
+    };
+  }
+  function forgeDevRead(){
+    if(!FORGE_DEV_ENABLED)return;
+    try{
+      const parsed=JSON.parse(localStorage.getItem(FORGE_DEV_STORAGE_KEY)||"null");
+      if(parsed&&typeof parsed==="object"&&parsed.views){
+        forgeDevConfig={version:1,views:{craft:{...(parsed.views.craft||{})},salvage:{...(parsed.views.salvage||{})}}};
+      }
+    }catch(_){ }
+  }
+  function forgeDevWrite(){
+    if(!FORGE_DEV_ENABLED)return;
+    try{localStorage.setItem(FORGE_DEV_STORAGE_KEY,JSON.stringify(forgeDevConfig));}catch(_){ }
+  }
+  function forgeDevMode(){
+    const select=document.getElementById("hvForgeSystemDevMode");
+    const raw=String(select?.value||currentView||"craft");
+    return raw==="salvage"?"salvage":"craft";
+  }
+  function forgeDevGroupKey(){return String(document.getElementById("hvForgeSystemDevGroup")?.value||"grid");}
+  function forgeDevState(mode=forgeDevMode(),key=forgeDevGroupKey()){
+    return forgeDevNormalize(forgeDevConfig.views?.[mode]?.[key]||FORGE_DEV_BASE);
+  }
+  function forgeDevSetState(mode,key,next){
+    if(!FORGE_DEV_ENABLED)return;
+    forgeDevConfig.views[mode]??={};
+    const state=forgeDevNormalize(next);
+    const isDefault=state.x===0&&state.y===0&&state.scale===100&&state.width===0&&state.height===0&&state.gap===0;
+    if(isDefault)delete forgeDevConfig.views[mode][key];else forgeDevConfig.views[mode][key]=state;
+    forgeDevWrite();
+    applyForgeDevLayout();
+    forgeDevSyncControls();
+  }
+  function forgeDevResetInline(node,group){
+    node.style.removeProperty("translate");
+    node.style.removeProperty("scale");
+    node.style.removeProperty("gap");
+    if(group.box){node.style.removeProperty("right");node.style.removeProperty("bottom");}
+    if(group.unit)node.style.removeProperty("max-width");
+    if(group.art)node.style.removeProperty("aspect-ratio");
+    const sizeNodes=group.sizeSelector?[...node.querySelectorAll(group.sizeSelector)]:[node];
+    for(const sizeNode of sizeNodes){sizeNode.style.removeProperty("width");sizeNode.style.removeProperty("height");}
+  }
+  function forgeDevApplyGroup(screen,group,state){
+    const nodes=[...screen.querySelectorAll(group.selector)];
+    for(const node of nodes){
+      forgeDevResetInline(node,group);
+      node.style.translate=`${state.x}px ${state.y}px`;
+      node.style.scale=String(state.scale/100);
+      if(group.gap&&state.gap>0)node.style.gap=`${state.gap}px`;
+      const sizeNodes=group.sizeSelector?[...node.querySelectorAll(group.sizeSelector)]:[node];
+      if(group.size){
+        for(const sizeNode of sizeNodes){
+          if(state.width>0)sizeNode.style.width=`${state.width}px`;
+          if(state.height>0)sizeNode.style.height=`${state.height}px`;
+        }
+      }
+      if(group.box){
+        if(state.width>0)node.style.right="auto";
+        if(state.height>0)node.style.bottom="auto";
+      }
+      if(group.unit&&state.width>0)node.style.maxWidth="none";
+      if(group.art&&state.height>0)node.style.aspectRatio="auto";
+    }
+  }
+  function applyForgeDevLayout(){
+    if(!FORGE_DEV_ENABLED)return;
+    const mode=currentView==="salvage"?"salvage":currentView==="craft"?"craft":null;
+    if(!mode)return;
+    const screen=document.querySelector(`#${PANEL_ID} [data-forge-screen="${mode}"]`);
+    if(!screen)return;
+    const states=forgeDevConfig.views?.[mode]||{};
+    for(const group of FORGE_DEV_GROUPS)forgeDevApplyGroup(screen,group,forgeDevNormalize(states[group.key]||FORGE_DEV_BASE));
+  }
+  function forgeDevExportJson(){
+    return JSON.stringify({
+      version:1,
+      note:"HallValla Forja DEV v158 · 0 en ancho/alto/separación = usar CSS original",
+      views:{craft:{...(forgeDevConfig.views.craft||{})},salvage:{...(forgeDevConfig.views.salvage||{})}}
+    },null,2);
+  }
+  async function forgeDevCopyJson(){
+    const text=forgeDevExportJson();
+    try{await navigator.clipboard.writeText(text);forgeDevStatus("JSON completo copiado. Pégamelo tal cual.");}
+    catch(_){
+      try{
+        const area=document.createElement("textarea");area.value=text;area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);area.select();document.execCommand("copy");area.remove();forgeDevStatus("JSON completo copiado. Pégamelo tal cual.");
+      }catch(__){forgeDevStatus("No pude copiar automáticamente; usa DESCARGAR JSON.");}
+    }
+  }
+  function forgeDevDownloadJson(){
+    const blob=new Blob([forgeDevExportJson()],{type:"application/json"});
+    const url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="hallvalla-forja-layout-dev.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    forgeDevStatus("JSON descargado.");
+  }
+  function forgeDevStatus(text){const node=document.getElementById("hvForgeSystemDevStatus");if(node)node.textContent=String(text||"");}
+  function forgeDevSyncControls(){
+    const panel=document.getElementById("hvForgeSystemLayoutDev");if(!panel)return;
+    const mode=forgeDevMode(),key=forgeDevGroupKey(),group=FORGE_DEV_GROUP_BY_KEY[key]||FORGE_DEV_GROUPS[0],state=forgeDevState(mode,key);
+    const set=(id,value)=>{const node=document.getElementById(id);if(node)node.value=String(value);};
+    set("hvForgeSystemDevX",state.x);set("hvForgeSystemDevY",state.y);set("hvForgeSystemDevScale",state.scale);set("hvForgeSystemDevWidth",state.width);set("hvForgeSystemDevHeight",state.height);set("hvForgeSystemDevGap",state.gap);
+    const width=document.getElementById("hvForgeSystemDevWidth"),height=document.getElementById("hvForgeSystemDevHeight"),gap=document.getElementById("hvForgeSystemDevGap");
+    if(width)width.disabled=!group.size;if(height)height.disabled=!group.size;if(gap)gap.disabled=!group.gap;
+    const selected=document.getElementById("hvForgeSystemDevSelected");if(selected)selected.textContent=`${mode==="craft"?"CONSTRUIR":"FUNDIR"} · ${group.label}`;
+  }
+  function forgeDevReadControls(){
+    const val=id=>Number(document.getElementById(id)?.value||0);
+    return forgeDevNormalize({x:val("hvForgeSystemDevX"),y:val("hvForgeSystemDevY"),scale:val("hvForgeSystemDevScale"),width:val("hvForgeSystemDevWidth"),height:val("hvForgeSystemDevHeight"),gap:val("hvForgeSystemDevGap")});
+  }
+  function forgeDevOnControl(){forgeDevSetState(forgeDevMode(),forgeDevGroupKey(),forgeDevReadControls());}
+  function forgeDevResetCurrent(){forgeDevSetState(forgeDevMode(),forgeDevGroupKey(),FORGE_DEV_BASE);forgeDevStatus("Elemento restablecido.");}
+  function forgeDevResetView(){
+    const mode=forgeDevMode();forgeDevConfig.views[mode]={};forgeDevWrite();applyForgeDevLayout();forgeDevSyncControls();forgeDevStatus(`${mode==="craft"?"Construir":"Fundir"} restablecido.`);
+  }
+  function forgeDevResetAll(){
+    forgeDevConfig={version:1,views:{craft:{},salvage:{}}};forgeDevWrite();applyForgeDevLayout();forgeDevSyncControls();forgeDevStatus("Fundir y Construir restablecidos.");
+  }
+  function forgeDevInstallStyle(){
+    if(document.getElementById("hvForgeSystemLayoutDevStyle"))return;
+    const style=document.createElement("style");style.id="hvForgeSystemLayoutDevStyle";
+    style.textContent=`
+      #hvForgeSystemLayoutDev{position:fixed;left:12px;top:70px;z-index:20040;width:330px;max-width:calc(100vw - 18px);max-height:calc(100vh - 82px);display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(231,184,85,.58);border-radius:15px;background:linear-gradient(180deg,rgba(18,12,7,.985),rgba(7,5,3,.985));color:#f8dfa8;box-shadow:0 22px 60px rgba(0,0,0,.76);font:700 11px/1.25 system-ui,sans-serif;user-select:none}
+      #hvForgeSystemLayoutDev.hidden{display:none!important}#hvForgeSystemLayoutDev *{box-sizing:border-box}
+      #hvForgeSystemDevHead{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:10px 10px 8px;border-bottom:1px solid rgba(231,184,85,.22);background:rgba(100,65,20,.24);cursor:move}
+      #hvForgeSystemDevHead b{display:block;color:#ffe29a;font:900 12px Georgia,serif}#hvForgeSystemDevHead small{display:block;margin-top:2px;color:#bba77c;font-size:9px}
+      #hvForgeSystemDevClose{width:28px;height:28px;border:1px solid rgba(231,184,85,.35);border-radius:8px;background:#24170a;color:#ffe2a0;font-size:18px;cursor:pointer}
+      .hv-forge-dev-body{display:flex;flex-direction:column;gap:7px;padding:9px;overflow:auto;min-height:0}.hv-forge-dev-body select,.hv-forge-dev-body input{width:100%;height:31px;border:1px solid rgba(226,177,78,.30);border-radius:8px;background:#120d08;color:#ffe9b5;padding:0 7px;font:700 10px system-ui,sans-serif}
+      .hv-forge-dev-body label{display:grid;grid-template-columns:112px 1fr;gap:7px;align-items:center;color:#d8c69b}.hv-forge-dev-body label span{font-size:9px;text-transform:uppercase;letter-spacing:.04em}
+      #hvForgeSystemDevSelected{padding:7px 8px;border:1px solid rgba(226,177,78,.18);border-radius:8px;background:rgba(226,177,78,.06);color:#ffd56f;font:900 10px Georgia,serif}
+      .hv-forge-dev-note{margin:0;color:#9f9278;font-size:9px}.hv-forge-dev-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.hv-forge-dev-actions button{min-height:31px;border:1px solid rgba(226,177,78,.34);border-radius:999px;background:linear-gradient(180deg,#674514,#342108);color:#ffe7ae;font:900 9px Georgia,serif;cursor:pointer}.hv-forge-dev-actions button:hover{filter:brightness(1.15)}
+      #hvForgeSystemDevStatus{min-height:26px;margin:0;padding-top:6px;border-top:1px solid rgba(226,177,78,.16);color:#7de9ff;font-size:9px}
+      @media(max-width:720px){#hvForgeSystemLayoutDev{left:5px;top:55px;width:300px;max-height:calc(100vh - 60px)}}`;
+    document.head.appendChild(style);
+  }
+  function forgeDevEnsurePanel(){
+    if(!FORGE_DEV_ENABLED)return null;
+    forgeDevInstallStyle();
+    let panel=document.getElementById("hvForgeSystemLayoutDev");if(panel)return panel;
+    panel=document.createElement("aside");panel.id="hvForgeSystemLayoutDev";panel.dataset.hvDevTool="";panel.className="hidden";
+    panel.innerHTML=`
+      <header id="hvForgeSystemDevHead"><div><b>FORJA · CONTROL DEV</b><small>Fundir + Construir · copia el JSON al terminar</small></div><button id="hvForgeSystemDevClose" type="button" aria-label="Cerrar">×</button></header>
+      <div class="hv-forge-dev-body">
+        <label><span>Pantalla</span><select id="hvForgeSystemDevMode"><option value="craft">Construir</option><option value="salvage">Fundir / Destruir</option></select></label>
+        <label><span>Elemento</span><select id="hvForgeSystemDevGroup">${FORGE_DEV_GROUPS.map(group=>`<option value="${group.key}">${group.label}</option>`).join("")}</select></label>
+        <div id="hvForgeSystemDevSelected">CONSTRUIR · Contenedor de unidades</div>
+        <label><span>X px</span><input id="hvForgeSystemDevX" type="number" min="-1600" max="1600" step="1"></label>
+        <label><span>Y px</span><input id="hvForgeSystemDevY" type="number" min="-1200" max="1200" step="1"></label>
+        <label><span>Tamaño %</span><input id="hvForgeSystemDevScale" type="number" min="10" max="400" step="1"></label>
+        <label><span>Ancho px</span><input id="hvForgeSystemDevWidth" type="number" min="0" max="1800" step="1"></label>
+        <label><span>Alto px</span><input id="hvForgeSystemDevHeight" type="number" min="0" max="1200" step="1"></label>
+        <label><span>Separación px</span><input id="hvForgeSystemDevGap" type="number" min="0" max="180" step="1"></label>
+        <p class="hv-forge-dev-note">Ancho, alto o separación en 0 = valor original. Los cambios se guardan automáticamente solo en DEV.</p>
+        <div class="hv-forge-dev-actions"><button id="hvForgeSystemDevResetCurrent" type="button">RESET ELEMENTO</button><button id="hvForgeSystemDevResetView" type="button">RESET PANTALLA</button><button id="hvForgeSystemDevResetAll" type="button">RESET TODO</button><button id="hvForgeSystemDevCopy" type="button">COPIAR JSON</button><button id="hvForgeSystemDevDownload" type="button">DESCARGAR JSON</button></div>
+        <p id="hvForgeSystemDevStatus">Ajusta cada grupo y al terminar usa COPIAR JSON.</p>
+      </div>`;
+    document.body.appendChild(panel);
+    const initialGroup=document.getElementById("hvForgeSystemDevGroup");if(initialGroup)initialGroup.value="grid";
+    document.getElementById("hvForgeSystemDevMode")?.addEventListener("change",event=>{const mode=event.target.value==="salvage"?"salvage":"craft";openView(mode);forgeDevSyncControls();});
+    document.getElementById("hvForgeSystemDevGroup")?.addEventListener("change",forgeDevSyncControls);
+    for(const id of ["hvForgeSystemDevX","hvForgeSystemDevY","hvForgeSystemDevScale","hvForgeSystemDevWidth","hvForgeSystemDevHeight","hvForgeSystemDevGap"])document.getElementById(id)?.addEventListener("input",forgeDevOnControl);
+    document.getElementById("hvForgeSystemDevResetCurrent")?.addEventListener("click",forgeDevResetCurrent);
+    document.getElementById("hvForgeSystemDevResetView")?.addEventListener("click",forgeDevResetView);
+    document.getElementById("hvForgeSystemDevResetAll")?.addEventListener("click",forgeDevResetAll);
+    document.getElementById("hvForgeSystemDevCopy")?.addEventListener("click",()=>void forgeDevCopyJson());
+    document.getElementById("hvForgeSystemDevDownload")?.addEventListener("click",forgeDevDownloadJson);
+    document.getElementById("hvForgeSystemDevClose")?.addEventListener("click",()=>panel.classList.add("hidden"));
+    const head=document.getElementById("hvForgeSystemDevHead");
+    head?.addEventListener("pointerdown",event=>{if(event.target.closest("button,input,select"))return;const rect=panel.getBoundingClientRect();forgeDevPanelDrag={id:event.pointerId,dx:event.clientX-rect.left,dy:event.clientY-rect.top};try{head.setPointerCapture(event.pointerId);}catch(_){ }});
+    head?.addEventListener("pointermove",event=>{if(!forgeDevPanelDrag||event.pointerId!==forgeDevPanelDrag.id)return;const left=Math.max(0,Math.min(innerWidth-panel.offsetWidth,event.clientX-forgeDevPanelDrag.dx));const top=Math.max(0,Math.min(innerHeight-panel.offsetHeight,event.clientY-forgeDevPanelDrag.dy));panel.style.left=`${left}px`;panel.style.top=`${top}px`;});
+    const endDrag=event=>{if(forgeDevPanelDrag&&event.pointerId===forgeDevPanelDrag.id)forgeDevPanelDrag=null;};head?.addEventListener("pointerup",endDrag);head?.addEventListener("pointercancel",endDrag);
+    return panel;
+  }
+  function openForgeSystemLayoutDev(){
+    if(!FORGE_DEV_ENABLED)return false;
+    const forge=ensurePanel();
+    if(forge.classList.contains("hidden"))openForgeHub();
+    if(currentView!=="craft"&&currentView!=="salvage")openView("craft");
+    const panel=forgeDevEnsurePanel();if(!panel)return false;
+    const mode=document.getElementById("hvForgeSystemDevMode");if(mode)mode.value=currentView==="salvage"?"salvage":"craft";
+    const group=document.getElementById("hvForgeSystemDevGroup");if(group&&!group.value)group.value="grid";
+    panel.classList.remove("hidden");forgeDevSyncControls();applyForgeDevLayout();forgeDevStatus("Control activo. Ajusta Construir y Fundir por separado.");return true;
+  }
+  function closeForgeSystemLayoutDev(){document.getElementById("hvForgeSystemLayoutDev")?.classList.add("hidden");}
+  forgeDevRead();
 
   function esc(value){
     if(typeof escapeHtml==="function")return escapeHtml(String(value??""));
@@ -327,6 +554,7 @@
     const content=panel.querySelector("[data-forge-content]");
     if(!content)return;
     content.innerHTML=currentView==="salvage"?salvageViewHtml():currentView==="craft"?craftViewHtml():hubHtml();
+    applyForgeDevLayout();
   }
   function openView(view){
     currentView=view==="salvage"||view==="craft"?view:"hub";
@@ -451,4 +679,15 @@
   }
 
   Object.assign(globalThis,{openForgeHub,closeForgeHub});
+  if(FORGE_DEV_ENABLED)Object.assign(globalThis,{
+    hvForgeSystemLayoutDevOpen:openForgeSystemLayoutDev,
+    hvForgeSystemLayoutDevClose:closeForgeSystemLayoutDev,
+    hvForgeSystemLayoutDevExport:()=>forgeDevExportJson(),
+    hvForgeSystemLayoutDevApply:json=>{
+      const parsed=typeof json==="string"?JSON.parse(json):json;
+      if(!parsed||typeof parsed!=="object"||!parsed.views)throw new TypeError("JSON de Forja inválido.");
+      forgeDevConfig={version:1,views:{craft:{...(parsed.views.craft||{})},salvage:{...(parsed.views.salvage||{})}}};
+      forgeDevWrite();applyForgeDevLayout();forgeDevSyncControls();return JSON.parse(forgeDevExportJson());
+    }
+  });
 })();

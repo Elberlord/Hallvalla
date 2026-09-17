@@ -721,6 +721,21 @@
     }
   }
 
+  async function openForgeSystemControl(){
+    setStatus("Forja: preparando control de Fundir / Construir…");
+    try{
+      if(typeof globalThis.hvEnsureFeature==="function")await globalThis.hvEnsureFeature("forge");
+      await nextFrame();
+      const open=globalThis.hvForgeSystemLayoutDevOpen;
+      if(typeof open!=="function"){setStatus("Forja: el control todavía no está disponible.");return;}
+      open();
+      setStatus("Forja: control de Fundir / Construir abierto. Al terminar copia el JSON.");
+    }catch(error){
+      console.error("[HallValla][DEVHUB] No se pudo abrir el control de Forja:",error);
+      setStatus(`Forja: ${error?.message||"no se pudo abrir"}.`);
+    }
+  }
+
   function closeKnownEditors(){
     const closers=[
       "closeActionsHudTunerBtn",
@@ -733,7 +748,8 @@
       "hvDetLayoutTunerClose",
       "hvBattleLayoutClose",
       "hvLayoutClose",
-      "hvForgeTunerDone"
+      "hvForgeTunerDone",
+      "hvForgeSystemDevClose"
     ];
     for(const id of closers){const node=$(id);if(node)node.click();}
     setStatus("Paneles de ajuste cerrados.");
@@ -763,6 +779,7 @@
     {title:"PANTALLAS",items:[
       {label:"CONTROL UNIVERSAL",action:openUniversalControl},
       {label:"Creación de mazo",action:openForgeControl},
+      {label:"Forja · Fundir / Construir",action:openForgeSystemControl},
       {label:"PvP / Online",action:openOnlineControl},
       {label:"Mapa de Aventura",action:openAdventureMapControl}
     ]}
