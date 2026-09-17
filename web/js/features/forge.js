@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla · FORJA v156
+/* HallValla · FORJA v157
    - Hub visual + Fundir + Construir.
    - Solo usa arte existente de HallValla e iconos; no abre modales de Forja.
    - Fundir solo muestra copias libres: no están reservadas por el mazo ni por Mina.
@@ -12,6 +12,7 @@
   const BACK_ICON="assets/ui/btn_back_hallvalla.webp";
   const EYE_ICON="assets/ui/effect_icons/ojo_del_cazador.webp";
   const SALVAGE_GAIN=typeof CRAFT_MATERIAL_GAIN==="number"?Math.max(1,CRAFT_MATERIAL_GAIN):50;
+  const PAGE_SIZE=16;
   const RARITIES=Object.freeze([
     {key:"basic",label:"Básica",cost:800,glow:"#d9e0e6"},
     {key:"rare",label:"Rara",cost:1200,glow:"#4ab8ff"},
@@ -25,6 +26,7 @@
   let currentView="hub";
   let showUnavailable=false;
   let lastStatus="";
+  const pageByView={salvage:0,craft:0};
 
   function esc(value){
     if(typeof escapeHtml==="function")return escapeHtml(String(value??""));
@@ -119,6 +121,24 @@
         return rarityDiff||String(a.card.name||"").localeCompare(String(b.card.name||""),"es");
       });
   }
+  function paginateRows(rows,view){
+    const list=Array.isArray(rows)?rows:[];
+    const totalPages=Math.max(1,Math.ceil(list.length/PAGE_SIZE));
+    const page=Math.max(0,Math.min(totalPages-1,Math.floor(Number(pageByView[view]||0))));
+    pageByView[view]=page;
+    const start=page*PAGE_SIZE;
+    return {rows:list.slice(start,start+PAGE_SIZE),page,totalPages,total:list.length,start};
+  }
+  function pagerHtml(view,pageData){
+    if(!pageData||pageData.totalPages<=1)return "";
+    const prevDisabled=pageData.page<=0;
+    const nextDisabled=pageData.page>=pageData.totalPages-1;
+    return `<nav class="hv-forge-pager" aria-label="Páginas de ${view==="salvage"?"Fundir":"Construir"}">
+      <button class="hv-forge-page-btn hv-forge-page-prev" type="button" data-forge-page-prev ${prevDisabled?"disabled":""} aria-label="Página anterior" title="Página anterior"><img src="${BACK_ICON}" alt=""></button>
+      <span class="hv-forge-page-count" aria-live="polite">${pageData.page+1} / ${pageData.totalPages}</span>
+      <button class="hv-forge-page-btn hv-forge-page-next" type="button" data-forge-page-next ${nextDisabled?"disabled":""} aria-label="Página siguiente" title="Página siguiente"><img src="${BACK_ICON}" alt=""></button>
+    </nav>`;
+  }
 
   function ensureStyle(){
     if(document.getElementById(STYLE_ID))return;
@@ -153,20 +173,27 @@
       #${PANEL_ID} .hv-forge-icon-btn:hover,#${PANEL_ID} .hv-forge-icon-btn:focus-visible{transform:scale(1.08);filter:drop-shadow(0 0 12px rgba(255,200,72,.58));outline:none;}
       #${PANEL_ID} .hv-forge-icon-btn .hv-forge-action-mark{position:absolute;right:-2px;bottom:0;display:grid;place-items:center;min-width:22px;height:22px;border-radius:50%;background:#1a1007;color:#ffd56b;font:bold 15px/1 Arial;border:1px solid #b77b2a;box-shadow:0 2px 7px #000;}
       #${PANEL_ID} .hv-forge-icon-btn.is-active{filter:drop-shadow(0 0 14px rgba(255,194,64,.85));}
-      #${PANEL_ID} .hv-forge-grid{position:absolute;left:4vw;right:4vw;top:22.5vh;bottom:10vh;display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));grid-auto-rows:max-content;gap:clamp(12px,1.4vw,22px);align-content:start;overflow:auto;padding:10px 18px 24px;scrollbar-width:thin;scrollbar-color:#8b5c25 transparent;}
-      #${PANEL_ID} .hv-forge-unit{position:relative;min-width:0;text-align:center;filter:drop-shadow(0 8px 12px rgba(0,0,0,.78));}
-      #${PANEL_ID} .hv-forge-unit-art{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(223,174,73,.45),0 0 0 1px rgba(0,0,0,.6);background:rgba(0,0,0,.15);}
+      #${PANEL_ID} .hv-forge-grid{position:absolute;left:5vw;right:5vw;top:22.5vh;bottom:17vh;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:clamp(10px,1.15vw,17px);align-items:start;align-content:start;overflow:hidden;padding:5px 10px;}
+      #${PANEL_ID} .hv-forge-unit{position:relative;width:100%;max-width:104px;min-width:0;justify-self:center;align-self:start;text-align:center;filter:drop-shadow(0 7px 11px rgba(0,0,0,.76));}
+      #${PANEL_ID} .hv-forge-unit-art{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(223,174,73,.45),0 0 0 1px rgba(0,0,0,.58);background:rgba(0,0,0,.15);}
       #${PANEL_ID} .hv-forge-unit-art>img{display:block;width:100%;height:100%;object-fit:cover;}
-      #${PANEL_ID} .hv-forge-unit-name{display:block;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ffe7af;font-size:clamp(11px,1vw,15px);text-shadow:0 2px 4px #000;}
-      #${PANEL_ID} .hv-forge-unit-sub{display:flex;justify-content:center;align-items:center;gap:4px;min-height:18px;color:#d6c095;font:600 clamp(10px,.86vw,13px)/1.1 Arial,sans-serif;text-shadow:0 2px 4px #000;}
-      #${PANEL_ID} .hv-forge-unit-sub img{width:18px;height:20px;object-fit:contain;filter:drop-shadow(0 0 4px var(--forge-glow));}
-      #${PANEL_ID} .hv-forge-unit-action{position:absolute;right:-8px;top:-8px;width:44px;height:44px;z-index:4;filter:drop-shadow(0 6px 8px rgba(0,0,0,.8));}
+      #${PANEL_ID} .hv-forge-unit-name{display:block;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ffe7af;font-size:clamp(10px,.84vw,13px);text-shadow:0 2px 4px #000;}
+      #${PANEL_ID} .hv-forge-unit-sub{display:flex;justify-content:center;align-items:center;gap:3px;min-height:15px;color:#d6c095;font:700 clamp(9px,.72vw,11px)/1.05 Arial,sans-serif;text-shadow:0 2px 4px #000;white-space:nowrap;}
+      #${PANEL_ID} .hv-forge-unit-sub img{width:15px;height:17px;object-fit:contain;filter:drop-shadow(0 0 4px var(--forge-glow));}
+      #${PANEL_ID} .hv-forge-unit-action{position:absolute;right:-7px;top:-7px;width:36px;height:36px;z-index:4;filter:drop-shadow(0 5px 7px rgba(0,0,0,.8));}
       #${PANEL_ID} .hv-forge-unit-action img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 5px var(--forge-glow));}
-      #${PANEL_ID} .hv-forge-unit-action .hv-forge-action-mark{position:absolute;right:-1px;bottom:0;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#160e07;color:#ffd46b;font:bold 14px/1 Arial;border:1px solid #ab7428;}
+      #${PANEL_ID} .hv-forge-unit-action .hv-forge-action-mark{position:absolute;right:-3px;bottom:-1px;display:block;color:#ffe083;font:bold 18px/1 Arial;text-shadow:0 2px 3px #000,0 0 5px #000,0 0 5px var(--forge-glow);background:transparent;border:0;box-shadow:none;}
       #${PANEL_ID} .hv-forge-unit-action:hover,#${PANEL_ID} .hv-forge-unit-action:focus-visible{transform:scale(1.12);filter:drop-shadow(0 0 10px var(--forge-glow));outline:none;}
       #${PANEL_ID} .hv-forge-unit-action:disabled{cursor:default;opacity:.36;filter:grayscale(.65);}
       #${PANEL_ID} .hv-forge-unit.is-unavailable .hv-forge-unit-art{filter:grayscale(.55) brightness(.58);}
       #${PANEL_ID} .hv-forge-unit.is-unavailable .hv-forge-unit-name{color:#aa9d86;}
+      #${PANEL_ID} .hv-forge-pager{position:absolute;left:50%;bottom:7.2vh;transform:translateX(-50%);z-index:7;display:flex;align-items:center;justify-content:center;gap:12px;min-height:38px;}
+      #${PANEL_ID} .hv-forge-page-btn{appearance:none;border:0;background:transparent;padding:0;margin:0;width:62px;height:38px;cursor:pointer;line-height:0;filter:drop-shadow(0 6px 9px rgba(0,0,0,.72));transition:transform .14s ease,filter .14s ease,opacity .14s ease;}
+      #${PANEL_ID} .hv-forge-page-btn img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;}
+      #${PANEL_ID} .hv-forge-page-next img{transform:scaleX(-1);}
+      #${PANEL_ID} .hv-forge-page-btn:hover:not(:disabled),#${PANEL_ID} .hv-forge-page-btn:focus-visible:not(:disabled){transform:scale(1.08);filter:brightness(1.12) drop-shadow(0 0 9px rgba(255,202,83,.48));outline:none;}
+      #${PANEL_ID} .hv-forge-page-btn:disabled{opacity:.26;cursor:default;filter:grayscale(.7) brightness(.72);}
+      #${PANEL_ID} .hv-forge-page-count{min-width:58px;text-align:center;color:#f6d678;font:900 13px/1 Georgia,"Times New Roman",serif;letter-spacing:.08em;text-shadow:0 2px 5px #000;}
       #${PANEL_ID} .hv-forge-empty{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(620px,80vw);text-align:center;color:#ecd5a3;font-size:clamp(15px,1.6vw,23px);text-shadow:0 3px 8px #000;}
       #${PANEL_ID} .hv-forge-status{position:absolute;left:50%;bottom:2.8vh;transform:translateX(-50%);z-index:6;max-width:70vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ffe3a2;font:600 clamp(12px,1vw,15px)/1.2 Arial,sans-serif;text-shadow:0 2px 6px #000;pointer-events:none;}
       @media(max-width:850px),(pointer:coarse){
@@ -183,9 +210,17 @@
         #${PANEL_ID} .hv-forge-material b{font-size:12px;}
         #${PANEL_ID} .hv-forge-toolbar{right:2vw;top:2vh;gap:8px;}
         #${PANEL_ID} .hv-forge-icon-btn{width:48px;height:48px;}
-        #${PANEL_ID} .hv-forge-grid{left:2vw;right:2vw;top:20vh;bottom:9vh;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:11px;padding:8px 10px 18px;}
-        #${PANEL_ID} .hv-forge-unit-action{width:38px;height:38px;right:-6px;top:-6px;}
-        #${PANEL_ID} .hv-forge-status{bottom:1.7vh;max-width:68vw;font-size:11px;}
+        #${PANEL_ID} .hv-forge-grid{left:2vw;right:2vw;top:20vh;bottom:18vh;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:7px;padding:4px 6px;}
+        #${PANEL_ID} .hv-forge-unit{max-width:68px;}
+        #${PANEL_ID} .hv-forge-unit-name{margin-top:2px;font-size:9px;}
+        #${PANEL_ID} .hv-forge-unit-sub{min-height:12px;font-size:8px;gap:2px;}
+        #${PANEL_ID} .hv-forge-unit-sub img{width:12px;height:14px;}
+        #${PANEL_ID} .hv-forge-unit-action{width:29px;height:29px;right:-5px;top:-5px;}
+        #${PANEL_ID} .hv-forge-unit-action .hv-forge-action-mark{font-size:15px;}
+        #${PANEL_ID} .hv-forge-pager{bottom:7.2vh;gap:8px;min-height:30px;}
+        #${PANEL_ID} .hv-forge-page-btn{width:50px;height:31px;}
+        #${PANEL_ID} .hv-forge-page-count{min-width:48px;font-size:11px;}
+        #${PANEL_ID} .hv-forge-status{bottom:1.7vh;max-width:68vw;font-size:10px;}
       }
     `;
     document.head.appendChild(style);
@@ -235,27 +270,33 @@
     </article>`;
   }
   function salvageViewHtml(){
-    const rows=freeUnitRows();
+    const allRows=freeUnitRows();
+    const page=paginateRows(allRows,"salvage");
+    const rows=page.rows;
     return `<div class="hv-forge-view" data-forge-screen="salvage">
       <div class="hv-forge-view-header"><img class="hv-forge-view-title" src="assets/ui/forge/btn_fundir.webp" alt="Fundir"></div>
       ${materialStripHtml()}
       <div class="hv-forge-toolbar">
         <button class="hv-forge-icon-btn" type="button" data-forge-salvage-all aria-label="Fundir todas las copias libres" title="Fundir todas las copias libres"><img src="${FRAGMENT_ICON}" alt=""><span class="hv-forge-action-mark">×</span></button>
       </div>
-      ${rows.length?`<div class="hv-forge-grid">${rows.map(salvageCardHtml).join("")}</div>`:`<p class="hv-forge-empty">No tienes unidades libres para fundir. Las copias usadas en el mazo o trabajando en la Mina no aparecen aquí.</p>`}
+      ${allRows.length?`<div class="hv-forge-grid" aria-label="Unidades libres para fundir">${rows.map(salvageCardHtml).join("")}</div>`:`<p class="hv-forge-empty">No tienes unidades libres para fundir. Las copias usadas en el mazo o trabajando en la Mina no aparecen aquí.</p>`}
+      ${pagerHtml("salvage",page)}
       ${backButtonHtml("Volver a la Forja")}
       <div class="hv-forge-status" aria-live="polite">${esc(lastStatus)}</div>
     </div>`;
   }
   function craftViewHtml(){
-    const rows=craftRows();
+    const allRows=craftRows();
+    const page=paginateRows(allRows,"craft");
+    const rows=page.rows;
     return `<div class="hv-forge-view" data-forge-screen="craft">
       <div class="hv-forge-view-header"><img class="hv-forge-view-title" src="assets/ui/forge/btn_construir.webp" alt="Construir"></div>
       ${materialStripHtml()}
       <div class="hv-forge-toolbar">
         <button class="hv-forge-icon-btn ${showUnavailable?"is-active":""}" type="button" data-forge-toggle-unavailable aria-pressed="${showUnavailable?"true":"false"}" aria-label="${showUnavailable?"Ocultar":"Ver"} unidades que todavía no puedes construir" title="${showUnavailable?"Ocultar":"Ver"} unidades que todavía no puedes construir"><img src="${EYE_ICON}" alt=""></button>
       </div>
-      ${rows.length?`<div class="hv-forge-grid">${rows.map(craftCardHtml).join("")}</div>`:`<p class="hv-forge-empty">${showUnavailable?"No hay unidades disponibles para construir en este momento.":"Todavía no tienes fragmentos suficientes para construir una unidad. Usa el icono del ojo para ver costes y cuánto te falta."}</p>`}
+      ${allRows.length?`<div class="hv-forge-grid" aria-label="Unidades para construir">${rows.map(craftCardHtml).join("")}</div>`:`<p class="hv-forge-empty">${showUnavailable?"No hay unidades disponibles para construir en este momento.":"Todavía no tienes fragmentos suficientes para construir una unidad. Usa el icono del ojo para ver costes y cuánto te falta."}</p>`}
+      ${pagerHtml("craft",page)}
       ${backButtonHtml("Volver a la Forja")}
       <div class="hv-forge-status" aria-live="polite">${esc(lastStatus)}</div>
     </div>`;
@@ -289,6 +330,7 @@
   }
   function openView(view){
     currentView=view==="salvage"||view==="craft"?view:"hub";
+    if(currentView==="salvage"||currentView==="craft")pageByView[currentView]=0;
     lastStatus="";
     renderForge();
     try{tryPlaySound?.("button_click",.25);}catch(_){ }
@@ -378,7 +420,15 @@
     if(target.matches("[data-forge-salvage-one]")){salvageOne(target.dataset.forgeSalvageOne);return;}
     if(target.matches("[data-forge-salvage-all]")){salvageAll();return;}
     if(target.matches("[data-forge-craft-one]")){craftOne(target.dataset.forgeCraftOne);return;}
-    if(target.matches("[data-forge-toggle-unavailable]")){showUnavailable=!showUnavailable;lastStatus="";renderForge();}
+    if(target.matches("[data-forge-page-prev]")){
+      if(currentView==="salvage"||currentView==="craft")pageByView[currentView]=Math.max(0,(pageByView[currentView]||0)-1);
+      renderForge();return;
+    }
+    if(target.matches("[data-forge-page-next]")){
+      if(currentView==="salvage"||currentView==="craft")pageByView[currentView]=Math.max(0,(pageByView[currentView]||0)+1);
+      renderForge();return;
+    }
+    if(target.matches("[data-forge-toggle-unavailable]")){showUnavailable=!showUnavailable;pageByView.craft=0;lastStatus="";renderForge();}
   }
 
   function openForgeHub(){
