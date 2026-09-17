@@ -1495,28 +1495,35 @@ function xpNeededForLevel(level){
   return table[lvl] || (450 + Math.max(0,lvl-8)*100);
 }
 function renderPlayerProfile(profile=getPlayerProfile()){
-  profile.xpToNext = xpNeededForLevel(profile.level || 1);
+  const maxLevel=typeof PLAYER_LEVEL_MAX==="number"?PLAYER_LEVEL_MAX:45;
+  const atMax=Math.max(1,Number(profile.level||1))>=maxLevel;
+  profile.xpToNext = atMax?0:xpNeededForLevel(profile.level || 1);
   if($("playerName"))$("playerName").textContent = profile.name || "Nuevo jugador";
-  if($("playerLevel"))$("playerLevel").textContent = `Nv. ${profile.level || 1}`;
+  if($("playerLevel"))$("playerLevel").textContent = `Nv. ${Math.min(maxLevel,profile.level || 1)}`;
   if($("playerRank"))$("playerRank").textContent = canAccessDecks() ? "Comandante" : "Recluta";
   if($("goldValue"))$("goldValue").textContent = profile.gold || 0;
   if($("gemsValue"))$("gemsValue").textContent = profile.gems || 0;
   if($("fragmentsValue"))$("fragmentsValue").textContent = profile.fragments || 0;
-  const pct = Math.max(0, Math.min(100, ((profile.xp || 0) / profile.xpToNext) * 100));
-  if($("xpText"))$("xpText").textContent = `${profile.xp || 0}/${profile.xpToNext}`;
+  const pct = atMax?100:Math.max(0, Math.min(100, ((profile.xp || 0) / Math.max(1,profile.xpToNext)) * 100));
+  if($("xpText"))$("xpText").textContent = atMax?"MAX":`${profile.xp || 0}/${profile.xpToNext}`;
   requestAnimationFrame(()=>{if($("xpFill"))$("xpFill").style.width = pct + "%";});
 }
 function addPlayerXp(amount){
   const profile = getPlayerProfile();
+  const maxLevel=typeof PLAYER_LEVEL_MAX==="number"?PLAYER_LEVEL_MAX:45;
+  profile.level=Math.max(1,Math.min(maxLevel,Math.floor(Number(profile.level)||1)));
   const beforeLevel = profile.level || 1;
   let levelUps = 0;
-  profile.xp = (profile.xp || 0) + amount;
-  while(profile.xp >= xpNeededForLevel(profile.level)){
-    profile.xp -= xpNeededForLevel(profile.level);
-    profile.level += 1;
-    levelUps += 1;
+  if(profile.level<maxLevel){
+    profile.xp = Math.max(0,Number(profile.xp||0)) + Math.max(0,Number(amount||0));
+    while(profile.level<maxLevel&&profile.xp >= xpNeededForLevel(profile.level)){
+      profile.xp -= xpNeededForLevel(profile.level);
+      profile.level += 1;
+      levelUps += 1;
+    }
   }
-  profile.xpToNext = xpNeededForLevel(profile.level);
+  if(profile.level>=maxLevel){profile.level=maxLevel;profile.xp=0;profile.xpToNext=0;}
+  else profile.xpToNext = xpNeededForLevel(profile.level);
   profile.leaderLevels = normalizeLeaderLevels(profile.leaderLevels || {}, profile.level);
   const autoLeaderLevel = normalizeLeaderLevel(profile.level);
   profile.leaderLevels.warrior = Math.max(profile.leaderLevels.warrior || 1, autoLeaderLevel);

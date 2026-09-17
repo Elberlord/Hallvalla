@@ -904,6 +904,14 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   if(wrote&&(state.mode==="online"||pvpBot)&&typeof globalThis.hvPvpRankingRecordResult==="function"){
     try{await globalThis.hvPvpRankingRecordResult({...state,...finalPatch},gameId);}catch(error){console.warn("[HallValla][PvP Ranking] El duelo terminó, pero el registro de ranking deberá reintentarse desde el snapshot final.",error);}
   }
+  // FORGE156 · Las bajas de Maestría se guardan en el perfil en el instante de la baja.
+  // Al cerrar cualquier batalla (también una derrota) forzamos una subida de nube para
+  // que salir inmediatamente no deje ese progreso esperando al ciclo automático de 8 s.
+  if(wrote&&typeof globalThis.hallvallaUploadCloudSave==="function"){
+    void globalThis.hallvallaUploadCloudSave(auth?.currentUser,{force:true,reason:"battle_end_mastery"}).catch(error=>
+      console.warn("[HallValla][Maestría] Las bajas quedaron guardadas localmente; la nube reintentará la sincronización.",error)
+    );
+  }
   return !!wrote;
 }function resetBattleState(){
   networkPublicStateRaw=null;

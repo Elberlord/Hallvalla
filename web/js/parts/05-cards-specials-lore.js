@@ -472,9 +472,9 @@ function getPrincipalTierSummary(level=1){
   const cards=getDeckSizeForLeaderTier(tier);
   return `Nivel ${safeLevel} · Tier ${tier}: ${cards} cartas`;
 }
-const CRAFT_MATERIAL_COSTS={basic:800,epic:1200,glorious:1600,mythic:2000,legendary:2400,demigod:2800,astral:3600};
+const CRAFT_MATERIAL_COSTS={basic:800,rare:1200,epic:1200,glorious:1600,mythic:2000,legendary:2400,demigod:2800,astral:3600};
 const CRAFT_MATERIAL_GAIN=50;
-const CRAFT_RARITY_KEYS=["basic","epic","glorious","mythic","legendary","demigod"];
+const CRAFT_RARITY_KEYS=["basic","rare","epic","glorious","mythic","legendary","demigod"];
 function cardRarity(card){
   return String(card?.rarity||card?.rareza||"Básica").toLowerCase();
 }
@@ -489,7 +489,7 @@ function getCraftRarityKey(cardOrRarity){
   return "basic";
 }
 function getCraftRarityLabel(key){
-  return {basic:"Básica",epic:"Épica",glorious:"Gloriosa",mythic:"Mítica",legendary:"Legendaria",demigod:"Semidiós",astral:"Astral"}[key]||"Básica";
+  return {basic:"Básica",rare:"Rara",epic:"Épica",glorious:"Gloriosa",mythic:"Mítica",legendary:"Legendaria",demigod:"Semidiós",astral:"Astral"}[key]||"Básica";
 }
 function getCraftCostByRarityKey(key){return CRAFT_MATERIAL_COSTS[key]||CRAFT_MATERIAL_COSTS.basic;}
 function getCraftCostForCard(card){return getCraftCostByRarityKey(getCraftRarityKey(card));}

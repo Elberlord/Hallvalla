@@ -70,6 +70,8 @@ const PACK_SHOP_ITEMS = [
     lowerRarity:"mythic"
   }
 ];
+const PLAYER_LEVEL_MAX=45;
+
 const defaultPlayerProfile = {
   name: "Nuevo jugador",
   level: 1,
@@ -160,7 +162,11 @@ function getPlayerProfile(){
   try{
     const saved = JSON.parse(localStorage.getItem("hallvalla_player_profile") || "null");
     const profile={...defaultPlayerProfile, ...(saved || {})};
-    profile.level=profile.level||1;
+    const rawLevel=Math.max(1,Math.floor(Number(profile.level)||1));
+    const levelWasClamped=rawLevel>PLAYER_LEVEL_MAX;
+    const xpWasCleared=rawLevel>=PLAYER_LEVEL_MAX&&Number(profile.xp||0)!==0;
+    profile.level=Math.min(PLAYER_LEVEL_MAX,rawLevel);
+    if(profile.level>=PLAYER_LEVEL_MAX){profile.xp=0;profile.xpToNext=0;}
     profile.leaderLevels=normalizeLeaderLevels(profile.leaderLevels||{},profile.level);
     const beforeAbilities=JSON.stringify(profile.leaderLevel5Abilities||{});
     const rawActionMasteries=profile.actionMasteries&&typeof profile.actionMasteries==="object"?profile.actionMasteries:{};
@@ -173,7 +179,7 @@ function getPlayerProfile(){
     if(needsCollectionMasteryMigration){
       profile.actionMasteries.collection.count=Math.max(Number(profile.actionMasteries.collection?.count||0),getStoredCollectionCardTotalForMastery());
     }
-    if(JSON.stringify(profile.leaderLevel5Abilities||{})!==beforeAbilities||needsCollectionMasteryMigration)savePlayerProfile(profile);
+    if(JSON.stringify(profile.leaderLevel5Abilities||{})!==beforeAbilities||needsCollectionMasteryMigration||levelWasClamped||xpWasCleared)savePlayerProfile(profile);
     return profile;
   }catch(e){
     const profile={...defaultPlayerProfile};
@@ -188,7 +194,10 @@ function getPlayerProfile(){
   }
 }
 function savePlayerProfile(profile){
-  localStorage.setItem("hallvalla_player_profile", JSON.stringify(profile));
+  const safe=profile&&typeof profile==="object"?profile:{};
+  safe.level=Math.max(1,Math.min(PLAYER_LEVEL_MAX,Math.floor(Number(safe.level)||1)));
+  if(safe.level>=PLAYER_LEVEL_MAX){safe.xp=0;safe.xpToNext=0;}
+  localStorage.setItem("hallvalla_player_profile", JSON.stringify(safe));
 }
 
 
@@ -618,7 +627,7 @@ function buildTestPromoProgressBooks(profile){
 }
 function getTestPromoStatusText(profile=getPlayerProfile()){
   return isTestPromoActive(profile)
-    ? `Activo: todas las cartas · perfil y líderes Nv. ${LEADER_LEVEL_MAX} · maestría ${romanUnitRank(UNIT_MASTERY_MAX_RANK)} · servicio máximo.`
+    ? `Activo: todas las cartas · perfil Nv. ${PLAYER_LEVEL_MAX} · líderes Nv. ${LEADER_LEVEL_MAX} · maestría ${romanUnitRank(UNIT_MASTERY_MAX_RANK)} · servicio máximo.`
     : "Inactivo. Introduce el código temporal para habilitar el entorno completo de pruebas.";
 }
 function renderTestPromoProfileUi(profile=getPlayerProfile()){
@@ -650,9 +659,9 @@ async function activateTestPromoCode(){
     const progressBooks=buildTestPromoProgressBooks(profile);
     const next={
       ...profile,
-      level:LEADER_LEVEL_MAX,
+      level:PLAYER_LEVEL_MAX,
       xp:0,
-      xpToNext:typeof xpNeededForLevel==="function"?xpNeededForLevel(LEADER_LEVEL_MAX):550,
+      xpToNext:0,
       leaderLevels,
       leaderLevel5Abilities:normalizeLeaderLevel5Abilities({},leaderLevels),
       ...progressBooks,
@@ -1189,7 +1198,10 @@ function ensureInitialLeaderStarterCollection(leaderType=getSelectedLeaderType()
 }
 function ensureStarterDeckCollection(){
   if(!canAccessDecks())return;
-  return ensureCollectionContainsStarterTemplates(getStarterCollectionTemplates());
+  // FORGE156: una vez desbloqueada la edición de mazos, la colección deja de
+  // reponer automáticamente copias iniciales. Así una unidad fundida no reaparece
+  // gratis al abrir el constructor de mazo y no puede explotarse para generar fragmentos.
+  return getPlayerCollection();
 }
 
 
