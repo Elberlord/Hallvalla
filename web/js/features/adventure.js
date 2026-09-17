@@ -170,7 +170,7 @@ async function syncAdventureFarmClaims(){
   })();
   try{return await adventureFarmSyncPromise;}finally{adventureFarmSyncPromise=null;}
 }
-function getAdventureFarmMapLevel(chapter){return Math.max(1,Math.min(6,Math.floor(Number(String(chapter?.number||"1").split(".")[0])||1)));}
+function getAdventureFarmMapLevel(chapter){return Math.max(1,Math.min(15,Math.floor(Number(String(chapter?.number||"1").split(".")[0])||1)));}
 function getAdventureFarmThemeLabel(battle={}){
   return {archer:"Arqueros",warrior:"Guerreros",cavalry:"Caballería",axe:"Hacheros",mage:"Arcanos",assassin:"Asesinos",beastmaster:"Bestias"}[String(battle?.enemyLeaderType||"").toLowerCase()]||"Unidades del combate";
 }
@@ -367,8 +367,10 @@ function renderAdventureMap(){
   const completedRequired=requiredBattles.filter(b=>chapter.completedBattles?.[b.id]).length;
   const completedOptional=optionalBattles.filter(b=>chapter.completedBattles?.[b.id]).length;
   const optionalText=optionalBattles.length?` · Extra opcional: ${completedOptional}/${optionalBattles.length}`:"";
-  const progressLabel=`Aliado: ${special.name} · Progreso obligatorio: ${completedRequired}/${requiredBattles.length}${optionalText}`;
+  const levelRange=activeChapter.levelRange?` · Nv. ${activeChapter.levelRange}`:"";
+  const progressLabel=`Aliado: ${special.name} · Progreso obligatorio: ${completedRequired}/${requiredBattles.length}${optionalText}${levelRange}`;
   if(introMeta)introMeta.textContent=progressLabel;
+  setAdventureGrimoireContent(activeChapter.introTitle||chapterLabel,activeChapter.introText||activeChapter.desc,`Mapa ${activeChapter.number}${activeChapter.levelRange?` · Nivel ${activeChapter.levelRange}`:""}`);
   if(!nodes)return;
   const theme=getAdventureMapTheme(activeChapter);
   const boss=getRequiredChapterBattles(activeChapter).slice(-1)[0]||activeChapter.battles[activeChapter.battles.length-1];
@@ -576,6 +578,133 @@ function initAdventureMapNodeTuner(){
 }
 initAdventureMapNodeTuner();
 
+/* ---------------------------------------------------------------------------
+   GRIMORIO · historia opcional + narración local del navegador · v162
+   No descarga audio ni consume recursos de voz del juego. El idioma se resuelve
+   desde <html lang>, con compatibilidad futura para preferencias locales.
+   --------------------------------------------------------------------------- */
+let adventureGrimoireContext={title:"Grimorio",text:"",meta:""};
+let adventureGrimoireSpeechSession=0;
+let adventureGrimoireSpeechPaused=false;
+
+function getAdventureUiLanguage(){
+  const candidates=[];
+  try{
+    for(const key of ["hallvalla_language","hallvalla_lang","language","lang"]){
+      const value=String(localStorage.getItem(key)||"").trim();
+      if(value)candidates.push(value);
+    }
+  }catch(_){ }
+  candidates.push(String(document.documentElement?.lang||"").trim());
+  candidates.push(String(navigator.language||"").trim());
+  return candidates.find(Boolean)||"es-ES";
+}
+function normalizeAdventureSpeechLanguage(lang=getAdventureUiLanguage()){
+  const raw=String(lang||"es-ES").replace("_","-");
+  const base=raw.split("-")[0].toLowerCase();
+  const defaults={es:"es-ES",en:"en-US",pt:"pt-BR",ja:"ja-JP",ko:"ko-KR",fr:"fr-FR",de:"de-DE",it:"it-IT",zh:"zh-CN"};
+  return raw.includes("-")?raw:(defaults[base]||raw||"es-ES");
+}
+function resolveAdventureLocalizedCopy(value){
+  if(typeof value==="string")return value;
+  if(!value||typeof value!=="object")return "";
+  const lang=getAdventureUiLanguage().toLowerCase();
+  const base=lang.split("-")[0];
+  return String(value[lang]??value[base]??value.es??value.en??Object.values(value)[0]??"");
+}
+function setAdventureGrimoireContent(title,text,meta=""){
+  adventureGrimoireContext={title:resolveAdventureLocalizedCopy(title)||"Grimorio",text:resolveAdventureLocalizedCopy(text),meta:resolveAdventureLocalizedCopy(meta)};
+  const titleEl=$("adventureGrimoireTitle"), textEl=$("adventureGrimoireText"), metaEl=$("adventureGrimoireMeta");
+  if(titleEl)titleEl.textContent=adventureGrimoireContext.title;
+  if(textEl)textEl.textContent=adventureGrimoireContext.text;
+  if(metaEl)metaEl.textContent=adventureGrimoireContext.meta;
+}
+function openAdventureGrimoire(){
+  const modal=$("adventureGrimoireModal");
+  if(!modal)return;
+  setAdventureGrimoireContent(adventureGrimoireContext.title,adventureGrimoireContext.text,adventureGrimoireContext.meta);
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+}
+function stopAdventureGrimoireNarration(){
+  adventureGrimoireSpeechSession++;
+  adventureGrimoireSpeechPaused=false;
+  try{window.speechSynthesis?.cancel();}catch(_){ }
+}
+function closeAdventureGrimoire(){
+  stopAdventureGrimoireNarration();
+  const modal=$("adventureGrimoireModal");
+  if(!modal)return;
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden","true");
+}
+function getAdventureNarratorVoice(lang){
+  const synth=window.speechSynthesis;
+  if(!synth)return null;
+  const voices=synth.getVoices?.()||[];
+  if(!voices.length)return null;
+  const target=String(lang||"").toLowerCase();
+  const base=target.split("-")[0];
+  const matching=voices.filter(v=>String(v.lang||"").toLowerCase()===target);
+  const family=voices.filter(v=>String(v.lang||"").toLowerCase().startsWith(base));
+  const pool=matching.length?matching:(family.length?family:voices);
+  const preferredHints=["male","mascul","hombre","jorge","pablo","diego","antonio","david","raul","miguel","carlos","google español","microsoft pablo","microsoft alvaro","microsoft jorge"];
+  return pool.find(v=>preferredHints.some(h=>String(v.name||"").toLowerCase().includes(h)))||pool.find(v=>v.localService)||pool[0]||null;
+}
+function splitAdventureNarrationParagraphs(text){
+  return String(text||"").split(/\n\s*\n+/).map(v=>v.trim()).filter(Boolean);
+}
+function speakAdventureGrimoire(){
+  const synth=window.speechSynthesis;
+  if(!synth||typeof SpeechSynthesisUtterance==="undefined"){
+    void hvAlert?.("Este navegador no ofrece narración por voz.","Grimorio");
+    return;
+  }
+  stopAdventureGrimoireNarration();
+  const session=++adventureGrimoireSpeechSession;
+  const language=normalizeAdventureSpeechLanguage();
+  const voice=getAdventureNarratorVoice(language);
+  const paragraphs=splitAdventureNarrationParagraphs(adventureGrimoireContext.text);
+  if(!paragraphs.length)return;
+  let index=0;
+  const next=()=>{
+    if(session!==adventureGrimoireSpeechSession||index>=paragraphs.length)return;
+    const utterance=new SpeechSynthesisUtterance(paragraphs[index++]);
+    utterance.lang=language;
+    if(voice)utterance.voice=voice;
+    utterance.rate=.86;
+    utterance.pitch=.78;
+    utterance.volume=1;
+    utterance.onend=()=>{if(session===adventureGrimoireSpeechSession)setTimeout(next,420);};
+    utterance.onerror=()=>{if(session===adventureGrimoireSpeechSession)setTimeout(next,180);};
+    synth.speak(utterance);
+  };
+  next();
+}
+function toggleAdventureGrimoirePause(){
+  const synth=window.speechSynthesis;
+  if(!synth)return;
+  try{
+    if(synth.paused){synth.resume();adventureGrimoireSpeechPaused=false;}
+    else if(synth.speaking){synth.pause();adventureGrimoireSpeechPaused=true;}
+    else speakAdventureGrimoire();
+  }catch(_){ }
+}
+function initAdventureGrimoire(){
+  $("adventureGrimoireBtn")?.addEventListener("click",openAdventureGrimoire);
+  $("adventureGrimoireCloseBtn")?.addEventListener("click",closeAdventureGrimoire);
+  $("adventureGrimoirePlayBtn")?.addEventListener("click",speakAdventureGrimoire);
+  $("adventureGrimoirePauseBtn")?.addEventListener("click",toggleAdventureGrimoirePause);
+  $("adventureGrimoireStopBtn")?.addEventListener("click",stopAdventureGrimoireNarration);
+  $("adventureGrimoireModal")?.addEventListener("click",event=>{if(event.target?.id==="adventureGrimoireModal")closeAdventureGrimoire();});
+  for(const id of ["closeAdventureBtn","closeAdventureMapBtn","backToAdventureChoiceBtn"]){
+    $(id)?.addEventListener("click",stopAdventureGrimoireNarration);
+  }
+  document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!$("adventureGrimoireModal")?.classList.contains("hidden")){event.stopPropagation();closeAdventureGrimoire();}});
+  try{window.speechSynthesis?.getVoices?.();window.speechSynthesis?.addEventListener?.("voiceschanged",()=>window.speechSynthesis.getVoices());}catch(_){ }
+}
+initAdventureGrimoire();
+
 const ADVENTURE_STORY_SCENES=[
   {title:"El mercenario que volvió",mark:"",cls:"scene-call",image:"assets/story/hallvalla_call.webp",text:"HallValla está en guerra. Fuerzas extranjeras cruzan sus fronteras mientras oro y armas alimentan levantamientos desde dentro. Años atrás, una disputa con la Corona convirtió tu nombre en el de un traidor y te obligó a sobrevivir como mercenario. Podrías dejar que el reino ardiera.\n\nTerral te observa afilar la espada.\n\n—Vas a volver.\n\n—No.\n\nTerral mira el equipo preparado junto a la puerta.\n\n—Claro. Nos quedaremos aquí con todas estas armas y dos caballos ensillados.\n\n—No voy por ellos. Mi madre nació allí.\n\nTerral deja de bromear.\n\n—Ya lo sé."},
   {title:"Terral",mark:"",cls:"scene-call",image:"assets/story/hallvalla_call.webp",text:"Terral fue la única persona que permaneció a tu lado cuando HallValla comenzó a escupir tu nombre. Compartió contratos, hambre, heridas y demasiadas noches durmiendo bajo la lluvia. Nunca necesitó preguntarte si las acusaciones eran ciertas.\n\nMientras preparas el viaje, él ensilla su caballo.\n\n—¿Qué haces?\n\n—Si vas a cometer la estupidez de regresar al reino que te odia, alguien tendrá que evitar que te maten antes de llegar.\n\n—No necesito que me cuides.\n\n—Lo sé. Eso nunca me ha detenido."},
@@ -597,6 +726,7 @@ function openAdventureStory(){
   showAdventureStoryScene(0);
 }
 function releaseAdventureRuntimeDom(){
+  stopAdventureGrimoireNarration();
   // PERF4: el panel oculto no conserva mapas/escenas pesadas. Todos estos
   // recursos se reconstruyen desde progreso persistente al volver a abrir Aventura.
   $("adventureMapNodes")?.replaceChildren();
@@ -684,6 +814,7 @@ function showAdventureStoryScene(index){
   setAdventureStoryActors(s.leftActor,s.rightActor);
   $("adventureStoryTitle").textContent=s.title;
   $("adventureStoryText").textContent=s.text;
+  setAdventureGrimoireContent(s.title,s.text,`Historia · ${adventureStoryIndex+1}/${ADVENTURE_STORY_SCENES.length}`);
   $("adventureProgress").textContent=`${adventureStoryIndex+1}/${ADVENTURE_STORY_SCENES.length}`;
   const nextStoryBtn=$("nextAdventureStoryBtn");
   const chooseAlly=adventureStoryIndex===ADVENTURE_STORY_SCENES.length-1;
@@ -724,6 +855,7 @@ function showAdventureWoundedIntro(specialKey){
   applyAdventureSceneVisual("adventureWoundedVisual","adventureWoundedMark",s.cls,s.mark,s.image);
   $("adventureWoundedTitle").textContent=s.title;
   $("adventureWoundedText").textContent=s.text;
+  setAdventureGrimoireContent(s.title,s.text,"Historia · Antes del guardián");
 }
 function hvCollectEntityBattlePrefetchAssets(entity,target){
   if(!entity||!target)return;
@@ -807,6 +939,7 @@ function showAdventureGuardianIntro(specialKey=pendingAdventureSpecial,battleId=
   storyText.className="guardian-story-main";
   const advanceLine=battle.isGuardian?"":`Derrota a ${battle.enemyName||"el rival"} para avanzar en el mapa.`;
   storyText.textContent=[battle.enemyIntro||battle.desc,introConflict,advanceLine].filter(Boolean).join("\n\n")+principalLine;
+  setAdventureGrimoireContent(battle.isGuardian?battle.title:`${introChapter.number}.${battle.num} ${battle.title}`,battle.enemyIntro||battle.desc,battle.isGuardian?"Guardián":`Mapa ${introChapter.number}${introChapter.levelRange?` · Nivel ${introChapter.levelRange}`:""}`);
   const rewardText=document.createElement("span");
   rewardText.className="guardian-reward-line";
   rewardText.textContent=battle.isGuardian

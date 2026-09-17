@@ -209,6 +209,17 @@ async function maybeGrantBeastmasterRareEgg(pub){
   }
 }
 
+
+function markAdventureLeaderUnlocked(profile,type){
+  const safe=String(type||"");
+  if(!safe||!LEADER_DATA?.[safe]||!profile||typeof profile!=="object")return false;
+  const current=profile.adventureUnlockedLeaders&&typeof profile.adventureUnlockedLeaders==="object"?{...profile.adventureUnlockedLeaders}:{};
+  if(current[safe])return false;
+  current[safe]=true;
+  profile.adventureUnlockedLeaders=current;
+  return true;
+}
+
 function completeAdventureBattleOnce(pub){
   const override=resolveHallvallaOverride("adventure.completeBattleOnce",{pub});
   if(override.handled)return override.value;
@@ -261,12 +272,13 @@ function completeAdventureBattleOnce(pub){
     const xpResult=addPlayerXp(battle.xp||0);
     const profile=getPlayerProfile();
     profile.gold=(profile.gold||0)+(battle.gold||0);
+    const leaderUnlocked=markAdventureLeaderUnlocked(profile,battle.rewardLeader);
     const rewardCards=getRewardCardsForBattle(battle,progress.selectedSpecial||pub.adventureSpecial||"");
     if(rewardCards.length)addCardsToCollection(rewardCards);
     savePlayerProfile(profile);
     renderPlayerProfile(profile);
     renderHomeProgress();
-    return{awarded:true,xp:battle.xp||0,gold:battle.gold||0,levelUps:xpResult.levelUps,cards:rewardCards,battle,progress,profile,guardianUnlocked:true,deckEditorUnlocked:true,principalUnlocked:true,packPending:grantGuardianPack};
+    return{awarded:true,xp:battle.xp||0,gold:battle.gold||0,levelUps:xpResult.levelUps,cards:rewardCards,battle,progress,profile,leaderUnlocked,guardianUnlocked:true,deckEditorUnlocked:true,principalUnlocked:true,packPending:grantGuardianPack};
   }
   const chapter=progress.chapters[chapterForBattle.id];
   if(chapter.completedBattles[battle.id]){
@@ -280,6 +292,7 @@ function completeAdventureBattleOnce(pub){
   const xpResult=addPlayerXp(battle.xp||0);
   const profile=getPlayerProfile();
   profile.gold=(profile.gold||0)+(battle.gold||0);
+  const leaderUnlocked=markAdventureLeaderUnlocked(profile,battle.rewardLeader);
   savePlayerProfile(profile);
   renderPlayerProfile(profile);
 
@@ -304,7 +317,7 @@ function completeAdventureBattleOnce(pub){
   }
   renderHomeProgress();
 
-  return{awarded:true,xp:battle.xp||0,gold:battle.gold||0,levelUps:xpResult.levelUps,cards:rewardCards,battle,progress,profile,packPending:!!battle.cardPack};
+  return{awarded:true,xp:battle.xp||0,gold:battle.gold||0,levelUps:xpResult.levelUps,cards:rewardCards,battle,progress,profile,leaderUnlocked,packPending:!!battle.cardPack};
 }
 function backToMainMenu(){
   leaveCurrentGame();

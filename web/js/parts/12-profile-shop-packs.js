@@ -1230,6 +1230,7 @@ function getBattleRewardLabel(battle){
   if(battle.xp)parts.push(`${battle.xp} EXP`);
   if(battle.gems)parts.push(`${battle.gems} Gemas`);
   if(battle.gold)parts.push(`${battle.gold} Oro`);
+  if(battle.rewardLeader&&LEADER_DATA?.[battle.rewardLeader])parts.push(`Líder: ${LEADER_DATA[battle.rewardLeader].name}`);
   if(battle.beastEvent&&battle.rewardBeastCard)parts.push("1 Bestia aleatoria (sin Dragones)");
   if(battle.rewardCard==="starter_complement")parts.push("Carta no elegida: Hua Lan o William Wallace");
   else if(getLegendaryCardByKey(battle.rewardCard))parts.push(`Carta: ${getLegendaryCardByKey(battle.rewardCard).name}`);
