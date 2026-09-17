@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla · FORJA v159
+/* HallValla · FORJA v160
    - Hub visual + Fundir + Construir.
    - Solo usa arte existente de HallValla e iconos; no abre modales de Forja.
    - Fundir solo muestra copias libres: no están reservadas por el mazo ni por Mina.
@@ -28,11 +28,11 @@
   let lastStatus="";
   const pageByView={salvage:0,craft:0};
 
-  /* DEV v159 · calibrador dedicado de Fundir / Construir.
+  /* DEV v160 · calibrador dedicado de Fundir / Construir.
      Solo existe con ?dev. Guarda ajustes localmente y exporta un JSON pequeño
      para poder convertir después exactamente esa calibración en layout canónico. */
   const FORGE_DEV_ENABLED=globalThis.__HALLVALLA_DEV_TOOLS__===true;
-  const FORGE_DEV_STORAGE_KEY="hallvalla_forge_system_layout_dev_v2";
+  const FORGE_DEV_STORAGE_KEY="hallvalla_forge_system_layout_dev_v3";
   const FORGE_DEV_GROUPS=Object.freeze([
     {key:"view",label:"Vista completa",selector:".hv-forge-view",size:true},
     {key:"title",label:"Título Fundir / Construir",selector:".hv-forge-view-title",size:true},
@@ -56,6 +56,24 @@
   ]);
   const FORGE_DEV_GROUP_BY_KEY=Object.fromEntries(FORGE_DEV_GROUPS.map(group=>[group.key,group]));
   const FORGE_DEV_BASE=Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0});
+  // v160: la calibración aprobada de FUNDIR es ahora el baseline real del editor.
+  // Así ?dev no vuelve a imponer 0/100 encima del layout canónico cuando no hay JSON guardado.
+  const FORGE_DEV_BASELINES=Object.freeze({
+    craft:Object.freeze({}),
+    salvage:Object.freeze({
+      view:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0}),
+      title:Object.freeze({x:-456,y:-33,scale:46,width:0,height:0,gap:0}),
+      materials:Object.freeze({x:0,y:-65,scale:73,width:0,height:0,gap:0}),
+      materialIcon:Object.freeze({x:0,y:0,scale:100,width:0,height:0,gap:0}),
+      toolbarButton:Object.freeze({x:0,y:0,scale:80,width:0,height:0,gap:0}),
+      art:Object.freeze({x:0,y:0,scale:72,width:0,height:0,gap:0}),
+      unitAction:Object.freeze({x:-16,y:22,scale:76,width:0,height:0,gap:0}),
+      back:Object.freeze({x:0,y:0,scale:73,width:0,height:0,gap:0})
+    })
+  });
+  function forgeDevBaseState(mode,key){
+    return forgeDevNormalize(FORGE_DEV_BASELINES?.[mode]?.[key]||FORGE_DEV_BASE);
+  }
   let forgeDevConfig={version:1,views:{craft:{},salvage:{}}};
   let forgeDevPanelDrag=null;
 
@@ -90,13 +108,15 @@
   }
   function forgeDevGroupKey(){return String(document.getElementById("hvForgeSystemDevGroup")?.value||"grid");}
   function forgeDevState(mode=forgeDevMode(),key=forgeDevGroupKey()){
-    return forgeDevNormalize(forgeDevConfig.views?.[mode]?.[key]||FORGE_DEV_BASE);
+    const saved=forgeDevConfig.views?.[mode]?.[key];
+    return forgeDevNormalize(saved||forgeDevBaseState(mode,key));
   }
   function forgeDevSetState(mode,key,next){
     if(!FORGE_DEV_ENABLED)return;
     forgeDevConfig.views[mode]??={};
     const state=forgeDevNormalize(next);
-    const isDefault=state.x===0&&state.y===0&&state.scale===100&&state.width===0&&state.height===0&&state.gap===0;
+    const base=forgeDevBaseState(mode,key);
+    const isDefault=["x","y","scale","width","height","gap"].every(field=>state[field]===base[field]);
     if(isDefault)delete forgeDevConfig.views[mode][key];else forgeDevConfig.views[mode][key]=state;
     forgeDevWrite();
     applyForgeDevLayout();
@@ -141,13 +161,19 @@
     const screen=document.querySelector(`#${PANEL_ID} [data-forge-screen="${mode}"]`);
     if(!screen)return;
     const states=forgeDevConfig.views?.[mode]||{};
-    for(const group of FORGE_DEV_GROUPS)forgeDevApplyGroup(screen,group,forgeDevNormalize(states[group.key]||FORGE_DEV_BASE));
+    for(const group of FORGE_DEV_GROUPS){
+      const effective=states[group.key]||forgeDevBaseState(mode,group.key);
+      forgeDevApplyGroup(screen,group,forgeDevNormalize(effective));
+    }
   }
   function forgeDevExportJson(){
     return JSON.stringify({
-      version:1,
-      note:"HallValla Forja DEV v159 · 0 en ancho/alto/separación = usar CSS original",
-      views:{craft:{...(forgeDevConfig.views.craft||{})},salvage:{...(forgeDevConfig.views.salvage||{})}}
+      version:2,
+      note:"HallValla Forja DEV v160 · valores efectivos absolutos; Fundir incluye el baseline aprobado",
+      views:{
+        craft:Object.fromEntries(FORGE_DEV_GROUPS.map(group=>[group.key,forgeDevState("craft",group.key)])),
+        salvage:Object.fromEntries(FORGE_DEV_GROUPS.map(group=>[group.key,forgeDevState("salvage",group.key)]))
+      }
     },null,2);
   }
   async function forgeDevCopyJson(){
@@ -180,7 +206,7 @@
     return forgeDevNormalize({x:val("hvForgeSystemDevX"),y:val("hvForgeSystemDevY"),scale:val("hvForgeSystemDevScale"),width:val("hvForgeSystemDevWidth"),height:val("hvForgeSystemDevHeight"),gap:val("hvForgeSystemDevGap")});
   }
   function forgeDevOnControl(){forgeDevSetState(forgeDevMode(),forgeDevGroupKey(),forgeDevReadControls());}
-  function forgeDevResetCurrent(){forgeDevSetState(forgeDevMode(),forgeDevGroupKey(),FORGE_DEV_BASE);forgeDevStatus("Elemento restablecido.");}
+  function forgeDevResetCurrent(){const mode=forgeDevMode(),key=forgeDevGroupKey();forgeDevSetState(mode,key,forgeDevBaseState(mode,key));forgeDevStatus("Elemento restablecido al layout canónico.");}
   function forgeDevResetView(){
     const mode=forgeDevMode();forgeDevConfig.views[mode]={};forgeDevWrite();applyForgeDevLayout();forgeDevSyncControls();forgeDevStatus(`${mode==="craft"?"Construir":"Fundir"} restablecido.`);
   }
@@ -429,14 +455,15 @@
       #${PANEL_ID} .hv-forge-empty{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(620px,80vw);text-align:center;color:#ecd5a3;font-size:clamp(15px,1.6vw,23px);text-shadow:0 3px 8px #000;}
       #${PANEL_ID} .hv-forge-status{position:absolute;left:50%;bottom:2.8vh;transform:translateX(-50%);z-index:6;max-width:70vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ffe3a2;font:600 clamp(12px,1vw,15px)/1.2 Arial,sans-serif;text-shadow:0 2px 6px #000;pointer-events:none;}
 
-      /* v159 · FUNDIR canónico según la calibración enviada por el usuario.
-         Construir conserva su layout anterior para calibrarlo por separado con ?dev. */
-      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-view-title{translate:-456px -33px;scale:.46;}
-      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-materials{translate:0 -65px;scale:.73;}
-      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-icon-btn{scale:.80;}
-      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-unit-art{scale:.72;}
-      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-unit-action{translate:-16px 22px;scale:.76;}
-      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-back{scale:.73;}
+      /* v160 · FUNDIR canónico según la calibración enviada por el usuario.
+         El editor DEV usa exactamente estos mismos valores como baseline, por lo que abrir ?dev
+         ya no restaura visualmente la versión anterior. Construir sigue independiente. */
+      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-view-title{translate:-456px -33px!important;scale:.46!important;}
+      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-materials{translate:0 -65px!important;scale:.73!important;}
+      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-icon-btn{scale:.80!important;}
+      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-unit-art{scale:.72!important;}
+      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-unit-action{translate:-16px 22px!important;scale:.76!important;}
+      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-back{scale:.73!important;}
 
       @media(max-width:850px),(pointer:coarse){
         #${PANEL_ID} .hv-forge-system-brand{top:4%;width:min(440px,68vw);}

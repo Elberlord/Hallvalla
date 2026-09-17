@@ -1,0 +1,22 @@
+HallValla build 20260917.160
+
+Objetivo:
+Corregir una regresión del calibrador DEV de Forja. En v159 el layout canónico de Fundir sí estaba escrito en CSS, pero al entrar con ?dev el editor recorría todos los grupos y les imponía inline 0px / 100%, anulando visualmente esa calibración.
+
+Fundir canónico conservado:
+- Vista completa: X 0 / Y 0 / 100%
+- Título: X -456 / Y -33 / 46%
+- Contenedor de fragmentos: X 0 / Y -65 / 73%
+- Iconos de fragmentos: 100%
+- Botón superior: 80%
+- Imagen/carta de unidad: 72%
+- Botón +/- de cada unidad: X -16 / Y +22 / 76%
+- Flecha regresar: 73%
+
+Corrección DEV:
+- Fundir usa esos valores como baseline real del calibrador.
+- Abrir ?dev ya no revierte visualmente Fundir.
+- RESET ELEMENTO vuelve al valor canónico de la pantalla, no a 0/100 genérico.
+- El almacenamiento del editor pasa a v3 para no arrastrar overrides vacíos/antiguos.
+- COPIAR JSON exporta valores efectivos absolutos de todos los grupos.
+- Construir permanece sin tocar para su próxima calibración.
