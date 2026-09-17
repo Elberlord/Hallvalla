@@ -5,7 +5,7 @@ HALLVALLA — FIRST-TIME PRIVATE REPOSITORY SETUP
 
 2. Extract this ZIP.
 
-3. Copy EVERYTHING INSIDE the folder HallValla_REPO_PRIVADO_LISTO_v137
+3. Copy EVERYTHING INSIDE the folder HallValla_REPO_PRIVADO_LISTO_v154
    into the ROOT of your HallValla repository.
    - Keep the hidden folder .github
    - Keep .gitignore and .gitattributes

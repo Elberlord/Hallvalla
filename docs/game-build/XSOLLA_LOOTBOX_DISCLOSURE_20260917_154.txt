@@ -1,0 +1,43 @@
+HallValla v154 · XSOLLA LOOT BOX DISCLOSURE
+Fecha: 2026-09-17
+
+Objetivo
+- Preparar HallValla para la opción de Xsolla con restricción regional reducida a Bélgica, Brasil y China.
+- Mostrar la probabilidad individual de CADA objeto que puede salir de un sobre antes de comprarlo y antes de abrirlo.
+
+Implementación
+1. Tienda > Sobres
+   - Cada uno de los 5 sobres muestra un botón PROBABILIDADES independiente del botón de compra.
+   - El jugador puede consultar la tabla completa antes de gastar oro.
+
+2. Apertura de sobres
+   - La pantalla de apertura incorpora un botón PROBABILIDADES visible antes de tocar el sobre.
+   - Funciona también para sobres gratuitos/recompensas cuando tienen un pool aleatorio.
+
+3. Fuente única de probabilidades
+   - La tabla no usa porcentajes escritos a mano por separado.
+   - Lee los mismos pools, rarezas y pesos usados por el RNG de HallValla.
+   - Para cada objeto muestra:
+     * probabilidad como Carta 1;
+     * probabilidad como Carta 2;
+     * probabilidad de aparecer al menos una vez en el sobre.
+   - La tabla muestra control de suma de cada slot (100% cuando corresponde).
+
+4. Pools actuales de tienda
+   - Pack básico: 2 cartas básicas aleatorias sin repetición cuando el pool tiene 2 o más cartas.
+   - Pack raro: Carta 1 Rara garantizada; Carta 2 Básica 100%.
+   - Pack épico: Carta 1 Épica garantizada; Carta 2 = 80% Básica / 20% Rara.
+   - Pack mítico: Carta 1 Mítica garantizada; Carta 2 = 60% Básica / 30% Rara / 10% Épica.
+   - Pack legendario: Carta 1 Legendaria garantizada; Carta 2 = 40% Básica / 30% Rara / 20% Épica / 10% Mítica.
+
+5. Compatibilidad
+   - Cambio 100% web.
+   - El APK Android antiguo que carga https://elberlord.github.io/Hallvalla/ recibe esta versión al publicarse el contenido web.
+   - No requiere recompilar APK para esta parte de cumplimiento.
+
+6. Alcance regional
+   - La restricción efectiva de Bélgica, Brasil y China debe configurarse en Xsolla/Publisher Account cuando el proyecto sea aprobado.
+   - HallValla expone las probabilidades; el proveedor de pagos aplica la disponibilidad regional.
+
+Nota
+- Si en el futuro cambia un pool, se agrega una carta o cambian pesos, la tabla se recalcula automáticamente desde el runtime actual. No mantener una segunda tabla manual de odds.

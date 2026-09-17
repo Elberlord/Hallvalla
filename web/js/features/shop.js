@@ -74,7 +74,11 @@ function buildShopPacks(profile){
       <span class="hv-shop-choice-label"><b>${escapeHtml(pack.name)}</b><small>${cost} ORO</small></span>
     </button>`;
   }).join("");
-  return shopStage("assets/shop/v6/sobres.webp",`${shopBackButton("go-back","Volver")}${packButtons}`,profile,"packs");
+  const oddsButtons=packs.map((pack,index)=>{
+    const x=xs[index]??(365+index*190);
+    return `<button class="hv-shop-pack-odds" type="button" data-shop-action="pack-odds" data-pack-key="${escapeHtml(pack.key)}" style="left:${shopPercent(x,SHOP_ARTBOARD_WIDTH)};top:${shopPercent(790,SHOP_ARTBOARD_HEIGHT)};width:${shopPercent(178,SHOP_ARTBOARD_WIDTH)};height:${shopPercent(38,SHOP_ARTBOARD_HEIGHT)}" aria-label="Ver probabilidades individuales de ${escapeHtml(pack.name)}">PROBABILIDADES</button>`;
+  }).join("");
+  return shopStage("assets/shop/v6/sobres.webp",`${shopBackButton("go-back","Volver")}${packButtons}${oddsButtons}`,profile,"packs");
 }
 function buildShopGems(profile){
   const slots=[
@@ -270,6 +274,11 @@ function bindLayeredShopActions(){
     if(action==="view-packs"){renderShopView("packs");return;}
     if(action==="view-gold"){renderShopView("gold");return;}
     if(action==="view-gems"){renderShopView("gems");return;}
+    if(action==="pack-odds"){
+      const key=button.dataset.packKey;
+      if(key)openHallvallaPackOdds(buildPendingShopPack(key));
+      return;
+    }
     if(action==="buy-pack"){
       const key=button.dataset.packKey;
       if(key)await buyPackWithGold(key);
@@ -369,7 +378,7 @@ async function buyPackWithGold(packKey){
     return;
   }
 
-  const confirmed=await hvConfirm(`Oro disponible: ${formatGold(currentGold)}\nCosto del sobre: ${formatGold(packCost)}\nOro después de comprar: ${formatGold(remainingGold)}\n\n¿Comprar ${pack.name}?`,"Confirmar compra","Comprar","Cancelar");
+  const confirmed=await hvConfirm(`Oro disponible: ${formatGold(currentGold)}\nCosto del sobre: ${formatGold(packCost)}\nOro después de comprar: ${formatGold(remainingGold)}\n\nLas probabilidades individuales de cada carta están disponibles en “PROBABILIDADES” antes de comprar.\n\n¿Comprar ${pack.name}?`,"Confirmar compra","Comprar","Cancelar");
   if(!confirmed)return;
 
   profile.gold=remainingGold;

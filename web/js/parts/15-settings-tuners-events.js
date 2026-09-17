@@ -75,6 +75,7 @@ if(packObject){packObject.addEventListener("click",revealActivePack);packObject.
 on("closePackOpeningBtn","click",closePackOpening);
 on("confirmPackCardsBtn","click",confirmActivePackCards);
 on("openNextPackBtn","click",openPackOpening);
+on("packOpeningOddsBtn","click",()=>openHallvallaPackOdds(activePackOpening));
 on("closePackShopBtn","click",closePackShop);
 on("closePackShopBtn2","click",closePackShop);
 on("openPacksFromNotificationsBtn","click",()=>{closeNotifications();openPackOpening();});

@@ -29584,3 +29584,74 @@ body.hv-mobile-landscape .map-node-farm-badge{font-size:8px;padding:2px 5px;top:
   .mine-wheel-prize-detail-icon{width:58px !important;height:58px !important;}
   .mine-wheel-prize-detail-copy ul{grid-template-columns:1fr !important;}
 }
+
+/* ========================================================================== */
+/* XSOLLA DISCLOSURE · probabilidades individuales de sobres · 20260917.154   */
+/* ========================================================================== */
+#packShopPanel .hv-shop-pack-odds{
+  position:absolute;z-index:44;margin:0;padding:0 6px;cursor:pointer;
+  border:1px solid rgba(224,177,79,.72);border-radius:7px;
+  background:linear-gradient(180deg,rgba(32,22,10,.96),rgba(7,5,3,.97));
+  color:#f3d48f;text-shadow:0 1px 3px #000;
+  box-shadow:0 4px 12px rgba(0,0,0,.62),inset 0 0 9px rgba(232,184,86,.08);
+  font:900 clamp(6px,.55vw,9px)/1 Georgia,"Times New Roman",serif;
+  letter-spacing:.08em;white-space:nowrap;
+}
+#packShopPanel .hv-shop-pack-odds:hover,
+#packShopPanel .hv-shop-pack-odds:focus-visible{
+  filter:brightness(1.16);outline:1px solid rgba(255,219,139,.62);outline-offset:1px;
+}
+.pack-opening-actions{align-items:center;flex-wrap:wrap;}
+.pack-opening-odds-btn{min-width:132px;}
+
+.hv-pack-odds-modal{
+  position:fixed;inset:0;z-index:120000;display:flex;align-items:center;justify-content:center;
+  padding:clamp(10px,2vw,28px);background:rgba(2,2,2,.88);
+}
+.hv-pack-odds-modal.hidden{display:none!important;}
+.hv-pack-odds-card{
+  position:relative;width:min(1040px,96vw);height:min(760px,92vh);display:grid;
+  grid-template-rows:auto auto minmax(0,1fr) auto;gap:10px;padding:18px;
+  border:1px solid rgba(224,177,79,.55);border-radius:18px;
+  background:linear-gradient(180deg,rgba(24,17,10,.99),rgba(5,5,5,.995));
+  box-shadow:0 28px 90px rgba(0,0,0,.85),inset 0 0 26px rgba(191,131,39,.06);
+  color:#eee4ce;
+}
+.hv-pack-odds-close{
+  position:absolute;right:12px;top:10px;z-index:2;width:34px;height:34px;border-radius:50%;
+  border:1px solid rgba(224,177,79,.55);background:rgba(10,8,5,.92);color:#e8ca85;
+  font:700 22px/1 Arial,sans-serif;cursor:pointer;
+}
+.hv-pack-odds-header{padding-right:44px;}
+.hv-pack-odds-header>span{display:block;color:#c9a45b;font:800 10px/1.1 Arial,sans-serif;letter-spacing:.18em;}
+.hv-pack-odds-header h2{margin:4px 0 5px;color:#f2d28a;font:700 clamp(22px,2vw,34px)/1 Georgia,"Times New Roman",serif;}
+.hv-pack-odds-header p{margin:0;color:#cfc6b7;font:500 13px/1.35 Arial,sans-serif;}
+.hv-pack-odds-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.hv-pack-odds-tools input{
+  width:min(420px,65%);height:36px;padding:0 12px;border-radius:8px;border:1px solid rgba(212,167,78,.38);
+  background:rgba(0,0,0,.45);color:#f4ead7;outline:none;
+}
+.hv-pack-odds-tools input:focus{border-color:rgba(240,196,107,.78);}
+.hv-pack-odds-tools strong{color:#d9b86d;font:700 12px/1 Arial,sans-serif;white-space:nowrap;}
+.hv-pack-odds-table-wrap{min-height:0;overflow:auto;border:1px solid rgba(211,164,74,.24);border-radius:10px;background:rgba(0,0,0,.24);}
+.hv-pack-odds-table{width:100%;border-collapse:collapse;font:500 12px/1.25 Arial,sans-serif;}
+.hv-pack-odds-table thead{position:sticky;top:0;z-index:1;background:#171008;color:#e5c474;}
+.hv-pack-odds-table th,.hv-pack-odds-table td{padding:8px 10px;border-bottom:1px solid rgba(221,179,91,.12);text-align:right;}
+.hv-pack-odds-table th:first-child,.hv-pack-odds-table td:first-child{text-align:left;min-width:240px;}
+.hv-pack-odds-table th:nth-child(2),.hv-pack-odds-table td:nth-child(2){text-align:left;white-space:nowrap;}
+.hv-pack-odds-table tbody tr:hover{background:rgba(219,166,70,.07);}
+.hv-pack-odds-table td strong{color:#f0cf86;}
+.hv-pack-odds-footer{display:grid;gap:4px;color:#bfb4a1;font:500 11px/1.35 Arial,sans-serif;}
+.hv-pack-odds-footer p{margin:0;color:#d9c28e;font-weight:700;}
+.hv-pack-odds-footer small{font-size:10px;color:#9f978a;}
+@media (max-width:760px),(max-height:560px){
+  .hv-pack-odds-modal{padding:6px;}
+  .hv-pack-odds-card{width:99vw;height:96vh;padding:11px;gap:7px;border-radius:12px;}
+  .hv-pack-odds-header h2{font-size:20px;}
+  .hv-pack-odds-header p{font-size:11px;}
+  .hv-pack-odds-tools input{height:32px;font-size:11px;}
+  .hv-pack-odds-tools strong{font-size:10px;}
+  .hv-pack-odds-table{font-size:10px;}
+  .hv-pack-odds-table th,.hv-pack-odds-table td{padding:6px 7px;}
+  .hv-pack-odds-table th:first-child,.hv-pack-odds-table td:first-child{min-width:180px;}
+}

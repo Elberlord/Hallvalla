@@ -17,8 +17,8 @@ The workflow `.github/workflows/publish-hallvalla-public.yml` builds a Pages art
 The APK signing key is deliberately NOT included in this repository package.
 
 ## Current versions
-- Browser/gameplay base: v151
-- Public distribution shell: v151 (restauración visual Beast Master + premios de ruleta por iconos; conserva Tutorial V2, PvP BOT por nivel, Contratos de Dragón XV y progresión de mapas)
+- Browser/gameplay base: v154
+- Public distribution shell: v154 (probabilidades individuales de sobres visibles antes de comprar/abrir para cumplimiento Xsolla; conserva Contratos de Dragón XV, Tutorial V2 y PvP BOT por nivel)
 - Android APK: v131 / versionCode 131 / `com.hallvalla.game`
 
 ## First setup
@@ -85,3 +85,11 @@ Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
 - El panel de premios deja de mostrar las tarjetas grandes: primero aparecen 10 iconos exactos recortados del arte de la ruleta.
 - Al tocar cada icono se abre únicamente la explicación de esa familia y sus premios todavía disponibles.
 - Los iconos de explicación proceden del mismo asset `wheel_mine_grouped_final.webp`, para que coincidan visualmente con lo que el jugador ve en la rueda.
+
+
+## v154 · Probabilidades individuales de sobres para Xsolla
+- Cada sobre de la tienda tiene acceso directo a “PROBABILIDADES” antes de comprar.
+- La pantalla de apertura también permite revisar probabilidades antes de tocar el sobre.
+- Cada carta muestra su probabilidad individual como Carta 1, Carta 2 y de aparecer en el sobre.
+- Los porcentajes se calculan desde los mismos pools y pesos usados por el RNG real.
+- Cambio web compatible con el APK remoto anterior al publicarse en GitHub Pages.

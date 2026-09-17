@@ -187,6 +187,259 @@ function getPackCards(pack){
   if(pack.type==="beast_pack")return getRandomBeastMasterPackCards(2);
   return randomPackCards(getBasicNonBeastPackPool(),2);
 }
+
+/* ==========================================================================
+   XSOLLA LOOT BOX DISCLOSURE · BUILD 20260917.154
+   - La tabla visible y el RNG leen los mismos pools/weights del juego.
+   - Muestra probabilidad individual por carta para Carta 1, Carta 2 y
+     probabilidad de aparecer al menos una vez en el sobre.
+   - Cubre sobres de tienda y sobres gratuitos/de evento al abrirlos.
+   ========================================================================== */
+const HALLVALLA_PACK_ODDS_BUILD="20260917.154";
+const HALLVALLA_PACK_RARITY_LABELS=Object.freeze({
+  basic:"Básica",
+  epic:"Rara",
+  glorious:"Épica",
+  mythic:"Mítica",
+  legendary:"Legendaria"
+});
+function getHallvallaPackRarityLabel(card){
+  const key=String(typeof getCraftRarityKey==="function"?getCraftRarityKey(card):(card?.rarity||card?.rareza||"basic")).toLowerCase();
+  return HALLVALLA_PACK_RARITY_LABELS[key]||String(card?.rarity||card?.rareza||key||"Carta");
+}
+function hallvallaPackOddsPercent(value){
+  const pct=Math.max(0,Math.min(1,Number(value||0)))*100;
+  if(pct===0)return "—";
+  if(Math.abs(pct-100)<1e-10)return "100%";
+  if(pct>=10)return `${pct.toFixed(2).replace(/\.?0+$/,"")}%`;
+  if(pct>=1)return `${pct.toFixed(3).replace(/\.?0+$/,"")}%`;
+  return `${pct.toFixed(4).replace(/\.?0+$/,"")}%`;
+}
+function hallvallaUniqueCards(pool){
+  const byKey=new Map();
+  (pool||[]).filter(Boolean).forEach(card=>{
+    const key=String(card?.key||card?.name||"").trim();
+    if(key&&!byKey.has(key))byKey.set(key,{...hydrateCardVisualData(card)});
+  });
+  return [...byKey.values()];
+}
+function hallvallaCreatePackOddsAccumulator(){
+  const rows=new Map();
+  const ensure=card=>{
+    const key=String(card?.key||card?.name||"").trim();
+    if(!key)return null;
+    if(!rows.has(key))rows.set(key,{
+      key,
+      name:String(card?.name||key),
+      rarity:getHallvallaPackRarityLabel(card),
+      slot1:0,
+      slot2:0,
+      combined:0
+    });
+    return rows.get(key);
+  };
+  const add=(slot,card,probability)=>{
+    const row=ensure(card);
+    if(!row)return;
+    const p=Math.max(0,Number(probability||0));
+    if(slot===1)row.slot1+=p;
+    if(slot===2)row.slot2+=p;
+  };
+  return {rows,ensure,add};
+}
+function hallvallaAddUniformSlot(acc,slot,pool,totalWeight=1){
+  const cards=hallvallaUniqueCards(pool);
+  if(!cards.length)return cards;
+  const p=Math.max(0,Number(totalWeight||0))/cards.length;
+  cards.forEach(card=>acc.add(slot,card,p));
+  return cards;
+}
+function getHallvallaPackOddsModel(packInput){
+  let pack=packInput;
+  if(typeof packInput==="string"){
+    pack=typeof buildPendingShopPack==="function"?buildPendingShopPack(packInput):{shopTier:packInput,type:`shop_${packInput}`};
+  }
+  pack=pack||{};
+  const acc=hallvallaCreatePackOddsAccumulator();
+  let title=String(pack.name||"Paquete de cartas");
+  let detail="Este sobre entrega 2 cartas.";
+  let sharedPoolTwoDraws=false;
+  let cardCount=2;
+
+  const special=typeof getLegendaryCardByKey==="function"
+    ?(getLegendaryCardByKey(pack.rewardCard)||(CARD_TEMPLATES||[]).find(c=>c.key===pack.rewardCard))
+    :(CARD_TEMPLATES||[]).find(c=>c.key===pack.rewardCard);
+  if(special){
+    acc.add(1,special,1);
+    title=String(pack.name||special.name||"Recompensa");
+    detail="Este paquete contiene una recompensa fija.";
+    cardCount=1;
+  }else if(pack.shopTier||String(pack.type||"").startsWith("shop_")){
+    const shopTier=String(pack.shopTier||String(pack.type||"").replace(/^shop_/,"")||"basic");
+    const def=typeof getShopPackDefinition==="function"?getShopPackDefinition(shopTier):null;
+    if(def)title=def.name;
+    if(shopTier==="basic"||pack.type==="shop_basic"||pack.type==="basic_magic_trap"){
+      const pool=getShopRarityPool("basic");
+      hallvallaAddUniformSlot(acc,1,pool,1);
+      hallvallaAddUniformSlot(acc,2,pool,1);
+      sharedPoolTwoDraws=true;
+      detail="Dos cartas básicas aleatorias, sin repetir la misma carta cuando el pool tiene 2 o más cartas.";
+    }else{
+      const target=pack.targetRarity||def?.targetRarity||"basic";
+      const targetPool=getShopRarityPool(target);
+      hallvallaAddUniformSlot(acc,1,targetPool,1);
+
+      const odds=SHOP_PACK_SECOND_CARD_ODDS[shopTier]||SHOP_PACK_SECOND_CARD_ODDS.rare;
+      const total=odds.reduce((sum,item)=>sum+Math.max(0,Number(item.weight||0)),0)||100;
+      odds.forEach(item=>{
+        const weight=Math.max(0,Number(item.weight||0))/total;
+        let pool=getShopRarityPool(item.rarity);
+        if(!pool.length)pool=getShopRarityPool("basic");
+        hallvallaAddUniformSlot(acc,2,pool,weight);
+      });
+      detail="La Carta 1 usa la rareza garantizada del sobre. La Carta 2 usa exactamente los pesos indicados por el juego.";
+    }
+  }else if(pack.type==="basic_epic_guaranteed"){
+    const epicPool=(IMPROVED_MAGIC_TRAP_PACK||[]).filter(c=>getCraftRarityKey(c)==="epic");
+    hallvallaAddUniformSlot(acc,1,epicPool.length?epicPool:IMPROVED_MAGIC_TRAP_PACK,1);
+    hallvallaAddUniformSlot(acc,2,getBasicNonBeastPackPool(),1);
+    title=String(pack.name||"Pack gratis: Épica garantizada");
+    detail="Una carta épica garantizada y una carta básica.";
+  }else if(pack.type==="improved_magic_trap"){
+    const pool=hallvallaUniqueCards(IMPROVED_MAGIC_TRAP_PACK||[]);
+    hallvallaAddUniformSlot(acc,1,pool,1);
+    hallvallaAddUniformSlot(acc,2,pool,1);
+    sharedPoolTwoDraws=true;
+    title=String(pack.name||"Pack mejorado");
+    detail="Dos cartas aleatorias del pool mejorado, sin repetir cuando hay 2 o más cartas.";
+  }else if(pack.type==="beast_pack"){
+    const pool=hallvallaUniqueCards(getBeastMasterSpecialPackPool());
+    hallvallaAddUniformSlot(acc,1,pool,1);
+    hallvallaAddUniformSlot(acc,2,pool,1);
+    sharedPoolTwoDraws=true;
+    title=String(pack.name||"Pack Beast Master");
+    detail="Dos cartas aleatorias exclusivas del pool Beast Master, sin repetir cuando hay 2 o más cartas.";
+  }else{
+    const pool=hallvallaUniqueCards(getBasicNonBeastPackPool());
+    hallvallaAddUniformSlot(acc,1,pool,1);
+    hallvallaAddUniformSlot(acc,2,pool,1);
+    sharedPoolTwoDraws=true;
+    title=String(pack.name||"Paquete básico");
+    detail="Dos cartas básicas aleatorias, sin repetir cuando hay 2 o más cartas.";
+  }
+
+  const list=[...acc.rows.values()];
+  if(sharedPoolTwoDraws){
+    const n=list.length;
+    list.forEach(row=>{
+      row.combined=n<=1?(row.slot1||row.slot2?1:0):Math.min(1,2/n);
+    });
+  }else{
+    list.forEach(row=>{
+      row.combined=Math.max(0,Math.min(1,row.slot1+row.slot2-(row.slot1*row.slot2)));
+    });
+  }
+  list.sort((a,b)=>{
+    const rarityOrder={Legendaria:5,Mítica:4,Épica:3,Rara:2,Básica:1};
+    const rarityDiff=(rarityOrder[b.rarity]||0)-(rarityOrder[a.rarity]||0);
+    return rarityDiff||a.name.localeCompare(b.name,"es",{sensitivity:"base"});
+  });
+
+  const slot1Total=list.reduce((sum,row)=>sum+row.slot1,0);
+  const slot2Total=list.reduce((sum,row)=>sum+row.slot2,0);
+  return {
+    build:HALLVALLA_PACK_ODDS_BUILD,
+    title,
+    detail,
+    cardCount,
+    rows:list,
+    slot1Total,
+    slot2Total,
+    pack
+  };
+}
+function ensureHallvallaPackOddsModal(){
+  let modal=$("hallvallaPackOddsModal");
+  if(modal)return modal;
+  modal=document.createElement("div");
+  modal.id="hallvallaPackOddsModal";
+  modal.className="hv-pack-odds-modal hidden";
+  modal.setAttribute("role","dialog");
+  modal.setAttribute("aria-modal","true");
+  modal.setAttribute("aria-labelledby","hallvallaPackOddsTitle");
+  modal.innerHTML=`
+    <section class="hv-pack-odds-card">
+      <button id="hallvallaPackOddsClose" class="hv-pack-odds-close" type="button" aria-label="Cerrar">×</button>
+      <header class="hv-pack-odds-header">
+        <span>PROBABILIDADES DEL SOBRE</span>
+        <h2 id="hallvallaPackOddsTitle">Probabilidades</h2>
+        <p id="hallvallaPackOddsDetail"></p>
+      </header>
+      <div class="hv-pack-odds-tools">
+        <input id="hallvallaPackOddsSearch" type="search" placeholder="Buscar carta…" autocomplete="off" aria-label="Buscar carta">
+        <strong id="hallvallaPackOddsCount"></strong>
+      </div>
+      <div class="hv-pack-odds-table-wrap">
+        <table class="hv-pack-odds-table">
+          <thead><tr><th>Carta</th><th>Rareza</th><th>Carta 1</th><th>Carta 2</th><th>En el sobre</th></tr></thead>
+          <tbody id="hallvallaPackOddsRows"></tbody>
+        </table>
+      </div>
+      <footer class="hv-pack-odds-footer">
+        <p id="hallvallaPackOddsTotals"></p>
+        <small>Las probabilidades se calculan desde los mismos pools y pesos que usa la apertura real del sobre. Se muestran antes de comprar y antes de abrir.</small>
+      </footer>
+    </section>`;
+  document.body.appendChild(modal);
+  const close=()=>modal.classList.add("hidden");
+  $("hallvallaPackOddsClose")?.addEventListener("click",close);
+  modal.addEventListener("click",event=>{if(event.target===modal)close();});
+  document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!modal.classList.contains("hidden"))close();});
+  $("hallvallaPackOddsSearch")?.addEventListener("input",event=>{
+    const query=String(event.target.value||"").trim().toLocaleLowerCase("es");
+    modal.querySelectorAll("tbody tr").forEach(row=>{
+      const hay=String(row.dataset.search||"").toLocaleLowerCase("es");
+      row.hidden=!!query&&!hay.includes(query);
+    });
+  });
+  return modal;
+}
+function openHallvallaPackOdds(packInput){
+  const model=getHallvallaPackOddsModel(packInput||activePackOpening);
+  if(!model.rows.length){
+    void hvAlert("Este paquete no tiene un pool de recompensas disponible para mostrar.","Probabilidades");
+    return;
+  }
+  const modal=ensureHallvallaPackOddsModal();
+  const title=$("hallvallaPackOddsTitle");
+  const detail=$("hallvallaPackOddsDetail");
+  const rows=$("hallvallaPackOddsRows");
+  const count=$("hallvallaPackOddsCount");
+  const totals=$("hallvallaPackOddsTotals");
+  const search=$("hallvallaPackOddsSearch");
+  if(title)title.textContent=model.title;
+  if(detail)detail.textContent=model.detail;
+  if(count)count.textContent=`${model.rows.length} objetos posibles`;
+  if(search){search.value="";search.dispatchEvent(new Event("input",{bubbles:true}));}
+  if(rows)rows.innerHTML=model.rows.map(row=>`
+    <tr data-search="${escapeHtml(`${row.name} ${row.rarity}`)}">
+      <td><b>${escapeHtml(row.name)}</b></td>
+      <td>${escapeHtml(row.rarity)}</td>
+      <td>${hallvallaPackOddsPercent(row.slot1)}</td>
+      <td>${model.cardCount>1?hallvallaPackOddsPercent(row.slot2):"—"}</td>
+      <td><strong>${hallvallaPackOddsPercent(row.combined)}</strong></td>
+    </tr>`).join("");
+  if(totals){
+    const slot1=hallvallaPackOddsPercent(model.slot1Total);
+    const slot2=model.cardCount>1?hallvallaPackOddsPercent(model.slot2Total):"No aplica";
+    totals.textContent=`Control de suma · Carta 1: ${slot1} · Carta 2: ${slot2} · Build ${model.build}`;
+  }
+  modal.classList.remove("hidden");
+}
+function closeHallvallaPackOdds(){
+  $("hallvallaPackOddsModal")?.classList.add("hidden");
+}
+
 function recordBasicPackOpeningAndMaybeBonus(pack){
   if(!pack||!(pack.type==="shop_basic"||pack.type==="basic_magic_trap"||pack.shopTier==="basic"))return false;
   const next=getBasicPackOpenCounter()+1;
