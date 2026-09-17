@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla · FORJA v158
+/* HallValla · FORJA v159
    - Hub visual + Fundir + Construir.
    - Solo usa arte existente de HallValla e iconos; no abre modales de Forja.
    - Fundir solo muestra copias libres: no están reservadas por el mazo ni por Mina.
@@ -28,11 +28,11 @@
   let lastStatus="";
   const pageByView={salvage:0,craft:0};
 
-  /* DEV v158 · calibrador dedicado de Fundir / Construir.
+  /* DEV v159 · calibrador dedicado de Fundir / Construir.
      Solo existe con ?dev. Guarda ajustes localmente y exporta un JSON pequeño
      para poder convertir después exactamente esa calibración en layout canónico. */
   const FORGE_DEV_ENABLED=globalThis.__HALLVALLA_DEV_TOOLS__===true;
-  const FORGE_DEV_STORAGE_KEY="hallvalla_forge_system_layout_dev_v1";
+  const FORGE_DEV_STORAGE_KEY="hallvalla_forge_system_layout_dev_v2";
   const FORGE_DEV_GROUPS=Object.freeze([
     {key:"view",label:"Vista completa",selector:".hv-forge-view",size:true},
     {key:"title",label:"Título Fundir / Construir",selector:".hv-forge-view-title",size:true},
@@ -146,7 +146,7 @@
   function forgeDevExportJson(){
     return JSON.stringify({
       version:1,
-      note:"HallValla Forja DEV v158 · 0 en ancho/alto/separación = usar CSS original",
+      note:"HallValla Forja DEV v159 · 0 en ancho/alto/separación = usar CSS original",
       views:{craft:{...(forgeDevConfig.views.craft||{})},salvage:{...(forgeDevConfig.views.salvage||{})}}
     },null,2);
   }
@@ -191,17 +191,20 @@
     if(document.getElementById("hvForgeSystemLayoutDevStyle"))return;
     const style=document.createElement("style");style.id="hvForgeSystemLayoutDevStyle";
     style.textContent=`
-      #hvForgeSystemLayoutDev{position:fixed;left:12px;top:70px;z-index:20040;width:330px;max-width:calc(100vw - 18px);max-height:calc(100vh - 82px);display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(231,184,85,.58);border-radius:15px;background:linear-gradient(180deg,rgba(18,12,7,.985),rgba(7,5,3,.985));color:#f8dfa8;box-shadow:0 22px 60px rgba(0,0,0,.76);font:700 11px/1.25 system-ui,sans-serif;user-select:none}
+      #hvForgeSystemLayoutDev{position:fixed;left:12px;top:10px;z-index:20040;width:350px;max-width:calc(100vw - 18px);height:min(700px,calc(100dvh - 20px));max-height:none;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(231,184,85,.58);border-radius:15px;background:linear-gradient(180deg,rgba(18,12,7,.985),rgba(7,5,3,.985));color:#f8dfa8;box-shadow:0 22px 60px rgba(0,0,0,.76);font:700 11px/1.25 system-ui,sans-serif;user-select:none}
       #hvForgeSystemLayoutDev.hidden{display:none!important}#hvForgeSystemLayoutDev *{box-sizing:border-box}
-      #hvForgeSystemDevHead{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:10px 10px 8px;border-bottom:1px solid rgba(231,184,85,.22);background:rgba(100,65,20,.24);cursor:move}
+      #hvForgeSystemDevHead{flex:0 0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:10px 10px 8px;border-bottom:1px solid rgba(231,184,85,.22);background:rgba(100,65,20,.24);cursor:move;touch-action:none}
       #hvForgeSystemDevHead b{display:block;color:#ffe29a;font:900 12px Georgia,serif}#hvForgeSystemDevHead small{display:block;margin-top:2px;color:#bba77c;font-size:9px}
       #hvForgeSystemDevClose{width:28px;height:28px;border:1px solid rgba(231,184,85,.35);border-radius:8px;background:#24170a;color:#ffe2a0;font-size:18px;cursor:pointer}
-      .hv-forge-dev-body{display:flex;flex-direction:column;gap:7px;padding:9px;overflow:auto;min-height:0}.hv-forge-dev-body select,.hv-forge-dev-body input{width:100%;height:31px;border:1px solid rgba(226,177,78,.30);border-radius:8px;background:#120d08;color:#ffe9b5;padding:0 7px;font:700 10px system-ui,sans-serif}
+      .hv-forge-dev-body{flex:1 1 auto;display:flex;flex-direction:column;gap:7px;padding:9px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;min-height:0;user-select:auto}.hv-forge-dev-body select,.hv-forge-dev-body input{width:100%;height:31px;border:1px solid rgba(226,177,78,.30);border-radius:8px;background:#120d08;color:#ffe9b5;padding:0 7px;font:700 10px system-ui,sans-serif}
       .hv-forge-dev-body label{display:grid;grid-template-columns:112px 1fr;gap:7px;align-items:center;color:#d8c69b}.hv-forge-dev-body label span{font-size:9px;text-transform:uppercase;letter-spacing:.04em}
       #hvForgeSystemDevSelected{padding:7px 8px;border:1px solid rgba(226,177,78,.18);border-radius:8px;background:rgba(226,177,78,.06);color:#ffd56f;font:900 10px Georgia,serif}
-      .hv-forge-dev-note{margin:0;color:#9f9278;font-size:9px}.hv-forge-dev-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.hv-forge-dev-actions button{min-height:31px;border:1px solid rgba(226,177,78,.34);border-radius:999px;background:linear-gradient(180deg,#674514,#342108);color:#ffe7ae;font:900 9px Georgia,serif;cursor:pointer}.hv-forge-dev-actions button:hover{filter:brightness(1.15)}
-      #hvForgeSystemDevStatus{min-height:26px;margin:0;padding-top:6px;border-top:1px solid rgba(226,177,78,.16);color:#7de9ff;font-size:9px}
-      @media(max-width:720px){#hvForgeSystemLayoutDev{left:5px;top:55px;width:300px;max-height:calc(100vh - 60px)}}`;
+      .hv-forge-dev-note{margin:0;color:#9f9278;font-size:9px}
+      .hv-forge-dev-footer{flex:0 0 auto;padding:8px 9px 9px;border-top:1px solid rgba(226,177,78,.20);background:linear-gradient(180deg,rgba(18,12,7,.98),rgba(7,5,3,.995));box-shadow:0 -8px 18px rgba(0,0,0,.35)}
+      .hv-forge-dev-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.hv-forge-dev-actions button{min-height:31px;border:1px solid rgba(226,177,78,.34);border-radius:999px;background:linear-gradient(180deg,#674514,#342108);color:#ffe7ae;font:900 9px Georgia,serif;cursor:pointer}.hv-forge-dev-actions button:hover{filter:brightness(1.15)}
+      #hvForgeSystemDevCopy,#hvForgeSystemDevDownload{background:linear-gradient(180deg,#8b651d,#4b3009);color:#fff0ba}
+      #hvForgeSystemDevStatus{min-height:22px;margin:6px 0 0;color:#7de9ff;font-size:9px}
+      @media(max-width:720px){#hvForgeSystemLayoutDev{left:5px;top:5px;width:320px;height:calc(100dvh - 10px)}}`;
     document.head.appendChild(style);
   }
   function forgeDevEnsurePanel(){
@@ -222,9 +225,11 @@
         <label><span>Alto px</span><input id="hvForgeSystemDevHeight" type="number" min="0" max="1200" step="1"></label>
         <label><span>Separación px</span><input id="hvForgeSystemDevGap" type="number" min="0" max="180" step="1"></label>
         <p class="hv-forge-dev-note">Ancho, alto o separación en 0 = valor original. Los cambios se guardan automáticamente solo en DEV.</p>
+      </div>
+      <footer class="hv-forge-dev-footer">
         <div class="hv-forge-dev-actions"><button id="hvForgeSystemDevResetCurrent" type="button">RESET ELEMENTO</button><button id="hvForgeSystemDevResetView" type="button">RESET PANTALLA</button><button id="hvForgeSystemDevResetAll" type="button">RESET TODO</button><button id="hvForgeSystemDevCopy" type="button">COPIAR JSON</button><button id="hvForgeSystemDevDownload" type="button">DESCARGAR JSON</button></div>
         <p id="hvForgeSystemDevStatus">Ajusta cada grupo y al terminar usa COPIAR JSON.</p>
-      </div>`;
+      </footer>`;
     document.body.appendChild(panel);
     const initialGroup=document.getElementById("hvForgeSystemDevGroup");if(initialGroup)initialGroup.value="grid";
     document.getElementById("hvForgeSystemDevMode")?.addEventListener("change",event=>{const mode=event.target.value==="salvage"?"salvage":"craft";openView(mode);forgeDevSyncControls();});
@@ -238,7 +243,7 @@
     document.getElementById("hvForgeSystemDevClose")?.addEventListener("click",()=>panel.classList.add("hidden"));
     const head=document.getElementById("hvForgeSystemDevHead");
     head?.addEventListener("pointerdown",event=>{if(event.target.closest("button,input,select"))return;const rect=panel.getBoundingClientRect();forgeDevPanelDrag={id:event.pointerId,dx:event.clientX-rect.left,dy:event.clientY-rect.top};try{head.setPointerCapture(event.pointerId);}catch(_){ }});
-    head?.addEventListener("pointermove",event=>{if(!forgeDevPanelDrag||event.pointerId!==forgeDevPanelDrag.id)return;const left=Math.max(0,Math.min(innerWidth-panel.offsetWidth,event.clientX-forgeDevPanelDrag.dx));const top=Math.max(0,Math.min(innerHeight-panel.offsetHeight,event.clientY-forgeDevPanelDrag.dy));panel.style.left=`${left}px`;panel.style.top=`${top}px`;});
+    head?.addEventListener("pointermove",event=>{if(!forgeDevPanelDrag||event.pointerId!==forgeDevPanelDrag.id)return;const viewportWidth=Math.floor(window.visualViewport?.width||innerWidth);const viewportHeight=Math.floor(window.visualViewport?.height||innerHeight);const left=Math.max(0,Math.min(Math.max(0,viewportWidth-panel.offsetWidth),event.clientX-forgeDevPanelDrag.dx));const top=Math.max(0,Math.min(Math.max(0,viewportHeight-panel.offsetHeight),event.clientY-forgeDevPanelDrag.dy));panel.style.left=`${left}px`;panel.style.top=`${top}px`;});
     const endDrag=event=>{if(forgeDevPanelDrag&&event.pointerId===forgeDevPanelDrag.id)forgeDevPanelDrag=null;};head?.addEventListener("pointerup",endDrag);head?.addEventListener("pointercancel",endDrag);
     return panel;
   }
@@ -423,6 +428,16 @@
       #${PANEL_ID} .hv-forge-page-count{min-width:58px;text-align:center;color:#f6d678;font:900 13px/1 Georgia,"Times New Roman",serif;letter-spacing:.08em;text-shadow:0 2px 5px #000;}
       #${PANEL_ID} .hv-forge-empty{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(620px,80vw);text-align:center;color:#ecd5a3;font-size:clamp(15px,1.6vw,23px);text-shadow:0 3px 8px #000;}
       #${PANEL_ID} .hv-forge-status{position:absolute;left:50%;bottom:2.8vh;transform:translateX(-50%);z-index:6;max-width:70vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ffe3a2;font:600 clamp(12px,1vw,15px)/1.2 Arial,sans-serif;text-shadow:0 2px 6px #000;pointer-events:none;}
+
+      /* v159 · FUNDIR canónico según la calibración enviada por el usuario.
+         Construir conserva su layout anterior para calibrarlo por separado con ?dev. */
+      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-view-title{translate:-456px -33px;scale:.46;}
+      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-materials{translate:0 -65px;scale:.73;}
+      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-icon-btn{scale:.80;}
+      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-unit-art{scale:.72;}
+      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-unit-action{translate:-16px 22px;scale:.76;}
+      #${PANEL_ID} [data-forge-screen="salvage"] .hv-forge-back{scale:.73;}
+
       @media(max-width:850px),(pointer:coarse){
         #${PANEL_ID} .hv-forge-system-brand{top:4%;width:min(440px,68vw);}
         #${PANEL_ID} .hv-forge-system-actions{gap:22px;margin-top:8vh;}

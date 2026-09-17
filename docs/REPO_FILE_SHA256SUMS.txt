@@ -835,12 +835,12 @@ b6a77b8a932a43f36d57cb74e72d19557068d054c27605dc7af75fba0ad331f0  ./web/assets/u
 1090d99e7921e9d7d56867778f36bd19161d93a18ddf6d36d0a88b2bc16ec2e0  ./web/assets/ui/vs_intro/vs_battlefield.webp
 b343b63496fb1605eb9a25dc30c3ee330f05607adc1c3436b2c17eb3e656890b  ./web/assets/ui/vs_intro/vs_emblem.webp
 e2d82e9b8a805e735793fbc96d6290c0021972ccfbe421f51c9cbdc68578b893  ./web/firebase-config.js
-a4cae53f055d23e3f759d590954da2e7f0477c83f1c342a09174a05c59be0ddb  ./web/index.html
-c6670c270f2b1d8d202cdebb78e9c7018ad43c9b92be64562096e6c7c15787fe  ./web/js/bootstrap-loader.js
+2a6cb510c468db46524c519604273bca0247ba520392d2b2bc29e336be2f2d4e  ./web/index.html
+edaa35fccdfbcf81684ea38e8cccfb6c2500ccd549405a3d624e158c800465cd  ./web/js/bootstrap-loader.js
 77d6fc8aaf82a28ece106da6fe95d7e0c95d5e78b4ff743a7f12410a31003845  ./web/js/features/adventure.js
 58e6a324da411d15d29a5296749619221da7008013abdba0dda764817d5822d8  ./web/js/features/battle-layout.js
 9c0f488ad4efcc5af5dbf1f3b8e1658b0c499d9dea55945452cf75e60f2cc465  ./web/js/features/forge-layout.js
-9fb8a4113d56eb698ff0dab72b9788ecde155f1d7d71f892de37636ee20a7814  ./web/js/features/forge.js
+8d49f187a80bf17badc6926197674426b9894f499bdc8083c24e460481a3f5f2  ./web/js/features/forge.js
 35cf418751872b0684db98acf7b4c3a2606a6da73b1a3efba187b69d31c7a600  ./web/js/features/hvdev.js
 c01be2e72323b23930a1313bbe65681acc0dce7d6a97ce8b14605264102ec5ca  ./web/js/features/pve.js
 ec2be679b307b9a15091cac30b7ff6fa607dcdb6fd5054d939610fdfd042c2cc  ./web/js/features/pvp.js
@@ -870,5 +870,5 @@ b4c68feaa1c017293987287ac9a3079bdc7c1a995cf8db62f9f3f11e72e27ba3  ./web/js/parts
 f0e52063c31a878b029c1a5b97d7025e717c45341e577388c7c6bb6e1caa7295  ./web/js/parts/19-field-figures-3d.js
 0a90e299501193d978594d90e2d23753b4ee2c8367b0e15f829f35a4a0206863  ./web/js/parts/20-gamepad-controls.js
 ad15212f42d2cb5af6e0a478d7335c216e645c3233d8eaad06ee54a1594a1198  ./web/js/parts/21-realtime-experimental.js
-70d6c5a4cb252d3402354ada382ec5360989794e4522395eb1b3f797ddd22310  ./web/service-worker.js
+52d1cc1e64945da3d2e2e8be5c1fe8c846edf188016c1acf6f3d2edaffde4c78  ./web/service-worker.js
 2c6bac9db3b1a7a7c1d46f7b25cbf1e58f449bd578efc040208e538bef101f34  ./web/styles.css
