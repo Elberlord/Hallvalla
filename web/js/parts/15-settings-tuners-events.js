@@ -708,7 +708,6 @@ on("startBasicTutorialFromSettingsBtn","click",()=>{const p=$("settingsPanel");i
 on("passBtn","click",()=>$("passPanel").classList.remove("hidden"));
 on("closePassBtn","click",()=>$("passPanel").classList.add("hidden"));
 
-function isChapterOneCompleteForTutorial(){try{return canAccessDecks();}catch(e){return false;}}
 function renderMasteryHomeBadge(){
   const badge=$("missionsRewardBadge");if(!badge)return;
   const count=typeof getPendingAccountMasteryRewardCount==="function"?getPendingAccountMasteryRewardCount():0;
@@ -902,37 +901,6 @@ function awardHomeDeckTutorialStep(stepIndex){
   return true;
 }
 
-function ensureHomeDeckTutorialUi(){
-  let root=$("homeDeckTutorial");
-  if(root)return root;
-  root=document.createElement("div");
-  root.id="homeDeckTutorial";
-  root.className="home-deck-tutorial hidden";
-  root.innerHTML=`
-    <div class="home-deck-tutorial-shield" aria-hidden="true"></div>
-    <div id="homeDeckTutorialFocus" class="home-deck-tutorial-focus" aria-hidden="true"></div>
-    <section id="homeDeckTutorialCard" class="home-deck-tutorial-card" role="dialog" aria-modal="true" aria-labelledby="homeDeckTutorialTitle">
-      <div class="home-deck-tutorial-top">
-        <span id="homeDeckTutorialStep" class="home-deck-tutorial-step">HOME Y MAZO</span>
-        <button id="homeDeckTutorialClose" class="home-deck-tutorial-close" type="button" aria-label="Salir del tutorial">×</button>
-      </div>
-      <h2 id="homeDeckTutorialTitle"></h2>
-      <div id="homeDeckTutorialBody" class="home-deck-tutorial-body"></div>
-      <div class="home-deck-tutorial-actions">
-        <button id="homeDeckTutorialPrev" class="home-deck-tutorial-btn ghost" type="button">Anterior</button>
-        <button id="homeDeckTutorialNext" class="home-deck-tutorial-btn primary" type="button">Continuar</button>
-      </div>
-    </section>`;
-  document.body.appendChild(root);
-  $("homeDeckTutorialClose")?.addEventListener("click",exitHomeDeckTutorial);
-  $("homeDeckTutorialPrev")?.addEventListener("click",()=>showHomeDeckTutorialStep(homeDeckTutorialState.index-1));
-  $("homeDeckTutorialNext")?.addEventListener("click",()=>{
-    awardHomeDeckTutorialStep(homeDeckTutorialState.index);
-    if(homeDeckTutorialState.index>=HOME_DECK_TUTORIAL_STEPS.length-1)finishHomeDeckTutorial();
-    else showHomeDeckTutorialStep(homeDeckTutorialState.index+1);
-  });
-  return root;
-}
 function getHomeDeckTutorialTarget(step){
   if(!step)return null;
   const target=step.selector?document.querySelector(step.selector):null;
@@ -997,15 +965,6 @@ async function showHomeDeckTutorialStep(index=0){
   if(prev)prev.disabled=safe===0;
   if(next)next.textContent=safe===HOME_DECK_TUTORIAL_STEPS.length-1?"Finalizar tutorial":"Continuar";
   requestAnimationFrame(()=>positionHomeDeckTutorial(step));
-}
-function startHomeDeckTutorial(){
-  if(homeDeckTutorialState.active)return;
-  const root=ensureHomeDeckTutorialUi();
-  homeDeckTutorialState={active:true,index:0,openedDeck:false,deckWasOpen:!$("deckBuilderPanel")?.classList.contains("hidden")};
-  closeMissionsPanel();
-  root.classList.remove("hidden");
-  document.body.classList.add("home-deck-tutorial-active");
-  void showHomeDeckTutorialStep(0);
 }
 function exitHomeDeckTutorial(){
   if(!homeDeckTutorialState.active)return;
@@ -2859,9 +2818,6 @@ function getHallvallaMineWheelCategoryId(def){
   if(def.effect==="mine_piece")return "pieces_pos";
   return "neutral";
 }
-function getHallvallaMineWheelCategory(def){
-  return HALLVALLA_MINE_WHEEL_CATEGORY_BY_ID.get(getHallvallaMineWheelCategoryId(def))||HALLVALLA_MINE_WHEEL_CATEGORY_BY_ID.get("neutral");
-}
 function getHallvallaMineWheelCategoryRemainingIds(state=getHallvallaMineWheelState()){
   const remaining=new Set((state&&Array.isArray(state.remaining)?state.remaining:[]));
   return HALLVALLA_MINE_WHEEL_CATEGORIES.map(cat=>{
@@ -3698,16 +3654,6 @@ function getHallvallaMineShopNextRotationMs(now=getHallvallaMineNow()){
   const current=Math.max(0,Number(now||0)),next=(Math.floor(current/86400000)+1)*86400000;
   return Math.max(0,next-current);
 }
-function getHallvallaMineShopRevealOrder(key){
-  const cells=Array.from({length:HALLVALLA_MINE_SHOP_PIECES_REQUIRED},(_,i)=>i);
-  const rng=createHallvallaMineShopRng(hashHallvallaMineShopString(`puzzle:${key}`));
-  for(let i=cells.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[cells[i],cells[j]]=[cells[j],cells[i]];}
-  return cells;
-}
-function getHallvallaMineShopPuzzleHtml(key,pieces){
-  const revealed=new Set(getHallvallaMineShopRevealOrder(key).slice(0,Math.max(0,Math.min(25,Number(pieces)||0))));
-  return Array.from({length:25},(_,i)=>`<span class="mine-shop-puzzle-piece${revealed.has(i)?" revealed":" locked"}" aria-hidden="true"></span>`).join("");
-}
 function ensureHallvallaMineUndeadCollectionUnlock(cardKey){
   const template=getHallvallaMineShopTemplate(cardKey);if(!template)return false;
   try{
@@ -4534,7 +4480,6 @@ if(HALLVALLA_LOCALHOST_TEST_MODE){
 }
 
 try{if($("mainMenu")&&!$("mainMenu").classList.contains("hidden"))playMusic("home_theme");}catch(e){}
-maybeShowBasicTutorialGate();
 
 /* ============================================================
    HallValla · Editor visual avanzado del modal DET

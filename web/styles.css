@@ -11387,52 +11387,6 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 
-/* ==========================================================
-   7HDT · Forja de materiales / creación de cartas
-   ========================================================== */
-.craft-material-panel{
-  border:1px solid rgba(255,209,102,.20);
-  border-radius:16px;
-  padding:10px;
-  background:linear-gradient(180deg,rgba(22,16,11,.86),rgba(3,3,3,.68));
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
-}
-.craft-mat-title{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  color:#ffe3a6;
-  font-size:12px;
-  margin-bottom:8px;
-}
-.craft-mat-title small{
-  color:#d9c095;
-  font-size:10px;
-}
-.craft-mat-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:6px;
-}
-.craft-mat-pill{
-  border:1px solid rgba(255,209,102,.18);
-  border-radius:10px;
-  padding:5px 6px;
-  background:rgba(0,0,0,.28);
-  display:flex;
-  justify-content:space-between;
-  gap:5px;
-  font-size:9px;
-  color:#f8dfaa;
-}
-.craft-mat-pill em{
-  font-style:normal;
-  color:#fff3c8;
-  font-weight:900;
-}
-
-
 .deck-mini-card.craft-missing{
   opacity:.58;
   border-style:dashed;
@@ -11476,10 +11430,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   content:" · crear";
   color:#9cff8e;
 }
-@media (max-width:980px){
-  .craft-mat-grid{grid-template-columns:1fr 1fr 1fr;}
-  .craft-material-panel{padding:8px;}
-}
+
 
 
 /* ==========================================================
@@ -11488,121 +11439,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .deckbuilder-status{
   gap:7px;
 }
-.craft-corner-dust{
-  border:1px solid rgba(255,209,102,.34);
-  border-radius:999px;
-  min-height:30px;
-  padding:0 12px;
-  background:linear-gradient(180deg,rgba(255,209,102,.23),rgba(88,54,12,.18));
-  color:#ffe7a8;
-  font-size:11px;
-  font-weight:900;
-  cursor:pointer;
-  box-shadow:0 0 14px rgba(255,209,102,.10), inset 0 0 0 1px rgba(255,255,255,.04);
-}
-.craft-corner-dust:not(:disabled):hover{
-  filter:brightness(1.12);
-  box-shadow:0 0 18px rgba(255,209,102,.18), inset 0 0 0 1px rgba(255,255,255,.06);
-}
-.craft-corner-dust:disabled{
-  opacity:.46;
-  cursor:not-allowed;
-  filter:grayscale(.35);
-}
-.craft-mat-note{
-  display:block;
-  margin-top:7px;
-  color:#cdb98e;
-  font-size:9.5px;
-  line-height:1.25;
-}
-@media (max-width:980px){
-  .craft-corner-dust{
-    width:100%;
-    min-height:34px;
-    font-size:12px;
-  }
-}
 
-
-
-/* 7HED · Wallet visible de materiales de creación */
-.craft-material-summary{
-  width:100%;
-  min-width:220px;
-  max-width:420px;
-  border:1px solid rgba(255,209,102,.22);
-  border-radius:14px;
-  padding:8px;
-  background:linear-gradient(180deg,rgba(20,14,8,.92),rgba(0,0,0,.62));
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.04),0 0 18px rgba(255,209,102,.08);
-}
-.craft-summary-title{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  margin-bottom:6px;
-  color:#ffe8ae;
-  font-size:10.5px;
-  font-weight:900;
-  letter-spacing:.02em;
-}
-.craft-summary-title strong{
-  color:#fff;
-  font-size:12px;
-}
-.craft-summary-grid{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:5px;
-}
-.craft-summary-pill{
-  border:1px solid rgba(255,209,102,.20);
-  border-radius:10px;
-  padding:4px 5px;
-  background:rgba(0,0,0,.34);
-  display:grid;
-  grid-template-columns:1fr auto auto;
-  align-items:center;
-  gap:2px;
-  color:#f6ddb0;
-  font-size:8.8px;
-  line-height:1;
-  min-width:0;
-}
-.craft-summary-pill b{
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-.craft-summary-pill em{
-  font-style:normal;
-  font-weight:1000;
-  color:#fff5c8;
-}
-.craft-summary-pill small{
-  color:#b9a47e;
-  font-size:8px;
-}
-.craft-summary-pill.can-create,
-.craft-mat-pill.can-create{
-  border-color:rgba(156,255,142,.42);
-  box-shadow:0 0 12px rgba(156,255,142,.10);
-}
-.craft-summary-pill.can-create em,
-.craft-mat-pill.can-create em{
-  color:#baffac;
-}
-.craft-mat-pill{
-  align-items:center;
-  min-height:28px;
-}
-.craft-mat-pill small{
-  color:#bba47a;
-  font-size:8px;
-  margin-left:4px;
-}
 .deck-mini-material{
   position:absolute;
   left:7px;
@@ -11637,15 +11474,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .deck-mini-card.craft-missing .deck-mini-material{
   right:7px;
 }
-@media (max-width:900px){
-  .craft-material-summary{
-    max-width:none;
-    min-width:0;
-  }
-  .craft-summary-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-}
+
 
 
 /* ==========================================================
@@ -12125,55 +11954,6 @@ body.mobile-landscape-locked{overflow:hidden!important}
   line-height:1.05 !important;
   margin-bottom:5px !important;
 }
-#deckBuilderPanel .craft-material-summary{
-  width:100% !important;
-  max-width:none !important;
-  min-width:0 !important;
-  padding:6px !important;
-  border-radius:11px !important;
-}
-#deckBuilderPanel .craft-summary-title{
-  margin-bottom:4px !important;
-  font-size:9px !important;
-  line-height:1 !important;
-}
-#deckBuilderPanel .craft-summary-title strong{
-  font-size:10px !important;
-}
-#deckBuilderPanel .craft-summary-grid{
-  grid-template-columns:repeat(6,minmax(0,1fr)) !important;
-  gap:4px !important;
-}
-#deckBuilderPanel .craft-summary-pill{
-  min-height:32px !important;
-  padding:3px 4px !important;
-  border-radius:8px !important;
-  grid-template-columns:1fr !important;
-  grid-template-rows:auto auto auto !important;
-  text-align:center !important;
-  gap:1px !important;
-  font-size:8px !important;
-}
-#deckBuilderPanel .craft-summary-pill b{
-  font-size:8px !important;
-  line-height:1 !important;
-}
-#deckBuilderPanel .craft-summary-pill em{
-  font-size:10px !important;
-  line-height:1 !important;
-}
-#deckBuilderPanel .craft-summary-pill small{
-  font-size:7px !important;
-  line-height:1 !important;
-}
-#deckBuilderPanel #dustAllSurplusCornerBtn.craft-corner-dust{
-  min-height:24px !important;
-  height:24px !important;
-  padding:2px 12px !important;
-  margin-top:5px !important;
-  font-size:9px !important;
-  border-radius:999px !important;
-}
 
 #deckBuilderPanel .deckbuilder-filters,
 #deckBuilderPanel .deckbuilder-collection,
@@ -12187,32 +11967,6 @@ body.mobile-landscape-locked{overflow:hidden!important}
 #deckBuilderPanel .deck-select{
   margin-bottom:8px !important;
   font-size:13px !important;
-}
-#deckBuilderPanel .craft-material-panel{
-  padding:8px !important;
-  border-radius:13px !important;
-}
-#deckBuilderPanel .craft-mat-title{
-  font-size:10px !important;
-  margin-bottom:6px !important;
-}
-#deckBuilderPanel .craft-mat-title small{
-  font-size:8px !important;
-}
-#deckBuilderPanel .craft-mat-grid{
-  gap:4px !important;
-}
-#deckBuilderPanel .craft-mat-pill{
-  min-height:24px !important;
-  padding:3px 5px !important;
-  font-size:8px !important;
-  border-radius:8px !important;
-}
-#deckBuilderPanel .craft-mat-pill em{
-  font-size:9px !important;
-}
-#deckBuilderPanel .craft-mat-pill small{
-  font-size:7px !important;
 }
 #deckBuilderPanel #saveDeckBtn{
   min-height:34px !important;
@@ -12252,18 +12006,11 @@ body.mobile-landscape-locked{overflow:hidden!important}
   #deckBuilderPanel .deckbuilder-head{
     grid-template-columns:minmax(0,1fr) minmax(260px,390px) !important;
   }
-  
-  #deckBuilderPanel .craft-summary-grid{
-    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-  }
 }
 @media(max-width:980px){
   
   #deckBuilderPanel .deckbuilder-head{
     grid-template-columns:1fr !important;
-  }
-  #deckBuilderPanel .craft-summary-grid{
-    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
   }
   
   #deckBuilderPanel .deck-card-grid.hv-mini-gallery.is-paged{
@@ -14046,73 +13793,8 @@ body.actions-hud-tuning #gameShell .battlefield .side .actions-visual-panel{
 body.actions-hud-tuning #gameShell .battlefield .side .action-img-btn{
   pointer-events:none!important;
 }
-.actions-hud-tuner{
-  position:fixed;
-  left:50%;
-  bottom:max(10px,env(safe-area-inset-bottom,0px));
-  transform:translateX(-50%);
-  z-index:1200;
-  width:min(760px,calc(100vw - 20px));
-  padding:12px;
-  border:1px solid rgba(255,209,102,.62);
-  border-radius:16px;
-  background:linear-gradient(180deg,rgba(20,15,10,.97),rgba(6,6,5,.98));
-  box-shadow:0 18px 50px rgba(0,0,0,.72),inset 0 0 0 1px rgba(255,235,178,.06);
-  color:#fff1c4;
-}
-.actions-hud-tuner.hidden{display:none!important}
-.actions-hud-tuner-head{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:9px;
-}
-.actions-hud-tuner-head b{display:block;font-size:15px}
-.actions-hud-tuner-head small{display:block;margin-top:3px;color:#c9b990;font-size:10px}
-.actions-hud-tuner-x{
-  width:32px;height:32px;flex:0 0 auto;border-radius:9px;
-  border:1px solid rgba(255,209,102,.42);background:rgba(255,255,255,.06);
-  color:#fff1c4;font-size:22px;line-height:1;cursor:pointer;
-}
-.actions-hud-tuner-grid{
-  display:grid;
-  grid-template-columns:repeat(5,minmax(110px,1fr));
-  gap:8px;
-}
-.actions-hud-tuner-control{
-  display:block;
-  padding:8px;
-  border:1px solid rgba(255,209,102,.18);
-  border-radius:10px;
-  background:rgba(255,255,255,.035);
-}
-.actions-hud-tuner-control span{
-  display:flex;justify-content:space-between;gap:8px;
-  margin-bottom:6px;font-size:10px;font-weight:800;color:#f1d695;
-}
-.actions-hud-tuner-control output{color:#7cecff;font-variant-numeric:tabular-nums}
-.actions-hud-tuner-control input{width:100%;accent-color:#e2b14d;cursor:pointer}
-.actions-hud-tuner-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:9px}
-.actions-hud-tuner-actions .btn{min-width:110px;padding:8px 12px}
-.actions-hud-tuner-status{min-height:14px;margin:6px 2px 0;color:#9feaff;font-size:10px;text-align:right}
-@media(max-width:720px){
-  .actions-hud-tuner{padding:9px;width:calc(100vw - 12px)}
-  .actions-hud-tuner-grid{grid-template-columns:repeat(3,minmax(92px,1fr));gap:5px}
-  .actions-hud-tuner-control{padding:6px}
-  .actions-hud-tuner-actions{justify-content:stretch}
-  .actions-hud-tuner-actions .btn{min-width:0;flex:1;padding:7px 8px;font-size:10px}
-  .actions-hud-tuner-head small{font-size:9px}
-}
-@media(max-height:430px){
-  .actions-hud-tuner{bottom:4px;padding:7px}
-  .actions-hud-tuner-head{margin-bottom:5px}
-  .actions-hud-tuner-grid{grid-template-columns:repeat(5,minmax(88px,1fr));gap:4px}
-  .actions-hud-tuner-control{padding:5px}
-  .actions-hud-tuner-control span{margin-bottom:2px;font-size:8px}
-  .actions-hud-tuner-actions{margin-top:5px}
-  .actions-hud-tuner-status{margin-top:3px}
-}
+
+
 
 
 /* ==========================================================
@@ -15712,53 +15394,6 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
   .battle-clock-tuner-head b{font-size:16px}
   .battle-clock-tuner-actions .btn{flex:1 1 100%}
 }
-
-
-
-/* 7BOARDCTRL8K · RELOJ SEGÚN MODO
-   PvP: Turno + J1 + J2. PvE/Aventura: únicamente el reloj de turno. */
-
-
-/* --------------------------------------------------------------------------
-   7BOARDCTRL8O · Personaje Principal
-   -------------------------------------------------------------------------- */
-
-.deck-principal-slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin:0 0 12px;}
-.deck-principal-tier-note{grid-column:1/-1;padding:8px 10px;border:1px solid rgba(233,201,111,.28);border-radius:9px;background:rgba(12,17,28,.78);color:#e8dfbf;font-size:11px;line-height:1.35;}
-.deck-principal-slots .deck-principal-selector{grid-template-columns:48px minmax(0,1fr);gap:8px;margin:0;padding:8px;align-items:center;}
-.deck-principal-slots .deck-principal-art{width:44px;height:44px;font-size:18px;}
-.deck-principal-slots .deck-principal-clear{grid-column:1/-1;width:100%;padding:5px 8px;}
-.deck-principal-slots .deck-principal-selector.empty{border-color:rgba(170,170,170,.28);background:linear-gradient(135deg,rgba(48,48,48,.55),rgba(16,20,31,.96));}
-.deck-principal-slots .deck-principal-copy strong{font-size:12px;}
-.deck-principal-slots .deck-principal-copy small{font-size:9px;}
-.deck-principal-selector{
-  display:grid;
-  grid-template-columns:64px minmax(0,1fr) auto;
-  gap:12px;
-  align-items:center;
-  margin:0 0 12px;
-  padding:10px;
-  border:1px solid rgba(226,189,92,.58);
-  border-radius:12px;
-  background:linear-gradient(135deg,rgba(76,53,15,.86),rgba(16,20,31,.96));
-  box-shadow:inset 0 0 22px rgba(255,195,59,.08),0 8px 18px rgba(0,0,0,.22);
-}
-.deck-principal-art{
-  width:60px;height:60px;border-radius:10px;overflow:hidden;
-  display:grid;place-items:center;
-  border:2px solid rgba(255,211,94,.8);
-  background:rgba(0,0,0,.45);color:#ffd66f;font-size:28px;
-}
-.deck-principal-art img{width:100%;height:100%;object-fit:cover;display:block;}
-.deck-principal-copy{min-width:0;display:flex;flex-direction:column;gap:2px;}
-.deck-principal-copy>span{font-size:10px;letter-spacing:.16em;color:#e9c96f;font-weight:900;}
-.deck-principal-copy strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff2bf;font-size:15px;}
-.deck-principal-copy small{color:#c8cbd3;line-height:1.25;font-size:11px;}
-.deck-principal-clear{
-  border:1px solid rgba(255,214,111,.45);border-radius:8px;padding:7px 9px;
-  background:rgba(21,18,15,.76);color:#f2d68b;font-weight:800;cursor:pointer;
-}
-.deck-principal-clear:disabled{opacity:.45;cursor:default;}
 .deck-mini-principal{
   position:absolute;left:3px;bottom:21px;top:auto;z-index:8;width:24px;height:20px;
   display:grid;place-items:center;border-radius:50%;
@@ -15777,11 +15412,7 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
   color:#281700;font-size:13px;font-weight:1000;line-height:1;
   box-shadow:0 2px 8px rgba(0,0,0,.58),0 0 10px rgba(255,211,81,.5);
 }
-@media(max-width:760px){
-  .deck-principal-selector{grid-template-columns:52px minmax(0,1fr);}
-  .deck-principal-art{width:50px;height:50px;}
-  .deck-principal-clear{grid-column:1/-1;width:100%;}
-}
+
 
 
 /* =====================================================================
@@ -15824,7 +15455,7 @@ body.hv-mobile-landscape #playerClock2{top:122px!important}
   border-color:rgba(126,203,255,.34)!important;
 }
 
-@media(max-width:1100px){.deck-principal-slots{grid-template-columns:1fr;}}
+
 
 
 /* HallValla 7BOARDCTRL8AG · Cuenta regresiva mortal de Morgana */
@@ -16289,19 +15920,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 @media(max-width:720px){
   .hv-det-layout-tuner{left:7px!important;bottom:7px!important;}
   .hv-det-layout-tuner-panel{width:min(300px,calc(100vw - 14px))!important;max-height:70vh!important;}
-}
-
-
-/* ==========================================================
-   8BH · Colección visible desde el inicio / Forja bloqueada
-   ========================================================== */
-
-#deckBuilderPanel.collection-browser-mode .deckbuilder-current,
-#deckBuilderPanel.collection-browser-mode #craftMaterialPanel,
-#deckBuilderPanel.collection-browser-mode #saveDeckBtn,
-#deckBuilderPanel.collection-browser-mode #craftMaterialSummary,
-#deckBuilderPanel.collection-browser-mode #dustAllSurplusCornerBtn{
-  display:none !important;
 }
 #deckBuilderPanel.collection-browser-mode .deckbuilder-collection{
   min-width:0 !important;
@@ -18153,16 +17771,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
   letter-spacing:.035em;
   white-space:nowrap;
 }
-#deckBuilderPanel .deckbuilder-filters #craftMaterialPanel{
-  margin:0 !important;
-  min-height:38px !important;
-  padding:4px 7px !important;
-  border-radius:12px !important;
-  border:1px solid rgba(75,43,14,.34) !important;
-  background:rgba(45,26,11,.15) !important;
-  box-shadow:inset 0 1px rgba(255,241,195,.19) !important;
-  overflow:hidden !important;
-}
 #deckBuilderPanel .deckbuilder-filters #saveDeckBtn{
   grid-column:5 !important;
   align-self:stretch !important;
@@ -18309,8 +17917,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
     min-height:610px;
     padding:118px 8vw 92px !important;
   }
-  
-  #deckBuilderPanel .deckbuilder-filters #craftMaterialPanel{grid-column:1/-1 !important;}
   #deckBuilderPanel .deckbuilder-filters #saveDeckBtn{grid-column:1/-1 !important;}
   #deckBuilderPanel .deck-card-grid.hv-mini-gallery.is-paged,
   #deckBuilderPanel.collection-browser-mode .deck-card-grid.hv-mini-gallery.is-paged{
@@ -18343,21 +17949,8 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
   filter:drop-shadow(0 18px 28px rgba(0,0,0,.55));
   pointer-events:none;
 }
-.hv-forge-direct-tuner{
-  position:fixed;left:14px;top:78px;z-index:5000;width:320px;max-width:calc(100vw - 18px);
-  padding:8px;border:1px solid rgba(221,177,85,.48);border-radius:14px;
-  background:linear-gradient(180deg,rgba(17,12,7,.98),rgba(8,6,4,.97));
-  box-shadow:0 18px 40px rgba(0,0,0,.55);color:#f4dda8;user-select:none;
-}
-.hv-forge-direct-tuner.hidden{display:none!important}
-.hv-forge-tuner-bar{display:flex;gap:6px;align-items:center}
-.hv-forge-tuner-bar button{height:34px;border-radius:999px;border:1px solid rgba(223,177,78,.48);background:linear-gradient(180deg,#7f571d,#422a0a);color:#ffeab4;font:800 10px Georgia,serif;cursor:pointer}
 #hvForgeTunerMove{width:40px;flex:0 0 40px;cursor:move;font-size:17px}
 #hvForgeTunerToggle{flex:1}
-.hv-forge-tuner-body{display:flex;flex-direction:column;gap:7px;margin-top:8px;height:min(620px,calc(100vh - 135px));max-height:calc(100vh - 135px);overflow:hidden;min-height:0}
-.hv-forge-tuner-scroll-wrap{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 24px;gap:7px;overflow:hidden}
-.hv-forge-tuner-scroll{min-height:0;height:100%;overflow-y:auto;overflow-x:hidden;padding-right:2px;scrollbar-width:none;-ms-overflow-style:none}
-.hv-forge-tuner-scroll::-webkit-scrollbar{width:0;height:0}
 .hv-forge-custom-scroll{min-height:0;display:grid;grid-template-rows:24px minmax(0,1fr) 24px;gap:5px;align-items:stretch;padding:2px 0}
 .hv-forge-custom-scroll button{width:24px;height:24px;padding:0;border-radius:7px;border:1px solid rgba(218,170,72,.42);background:#3b270d;color:#ffe9b1;font:900 10px/1 system-ui,sans-serif;cursor:pointer}
 .hv-forge-custom-scroll input[type="range"]{appearance:none;-webkit-appearance:none;writing-mode:vertical-lr;direction:rtl;width:24px;height:100%;margin:0;padding:0;background:transparent;cursor:pointer;accent-color:#d8a83f}
@@ -18366,9 +17959,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 .hv-forge-custom-scroll input[type="range"]::-moz-range-track{width:10px;border-radius:999px;background:#171009;border:1px solid rgba(218,170,72,.32)}
 .hv-forge-custom-scroll input[type="range"]::-moz-range-thumb{width:18px;height:34px;border-radius:999px;border:2px solid #171009;background:linear-gradient(180deg,#efc665,#8b5d1c)}
 .hv-forge-custom-scroll input:disabled{opacity:.35}
-.hv-forge-tuner-body.hidden{display:none!important}
-.hv-forge-tuner-top{display:grid;grid-template-columns:1fr 32px;gap:6px}
-.hv-forge-tuner-top select{height:34px;border-radius:10px;border:1px solid rgba(218,170,72,.35);background:#171008;color:#ffe9b4;padding:0 9px;font:700 11px Georgia,serif}
 #hvForgeTunerClose{border-radius:9px;border:1px solid rgba(218,170,72,.38);background:#26180b;color:#ffe5aa;font-size:20px;cursor:pointer}
 .hv-forge-selected-name{padding:7px 9px;border-radius:9px;border:1px solid rgba(220,173,74,.18);background:rgba(220,173,74,.07);font:800 11px Georgia,serif;color:#ffd989}
 .hv-forge-control-row{padding:7px 8px;border-radius:10px;border:1px solid rgba(220,173,74,.14);background:rgba(255,255,255,.025)}
@@ -18376,13 +17966,10 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 .hv-forge-control-line{display:grid;grid-template-columns:30px 1fr 30px;gap:6px;align-items:center}
 .hv-forge-control-line input{width:100%;accent-color:#d8a83f}
 .hv-forge-control-line button{height:28px;border-radius:8px;border:1px solid rgba(218,170,72,.32);background:#3a260d;color:#ffe9b1;font-size:17px;font-weight:900;cursor:pointer}
-.hv-forge-tuner-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:0 0 auto;padding-top:7px;border-top:1px solid rgba(218,170,72,.18);background:#0b0805}
-.hv-forge-tuner-actions button{min-height:32px;border-radius:999px;border:1px solid rgba(218,170,72,.35);background:linear-gradient(180deg,#704b17,#382309);color:#ffe9b1;font:800 10px Georgia,serif;cursor:pointer}
-.hv-forge-tuner-group-candidate{cursor:crosshair!important}
 
 
 
-@media(max-width:720px){.hv-forge-direct-tuner{left:6px;top:66px;width:300px}.hv-forge-tuner-body{height:calc(100vh - 118px);max-height:calc(100vh - 118px)}}
+
 
 /* El pergamino permanece detrás del contenido interactivo. */
 
@@ -18657,31 +18244,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
   font:900 8px/1.1 Georgia,"Times New Roman",serif;
   letter-spacing:.19em;
 }
-#deckBuilderPanel:not(.collection-browser-mode) .deck-principal-tier-note{
-  border-color:rgba(103,58,14,.35) !important;
-  background:rgba(109,64,18,.10) !important;
-  color:#553315 !important;
-}
-#deckBuilderPanel:not(.collection-browser-mode) .deck-principal-selector,
-#deckBuilderPanel:not(.collection-browser-mode) .deck-principal-slots .deck-principal-selector.empty{
-  border-color:rgba(111,67,17,.44) !important;
-  background:linear-gradient(135deg,rgba(190,134,53,.20),rgba(102,58,15,.10)) !important;
-  box-shadow:inset 0 1px rgba(255,241,193,.35),0 4px 10px rgba(78,40,8,.12) !important;
-}
-#deckBuilderPanel:not(.collection-browser-mode) .deck-principal-copy>span{color:#8b5a16 !important;}
-#deckBuilderPanel:not(.collection-browser-mode) .deck-principal-copy strong{color:#3a2008 !important;text-shadow:0 1px rgba(255,241,194,.45) !important;}
-#deckBuilderPanel:not(.collection-browser-mode) .deck-principal-copy small{color:#6b4a28 !important;}
-#deckBuilderPanel:not(.collection-browser-mode) .deck-principal-art{
-  border-color:#8d5c17 !important;
-  background:rgba(85,48,12,.20) !important;
-  color:#7d4d0e !important;
-}
-#deckBuilderPanel:not(.collection-browser-mode) .deck-principal-clear{
-  border-color:#7e4d10 !important;
-  background:linear-gradient(180deg,#d4a13d,#8a5915) !important;
-  color:#241305 !important;
-  text-shadow:0 1px rgba(255,236,164,.46) !important;
-}
 #deckBuilderPanel:not(.collection-browser-mode) .deck-drop-hint{
   border-color:rgba(106,62,14,.37) !important;
   background:rgba(98,57,15,.10) !important;
@@ -18722,11 +18284,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 #deckBuilderPanel:not(.collection-browser-mode) #saveDeckBtn.deck-save-scroll:disabled{
   opacity:.48 !important;
   filter:saturate(.55) !important;
-}
-
-/* Al mover Guardar al pergamino derecho, la barra de filtros ocupa todo el ancho útil. */
-#deckBuilderPanel .deckbuilder-filters #craftMaterialPanel{
-  grid-column:1 / -1 !important;
 }
 
 @media(max-width:1100px){
@@ -18902,28 +18459,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
   max-width:100% !important;
   margin:4px auto 0 !important;
 }
-
-/* Conserva el tratamiento medieval del contenido del drawer. */
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-tier-note{
-  border-color:rgba(103,58,14,.35) !important;
-  background:rgba(109,64,18,.10) !important;
-  color:#553315 !important;
-}
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-selector,
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-slots .deck-principal-selector.empty{
-  border-color:rgba(111,67,17,.44) !important;
-  background:linear-gradient(135deg,rgba(190,134,53,.20),rgba(102,58,15,.10)) !important;
-  box-shadow:inset 0 1px rgba(255,241,193,.35),0 4px 10px rgba(78,40,8,.12) !important;
-}
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-copy>span{color:#8b5a16 !important;}
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-copy strong{color:#3a2008 !important;text-shadow:0 1px rgba(255,241,194,.45) !important;}
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-copy small{color:#6b4a28 !important;}
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-art{
-  border-color:#8d5c17 !important;
-}
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-clear{
-  border-color:#7e4d10 !important;
-}
 #deckBuilderPanel.collection-forge-unlocked .deck-drop-hint{border-color:rgba(106,62,14,.37) !important;background:rgba(98,57,15,.10) !important;color:#5b3817 !important;}
 #deckBuilderPanel.collection-forge-unlocked .deck-empty-slot{border-color:rgba(104,60,13,.36) !important;background:rgba(112,65,18,.08) !important;color:rgba(74,40,8,.48) !important;}
 #deckBuilderPanel.collection-forge-unlocked .current-deck-list.hv-mini-deck{
@@ -18983,19 +18518,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 #deckBuilderPanel.collection-browser-mode .deckbuilder-parchment-stage{
   padding-top:14vh !important;
 }
-#deckBuilderPanel.collection-forge-unlocked .deckbuilder-filters #craftMaterialPanel{
-  display:block !important;
-  position:fixed !important;
-  min-height:110px !important;
-  padding:0 !important;
-  margin:0 !important;
-  border:0 !important;
-  background:transparent !important;
-  box-shadow:none !important;
-  overflow:visible !important;
-  z-index:240 !important;
-}
-#deckBuilderPanel.collection-browser-mode .deckbuilder-filters #craftMaterialPanel{display:none !important;}
 #deckBuilderPanel .craft-material-art{
   position:relative !important;
   width:100% !important;
@@ -19009,46 +18531,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
   color:#f6ead0 !important;
   font:900 18px/1 Georgia,"Times New Roman",serif !important;
   text-shadow:0 1px 6px rgba(0,0,0,.65) !important;
-}
-#deckBuilderPanel .craft-material-node{
-  position:absolute !important;
-  top:35.5% !important;
-  width:13.8% !important;
-  transform:translateX(-50%) !important;
-  display:flex !important;
-  flex-direction:column !important;
-  align-items:center !important;
-  justify-content:center !important;
-  color:#f9edcf !important;
-  text-align:center !important;
-  text-shadow:0 1px 6px rgba(0,0,0,.74) !important;
-}
-#deckBuilderPanel .craft-material-node::before{
-  content:"" !important;
-  position:absolute !important;
-  inset:-8px -4px 18px !important;
-  border-radius:999px !important;
-  box-shadow:0 0 0 1px rgba(255,229,162,.06),0 0 18px rgba(255,204,111,.18) !important;
-  opacity:0 !important;
-}
-#deckBuilderPanel .craft-material-node.can-create::before{opacity:1 !important;}
-#deckBuilderPanel .craft-material-node[style*="--craft-slot:1"]{left:11.5% !important;}
-#deckBuilderPanel .craft-material-node[style*="--craft-slot:2"]{left:26.2% !important;}
-#deckBuilderPanel .craft-material-node[style*="--craft-slot:3"]{left:41% !important;}
-#deckBuilderPanel .craft-material-node[style*="--craft-slot:4"]{left:55.8% !important;}
-#deckBuilderPanel .craft-material-node[style*="--craft-slot:5"]{left:70.7% !important;}
-#deckBuilderPanel .craft-material-node[style*="--craft-slot:6"]{left:85.4% !important;}
-#deckBuilderPanel .craft-material-value{
-  display:block !important;
-  min-width:34px !important;
-  font:900 15px/1 Georgia,"Times New Roman",serif !important;
-}
-#deckBuilderPanel .craft-material-label{
-  display:block !important;
-  margin-top:18px !important;
-  color:#f2e2b7 !important;
-  font:700 9px/1.05 Georgia,"Times New Roman",serif !important;
-  letter-spacing:.02em !important;
 }
 #deckBuilderPanel #dustAllSurplusCornerBtn{
   position:fixed !important;
@@ -19066,7 +18548,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
   font:800 10px/1 Georgia,"Times New Roman",serif !important;
   box-shadow:0 4px 10px rgba(0,0,0,.35) !important;
 }
-#deckBuilderPanel .craft-material-summary{display:none !important;}
 
 #deckBuilderPanel.collection-forge-unlocked .deckbuilder-current{
   width:min(510px,94vw) !important;
@@ -19077,16 +18558,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
   background:url("assets/ui/deck_forge/spellbook_drawer_asset.webp") center/100% 100% no-repeat !important;
   filter:drop-shadow(0 22px 28px rgba(0,0,0,.6)) !important;
   overflow:hidden !important;
-}
-#deckBuilderPanel.collection-forge-unlocked .deckbuilder-current h3,
-#deckBuilderPanel.collection-forge-unlocked .deckbuilder-current h3::before,
-#deckBuilderPanel.collection-forge-unlocked .deckbuilder-current .deckbuilder-status > span,
-#deckBuilderPanel.collection-forge-unlocked .deckbuilder-current #craftMaterialSummary,
-#deckBuilderPanel.collection-forge-unlocked .deckbuilder-current .deck-drop-hint,
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-tier-note,
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-copy,
-#deckBuilderPanel.collection-forge-unlocked .deckbuilder-current .deckbuilder-status > button{
-  display:none !important;
 }
 #deckBuilderPanel.collection-forge-unlocked .deckbuilder-current .deckbuilder-status{
   position:absolute !important;
@@ -19108,61 +18579,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
   font:900 22px/1 Georgia,"Times New Roman",serif !important;
   text-shadow:0 1px 8px rgba(0,0,0,.74) !important;
   letter-spacing:.02em !important;
-}
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-slots{
-  position:absolute !important;
-  left:8.7% !important;
-  right:8.4% !important;
-  bottom:3.15% !important;
-  display:grid !important;
-  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
-  gap:9px !important;
-  margin:0 !important;
-}
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-selector,
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-slots .deck-principal-selector.empty,
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-slots .deck-principal-selector.decor-slot{
-  position:relative !important;
-  min-height:104px !important;
-  padding:0 !important;
-  margin:0 !important;
-  border:0 !important;
-  background:transparent !important;
-  box-shadow:none !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-}
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-selector.decor-slot{opacity:0 !important;pointer-events:none !important;}
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-art{
-  width:62px !important;
-  height:86px !important;
-  border-radius:10px !important;
-  overflow:hidden !important;
-  border:1px solid rgba(216,171,82,.34) !important;
-  background:rgba(37,22,8,.45) !important;
-  color:#c89a43 !important;
-  box-shadow:0 6px 14px rgba(0,0,0,.36) !important;
-}
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-art span{
-  font:900 18px/1 Georgia,"Times New Roman",serif !important;
-}
-#deckBuilderPanel.collection-forge-unlocked .deck-principal-clear{
-  position:absolute !important;
-  top:-7px !important;
-  right:6px !important;
-  width:24px !important;
-  height:24px !important;
-  min-height:24px !important;
-  padding:0 !important;
-  border-radius:50% !important;
-  display:grid !important;
-  place-items:center !important;
-  border:1px solid rgba(223,183,90,.58) !important;
-  background:rgba(18,10,3,.92) !important;
-  color:#f6dda0 !important;
-  font:900 15px/1 Georgia,serif !important;
-  box-shadow:0 4px 10px rgba(0,0,0,.34) !important;
 }
 #deckBuilderPanel.collection-forge-unlocked .current-deck-list.hv-mini-deck{
   position:absolute !important;
@@ -19216,10 +18632,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
   #deckBuilderPanel.collection-forge-unlocked .deckbuilder-filters{
     grid-template-columns:minmax(150px,1.3fr) repeat(5,minmax(76px,1fr)) !important;
   }
-  #deckBuilderPanel.collection-forge-unlocked .deckbuilder-filters #craftMaterialPanel{
-  min-width:260px !important;
-  right:68px !important;
-}
 }
 @media(max-width:980px){
   #deckBuilderPanel.collection-forge-unlocked .deckbuilder-filters,
@@ -19227,11 +18639,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
     grid-template-columns:repeat(2,minmax(0,1fr)) !important;
   }
   #deckBuilderPanel .deck-search-field{grid-column:1/-1 !important;}
-  #deckBuilderPanel.collection-forge-unlocked .deckbuilder-filters #craftMaterialPanel{
-  min-width:220px !important;
-  top:12px !important;
-  right:54px !important;
-}
   #deckBuilderPanel #dustAllSurplusCornerBtn{
     top:103px !important;
     right:66px !important;
@@ -19242,10 +18649,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
   }
   #deckBuilderPanel.collection-forge-unlocked .current-deck-list.hv-mini-deck{
     grid-template-columns:repeat(4,minmax(0,1fr)) !important;
-  }
-  #deckBuilderPanel.collection-forge-unlocked .deck-principal-art{
-    width:52px !important;
-    height:74px !important;
   }
   
 }
@@ -19304,24 +18707,6 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 #deckBuilderPanel .deck-builder-action-group #saveDeckBtn:disabled,
 #deckBuilderPanel .deck-builder-action-group #dustAllSurplusCornerBtn:disabled{opacity:.45 !important;}
 
-/* El banner de materiales conserva posición propia; el editor lo mueve sin convertirlo en position:relative. */
-#deckBuilderPanel.collection-forge-unlocked .deckbuilder-filters #craftMaterialPanel{
-  top:146px !important;
-  left:calc(50% - 245px) !important;
-  right:auto !important;
-  width:490px !important;
-  min-width:0 !important;
-}
-
-/* El editor no debe alterar layouts por el mero hecho de abrirse. */
-.hv-forge-edit-active #deckBuilderPanel [data-hv-forge-tuner-name]{cursor:grab !important;user-select:none !important;}
-html.hv-forge-dragging,html.hv-forge-dragging *{cursor:grabbing !important;user-select:none !important;}
-.hv-forge-tuner-selected{
-  outline:2px dashed rgba(255,224,127,.98) !important;
-  outline-offset:4px !important;
-  box-shadow:0 0 0 1px rgba(255,224,127,.2),0 0 24px rgba(196,137,35,.22) !important;
-}
-
 
 /* Selector de elemento + ayuda del editor. */
 .hv-forge-target-select{
@@ -19349,19 +18734,11 @@ html.hv-forge-dragging,html.hv-forge-dragging *{cursor:grabbing !important;user-
   #deckBuilderPanel .deck-filter-group{
     grid-template-columns:minmax(145px,1.3fr) repeat(5,minmax(78px,1fr)) !important;
   }
-  #deckBuilderPanel.collection-forge-unlocked .deckbuilder-filters #craftMaterialPanel{
-    left:calc(50% - 210px) !important;
-    width:420px !important;
-  }
 }
 @media(max-width:980px){
   #deckBuilderPanel .deck-filter-group{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}
   #deckBuilderPanel .deck-filter-group .deck-search-field{grid-column:1/-1 !important;}
   #deckBuilderPanel .deck-builder-action-group{top:190px !important;left:10px !important;}
-  #deckBuilderPanel.collection-forge-unlocked .deckbuilder-filters #craftMaterialPanel{
-    left:calc(50% - min(42vw,180px)) !important;
-    width:min(360px,84vw) !important;
-  }
 }
 
 
@@ -19372,21 +18749,6 @@ html.hv-forge-dragging,html.hv-forge-dragging *{cursor:grabbing !important;user-
 
 #deckBuilderPanel .craft-material-art{
   background:none !important;
-}
-
-#deckBuilderPanel .craft-material-node{z-index:2 !important;}
-
-
-/* Las piezas seleccionables individuales reciben el cursor; los grupos parentales no interceptan clics. */
-body.hv-forge-edit-active #deckBuilderPanel [data-hv-forge-tuner-name]{cursor:grab !important;user-select:none !important;}
-body.hv-forge-edit-active #deckBuilderPanel .deck-filter-group,
-body.hv-forge-edit-active #deckBuilderPanel .deckbuilder-collection,
-body.hv-forge-edit-active #deckBuilderPanel #deckCollectionGrid,
-body.hv-forge-edit-active #deckBuilderPanel #deckCollectionPager,
-body.hv-forge-edit-active #deckBuilderPanel #deckBuilderActionGroup,
-body.hv-forge-edit-active #deckBuilderPanel #deckPrincipalSlots,
-body.hv-forge-edit-active #deckBuilderPanel #currentDeckList{
-  cursor:default !important;
 }
 
 
@@ -19402,34 +18764,12 @@ body.hv-forge-edit-active #deckBuilderPanel #currentDeckList{
 #deckBuilderPanel #deckCollectionGrid .deck-mini-material{
   display:none !important;
 }
-
-/* Materiales: el asset, el número y el nombre viajan juntos. Los nodos reciben IDs estables. */
-#deckBuilderPanel #craftMaterialPanel .craft-material-art{
-  position:relative !important;
-}
-#deckBuilderPanel #craftMaterialPanel .craft-material-node{
-  top:35.5% !important;
-  width:13.8% !important;
-  pointer-events:auto !important;
-}
 #deckBuilderPanel #craftMaterialBasic{left:11.5% !important;}
 #deckBuilderPanel #craftMaterialEpic{left:26.2% !important;}
 #deckBuilderPanel #craftMaterialGlorious{left:41% !important;}
 #deckBuilderPanel #craftMaterialMythic{left:55.8% !important;}
 #deckBuilderPanel #craftMaterialLegendary{left:70.7% !important;}
 #deckBuilderPanel #craftMaterialDemigod{left:85.4% !important;}
-#deckBuilderPanel #craftMaterialPanel .craft-material-value{
-  margin-top:0 !important;
-  font-size:15px !important;
-}
-#deckBuilderPanel #craftMaterialPanel .craft-material-label{
-  margin-top:18px !important;
-  font-size:9px !important;
-}
-body.hv-forge-edit-active #deckBuilderPanel #craftMaterialPanel .craft-material-node{
-  pointer-events:auto !important;
-  cursor:grab !important;
-}
 
 /* Como materialsArt ahora apunta al contenedor completo, la capa gráfica interna no debe capturar el clic. */
 
@@ -20909,41 +20249,8 @@ html.hv-perf-lite .event-splash-spell-art img{
   background:#a72b20;color:#fff4cf;font:900 10px/1 Arial,sans-serif;box-shadow:0 2px 7px rgba(0,0,0,.55);
 }
 .missions-reward-badge.hidden{display:none!important}
-.mastery-missions-modal{width:min(860px,95vw)!important;max-height:min(92dvh,900px)!important;overflow:auto!important;overscroll-behavior:contain}
-.account-mastery-section{margin:12px 0 18px;padding:12px;border:1px solid rgba(255,209,102,.24);border-radius:16px;background:rgba(9,7,5,.42)}
-.account-mastery-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
-.account-mastery-head>div{display:grid;gap:2px}.account-mastery-head b{color:#fff0bd;font-family:Georgia,serif;font-size:16px}.account-mastery-head small{color:#d5bd8b;font-size:10px}
-.mastery-claim-all{min-width:140px}.mastery-claim-all:disabled{opacity:.45;cursor:default}
-.account-mastery-list{display:grid;gap:10px}
-.account-mastery-card{padding:12px;border-radius:14px;border:1px solid rgba(225,180,76,.27);background:linear-gradient(180deg,rgba(74,48,20,.27),rgba(7,6,5,.64));box-shadow:0 7px 18px rgba(0,0,0,.18)}
-.account-mastery-card.mastered{border-color:rgba(255,215,108,.58);box-shadow:inset 0 0 18px rgba(255,204,86,.05)}
-.account-mastery-title{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:9px}
-.account-mastery-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(232,190,89,.48);background:#171007;color:#ffe19a;font-size:21px;text-shadow:0 2px 5px #000}
-.account-mastery-title h3{margin:0;color:#fff0c0;font-size:15px;font-family:Georgia,serif}.account-mastery-title p{margin:2px 0 0;color:#cfba92;font-size:10px}.account-mastery-title strong{color:#ffd166;font-size:17px;font-variant-numeric:tabular-nums}
-.account-mastery-progress{height:7px;margin:10px 0 5px;border-radius:999px;overflow:hidden;background:#120d07;border:1px solid rgba(255,209,102,.15)}
-.account-mastery-progress-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,#9b651d,#ffd166);transition:width .2s ease}
-.account-mastery-next{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#dac49b;font-size:9.5px}.account-mastery-next b{color:#ffe09a;font-size:10px;white-space:nowrap}
-.mastery-milestone-strip{display:flex;gap:4px;margin-top:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
-.mastery-milestone-chip{flex:0 0 auto;min-width:37px;padding:4px 5px;border-radius:7px;text-align:center;border:1px solid rgba(204,177,120,.2);background:#100c08;color:#8f8066;font:800 8px/1 Arial,sans-serif}
-.mastery-milestone-chip.claimed{border-color:rgba(92,201,122,.35);color:#91dfa8;background:rgba(35,98,53,.16)}
-.mastery-milestone-chip.ready{border-color:rgba(255,209,102,.72);color:#ffe39a;background:rgba(154,99,23,.26)}
-.mastery-milestone-chip.mastery-final{min-width:44px}
-.mastery-ready-list{display:grid;gap:6px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,209,102,.13)}
-.mastery-ready-reward{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 7px;border-radius:9px;background:rgba(255,209,102,.07)}
-.mastery-ready-reward>span{display:grid;gap:1px}.mastery-ready-reward b{color:#ffe3a0;font-size:10px}.mastery-ready-reward small{color:#d8c39a;font-size:9px}.mastery-claim-one{min-width:92px;padding:7px 9px!important;font-size:9px!important}
-.mission-section-divider{display:flex;align-items:center;gap:10px;margin:7px 0;color:#caa65c;font:900 9px/1 Arial,sans-serif;letter-spacing:.16em}.mission-section-divider::before,.mission-section-divider::after{content:"";height:1px;flex:1;background:rgba(210,161,62,.22)}
-.tutorial-missions-intro--secondary{margin-top:0!important}
-@media(max-width:650px){
-  .mastery-missions-modal{width:calc(100vw - 12px)!important;max-height:calc(100dvh - 12px)!important;padding:12px!important}
-  .account-mastery-section{padding:8px;margin:8px 0 13px}.account-mastery-head{align-items:stretch;gap:7px}.account-mastery-head b{font-size:14px}.mastery-claim-all{min-width:112px;padding:7px 8px!important;font-size:9px!important}
-  .account-mastery-card{padding:9px}.account-mastery-title{grid-template-columns:34px 1fr auto;gap:7px}.account-mastery-icon{width:32px;height:32px;font-size:17px}.account-mastery-title h3{font-size:13px}.account-mastery-title p{font-size:9px}.account-mastery-title strong{font-size:14px}
-  .account-mastery-next{align-items:flex-start;font-size:8.5px}.account-mastery-next span{max-width:75%}.account-mastery-next b{font-size:9px}
-  .mastery-ready-reward{padding:5px}.mastery-ready-reward small{font-size:8px}.mastery-claim-one{min-width:78px}
-}
-.mastery-milestone-chip{display:grid!important;gap:2px!important;min-width:72px!important;line-height:1.05!important}
-.mastery-milestone-chip b{font-size:8px!important;color:inherit!important}
-.mastery-milestone-chip small{max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:6.5px!important;color:inherit!important;opacity:.86}
-@media(max-width:650px){.mastery-milestone-chip{min-width:66px!important}.mastery-milestone-chip small{max-width:62px;font-size:6px!important}}
+
+
 
 /* ============================================================================
    7HE22 · REFERENCIA MÓVIL MOTO E22 (1600×720 físico / ~800×360 CSS)
@@ -21625,27 +20932,6 @@ html.hv-perf-lite .event-splash-spell-art img{
   }
 }
 
-/* ==========================================================
-   FORGE · INTERACCIÓN DE MATERIALES / HITBOX CANÓNICO
-   El panel de "Materiales de creación" es visual y su caja real es
-   bastante más grande que el arte visible después del ajuste del tuner.
-   Esa zona transparente quedaba por encima de varias miniaturas y
-   capturaba el click del botón + (Saboteador, Samurai, etc.).
-   En juego normal no debe interceptar ningún puntero. El modo editor
-   recupera interacción únicamente sobre las piezas que sí se editan.
-   ========================================================== */
-#deckBuilderPanel.collection-forge-unlocked #craftMaterialPanel,
-#deckBuilderPanel.collection-forge-unlocked #craftMaterialPanel .craft-material-art,
-#deckBuilderPanel.collection-forge-unlocked #craftMaterialPanel .craft-material-node,
-#deckBuilderPanel.collection-forge-unlocked #craftMaterialPanel .craft-material-value,
-#deckBuilderPanel.collection-forge-unlocked #craftMaterialPanel .craft-material-label{
-  pointer-events:none !important;
-}
-body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMaterialPanel .craft-material-art,
-body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMaterialPanel .craft-material-node{
-  pointer-events:auto !important;
-}
-
 /* ============================================================================
    MISIONES + MAESTRÍAS · SKIN VISUAL 2026-08-18
    - Usa el arte aprobado como base única del modal.
@@ -22121,133 +21407,6 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
 }
 #deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-empty-slot span{display:none !important;}
 
-/* Tres espacios de Personaje Principal, siempre en la zona inferior. */
-#deckBuilderPanel.hv-forge-collection-v2 #deckPrincipalSlots.deck-principal-slots{
-  position:absolute !important;
-  z-index:7 !important;
-  left:7.7% !important;
-  right:7.6% !important;
-  bottom:2.8% !important;
-  height:23.2% !important;
-  display:grid !important;
-  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-  gap:5.6% !important;
-  padding:0 !important;
-  margin:0 !important;
-  translate:none !important;
-  scale:1 !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-selector,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-selector.empty,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-selector.locked-tier{
-  position:relative !important;
-  width:100% !important;
-  height:100% !important;
-  min-height:0 !important;
-  padding:0 !important;
-  margin:0 !important;
-  border:0 !important;
-  background:transparent !important;
-  box-shadow:none !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-art{
-  width:92% !important;
-  height:92% !important;
-  border:0 !important;
-  border-radius:0 !important;
-  background:transparent !important;
-  box-shadow:none !important;
-  overflow:visible !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-art img{
-  width:100% !important;
-  height:100% !important;
-  object-fit:cover !important;
-  object-position:center center !important;
-  filter:drop-shadow(0 5px 6px rgba(0,0,0,.5)) !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-selector.empty .deck-principal-art span{display:none !important;}
-#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-selector.locked-tier .deck-principal-art{
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  opacity:.42 !important;
-  color:#c59b50 !important;
-  font-size:16px !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-clear{
-  position:absolute !important;
-  z-index:9 !important;
-  top:-4px !important;
-  right:-4px !important;
-  width:20px !important;
-  height:20px !important;
-  min-width:20px !important;
-  min-height:20px !important;
-  padding:0 !important;
-  border-radius:50% !important;
-  border:1px solid rgba(235,194,104,.72) !important;
-  background:rgba(14,9,5,.92) !important;
-  color:#f1cf83 !important;
-  font:900 12px/18px Georgia,serif !important;
-}
-
-/* Materiales se conservan en una franja compacta sin competir con las cartas. */
-#deckBuilderPanel.hv-forge-collection-v2 #craftMaterialPanel{
-  position:fixed !important;
-  z-index:31 !important;
-  left:20% !important;
-  bottom:5.2% !important;
-  width:34% !important;
-  min-height:0 !important;
-  height:4.2% !important;
-  padding:0 !important;
-  margin:0 !important;
-  border:1px solid rgba(183,132,55,.28) !important;
-  border-radius:3px !important;
-  background:rgba(8,7,5,.76) !important;
-  box-shadow:inset 0 0 12px rgba(0,0,0,.52) !important;
-  overflow:hidden !important;
-  translate:none !important;
-  scale:1 !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 #craftMaterialPanel .craft-material-art{
-  width:100% !important;
-  height:100% !important;
-  aspect-ratio:auto !important;
-  display:grid !important;
-  grid-template-columns:repeat(6,1fr) !important;
-  align-items:center !important;
-  background:transparent !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 #craftMaterialPanel .craft-material-art::after{display:none !important;}
-#deckBuilderPanel.hv-forge-collection-v2 #craftMaterialPanel .craft-material-node{
-  position:relative !important;
-  inset:auto !important;
-  left:auto !important;
-  top:auto !important;
-  transform:none !important;
-  width:auto !important;
-  min-width:0 !important;
-  height:100% !important;
-  display:flex !important;
-  flex-direction:row !important;
-  align-items:center !important;
-  justify-content:center !important;
-  gap:3px !important;
-  color:#ddbf7b !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 #craftMaterialPanel .craft-material-value{
-  font:900 clamp(7px,.68vw,10px)/1 Georgia,serif !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 #craftMaterialPanel .craft-material-label{
-  margin:0 !important;
-  font:700 clamp(5px,.48vw,8px)/1 Georgia,serif !important;
-}
-
 /* Botones inferiores: flecha izquierda = cerrar; placa central = guardar. */
 #deckBuilderPanel.hv-forge-collection-v2 #closeDeckBuilderBtn{
   position:absolute !important;
@@ -22335,27 +21494,6 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
   #deckBuilderPanel.hv-forge-collection-v2 .deck-mini-dust{width:16px !important;height:16px !important;min-width:16px !important;min-height:16px !important;font-size:9px !important;line-height:14px !important;}
 }
 
-/* ========================================================================== */
-/* FORGE-CLEAN-1 · Limpieza quirúrgica sobre el fondo aprobado.               */
-/* Solo afecta elementos superpuestos de Colección/Mazo.                      */
-/* ========================================================================== */
-#deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-filters,
-#deckBuilderPanel.hv-forge-collection-v2 #deckFilterGroup,
-#deckBuilderPanel.hv-forge-collection-v2 #craftMaterialPanel,
-#deckBuilderPanel.hv-forge-collection-v2 #dustAllSurplusCornerBtn,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-lock,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-craft,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-dust,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-name,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-type,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-badge,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-cost,
-#deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-status,
-#deckBuilderPanel.hv-forge-collection-v2 #deckCountText,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-page-info{
-  display:none !important;
-}
-
 /* Las seis pestañas conservan solamente el área de clic del dibujo de fondo.
    No muestran borde, caja, brillo ni selección superpuesta. */
 #deckBuilderPanel.hv-forge-collection-v2 .deckbuilder-leader-tabs button,
@@ -22391,31 +21529,6 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
 }
 #deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-mini-card{
   z-index:76 !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 #deckPrincipalSlots.deck-principal-slots{
-  z-index:78 !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-selector{
-  z-index:80 !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-art,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-art{
-  z-index:1 !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-plus,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-remove,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-principal,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-clear{
-  z-index:12 !important;
-}
-
-/* Los controles que quedan son únicamente: + en colección; quitar y estrella
-   dentro del mazo; quitar en la ranura Principal. */
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-plus,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-remove,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-mini-principal,
-#deckBuilderPanel.hv-forge-collection-v2 .deck-principal-clear{
-  display:block !important;
 }
 
 
@@ -22459,13 +21572,6 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
 }
 #deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-mini-card.in-deck .deck-mini-art img{
   display:block !important;
-  visibility:visible !important;
-  opacity:1 !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 #deckPrincipalSlots,
-#deckBuilderPanel.hv-forge-collection-v2 #deckPrincipalSlots .deck-principal-selector,
-#deckBuilderPanel.hv-forge-collection-v2 #deckPrincipalSlots .deck-principal-art,
-#deckBuilderPanel.hv-forge-collection-v2 #deckPrincipalSlots .deck-principal-art img{
   visibility:visible !important;
   opacity:1 !important;
 }
@@ -22542,7 +21648,7 @@ body.hv-forge-edit-active #deckBuilderPanel.collection-forge-unlocked #craftMate
 }
 /* Durante calibración únicamente, el selector activo puede recibir el outline
    del editor directo; fuera del editor los hitboxes siguen siendo invisibles. */
-body:not(.hv-forge-edit-active) #deckBuilderPanel.hv-forge-collection-v2 #deckFilterGroup .deck-select{
+#deckBuilderPanel.hv-forge-collection-v2 #deckFilterGroup .deck-select{
   opacity:.001 !important;
 }
 
@@ -26864,27 +25970,10 @@ html:has(#gameShell:not(.hidden)) body{
 }
 
 /* 20260912.47 · Mina Producción: escena limpia, compacta y modal visible */
-.hv-modal{z-index:20000 !important;}
-.mine-panel.hv47-mine-production-panel{overflow:hidden !important;border-color:rgba(216,168,79,.22)!important;background-position:center!important;}
-.hv47-mine-production-shade{position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(180deg,rgba(2,4,6,.55),rgba(2,4,6,.08) 24%,rgba(2,4,6,.03) 60%,rgba(2,4,6,.6)),radial-gradient(ellipse at 50% 42%,transparent 20%,rgba(1,2,4,.22) 80%);}
-.hv47-mine-production{position:absolute;inset:0;z-index:3;display:grid;grid-template-rows:auto minmax(0,1fr) auto auto auto;gap:6px;padding:11px 13px 8px;box-sizing:border-box;overflow:hidden;}
-.hv47-mine-lock-note{position:absolute;left:50%;top:50%;z-index:30;transform:translate(-50%,-50%);padding:9px 16px;border:1px solid rgba(216,168,79,.38);border-radius:999px;background:rgba(5,5,5,.92);color:#f4d89c;font:800 11px/1.2 system-ui;}
-.hv47-mine-hud{position:relative;z-index:30;width:max-content;max-width:100%;display:flex;align-items:center;gap:8px;padding:6px 11px;border:1px solid rgba(216,168,79,.24);border-radius:999px;background:linear-gradient(180deg,rgba(15,13,9,.88),rgba(4,5,7,.8));box-shadow:0 8px 20px rgba(0,0,0,.24),inset 0 1px rgba(255,236,192,.06);backdrop-filter:blur(9px);}
-.hv47-mine-hud>span{display:flex;align-items:baseline;gap:4px;white-space:nowrap}.hv47-mine-hud>span em{font:800 7px/1 system-ui;font-style:normal;letter-spacing:.1em;text-transform:uppercase;color:#9d907a}.hv47-mine-hud>span b{font:900 10px/1.05 system-ui;color:#f6ead2}.hv47-mine-hud>span.is-accent b{color:#8ee8ff}.hv47-mine-hud>i{width:1px;height:11px;background:rgba(216,168,79,.26)}
-.hv47-mine-stage{position:relative;z-index:10;min-height:0;display:grid;grid-template-columns:28px minmax(0,1fr) 28px;gap:6px;align-items:center;padding:2px 0;}
-.hv47-mine-slots{min-width:0;display:grid;grid-template-columns:repeat(5,minmax(84px,1fr));gap:clamp(6px,.8vw,12px);align-items:center}.hv47-mine-slots.is-disabled{opacity:.55;pointer-events:none}
-.hv47-mine-slot{position:relative;isolation:isolate;min-width:0;height:132px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;padding:6px 4px 7px;border:0;border-radius:15px;color:#f7efdf;background:transparent;cursor:pointer;transition:transform .18s ease,filter .18s ease}.hv47-mine-slot::before{content:"";position:absolute;inset:12px 3px 0;z-index:-2;border-radius:16px;background:linear-gradient(180deg,rgba(5,7,9,.02),rgba(3,4,6,.6));opacity:.38;border:1px solid transparent;transition:.18s ease}.hv47-mine-slot:hover:not(:disabled),.hv47-mine-slot:focus-visible:not(:disabled){transform:translateY(-3px);filter:brightness(1.07);outline:none}.hv47-mine-slot:hover:not(:disabled)::before,.hv47-mine-slot:focus-visible:not(:disabled)::before{opacity:.75;border-color:rgba(216,168,79,.2);box-shadow:0 12px 25px rgba(0,0,0,.25)}.hv47-mine-slot.is-selected::before{opacity:.82;border-color:rgba(255,216,132,.5);box-shadow:0 0 18px rgba(216,168,79,.1),0 12px 25px rgba(0,0,0,.26)}.hv47-mine-slot.is-locked{cursor:default;filter:grayscale(.8) brightness(.5)}
-.hv47-mine-slot-no{position:absolute;top:3px;left:50%;transform:translateX(-50%);z-index:5;min-width:26px;padding:3px 6px;border-radius:999px;border:1px solid rgba(216,168,79,.3);background:rgba(5,6,8,.86);color:#f1d492;font:900 7px/1 system-ui;letter-spacing:.08em}
-.hv47-mine-node{position:relative;width:68px;height:68px;display:block;flex:0 0 68px}.hv47-mine-node img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 8px 9px rgba(0,0,0,.42));transform-origin:50% 76%}.hv47-mine-slot.is-working .hv47-mine-node img{animation:hv47MineWork 1.5s cubic-bezier(.4,0,.2,1) infinite}.hv47-mine-slot.is-working .hv47-mine-node::after{content:"";position:absolute;left:50%;bottom:8px;width:32px;height:8px;transform:translateX(-50%);border-radius:50%;background:rgba(63,207,255,.2);filter:blur(6px);animation:hv47MineGlow 1.5s ease-in-out infinite}@keyframes hv47MineWork{0%,100%{transform:translateY(0) rotate(0)}44%{transform:translateY(-1px) rotate(-2deg)}55%{transform:translateY(1px) rotate(1deg)}70%{transform:translateY(0)}}@keyframes hv47MineGlow{0%,100%{opacity:.25;transform:translateX(-50%) scale(.85)}55%{opacity:1;transform:translateX(-50%) scale(1.1)}}
-.hv47-mine-worker{position:absolute;right:6px;top:25px;z-index:6;width:33px;height:39px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,222,151,.42);background:#0a0b0d;box-shadow:0 6px 14px rgba(0,0,0,.4)}.hv47-mine-worker img{width:100%;height:100%;object-fit:cover;display:block}.hv47-mine-slot-copy{width:100%;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;text-shadow:0 2px 6px #000}.hv47-mine-slot-copy strong{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff4da;font:900 9px/1.15 Georgia,serif}.hv47-mine-slot-copy small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#bbb19f;font:750 7px/1.15 system-ui;font-variant-numeric:tabular-nums}.hv47-mine-slot.is-working .hv47-mine-slot-copy small{color:#a5eaff}
-.hv47-mine-page-arrow{width:28px;height:44px;padding:0;display:grid;place-items:center;border-radius:9px;border:1px solid rgba(216,168,79,.25);background:linear-gradient(180deg,rgba(20,16,10,.78),rgba(5,6,8,.86));color:#f2d38e;font:300 25px/1 Georgia;cursor:pointer}.hv47-mine-page-arrow:disabled{opacity:.2;cursor:default}.hv47-mine-page-arrow:hover:not(:disabled){filter:brightness(1.15);border-color:rgba(255,217,138,.6)}
-.hv47-mine-controls{position:relative;z-index:31;display:grid;grid-template-columns:68px minmax(190px,.9fr) minmax(118px,.52fr) minmax(148px,.64fr);gap:6px;align-items:stretch;padding:5px;border:1px solid rgba(216,168,79,.18);border-radius:13px;background:rgba(4,5,7,.74);box-shadow:0 10px 22px rgba(0,0,0,.22);backdrop-filter:blur(9px)}.hv47-mine-page-status{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-right:1px solid rgba(216,168,79,.13)}.hv47-mine-page-status>b{color:#e4ca93;font:900 8px/1 system-ui;letter-spacing:.08em}.hv47-mine-page-dots{display:flex;gap:3px}.hv47-mine-page-dot{width:7px;height:4px;padding:0;border:0;border-radius:99px;background:#514a3d;cursor:pointer}.hv47-mine-page-dot.is-active{width:15px;background:#d8a84f}
-.hv47-mine-command{min-width:0;min-height:42px;padding:4px 9px;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid rgba(216,168,79,.38);border-radius:10px;color:#f5e8cf;background:linear-gradient(180deg,rgba(31,25,15,.96),rgba(5,6,8,.96));box-shadow:inset 0 1px rgba(255,238,199,.06),0 6px 14px rgba(0,0,0,.2);cursor:pointer;transition:.15s ease}.hv47-mine-command:hover:not(:disabled),.hv47-mine-command:focus-visible:not(:disabled){transform:translateY(-1px);border-color:#f0c96f;filter:brightness(1.08);outline:none}.hv47-mine-command:disabled{opacity:.4;cursor:default}.hv47-mine-command>img{width:30px;height:30px;object-fit:contain}.hv47-mine-command>span:not(.hv47-mine-command-gem){min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}.hv47-mine-command span b{font:900 9px/1.1 system-ui;text-transform:uppercase;white-space:nowrap}.hv47-mine-command span small{font:700 7px/1.1 system-ui;color:#aa9d86;white-space:nowrap}.hv47-mine-command-gem{width:25px;height:25px;display:grid;place-items:center;border:1px solid rgba(99,217,255,.28);border-radius:7px;color:#9feaff;background:rgba(99,217,255,.07)}.hv47-mine-command--claim{border-color:rgba(99,217,255,.26)}.hv47-mine-command--buy.is-insufficient{border-color:rgba(255,119,111,.28)}
-.hv47-mine-ready{min-width:0;display:grid;grid-template-columns:1fr auto;align-content:center;column-gap:5px;padding:4px 7px;border:1px solid rgba(216,168,79,.11);border-radius:9px;background:rgba(3,4,6,.4)}.hv47-mine-ready>span{color:#9f9585;font:800 7px/1 system-ui;text-transform:uppercase}.hv47-mine-ready>strong{grid-row:1/3;grid-column:2;color:#8ee8ff;font:900 17px/1 system-ui;align-self:center}.hv47-mine-ready>small{color:#918879;font:700 7px/1 system-ui}.hv47-mine-ready>small b{color:#c8bcaa}
-.hv47-mine-roster-dock{position:relative;z-index:30;min-height:52px;display:grid;grid-template-columns:minmax(135px,.62fr) 64px minmax(0,2.5fr);gap:5px;align-items:stretch;padding:4px;border:1px solid rgba(216,168,79,.13);border-radius:12px;background:rgba(3,4,6,.62);backdrop-filter:blur(8px)}.hv47-mine-selected{min-width:0;display:flex;align-items:center;gap:6px;padding:3px 6px!important;background:transparent!important;border:0!important;box-shadow:none!important}.hv47-mine-selected .mine-selected-thumb{width:30px!important;height:39px!important;border-radius:7px!important;flex:0 0 30px}.hv47-mine-selected .mine-selected-copy{min-width:0;gap:1px}.hv47-mine-selected .mine-selected-copy span{font-size:6px!important}.hv47-mine-selected .mine-selected-copy b{font-size:9px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hv47-mine-selected .mine-selected-copy small{font-size:6px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hv47-mine-unassign{min-width:0;border:1px solid rgba(216,168,79,.2);border-radius:9px;background:linear-gradient(180deg,rgba(27,22,14,.75),rgba(5,6,8,.84));color:#e8d1a1;font:900 7px/1 system-ui;text-transform:uppercase;cursor:pointer}.hv47-mine-unassign:disabled{opacity:.35;cursor:default}.hv47-mine-roster{min-width:0;display:flex!important;gap:4px!important;overflow-x:auto;overflow-y:hidden;padding:0 1px 1px;align-items:stretch}.hv47-mine-roster .mine-roster-card{flex:0 0 52px!important;min-width:52px!important;height:43px!important;border-radius:7px!important}.hv47-mine-roster .mine-roster-meta{left:3px!important;right:3px!important;bottom:2px!important}.hv47-mine-roster .mine-roster-meta b{font-size:5px!important;line-height:1!important;-webkit-line-clamp:1!important}.hv47-mine-roster .mine-roster-meta small{font-size:5px!important}.hv47-mine-status{position:relative;z-index:31;min-height:11px;color:#c5b79e;font:700 7px/1.2 system-ui;padding:0 3px;text-shadow:0 2px 5px #000}
-@media(max-width:980px){.hv47-mine-production{padding:7px 8px 6px;gap:4px}.hv47-mine-hud{gap:5px;padding:5px 8px}.hv47-mine-hud>span em{font-size:6px}.hv47-mine-hud>span b{font-size:8px}.hv47-mine-slots{grid-template-columns:repeat(5,minmax(62px,1fr));gap:3px}.hv47-mine-slot{height:108px;padding:4px 2px 5px}.hv47-mine-node{width:52px;height:52px;flex-basis:52px}.hv47-mine-worker{width:25px;height:30px;right:2px;top:22px}.hv47-mine-slot-copy strong{font-size:7px}.hv47-mine-slot-copy small{font-size:6px}.hv47-mine-controls{grid-template-columns:55px minmax(150px,1fr) minmax(95px,.55fr) minmax(118px,.7fr);gap:4px}.hv47-mine-command{min-height:37px;padding:3px 6px}.hv47-mine-command>img{width:25px;height:25px}.hv47-mine-command span b{font-size:7px}.hv47-mine-command span small{font-size:6px}.hv47-mine-roster-dock{grid-template-columns:minmax(110px,.65fr) 50px minmax(0,2.5fr);min-height:44px}}
-@media(max-width:700px){.hv47-mine-hud{width:100%;overflow-x:auto;box-sizing:border-box;scrollbar-width:none}.hv47-mine-stage{grid-template-columns:22px minmax(0,1fr) 22px;gap:1px}.hv47-mine-page-arrow{width:22px;height:36px;font-size:20px}.hv47-mine-slots{grid-template-columns:repeat(5,minmax(48px,1fr));gap:1px}.hv47-mine-slot{height:94px}.hv47-mine-node{width:44px;height:44px;flex-basis:44px}.hv47-mine-worker{width:21px;height:25px}.hv47-mine-controls{grid-template-columns:48px minmax(132px,1fr) minmax(96px,.7fr)}.hv47-mine-ready{display:none}.hv47-mine-roster-dock{grid-template-columns:92px 46px minmax(0,1fr)}}
-@media(prefers-reduced-motion:reduce){.hv47-mine-slot,.hv47-mine-node img,.hv47-mine-node::after,.hv47-mine-command{animation:none!important;transition:none!important}}
+.hv-modal{z-index:20000 !important;}@keyframes hv47MineWork{0%,100%{transform:translateY(0) rotate(0)}44%{transform:translateY(-1px) rotate(-2deg)}55%{transform:translateY(1px) rotate(1deg)}70%{transform:translateY(0)}}@keyframes hv47MineGlow{0%,100%{opacity:.25;transform:translateX(-50%) scale(.85)}55%{opacity:1;transform:translateX(-50%) scale(1.1)}}
+
+
+
 
 /* ======================================================================
    HALLVALLA · MINA PRODUCCIÓN · UI CANÓNICA 20260912.50
@@ -28559,23 +27648,7 @@ html.hv-rt-experimental.hv-rt-card-targeting #rtTargetCancelBtn:not([hidden]){di
   .rt-target-cancel{left:54px;top:145px;width:34px;height:34px;}
   .rt-keybind-grid{grid-template-columns:1fr;}
 }
-
-/* 8D86 · Los Personajes Principales fueron retirados del sistema de mazos. */
-#deckBuilderPanel #deckPrincipalSlots{display:none !important;}
 .hv-match-principals{display:none !important;}
-
-
-/* ==========================================================================
-   8D89 · FORJA 30 SLOTS · sin Personajes Principales
-   Conserva intactas las posiciones calibradas 1–20 y reutiliza la zona
-   inferior para las posiciones 21–30. El fondo ya dibuja los 30 marcos.
-   ========================================================================== */
-#deckBuilderPanel #deckPrincipalSlots,
-#deckBuilderPanel .deck-mini-principal,
-#deckBuilderPanel .deck-principal-selector,
-#deckBuilderPanel .deck-principal-clear{
-  display:none !important;
-}
 
 /* Slots 21–30: contenedor independiente para no alterar la cuadrícula 1–20
    que ya fue calibrada por el usuario. */
@@ -28669,13 +27742,6 @@ html.hv-rt-experimental.hv-rt-card-targeting #rtTargetCancelBtn:not([hidden]){di
    se mantiene en addCardToDeck/validateDeckList. */
 #deckBuilderPanel.hv-forge-collection-v2 .deck-tier-locked-slot{
   pointer-events:auto !important;
-}
-
-/* En el editor, ambos grupos del mazo se pueden seleccionar sin que el
-   contenedor parental secuestre el clic. */
-body.hv-forge-edit-active #deckBuilderPanel #deckExtraSlots,
-body.hv-forge-edit-active #deckBuilderPanel #currentDeckList{
-  cursor:default !important;
 }
 
 /* v93 · Navegación entre mapas de Aventura ya desbloqueados.

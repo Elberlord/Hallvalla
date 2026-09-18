@@ -3200,7 +3200,6 @@ function makeEnemyDeckForBattle(battle,enemyLeaderType){
     ].filter(entry=>entry.score>0);
   }
 
-  function countBy(currentCards,predicate){return (currentCards||[]).reduce((total,card)=>total+(predicate(card)?1:0),0);}
 
   function canRemoveCardForCandidate(removingCard,candidateCard,currentCards,leaderType,battle){
     if(!removingCard)return false;

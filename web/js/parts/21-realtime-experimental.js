@@ -1116,27 +1116,6 @@ function hallvallaRtChooseSpawnExitStep(unit,units=publicState?.units||[]){
   return candidates[0]?.cell||null;
 }
 
-async function hallvallaRtMoveUnit(unit,step){
-  let units=[...(publicState?.units||[])];
-  const live=units.find(u=>u.id===unit.id&&Number(u.hp||0)>0);if(!live)return false;
-  if(getUnitAt(step.x,step.y))return false;
-  const movedNow=1;
-  const dx=Math.sign(step.x-live.x),dy=Math.sign(step.y-live.y);
-  let trapMove;
-  try{trapMove=resolveMovementLegendaryTraps(live,{x:step.x,y:step.y},units);}catch(_){trapMove={cancel:false,units,traps:publicState?.legendaryTraps||[],logs:[]};}
-  units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:1,lastMoveDx:dx,lastMoveDy:dy,lastMoveTurnKey:publicState?.turnKey||""}:u);
-  let beast={units,traps:[...(publicState?.beastTraps||[])],logs:[]};
-  if(!trapMove.cancel){
-    const moved=units.find(u=>u.id===live.id&&Number(u.hp||0)>0);
-    if(moved){try{beast=resolveBeastCellTraps(moved,units,publicState?.beastTraps||[]);units=beast.units;}catch(_){ }}
-  }
-  let fear={units,logs:[],statusFxEvent:null,floatFxEvent:null};
-  try{fear=applyAfricanLionFearAura(units);units=fear.units;}catch(_){ }
-  await updatePublic({units,beastTraps:beast.traps,legendaryTraps:trapMove.traps||publicState?.legendaryTraps||[],statusFxEvent:fear.statusFxEvent||null,floatFxEvent:fear.floatFxEvent||null});
-  const logs=[...(trapMove.logs||[]),...(beast.logs||[]),...(fear.logs||[])].filter(Boolean);
-  if(logs.length)await pushLog(logs.join(" "));
-  return true;
-}
 
 async function hallvallaRtAttackUnit(attacker,target){
   let units=[...(publicState?.units||[])];

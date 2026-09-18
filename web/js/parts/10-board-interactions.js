@@ -55,11 +55,9 @@ const IMMEDIATE_MOVE_UNDO_MS=4500;
 let immediateMoveUndoState=null;
 let immediateMoveUndoTimer=null;
 let immediateMoveUndoInFlight=false;
-function syncBattleCancelUndoUi(){}
 function invalidateImmediateMoveUndo(_reason=""){
   immediateMoveUndoState=null;
   if(immediateMoveUndoTimer){battleClearTimeout(immediateMoveUndoTimer);immediateMoveUndoTimer=null;}
-  syncBattleCancelUndoUi();
 }
 function registerImmediateMoveUndo(snapshot){
   invalidateImmediateMoveUndo("replace");
@@ -74,37 +72,7 @@ function registerImmediateMoveUndo(snapshot){
     expiresAt:Date.now()+IMMEDIATE_MOVE_UNDO_MS
   };
   immediateMoveUndoTimer=battleSetTimeout(()=>invalidateImmediateMoveUndo("expired"),IMMEDIATE_MOVE_UNDO_MS+50,"immediate-move-undo-expire");
-  syncBattleCancelUndoUi();
   return true;
-}
-async function tryImmediateMoveUndo(){
-  const snap=immediateMoveUndoState;
-  if(!snap||immediateMoveUndoInFlight)return false;
-  if(Date.now()>Number(snap.expiresAt||0)||String(gameId||"")!==snap.gameId||Number(myPlayer||0)!==snap.player||String(publicState?.turnKey||"")!==snap.turnKey||!isMyTurn()||isBattleEnded()){
-    invalidateImmediateMoveUndo("invalid_context");
-    return false;
-  }
-  immediateMoveUndoInFlight=true;
-  immediateMoveUndoState=null;
-  if(immediateMoveUndoTimer){battleClearTimeout(immediateMoveUndoTimer);immediateMoveUndoTimer=null;}
-  syncBattleCancelUndoUi();
-  try{
-    const ok=await updatePublic({units:JSON.parse(JSON.stringify(snap.beforeUnits)),log:[...snap.beforeLog]});
-    if(!ok){setHint("No se pudo deshacer el movimiento.");return false;}
-    clearSelection();
-    setHint(`${snap.unitName||"La unidad"}: movimiento deshecho.`);
-    return true;
-  }catch(error){
-    console.warn("[HallValla] Falló Deshacer MOV inmediato:",error);
-    setHint("No se pudo deshacer el movimiento.");
-    return false;
-  }finally{
-    immediateMoveUndoInFlight=false;
-  }
-}
-async function handleBattleCancelButton(){
-  if(await tryImmediateMoveUndo())return;
-  clearSelection();
 }
 
 let boardLongPressDetailState=null;

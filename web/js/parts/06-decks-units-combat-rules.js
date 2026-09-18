@@ -579,12 +579,6 @@ function getLeaderStarterFixedDeckTemplates(leaderType=getSelectedLeaderType()||
   if(templates.length!==9)console.error(`[HallValla] Starter ${leaderType}: ${templates.length}/9 Básicas.`);
   return templates;
 }
-function getStarterComplementTemplate(selectedSpecial=""){
-  const selected=getStarterChosenSpecialCard(selectedSpecial);
-  if(!selected)return null;
-  const complementKey=selected.key==="wallace"?"mulan":"wallace";
-  return ADVENTURE_SPECIALS[complementKey]?{...ADVENTURE_SPECIALS[complementKey]}:null;
-}
 function getLegacyDefaultDeckTemplates(selectedSpecial="",principalSlots=getCurrentPrincipalSlots()){
   const target=getCurrentDeckSize();
   const base=getStarterBasicDeckTemplates(target);

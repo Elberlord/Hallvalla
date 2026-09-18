@@ -140,7 +140,6 @@ function render(reason="direct"){
   hallvallaRecordRenderDomain("context",renderUnitContextMenu);
   hallvallaRecordRenderDomain("hand",renderHand);
   hallvallaRecordRenderDomain("log",renderLog);
-  hallvallaRecordRenderDomain("detail",renderDetail);
   hallvallaRecordRenderDomain("chrome",renderBattleChrome);
   if(publicState.mode==="tutorial")hallvallaRecordRenderDomain("tutorial",renderBasicTutorialCoach);
   if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);
@@ -1207,10 +1206,6 @@ function renderLog(){
   }).join("");
   if(el.__hvLogMarkup!==markup){el.innerHTML=markup;el.__hvLogMarkup=markup;}
 }
-function renderDetail(){
-  // Etapa 9: #detail fue retirado del DOM; se conserva el hook como no-op para
-  // no alterar el contrato de render() ni llamadas externas durante esta etapa.
-}
 
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
 
@@ -1257,7 +1252,6 @@ function hvConfirm(message,title="Confirmar",confirmText="Aceptar",cancelText="C
 function markBasicBattleTutorialSeen(){try{localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_KEY,"true");}catch(e){}}
 // El tutorial antiguo de entrada por modal fue retirado. El Tutorial básico se inicia
 // desde su botón y enseña todo dentro del tablero mediante texto flotante.
-function maybeShowBasicTutorialGate(){}
 function getTutorialCardTemplate(key){
   const card=getStarterBasicCardByKey(key);
   return card?{...card}:null;
@@ -1368,7 +1362,6 @@ function clearBasicTutorialTargetHighlight(){if(basicTutorialCurrentTarget&&basi
 function isBasicTutorialInitialDrawBlocked(){return false;}
 function getBasicTutorialPlayerUnits(){return (publicState?.units||[]).filter(u=>u&&u.owner===myPlayer&&!u.leader&&u.hp>0);}
 function getBasicTutorialSummonedUnit(){return getBasicTutorialPlayerUnits().find(u=>u.summonOrigin==="hand")||null;}
-function getBasicTutorialEnemyUnit(){return (publicState?.units||[]).find(u=>u&&u.owner!==myPlayer&&!u.leader&&u.hp>0&&u.tutorialRole==="target-demo")||null;}
 function getBasicTutorialEnemyLeader(){return (publicState?.units||[]).find(u=>u&&u.owner!==myPlayer&&u.leader&&u.hp>0)||null;}
 function getBasicTutorialPlayerLeader(){return (publicState?.units||[]).find(u=>u&&u.owner===myPlayer&&u.leader&&u.hp>0)||null;}
 function getBasicTutorialBoardUnitEl(unit){if(!unit)return null;return document.querySelector(`.unit-card[data-x="${unit.x}"][data-y="${unit.y}"]`)||document.querySelector(`.leader-base[data-x="${unit.x}"][data-y="${unit.y}"]`)||null;}

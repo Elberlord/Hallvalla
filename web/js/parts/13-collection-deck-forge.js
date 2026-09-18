@@ -436,9 +436,6 @@ function openHallvallaPackOdds(packInput){
   }
   modal.classList.remove("hidden");
 }
-function closeHallvallaPackOdds(){
-  $("hallvallaPackOddsModal")?.classList.add("hidden");
-}
 
 function recordBasicPackOpeningAndMaybeBonus(pack){
   if(!pack||!(pack.type==="shop_basic"||pack.type==="basic_magic_trap"||pack.shopTier==="basic"))return false;
@@ -654,7 +651,6 @@ function saveDeck(deck){
   return Promise.resolve({committed:false,removed:0,earned:0,reason:"NOT_AVAILABLE"});
 }
 // 8D86 · Compatibilidad con partidas antiguas: Principales ya no existen.
-function normalizePrincipalKeys(){return [];}
 function getSavedPrincipalKeys(){return [];}
 function savePrincipalKeys(){
   try{localStorage.removeItem(HALLVALLA_PRINCIPAL_UNITS_KEY);localStorage.removeItem(HALLVALLA_PRINCIPAL_UNIT_KEY);}catch(_){ }
@@ -979,8 +975,6 @@ function addCardToDeck(cardKey){
   return true;
 }
 function syncCurrentPrincipalWithDraft(){currentPrincipalKeys=[];}
-function setCurrentDeckPrincipal(){setHint("Los Personajes Principales ya no forman parte de los mazos.");return false;}
-function clearCurrentDeckPrincipal(){currentPrincipalKeys=[];renderDeckBuilder();}
 
 function removeCardFromDeckIndex(index){
   const idx=Number(index);
@@ -1194,10 +1188,6 @@ function bindDeckBuilderDragAndClick(collectionGrid,...deckContainers){
     }));
   });
   bindDeckBuilderPersistentDropTargets(collectionGrid,...lists);
-}
-function renderDeckPrincipalSelector(){
-  // Compatibilidad legacy: el sistema actual ya no tiene Personajes Principales.
-  currentPrincipalKeys=[];
 }
 
 const DECK_SEARCH_ALIAS_GROUPS=[

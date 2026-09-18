@@ -461,10 +461,8 @@ function getCurrentLeaderDeckLevel(){
 function getCurrentLeaderDeckTier(){return getLeaderDeckTierFromLevel(getCurrentLeaderDeckLevel());}
 // Compatibilidad: ningún modo nuevo debe extraer cartas como Principales.
 function getPrincipalSlotsForLeaderLevel(){return 0;}
-function getPrincipalSlotsForLeaderType(){return 0;}
 function getCurrentPrincipalSlots(){return 0;}
 // Alias legacy: los llamadores antiguos reciben ahora el tamaño real del líder activo.
-function getDeckSizeForPrincipalSlots(){return getCurrentDeckSize();}
 function getCurrentDeckSize(){return getDeckSizeForLeaderType();}
 function getPrincipalTierSummary(level=1){
   const safeLevel=getLeaderDeckLevel(level);
@@ -2498,19 +2496,6 @@ const SWORD_UNIT_KEYS=new Set([
   "fuma_kotaro",
   "saboteador_iga"
 ]);
-function isSwordUnitCardLike(card){
-  if(!card||card.type!=="unit")return false;
-  const key=String(card.key||"").toLowerCase();
-  const name=String(card.name||"").toLowerCase();
-  const txt=String(card.text||card.effectText||card.ability||"").toLowerCase();
-  return SWORD_UNIT_KEYS.has(key)
-    || name.includes("espada")
-    || name.includes("espadach")
-    || name.includes("sword")
-    || txt.includes("espada")
-    || txt.includes("espadach")
-    || txt.includes("sword");
-}
 function applySwordGuardRule(card){
   // 20260909.18: GD representa armadura/cobertura física. Portar espada ya no concede Guardia base.
   if(!card)return card;
@@ -2587,20 +2572,6 @@ const FOOT_ARCHER_MOVEMENT_ONE_KEYS=new Set([
   "archer","egyptian_line_archer","new_kingdom_archer","roman_auxiliary_sagittarius",
   "simo_hayha","nasu_no_yoichi","arjuna"
 ]);
-function isMountedArcherCard(card){
-  if(!card||card.type!=="unit")return false;
-  const key=String(card.key||"").toLowerCase();
-  return getWeaponClassForCard(card)==="cavalry"||[
-    "saladin_archer_cavalry","samurai_yabusame","scythian_horse_archer","mongol_explorer","tomoe_gozen"
-  ].includes(key);
-}
-function isCanonicalFootArcherMovementOne(card){
-  if(!card||card.type!=="unit"||isMountedArcherCard(card))return false;
-  const key=String(card.key||"").toLowerCase();
-  const name=String(card.name||"").toLowerCase();
-  const icon=String(card.icon||"");
-  return FOOT_ARCHER_MOVEMENT_ONE_KEYS.has(key)||icon.includes("🏹")||name.includes("arquero")||name.includes("arquera");
-}
 function applyArcherMovementRule(card){
   // 20260908.14: MOV ya no se fuerza por clase Arco. La locomoción natural + carga
   // es la única fuente canónica del movimiento base.

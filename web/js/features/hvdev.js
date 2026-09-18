@@ -419,7 +419,6 @@
   let panelDrag=null;
   let panelCollapsed=false;
 
-  function defaultState(){return {x:0,y:0,scale:1,visible:true};}
   function readConfig(){
     try{
       const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;
@@ -672,41 +671,6 @@
     setStatus("Combate completo: calibrador abierto.");
   }
 
-  function bindForgeShell(shell,body){
-    if(!shell||!body||body.dataset.hvHubObserved==="1")return;
-    body.dataset.hvHubObserved="1";
-    const sync=()=>shell.classList.toggle("hv-dev-hub-tool-open",!body.classList.contains("hidden"));
-    new MutationObserver(sync).observe(body,{attributes:true,attributeFilter:["class"]});
-    sync();
-  }
-  async function openForgeControl(){
-    setStatus("Creación de mazo: preparando editor…");
-    try{
-      if(typeof globalThis.hvEnsureFeature==="function")await globalThis.hvEnsureFeature("forge-layout");
-      let panel=$("deckBuilderPanel");
-      if(panel?.classList.contains("hidden")){
-        if(isShown($("mainMenu"))&&$("collectionBtn")){
-          $("collectionBtn").click();
-          await nextFrame();await nextFrame();await delay(40);
-          panel=$("deckBuilderPanel");
-        }else{
-          setStatus("Creación de mazo: vuelve al Home y abre Colección; después toca este control.");
-          return;
-        }
-      }
-      if(typeof globalThis.hvEnsureFeature==="function")await globalThis.hvEnsureFeature("forge-layout");
-      await nextFrame();await nextFrame();
-      const shell=$("hvForgeDirectTuner"),body=$("hvForgeTunerBody"),toggle=$("hvForgeTunerToggle");
-      if(!shell||!body||!toggle){setStatus("Creación de mazo: el editor todavía no está disponible.");return;}
-      bindForgeShell(shell,body);
-      shell.classList.add("hv-dev-hub-tool-open");
-      if(body.classList.contains("hidden"))toggle.click();
-      setStatus("Creación de mazo: editor abierto.");
-    }catch(error){
-      console.error("[HallValla][DEVHUB] No se pudo abrir el editor de mazo:",error);
-      setStatus(`Creación de mazo: ${error?.message||"no se pudo abrir"}.`);
-    }
-  }
 
   async function openForgeSystemControl(){
     setStatus("Forja: preparando control de Fundir / Construir…");
@@ -735,7 +699,6 @@
       "hvDetLayoutTunerClose",
       "hvBattleLayoutClose",
       "hvLayoutClose",
-      "hvForgeTunerDone",
       "hvForgeSystemDevClose"
     ];
     for(const id of closers){const node=$(id);if(node)node.click();}
@@ -764,7 +727,6 @@
     ]},
     {title:"PANTALLAS",items:[
       {label:"CONTROL UNIVERSAL",action:openUniversalControl},
-      {label:"Creación de mazo",action:openForgeControl},
       {label:"Forja · Fundir / Construir",action:openForgeSystemControl},
       {label:"PvP / Online",action:openOnlineControl},
       {label:"Mapa de Aventura",action:openAdventureMapControl}
@@ -791,13 +753,6 @@
       promo.classList.add("hv-dev-hub-inline-tool");
       host.appendChild(promo);
     }
-  }
-  function bindDeferredForgeObserver(){
-    const observer=new MutationObserver(()=>{
-      const shell=$("hvForgeDirectTuner"),body=$("hvForgeTunerBody");
-      if(shell&&body)bindForgeShell(shell,body);
-    });
-    observer.observe(document.body,{childList:true,subtree:false});
   }
   function createHub(){
     if($("hvDevToolsHub"))return;
@@ -830,7 +785,6 @@
     $("hvDevHubCloseEditors")?.addEventListener("click",closeKnownEditors);
     document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!hub.classList.contains("hidden"))setOpen(false);});
     adoptInlineDevTools();
-    bindDeferredForgeObserver();
   }
 
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",createHub,{once:true});

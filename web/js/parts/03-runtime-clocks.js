@@ -459,27 +459,6 @@ async function expireTurnByClock(){
   }catch(e){console.warn("[HallValla] No se pudo cerrar el turno por tiempo:",e);turnTimerExpiredKey="";}
   finally{turnTimerSystemUpdate=false;turnTimerExpiryLock=false;}
 }
-function tickTurnTimer(){
-  if(!publicState){renderTurnTimerHud();return;}
-  const key=String(publicState.turnKey||"");
-  if(key!==turnTimerObservedKey){
-    turnTimerObservedKey=key;turnTimerExpiredKey="";duelClockExpiredKey="";turnTimerExpiryLock=false;duelClockExpiryLock=false;
-  }
-  renderTurnTimerHud();
-  if(!isTurnTimerEnabled())return;
-  const startedAt=Number(publicState.turnStartedAt||0);
-  if(!Number.isFinite(startedAt)||startedAt<=0){void ensureTurnTimerAnchor();return;}
-  const owner=Number(publicState.currentPlayer||0);
-  if(isDuelClockEnabledForOwner(owner)&&getDuelClockRemainingMs(owner)<=0){void expireDuelByClock();return;}
-  if(isTurnLimitEnabled()&&getTurnTimerRemainingMs()<=0)void expireTurnByClock();
-}
-function startTurnTimerLoop(){
-  if(typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested())return;
-  if(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental())return;
-  if(turnTimerInterval)return;
-  turnTimerInterval=battleSetInterval(()=>safeBattleTick("turnTimer",tickTurnTimer),TURN_TIMER_TICK_MS,"turn-timer-loop");
-  tickTurnTimer();
-}
 function stopTurnTimerLoop(){
   if(turnTimerInterval){battleClearInterval(turnTimerInterval);turnTimerInterval=null;}
   turnTimerObservedKey="";turnTimerExpiredKey="";duelClockExpiredKey="";turnTimerExpiryLock=false;duelClockExpiryLock=false;turnTimerAnchorLock=false;turnTimerSystemUpdate=false;
@@ -592,16 +571,10 @@ async function ensureFirebaseAuthReady(surface="online"){
 function getTurnPhase(){return publicState?.turnPhase||publicState?.phase||"main"}
 function isHandPlayPhase(){const p=getTurnPhase();return p==="main"||p==="last"}
 function isActionPhase(){return getTurnPhase()==="actions"}
-function isUnitMovePhase(){return isActionPhase()}
 function turnPhaseLabel(){return TURN_PHASE_LABELS[getTurnPhase()]||String(getTurnPhase()||"TURNO").toUpperCase()}
 function shouldAutoOpenHand(){return isMyTurn()&&getTurnPhase()==="main"}
 function isMobileBattleViewport(){return typeof window!=="undefined"&&window.matchMedia&&window.matchMedia("(max-width:980px), (pointer:coarse)").matches}
 function isOnlineOpponentHandReview(){return publicState?.mode==="online"&&!isMyTurn()&&!isBattleEnded()}
-function canManuallyOpenHandNow(){return isOnlineOpponentHandReview()||(isMyTurn()&&isHandPlayPhase())}
-function canOpenHandForViewNow(){
-  if(isOnlineOpponentHandReview())return ((privateState?.hand||[]).length>0);
-  return canManuallyOpenHandNow()&&(hasPlayableCardsInHand()||(isMobileBattleViewport()&&((privateState?.hand||[]).length>0)))
-}
 
 function getPhaseAnnouncement(){
   if(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental())return null;
