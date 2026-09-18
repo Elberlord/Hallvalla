@@ -1,0 +1,59 @@
+HALLVALLA v179 — ANDROID v133 VIRTUAL VIEWPORT TEST
+===================================================
+
+Purpose
+-------
+Prepare the next Android test without changing the stable public v131 APK.
+The browser gameplay remains v178-compatible. Only the APK URL containing
+`hvfit=1` activates the virtual viewport experiment.
+
+Virtual stage
+-------------
+- Logical web viewport: 1920 x 1080.
+- Native WebView frame: largest 16:9 rectangle that fits inside the Android
+  fullscreen area (`contain`).
+- Excess space remains black. X and Y are never stretched independently.
+- The WebView itself is laid out at the contained rectangle; the DOM is not
+  visually transformed with CSS `scale()`. Android/WebView therefore performs
+  hit-testing on the same geometry that is rendered.
+
+Android source
+--------------
+- applicationId: com.hallvalla.game
+- test versionCode: 133
+- test versionName: 1.0.133
+- URL: https://elberlord.github.io/Hallvalla/?apk=133&hvfit=1
+- WebView: useWideViewPort=true, loadWithOverviewMode=true, textZoom=100.
+- MainActivity wraps WebView in a black FrameLayout and centers a contained 16:9
+  child rectangle on every native size change.
+
+Web behavior
+------------
+- Normal browser URL: unchanged responsive viewport.
+- Existing stable APK v131/v132 URL without `hvfit=1`: unchanged.
+- `?hvfit=1`: meta viewport becomes width=1920,height=1080,user-scalable=no and
+  exposes window.__HALLVALLA_VIRTUAL_VIEWPORT__ for diagnostics.
+
+What to test after signing/building v133
+----------------------------------------
+1. Home fits without horizontal/vertical distortion.
+2. Daily reward and welcome package remain visible.
+3. Deck builder cards line up exactly like the browser reference.
+4. Deck builder Back and Save hitboxes match their visible buttons.
+5. Mine roulette fits entirely instead of being crushed/cropped.
+6. Forge and Store remain correct.
+7. Adventure, Missions and Online remain correct.
+8. Google native sign-in still works with the permanent HallValla signing key.
+9. Wide phones show black side bands rather than stretching the UI.
+10. Notch/cutout does not cover game controls.
+
+Signing
+-------
+The permanent signing key is intentionally NOT in this repository. Build v133
+with the same HallValla release key used by v131 (documented SHA-1 in
+android/README.md) so it can upgrade the installed package and keep Google OAuth.
+
+Stable release
+--------------
+`releases/android/HallValla-Android-v131.apk`, latest.json and public checksum are
+left untouched until this experiment is approved on-device.

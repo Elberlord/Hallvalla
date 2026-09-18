@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.CookieManager;
@@ -26,11 +28,15 @@ import com.google.android.gms.tasks.Task;
 import org.json.JSONObject;
 
 public class MainActivity extends Activity {
-    private static final String HOME_URL = "https://elberlord.github.io/Hallvalla/?apk=132";
+    private static final String HOME_URL = "https://elberlord.github.io/Hallvalla/?apk=133&hvfit=1";
     private static final String TRUSTED_HOST = "elberlord.github.io";
     private static final String WEB_CLIENT_ID = "496903032464-mcru6mkdr99pgos2fdegarg08eb55ujf.apps.googleusercontent.com";
     private static final int RC_GOOGLE_SIGN_IN = 7311;
+    private static final int VIRTUAL_WIDTH = 1920;
+    private static final int VIRTUAL_HEIGHT = 1080;
+    private static final float VIRTUAL_ASPECT = (float) VIRTUAL_WIDTH / (float) VIRTUAL_HEIGHT;
 
+    private FrameLayout viewportRoot;
     private WebView webView;
     private GoogleSignInClient googleSignInClient;
     private boolean googleSignInInFlight = false;
@@ -50,13 +56,34 @@ public class MainActivity extends Activity {
             .build();
         googleSignInClient = GoogleSignIn.getClient(this, googleOptions);
 
+        // v133: el teléfono deja de decidir la relación de aspecto del juego.
+        // Creamos un escenario nativo 16:9 tipo `contain`: el rectángulo mayor
+        // que cabe en la pantalla sin deformarse. Las bandas sobrantes quedan
+        // negras y absorben notch/cutout en teléfonos muy panorámicos.
+        viewportRoot = new FrameLayout(this) {
+            @Override
+            protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+                super.onSizeChanged(w, h, oldw, oldh);
+                post(() -> applyContainedGameViewport(w, h));
+            }
+        };
+        viewportRoot.setBackgroundColor(Color.BLACK);
+
         webView = new WebView(this);
         webView.setBackgroundColor(Color.BLACK);
+        webView.setVisibility(View.INVISIBLE);
         webView.setFocusable(true);
         webView.setFocusableInTouchMode(true);
         webView.setPadding(0, 0, 0, 0);
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        setContentView(webView);
+
+        FrameLayout.LayoutParams initialWebViewParams = new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            Gravity.CENTER
+        );
+        viewportRoot.addView(webView, initialWebViewParams);
+        setContentView(viewportRoot);
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
             WindowManager.LayoutParams params = getWindow().getAttributes();
@@ -72,18 +99,18 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(false);
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setLoadsImagesAutomatically(true);
-        // Fullscreen real en APK: respetar el viewport del juego sin hacer
-        // "overview/fit-to-page" del WebView, que encogía toda la UI como si
-        // fuera una página de escritorio y terminaba recortando paneles.
+        // v133: la web solicita un viewport lógico 1920x1080 con `hvfit=1`.
+        // OverviewMode ahora sí es intencional: reduce ESE escenario completo al
+        // WebView 16:9 calculado arriba. No estira X/Y por separado.
         settings.setUseWideViewPort(true);
-        settings.setLoadWithOverviewMode(false);
+        settings.setLoadWithOverviewMode(true);
         settings.setTextZoom(100);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setUserAgentString(settings.getUserAgentString() + " HallVallaAndroid/132");
+        settings.setUserAgentString(settings.getUserAgentString() + " HallVallaAndroid/133");
 
         CookieManager cookies = CookieManager.getInstance();
         cookies.setAcceptCookie(true);
@@ -123,6 +150,34 @@ public class MainActivity extends Activity {
             webView.loadUrl(HOME_URL);
         }
         webView.requestFocus();
+    }
+
+    /**
+     * Ajusta el WebView al mayor rectángulo 16:9 que cabe en el área nativa.
+     * El WebView no recibe transformaciones visuales: Android entrega los taps
+     * directamente sobre el mismo rectángulo que dibuja, por lo que el hit-test
+     * permanece alineado con Guardar, Atrás, cartas, ruleta, etc.
+     */
+    private void applyContainedGameViewport(int availableWidth, int availableHeight) {
+        if (webView == null || availableWidth <= 0 || availableHeight <= 0) return;
+
+        int targetWidth = availableWidth;
+        int targetHeight = Math.round(targetWidth / VIRTUAL_ASPECT);
+        if (targetHeight > availableHeight) {
+            targetHeight = availableHeight;
+            targetWidth = Math.round(targetHeight * VIRTUAL_ASPECT);
+        }
+
+        FrameLayout.LayoutParams current = (FrameLayout.LayoutParams) webView.getLayoutParams();
+        if (current != null && current.width == targetWidth && current.height == targetHeight && current.gravity == Gravity.CENTER) {
+            webView.setVisibility(View.VISIBLE);
+            return;
+        }
+
+        FrameLayout.LayoutParams next = new FrameLayout.LayoutParams(targetWidth, targetHeight, Gravity.CENTER);
+        webView.setLayoutParams(next);
+        webView.requestLayout();
+        webView.setVisibility(View.VISIBLE);
     }
 
     private boolean isTrustedHallVallaUrl(String url) {
@@ -219,8 +274,8 @@ public class MainActivity extends Activity {
 
     private static final String NATIVE_GOOGLE_BRIDGE_SCRIPT = """
         (() => {
-          if (window.__hallvallaNativeGoogleBridgeV131Installed) return;
-          window.__hallvallaNativeGoogleBridgeV131Installed = true;
+          if (window.__hallvallaNativeGoogleBridgeV133Installed) return;
+          window.__hallvallaNativeGoogleBridgeV133Installed = true;
 
           const googleButtons = new Map([
             ['googleLoginSplashBtn', 'splash'],

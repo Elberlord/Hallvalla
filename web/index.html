@@ -3,12 +3,26 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"/>
+<script>
+  (()=>{
+    try{
+      const params=new URLSearchParams(location.search);
+      if(params.get("hvfit")!=="1")return;
+      const viewport=document.querySelector('meta[name="viewport"]');
+      if(viewport){
+        viewport.setAttribute("content","width=1920, height=1080, user-scalable=no");
+      }
+      document.documentElement.dataset.hvVirtualViewport="1920x1080";
+      globalThis.__HALLVALLA_VIRTUAL_VIEWPORT__=Object.freeze({width:1920,height:1080,mode:"contain"});
+    }catch(_){ }
+  })();
+</script>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260918.178">
-<meta name="hallvalla-build" content="v8_MODULAR_20260918.178">
-<meta name="hallvalla-build-name" content="Arranque modular reparado · perfil y catálogos restaurados · 20260918.178">
-<link rel="stylesheet" href="styles.css?h=9f57d2be77f4"/>
+<meta name="hallvalla-version" content="20260918.179">
+<meta name="hallvalla-build" content="v8_MODULAR_20260918.179">
+<meta name="hallvalla-build-name" content="Android viewport virtual 1920×1080 · contain · web estable · 20260918.179">
+<link rel="stylesheet" href="styles.css?h=7bc32c4d97df"/>
 
 <link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.90">
 <link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.90">
@@ -1499,6 +1513,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=2a73dafae940"></script>
+<script type="module" src="js/bootstrap-loader.js?h=7d3ef81a1729"></script>
 </body>
 </html>

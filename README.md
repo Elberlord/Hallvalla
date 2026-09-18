@@ -3,7 +3,7 @@
 Repository layout prepared for HallValla private-source/public-game distribution.
 
 ## What stays private
-- `android/` — Android application source (v131 native Google Sign-In shell)
+- `android/` — Android application source (v133 virtual 1920×1080 test shell; stable public APK remains v131)
 - `backend/firebase/` — Realtime Database rules and Cloud Functions source
 - `docs/` — internal build/design documentation
 - repository history, branches, issues and development files
@@ -17,9 +17,9 @@ The workflow `.github/workflows/publish-hallvalla-public.yml` builds a Pages art
 The APK signing key is deliberately NOT included in this repository package.
 
 ## Current versions
-- Browser/gameplay base: v175
-- Public distribution shell: v175 (ataque más frecuente y desplazamiento más lento, manteniendo Velocidad de Ataque/Movimiento separadas por AGI/carga; conserva tutorial PvP, progreso Huevo/Bebé/Joven, Hannibal compuesto, Mina v172, iconografía WEBP canónica, campo Vida/Ataque/Guardia, PvP EXP/Maestría, Mapas 11–20 y Contratos de Dragón XV)
-- Android APK: v131 / versionCode 131 / `com.hallvalla.game`
+- Browser/gameplay base: v179 (v178 gameplay + conditional Android viewport test)
+- Public distribution shell: v179 (web normal conserva el layout v178; `hvfit=1` activa exclusivamente el viewport virtual Android 1920×1080)
+- Android APK pública estable: v131 / versionCode 131. Fuente de prueba preparada: v133 / versionCode 133 / `com.hallvalla.game`
 
 ## First setup
 Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
