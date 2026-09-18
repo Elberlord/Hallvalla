@@ -839,7 +839,7 @@
 
 
 /* ============================================================
-   HallValla DEV · CONTROL UNIVERSAL LIBRE v4 · 1366×636
+   HallValla DEV · CONTROL UNIVERSAL LIBRE v5 · 1366×636
    - Solo existe con ?dev.
    - Arrastre libre y directo: seleccionar -> arrastrar.
    - No fuerza los elementos a una caja durante el movimiento.
@@ -852,8 +852,8 @@
   "use strict";
   if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return;
 
-  const STORAGE_KEY="hallvalla_universal_layout_dev_v4_force_1366";
-  const PANEL_KEY="hallvalla_universal_layout_panel_v4_force_1366";
+  const STORAGE_KEY="hallvalla_universal_layout_dev_v5_after_bake_1366";
+  const PANEL_KEY="hallvalla_universal_layout_panel_v5_after_bake_1366";
   const DESIGN_W=1366;
   const DESIGN_H=636;
   const MIN_GRAB=28;
@@ -1162,7 +1162,7 @@
     if($('#hvUniversalLayoutTuner'))return;
     const panel=document.createElement('aside');panel.id='hvUniversalLayoutTuner';panel.dataset.hvDevTool='';panel.className='hv-universal-layout-tuner hidden';
     panel.innerHTML=`
-      <header id="hvUniversalDragHandle" class="hv-universal-head"><div><b>CONTROL UNIVERSAL LIBRE v4 · 1366×636</b><small>DEV fuerza reglas !important · JSON canónico</small></div><button id="hvUniversalClose" type="button">×</button></header>
+      <header id="hvUniversalDragHandle" class="hv-universal-head"><div><b>CONTROL UNIVERSAL LIBRE v5 · 1366×636</b><small>BASE FIJA v185 · nuevos cambios quedan como delta DEV</small></div><button id="hvUniversalClose" type="button">×</button></header>
       <div class="hv-universal-body">
         <button id="hvUniversalPick" class="hv-universal-primary" type="button">🎯 SELECCIONAR / ARRASTRAR</button>
         <button id="hvUniversalPickMode" class="hv-universal-primary hv-universal-mode" type="button">SELECCIÓN: HITBOX</button>
