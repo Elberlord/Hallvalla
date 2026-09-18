@@ -1026,6 +1026,7 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
 function getDeckBuilderDetProgressText(card){
   try{
     if(!card||card.type!=="unit")return "";
+    if(typeof globalThis.getDragonDetProgressData==="function"){const dragonGrowth=globalThis.getDragonDetProgressData(card);if(dragonGrowth)return `NIVEL ${dragonGrowth.rank} · ${dragonGrowth.summary}`;}
     if(typeof isUnitServiceProgression==="function"&&isUnitServiceProgression(card)){
       return typeof getAcolyteServiceProgressText==="function"?getAcolyteServiceProgressText(card):"Progreso de servicio";
     }

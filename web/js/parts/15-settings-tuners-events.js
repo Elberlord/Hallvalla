@@ -1274,7 +1274,12 @@ async function hallvallaTutorialPrepareModule(key){
   }
   if(key==="pvp"){
     await hallvallaTutorialEnsureFeature("pvp");
-    if(typeof openCleanRoom==="function")openCleanRoom();else $("onlineLobby")?.classList.remove("hidden");
+    const openPvp=globalThis.openCleanRoom||globalThis.pvpRebuildStep6fOpen||globalThis.pvpRebuildStep6eOpen;
+    if(typeof openPvp==="function")await Promise.resolve(openPvp());
+    else{
+      $("onlineLobby")?.classList.remove("hidden");
+      $("onlineModeSelect")?.classList.remove("hidden");
+    }
     return true;
   }
   if(key==="shop"){

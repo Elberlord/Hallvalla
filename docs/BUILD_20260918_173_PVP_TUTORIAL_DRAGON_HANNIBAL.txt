@@ -1,0 +1,33 @@
+HallValla v173 · 2026-09-18
+
+ALCANCE
+- Web únicamente. APK Android sin cambios. Firebase Rules sin cambios.
+
+1. TUTORIAL PVP
+- El preparador del tutorial carga features/pvp.js y abre la pantalla real de selección de modo mediante openCleanRoom exportado a globalThis.
+- Fallback: hace visibles onlineLobby + onlineModeSelect.
+
+2. CRECIMIENTO DRACONICO
+- Se elimina la dependencia del flag principal para detectar Huevo/Dragón compañero en campo.
+- Huevo, Bebé y Joven contabilizan eliminaciones aliadas mientras sigan vivos en campo.
+- La baja del líder rival también cuenta.
+- Se permite registrar la baja que termina el combate.
+- Ledger sessionStorage por batalla evita doble conteo por snapshots repetidos.
+- DET/constructor de mazo muestran el progreso por instancia; dos huevos se muestran como #1 y #2.
+- Umbrales conservados: Huevo 1000, Bebé 5000, Joven 10000. Adulto no evoluciona.
+
+3. HANNIBAL BARCA
+- Montura compuesta: jinete 4 HP + elefante 18 HP (más la progresión ya existente cuando corresponda).
+- RG 2-3: ataque a distancia del jinete, AT 4.
+- Adyacente: elefante, AT 16.
+- Arremetida Colosal reutiliza la regla del Elefante Africano: +6 AT (22), debuff y efectos ya existentes.
+- Ataque de unidad cuerpo a cuerpo daña elefante. Ataque de unidad a distancia daña jinete.
+- Elefante a 0: queda Hannibal desmontado. Jinete a 0: queda el elefante. No hay transferencia de overflow al superviviente.
+- Contraataques directos respetan la misma distribución.
+- DET informa HP de ambos componentes.
+
+VALIDACION
+- node --check sobre todos los módulos JS modificados.
+- Build público regenerado.
+- Hashes de loader/service worker y checksums del repositorio regenerados.
+- APK/release Android comparados por SHA-256 y sin cambios.

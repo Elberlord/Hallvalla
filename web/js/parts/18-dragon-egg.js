@@ -6,6 +6,7 @@ const DRAGON_COMPANION_STAGES=["egg","baby","young","adult"];
 const DRAGON_STAGE_THRESHOLDS=Object.freeze({egg:1000,baby:5000,young:10000,adult:10000});
 const DRAGON_ACTIVE_RECORD_KEY="hallvalla_active_dragon_companion_v1";
 const DRAGON_GROWTH_BATTLE_KEY="hallvalla_dragon_growth_battle_v1";
+const DRAGON_GROWTH_KILL_LEDGER_KEY="hallvalla_dragon_growth_kill_ledger_v2";
 
 const DRAGON_COMPANION_STATS=Object.freeze({
   lightning:Object.freeze({
@@ -97,7 +98,7 @@ function makeDragonCompanionCard(stage,element){
   const elementName=dragonElementLabel(element);
   const rarity=stage==="baby"?"Gloriosa":stage==="young"?"Mítica":"Astral";
   const threshold=stage==="baby"?5000:stage==="young"?10000:10000;
-  const growthText=stage==="adult"?"Forma adulta completa.":`Evoluciona después del duelo al alcanzar ${threshold} eliminaciones acumuladas.`;
+  const growthText=stage==="adult"?"Forma adulta completa.":`Mientras permanezca vivo en el campo, todas las eliminaciones aliadas continúan sumando a su crecimiento. Evoluciona después del duelo al alcanzar ${threshold} eliminaciones acumuladas.`;
   return{
     key:dragonCardKey(stage,element),name:`Dragón ${stageName} de ${elementName}`,type:"unit",
     icon:element==="fire"?"🔥":element==="ice"?"❄️":"⚡",portrait:DRAGON_COMPANION_ASSETS[visualStage].hand,fieldFigure:DRAGON_COMPANION_ASSETS[visualStage].field,
@@ -217,7 +218,7 @@ registerHallvallaHook("unit.make",(unit,{card})=>{
   const record=findDragonRecordForCardKey(unit.key);
   if(Number(unit.owner)===getLocalDragonOwner()&&record)setActiveDragonRecordId(record.id);
   const threshold=getDragonStageThreshold(record?.stage||unit.dragonStage||"adult");
-  return{...unit,dragonCompanion:true,dragonCompanionId:record?.id||"",dragonStage:record?.stage||unit.dragonStage,dragonElement:record?.element||unit.dragonElement,dragonGrowthThreshold:threshold};
+  return{...unit,dragonCompanion:true,dragonCompanionId:record?.id||"",dragonStage:record?.stage||unit.dragonStage,dragonElement:record?.element||unit.dragonElement,dragonKills:Number(record?.kills||0),dragonThreshold:threshold,dragonGrowthThreshold:threshold};
 },{id:"dragon-growth:normal-unit"});
 // Compatibilidad con partidas antiguas que aún materialicen una unidad principal.
 registerHallvallaHook("principal.makeUnit",(unit,{owner})=>{
@@ -327,18 +328,28 @@ registerHallvallaHook("combat.activateDefenseStance",async({unit})=>{
 
 function getActiveLivingDragonUnit(state){
   const owner=getLocalDragonOwner();
-  return(state?.units||[]).find(unit=>unit&&Number(unit.owner)===owner&&unit.principal&&isDragonCompanionKey(unit.key)&&Number(unit.hp||0)>0)||null;
+  return(state?.units||[]).find(unit=>unit&&Number(unit.owner)===owner&&isDragonCompanionKey(unit.key)&&Number(unit.hp||0)>0)||null;
 }
 function getNewEnemyDeaths(prevState,nextState){
   if(!prevState||!nextState)return[];
   const owner=getLocalDragonOwner();
   const nextById=new Map((nextState.units||[]).map(unit=>[unit.id,unit]));
   return(prevState.units||[]).filter(unit=>{
-    if(!unit||unit.leader||Number(unit.owner)===owner||Number(unit.hp||0)<=0)return false;
+    if(!unit||Number(unit.owner)===owner||Number(unit.hp||0)<=0)return false;
     const after=nextById.get(unit.id);
     return!after||Number(after.hp||0)<=0;
   });
 }
+function getDragonKillLedger(state){
+  const battleKey=String(gameId||state?.code||state?.adventureBattleId||state?.battleId||"local");
+  try{
+    const raw=JSON.parse(sessionStorage.getItem(DRAGON_GROWTH_KILL_LEDGER_KEY)||"null")||{};
+    if(raw.battleKey!==battleKey)return{battleKey,ids:[]};
+    return{battleKey,ids:Array.isArray(raw.ids)?raw.ids:[]};
+  }catch(_){return{battleKey,ids:[]};}
+}
+function saveDragonKillLedger(ledger){try{sessionStorage.setItem(DRAGON_GROWTH_KILL_LEDGER_KEY,JSON.stringify(ledger));}catch(_){}}
+
 function addDragonProgress(recordId,amount){
   const records=getDragonCompanions();
   const index=records.findIndex(record=>record.id===recordId);
@@ -352,17 +363,22 @@ function addDragonProgress(recordId,amount){
   return records[index];
 }
 function maybeAccumulateDragonKills(prevState,nextState){
-  if(!prevState||!nextState||nextState.mode==="tutorial"||nextState.phase==="ended")return;
-  const dragon=getActiveLivingDragonUnit(nextState);
+  if(!prevState||!nextState||nextState.mode==="tutorial")return;
+  const dragon=getActiveLivingDragonUnit(nextState)||getActiveLivingDragonUnit(prevState);
   if(!dragon)return;
-  const deaths=getNewEnemyDeaths(prevState,nextState);
+  const ledger=getDragonKillLedger(nextState);
+  const seen=new Set(ledger.ids||[]);
+  const deaths=getNewEnemyDeaths(prevState,nextState).filter(unit=>unit?.id&&!seen.has(unit.id));
   if(!deaths.length)return;
+  deaths.forEach(unit=>seen.add(unit.id));
+  saveDragonKillLedger({battleKey:ledger.battleKey,ids:[...seen]});
   const recordId=dragon.dragonCompanionId||getActiveDragonRecordId()||findDragonRecordForCardKey(dragon.key)?.id;
   if(!recordId)return;
   const updated=addDragonProgress(recordId,deaths.length);
   if(!updated)return;
   const threshold=getDragonStageThreshold(updated.stage);
-  setHint(`${dragon.name}: ${updated.kills}/${threshold} eliminaciones acumuladas${updated.ready?" · evolución preparada al terminar el duelo":""}.`);
+  const remaining=Math.max(0,threshold-updated.kills);
+  setHint(`${dragon.name}: ${updated.kills}/${threshold} eliminaciones acumuladas · faltan ${remaining}${updated.ready?" · evolución preparada al terminar el duelo":""}.`);
   setTimeout(()=>{try{render?.();}catch(e){}},0);
 }
 registerHallvallaHook("veilCurse.killEventProcessed",({prevState,nextState})=>maybeAccumulateDragonKills(prevState,nextState),{id:"dragon-growth:accumulate-kills"});
@@ -409,6 +425,25 @@ function processDragonGrowthAfterBattle(state){
   return[evolution];
 }
 registerHallvallaHook("battle.resultChecked",({state})=>processDragonGrowthAfterBattle(state),{id:"dragon-growth:process-after-battle"});
+
+function getDragonDetProgressData(entity){
+  if(!entity||!isDragonCompanionKey(entity.key))return null;
+  const records=getDragonCompanions().filter(record=>getDragonRecordCardKey(record)===String(entity.key||"")).sort((a,b)=>a.obtainedAt-b.obtainedAt);
+  if(!records.length)return null;
+  const first=records[0];
+  const threshold=getDragonStageThreshold(first.stage);
+  const current=Math.min(threshold,Math.max(0,Number(first.kills||0)));
+  const remaining=Math.max(0,threshold-current);
+  const percent=first.stage==="adult"?100:Math.max(0,Math.min(100,(current/Math.max(1,threshold))*100));
+  const labels=records.map((record,index)=>{
+    const t=getDragonStageThreshold(record.stage);
+    return `${records.length>1?`#${index+1} `:""}${record.stage==="adult"?"ADULTO":`${record.kills}/${t} · faltan ${Math.max(0,t-record.kills)}`}`;
+  });
+  const mastery=typeof getUnitMasteryRecord==="function"?getUnitMasteryRecord(entity):{kills:0};
+  const rank=typeof getUnitMasteryRankFromKills==="function"?getUnitMasteryRankFromKills(mastery?.kills||0):1;
+  return{rank:typeof romanUnitRank==="function"?romanUnitRank(rank):String(rank),progressText:labels.join("   ·   "),percent,maxed:first.stage==="adult",current,total:threshold,remaining,records,summary:`${dragonStageLabel(first.stage)} · ${labels.join(" · ")}`};
+}
+globalThis.getDragonDetProgressData=getDragonDetProgressData;
 
 function getDragonProgressRecordForUnit(unit){
   if(!unit||!isDragonCompanionKey(unit.key))return null;

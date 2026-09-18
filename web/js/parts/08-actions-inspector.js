@@ -1309,6 +1309,11 @@ function getUnifiedDetLevelDisplayData(entity){
     }
     if(entity.type!=='unit')return empty;
 
+    if((entity.owner===undefined||typeof myPlayer==='undefined'||Number(entity.owner)===Number(myPlayer))&&typeof globalThis.getDragonDetProgressData==='function'){
+      const dragonGrowth=globalThis.getDragonDetProgressData(entity);
+      if(dragonGrowth)return {...empty,visible:true,...dragonGrowth};
+    }
+
     // El rival solo expone el rango que ya trae la unidad; no inventamos progreso local.
     if(entity.owner!==undefined&&typeof myPlayer!=='undefined'&&Number(entity.owner)!==Number(myPlayer)){
       const enemyRank=Math.max(1,Math.floor(Number(entity.masteryRank||1)));

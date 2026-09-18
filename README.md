@@ -17,8 +17,8 @@ The workflow `.github/workflows/publish-hallvalla-public.yml` builds a Pages art
 The APK signing key is deliberately NOT included in this repository package.
 
 ## Current versions
-- Browser/gameplay base: v172
-- Public distribution shell: v172 (canje de piezas gratis confirmado con lectura remota fresca + barra visible del Grimorio; conserva iconografía WEBP canónica, campo simplificado Vida/Ataque/Guardia, PvP EXP/Maestría, Mapas 11–20, Xsolla, Contratos de Dragón XV, Tutorial V2 y PvP BOT por nivel)
+- Browser/gameplay base: v173
+- Public distribution shell: v173 (tutorial PvP reparado + progreso visible Huevo/Bebé/Joven + Hannibal jinete/elefante compuesto; conserva Mina v172, iconografía WEBP canónica, campo Vida/Ataque/Guardia, PvP EXP/Maestría, Mapas 11–20 y Contratos de Dragón XV)
 - Android APK: v131 / versionCode 131 / `com.hallvalla.game`
 
 ## First setup
@@ -180,3 +180,15 @@ Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
 - Tras escribir, se vuelve a leer Firebase y se confirma que ambos contadores coincidan antes de actualizar la UI local.
 - El Grimorio muestra una barra de desplazamiento vertical visible con estética HallValla para capítulos largos; cada nueva página comienza arriba.
 - No se modifica la APK Android.
+
+
+## v173 — Tutorial PvP + crecimiento dracónico + Hannibal compuesto
+- El tutorial de PvP ya no abre un modal vacío: carga el módulo PvP y abre explícitamente la selección de modo antes de enfocar sus pasos.
+- Huevo de Dragón, Dragón Bebé y Dragón Joven cuentan correctamente las eliminaciones aliadas mientras ese compañero permanezca vivo en el campo; también se contabiliza la baja final del líder rival.
+- Se añade un ledger por batalla para evitar dobles conteos al recibir snapshots repetidos.
+- El progreso dracónico queda visible en el DET/carta y en el campo; si existen varias copias de la misma etapa (por ejemplo dos huevos), se muestran por separado como #1, #2, etc., con bajas actuales y las que faltan.
+- Hannibal Barca pasa a representar jinete + elefante como dos componentes ligados: 4 Vida del jinete y 18 del elefante antes de bonificaciones de Maestría.
+- A RG 2–3 Hannibal usa el ataque a distancia del jinete (jabalinas, AT 4); adyacente usa la fuerza del Elefante Africano (AT 16) y puede activar Arremetida Colosal (+6 AT, AT 22).
+- El daño de ataques de unidades cuerpo a cuerpo se dirige al elefante y el de ataques de unidades a distancia al jinete. Si cae el elefante, Hannibal continúa desmontado; si cae Hannibal, el elefante continúa como bestia. El daño sobrante de un golpe no salta automáticamente al superviviente.
+- El DET de Hannibal montado muestra la Vida restante de jinete y elefante sin añadir nuevos iconos al campo. Los contraataques usan la misma separación.
+- No se modifica la APK Android ni las reglas de Firebase en esta versión.

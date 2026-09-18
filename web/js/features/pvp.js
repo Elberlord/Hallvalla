@@ -2932,6 +2932,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   globalThis.pvpRebuildStep6eRpsChoice=submitRpsChoice;
   globalThis.pvpRebuildStep6eChooseTurn=chooseTurnOrder;
   globalThis.pvpRebuildStep6fOpen=openCleanRoom;
+  globalThis.openCleanRoom=openCleanRoom;
   globalThis.pvpRebuildStep6fCreate=createMinimalPublicRoom;
   globalThis.pvpRebuildStep6fJoin=joinExistingRoom;
   globalThis.pvpRebuildStep6fReady=toggleReady;

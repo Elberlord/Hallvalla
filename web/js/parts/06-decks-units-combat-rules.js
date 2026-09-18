@@ -707,13 +707,71 @@ function getCardEffectTextByKey(key){
   return "";
 }
 function getUnitEffectText(u){
-  const base=normalizeSaboteadorRuleText(u,u?.text||u?.effectText||u?.ability||getCardEffectTextByKey(u?.key)||"");
+  let base=normalizeSaboteadorRuleText(u,u?.text||u?.effectText||u?.ability||getCardEffectTextByKey(u?.key)||"");
+  if(typeof isHannibalMountedUnit==="function"&&isHannibalMountedUnit(u)){
+    const riderHp=Math.max(0,Number(u?.hannibalRiderHp??HANNIBAL_RIDER_BASE_HP));
+    const riderMax=Math.max(1,Number(u?.hannibalRiderMaxHp??HANNIBAL_RIDER_BASE_HP));
+    const elephantHp=Math.max(0,Number(u?.hannibalElephantHp??HANNIBAL_ELEPHANT_BASE_HP));
+    const elephantMax=Math.max(1,Number(u?.hannibalElephantMaxHp??HANNIBAL_ELEPHANT_BASE_HP));
+    base=[base,`Estado de montura: Jinete ${riderHp}/${riderMax} Vida · Elefante ${elephantHp}/${elephantMax} Vida.`].filter(Boolean).join(" ");
+  }
   const equipped=getUnitEquipmentTemplates(u);
   if(!equipped.length)return base;
   const eqText=equipped.map(eq=>`${eq.name}: ${eq.text||""}`).join(" ");
   return [base,`Equipo: ${eqText}`].filter(Boolean).join(" ");
 }
 function makeUnit(card,x,y){card=applyArcherMovementRule(applyLanceWeaponRule(applyDesertAssassinRule({...card})));const baseGuard=(card.guard||0)+getSwordGuardBonus(card);let unit={id:uid8(),owner:card.owner,leader:false,type:"unit",name:card.name,key:card.key,icon:card.icon,portrait:card.portrait||getResolvedCardPortraitSource(card)||"",assetKey:card.assetKey||card.visualKey||getAssetIdentityKey(card)||"",visualKey:card.visualKey||"",assetBucket:card.assetBucket||card.assetFolder||card.assetCategory||"",assetFolder:card.assetFolder||"",assetCategory:card.assetCategory||"",cardAssetBucket:card.cardAssetBucket||card.cardsAssetBucket||"",cardsAssetBucket:card.cardsAssetBucket||"",fieldFigure:card.fieldFigure||card.fieldFigurePortrait||card.fieldFigureImage||getResolvedFieldFigureSource(card)||"",fieldFigurePortrait:card.fieldFigurePortrait||"",fieldFigureImage:card.fieldFigureImage||"",fieldFigureAssetBucket:card.fieldFigureAssetBucket||card.fieldAssetBucket||"",fieldAssetBucket:card.fieldAssetBucket||"",rarity:card.rarity||"Básica",special:!!card.special,text:card.text||card.effectText||card.ability||"",effectText:card.effectText||card.text||card.ability||"",ability:card.ability||"",x,y,nexoX:x,nexoY:y,hp:card.hp,maxHp:card.hp,atk:card.atk,baseGuard,guard:baseGuard,dex:card.dex||0,agi:card.agi||0,mov:card.mov,fixedMov:(card.fixedMov!==null&&card.fixedMov!==undefined&&card.fixedMov!==""&&Number.isFinite(Number(card.fixedMov)))?Math.max(0,Number(card.fixedMov)):null,range:getCardDisplayRange(card),moved:false,movedSpaces:0,lastMoveStraightDistance:0,lastMoveDistance:0,lastMoveDx:0,lastMoveDy:0,lastMoveTurnKey:"",acted:false,buffAtk:0,evasionSpent:0,arjunaRerollUsedTurn:false,lanceFirstStrikeUsedTurn:false,leaderType:card.leaderType||"",weaponClass:getWeaponClassForCard(card),battlePower:getUnitBattlePower(card),cost:Number(card.cost||0),effectRange:Math.max(0,Number(card.effectRange||0)),leaderBuffGroups:Array.isArray(card.leaderBuffGroups)?[...card.leaderBuffGroups]:[],caster:!!card.caster,healer:!!card.healer,hechicero:!!card.hechicero,hechicera:!!card.hechicera,nigromante:!!card.nigromante,summonOrigin:String(card.summonOrigin||"hand"),fieldGeneratedSummon:!!card.fieldGeneratedSummon,summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"",hallvallaReadyOnSummon:true,beast:!!card.beast,elementalAffinity:card.elementalAffinity&&typeof card.elementalAffinity==="object"?{...card.elementalAffinity}:null,elementalNature:!!card.elementalNature,aerial:!!card.aerial,stealth:!!card.stealth,revealed:false,ninjutsu:!!card.ninjutsu,hanzoContractPending:false,hanzoContractConsumed:false,equipmentKeys:Array.isArray(card.equipmentKeys)?[...card.equipmentKeys]:[],undead:!!card.undead,noMuerto:!!card.noMuerto,mineExclusive:!!card.mineExclusive,minePuzzle:!!card.minePuzzle,reviveTurns:Math.max(0,Number(card.reviveTurns||3)),reviveHpRatio:Math.max(0,Number(card.reviveHpRatio||.5))};unit=applyHallvallaUnitLoadProfile(unit)||unit;unit=annotateUnitWithMastery(unit);const masteryStatBonus=Math.max(0,Number(unit.masteryStatBonus??unit.masteryHpBonus??0));if(masteryStatBonus>0){unit.maxHp=(unit.maxHp||0)+masteryStatBonus;unit.hp=(unit.hp||0)+masteryStatBonus;unit.atk=(unit.atk||0)+masteryStatBonus;unit.baseGuard=(unit.baseGuard||0)+masteryStatBonus;unit.guard=(unit.guard||0)+masteryStatBonus;unit.dex=(unit.dex||0)+masteryStatBonus;unit.agi=(unit.agi||0)+masteryStatBonus;}const leaderHpBonus=Math.max(0,Number((getLeaderBonus(unit)||{}).hp||0));if(leaderHpBonus>0){unit.hp=(unit.hp||0)+leaderHpBonus;unit.leaderHpBonusApplied=leaderHpBonus;}unit.guard=maxTurnGuard(unit);unit=applyHallvallaValueHooks("unit.make",unit,{card,x,y})||unit;return unit}
+
+
+/* v173 · Hannibal: jinete y elefante son dos cuerpos ligados en una misma casilla. */
+const HANNIBAL_RIDER_BASE_HP=4;
+const HANNIBAL_ELEPHANT_BASE_HP=18;
+function isHannibalMountedUnit(u){return !!u&&u.key==="hannibal_barca"&&u.hannibalMounted!==false&&!u.hannibalSeparated;}
+function isHannibalElephantCombatForm(u){return !!u&&(u.key==="african_elephant"||u.key==="hannibal_elephant_survivor"||isHannibalMountedUnit(u));}
+function initializeHannibalCompositeUnit(unit){
+  if(!unit||unit.key!=="hannibal_barca")return unit;
+  const maxHp=Math.max(HANNIBAL_RIDER_BASE_HP+1,Number(unit.maxHp||unit.hp||22));
+  const riderMax=Math.min(HANNIBAL_RIDER_BASE_HP,maxHp-1);
+  const elephantMax=Math.max(1,maxHp-riderMax);
+  return {...unit,hannibalMounted:true,hannibalSeparated:false,hannibalRiderHp:riderMax,hannibalRiderMaxHp:riderMax,hannibalElephantHp:elephantMax,hannibalElephantMaxHp:elephantMax,hp:riderMax+elephantMax,maxHp:riderMax+elephantMax};
+}
+registerHallvallaHook("unit.make",(unit)=>initializeHannibalCompositeUnit(unit),{id:"hannibal:composite-mount"});
+function transformHannibalToRider(unit,riderHp){
+  const mastery=Math.max(0,Number(unit?.masteryStatBonus??unit?.masteryHpBonus??0));
+  const maxHp=Math.max(1,Number(unit?.hannibalRiderMaxHp||HANNIBAL_RIDER_BASE_HP));
+  return {...unit,key:"hannibal_dismounted",name:"Hannibal Barca",hannibalMounted:false,hannibalSeparated:true,hannibalSurvivor:"rider",mountType:"",locomotionClass:"foot",beast:false,hp:Math.max(1,Math.min(maxHp,Number(riderHp||maxHp))),maxHp,atk:4+mastery,baseGuard:2+mastery,guard:2+mastery,dex:11+mastery,agi:4+mastery,mov:2,fixedMov:null,range:3,fieldFigure:"assets/field_figures_light/basic/roman_auxiliary_sagittarius.webp",text:"Hannibal continúa a pie. Ataca a distancia con jabalinas; el elefante ha caído. Conserva Trampa de Cannas."};
+}
+function transformHannibalToElephant(unit,elephantHp){
+  const mastery=Math.max(0,Number(unit?.masteryStatBonus??unit?.masteryHpBonus??0));
+  const maxHp=Math.max(1,Number(unit?.hannibalElephantMaxHp||HANNIBAL_ELEPHANT_BASE_HP));
+  return {...unit,key:"hannibal_elephant_survivor",name:"Hannibal Barca",hannibalMounted:false,hannibalSeparated:true,hannibalSurvivor:"elephant",mountType:"",locomotionClass:"beast",beast:true,hp:Math.max(1,Math.min(maxHp,Number(elephantHp||maxHp))),maxHp,atk:16+mastery,baseGuard:7+mastery,guard:7+mastery,dex:3+mastery,agi:3+mastery,mov:1,fixedMov:null,range:1,fieldFigure:"assets/field_figures_light/beasts/african_elephant.webp",text:"El elefante de Hannibal permanece en combate después de perder a su jinete. Usa la fuerza y Arremetida Colosal del Elefante Africano."};
+}
+function routeHannibalMountedHpDamage(before,damaged,attacker){
+  if(!isHannibalMountedUnit(before)||!damaged||Number(damaged.lastHpLoss||0)<=0)return{unit:damaged,splitText:"",component:""};
+  const rawLoss=Math.max(0,Number(damaged.lastHpLoss||0));
+  const melee=!!attacker&&dist(attacker,before)<=1;
+  const component=melee?"elephant":"rider";
+  const riderBefore=Math.max(0,Number(before.hannibalRiderHp??HANNIBAL_RIDER_BASE_HP));
+  const elephantBefore=Math.max(0,Number(before.hannibalElephantHp??HANNIBAL_ELEPHANT_BASE_HP));
+  const available=component==="elephant"?elephantBefore:riderBefore;
+  const applied=Math.min(rawLoss,available);
+  const overflow=Math.max(0,rawLoss-applied);
+  let riderHp=riderBefore,elephantHp=elephantBefore;
+  if(component==="elephant")elephantHp=Math.max(0,elephantHp-applied);else riderHp=Math.max(0,riderHp-applied);
+  let next={...damaged,hp:Math.max(0,Number(damaged.hp||0)+overflow),lastHpLoss:applied,hannibalRiderHp:riderHp,hannibalElephantHp:elephantHp};
+  if(elephantHp<=0&&riderHp>0){
+    next=transformHannibalToRider(next,riderHp);
+    next.lastHpLoss=applied;
+    return{unit:next,component,splitText:" El elefante cae; Hannibal desmonta y continúa combatiendo a distancia."};
+  }
+  if(riderHp<=0&&elephantHp>0){
+    next=transformHannibalToElephant(next,elephantHp);
+    next.lastHpLoss=applied;
+    return{unit:next,component,splitText:" Hannibal cae; su elefante permanece en el campo y continúa la lucha."};
+  }
+  next.hp=Math.max(0,riderHp+elephantHp);
+  return{unit:next,component,splitText:""};
+}
 function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}
@@ -1156,7 +1214,7 @@ function effectiveMov(u){
   return applyHallvallaValueHooks("unit.effectiveMov",base,{unit:u});
 }function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
 function isAfricanElephantChargeReady(u,target){
-  if(!u||!target||u.key!=="african_elephant")return false;
+  if(!u||!target||!isHannibalElephantCombatForm(u))return false;
   if(Number(u.lastMoveDistance||0)!==1||u.lastMoveTurnKey!==publicState?.turnKey)return false;
   if(dist(u,target)!==1)return false;
   const dx=Math.sign((target.x||0)-(u.x||0));
@@ -1316,6 +1374,7 @@ function getCombatMods(attacker,defender,attackContext=null){
   if(melee&&attacker.key==="bengal_tiger"&&adjacentAllies(defender).some(a=>a.owner===attacker.owner&&isBeastUnit(a))){mods.defenderAgi-=2;mods.notes.push(`${defender.name} -2 AGI por Ataque por la espalda de la manada.`);}
   if(melee&&attacker.key==="wild_boar"&&(attacker.movedSpaces||0)>=2){mods.attackerAtk+=1;mods.notes.push(`${attacker.name} +1 AT por Carga Brusca.`);}
   if(melee&&isWhiteRhinoChargeReady(attacker)){mods.attackerAtk+=8;mods.rhinoCharge=true;mods.notes.push(`${attacker.name} usa Embestida Devastadora: AT 22.`);}
+  if(melee&&isHannibalMountedUnit(attacker)){mods.attackerAtk+=12;mods.hannibalElephantMelee=true;mods.notes.push(`${attacker.name} combate con la fuerza del elefante: AT 16.`);}
   if(melee&&isAfricanElephantChargeReady(attacker,defender)){mods.attackerAtk+=6;mods.defenderAgi-=4;mods.elephantCharge=true;mods.notes.push(`${attacker.name} usa Arremetida Colosal: +6 AT (AT 22) y ${defender.name} -4 AGI para evadir.`);}
   if(attacker.key==="peregrine_falcon"&&(attacker.movedSpaces||0)>=3){mods.attackerAtk+=2;mods.falconDive=true;mods.notes.push(`${attacker.name} usa Ataque en Picada: golpe seguro, AT 3.`);}
   if(defender.key==="honey_badger"){mods.damageReduction+=1;mods.honeyBadgerReduction=true;mods.notes.push(`${defender.name} reduce 1 daño por Armadura Natural.`);}
