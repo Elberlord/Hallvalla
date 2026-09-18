@@ -793,7 +793,7 @@
 
 
 /* ============================================================
-   HallValla DEV · CONTROL UNIVERSAL LIBRE v7 · 1366×636
+   HallValla DEV · CONTROL UNIVERSAL LIBRE v8 · 1366×636
    - Solo existe con ?dev.
    - Arrastre libre y directo: seleccionar -> arrastrar.
    - No fuerza los elementos a una caja durante el movimiento.
@@ -806,8 +806,8 @@
   "use strict";
   if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return;
 
-  const STORAGE_KEY="hallvalla_universal_layout_dev_v7_singledeck_1366";
-  const PANEL_KEY="hallvalla_universal_layout_panel_v7_singledeck_1366";
+  const STORAGE_KEY="hallvalla_universal_layout_dev_v8_after_bake_1366";
+  const PANEL_KEY="hallvalla_universal_layout_panel_v8_after_bake_1366";
   const DESIGN_W=1366;
   const DESIGN_H=636;
   const MIN_GRAB=28;
@@ -913,8 +913,10 @@
   function stableDataAttrs(node){
     const priority=['data-mine-panel','data-mine-nav','data-action','data-mode','data-view','data-slot-index','data-card-id','data-unit-id','data-adventure-node','data-id','data-key','data-draft-index','data-deck-slot','data-deck-card-key','data-beast-tab','data-beast-season-seal'];
     const attrs=[];
-    for(const name of priority){const value=node.getAttribute?.(name);if(value!=null&&String(value).length<80)attrs.push([name,String(value)]);}
-    if(attrs.length)return attrs.slice(0,2);
+    for(const name of priority){
+      const value=node.getAttribute?.(name);
+      if(value!=null&&String(value).length<80)return [[name,String(value)]];
+    }
     for(const attr of Array.from(node.attributes||[])){
       if(!attr.name.startsWith('data-')||attr.name.startsWith('data-hv-')||attr.value.length>80)continue;
       attrs.push([attr.name,attr.value]);if(attrs.length>=1)break;
@@ -1111,7 +1113,7 @@
     for(const [selector,raw] of Object.entries(config.items)){const option=document.createElement('option');option.value=selector;option.textContent=raw.label||selector;select.appendChild(option);}
     if(previous&&config.items[previous])select.value=previous;
   }
-  function exportJson(){return JSON.stringify({version:7,designStage:{width:DESIGN_W,height:DESIGN_H,mode:'fixed'},units:'design-px',editor:'single-deck-stable-smart-scale-v190',items:config.items},null,2);}
+  function exportJson(){return JSON.stringify({version:7,designStage:{width:DESIGN_W,height:DESIGN_H,mode:'fixed'},units:'design-px',editor:'single-deck-stable-smart-scale-v191',items:config.items},null,2);}
   function exportCss(){
     return Object.entries(config.items).map(([selector,raw])=>{const s=normalizeState(raw),rules=[`translate:${s.x}px ${s.y}px`,`scale:${s.sx/100} ${s.sy/100}`,`opacity:${s.opacity/100}`];if(s.z)rules.push(`z-index:${s.z}`);if(s.backgroundOff)rules.push('background:transparent!important');if(s.borderOff)rules.push('border:0!important');if(s.shadowOff)rules.push('box-shadow:none!important');if(s.hidden)rules.push('visibility:hidden!important','pointer-events:none!important');return `${selector}{${rules.join(';')};}`;}).join('\n');
   }
@@ -1125,7 +1127,7 @@
     if($('#hvUniversalLayoutTuner'))return;
     const panel=document.createElement('aside');panel.id='hvUniversalLayoutTuner';panel.dataset.hvDevTool='';panel.className='hv-universal-layout-tuner hidden';
     panel.innerHTML=`
-      <header id="hvUniversalDragHandle" class="hv-universal-head"><div><b>CONTROL UNIVERSAL LIBRE v7 · 1366×636</b><small>BASE v190 · MAZO ÚNICO · SELECTORES ESTABLES</small></div><button id="hvUniversalClose" type="button">×</button></header>
+      <header id="hvUniversalDragHandle" class="hv-universal-head"><div><b>CONTROL UNIVERSAL LIBRE v8 · 1366×636</b><small>BASE v191 · COORDENADAS HORNEADAS · SELECTOR ÚNICO</small></div><button id="hvUniversalClose" type="button">×</button></header>
       <div class="hv-universal-body">
         <button id="hvUniversalPick" class="hv-universal-primary" type="button">🎯 SELECCIONAR / ARRASTRAR</button>
         <button id="hvUniversalPickMode" class="hv-universal-primary hv-universal-mode" type="button">SELECCIÓN: HITBOX</button>
