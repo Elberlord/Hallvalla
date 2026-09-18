@@ -17,8 +17,8 @@ The workflow `.github/workflows/publish-hallvalla-public.yml` builds a Pages art
 The APK signing key is deliberately NOT included in this repository package.
 
 ## Current versions
-- Browser/gameplay base: v171
-- Public distribution shell: v171 (canje atómico de piezas gratis de Mina; conserva iconografía WEBP canónica, campo simplificado Vida/Ataque/Guardia, PvP EXP/Maestría, Mapas 11–20, Xsolla, Contratos de Dragón XV, Tutorial V2 y PvP BOT por nivel)
+- Browser/gameplay base: v172
+- Public distribution shell: v172 (canje de piezas gratis confirmado con lectura remota fresca + barra visible del Grimorio; conserva iconografía WEBP canónica, campo simplificado Vida/Ataque/Guardia, PvP EXP/Maestría, Mapas 11–20, Xsolla, Contratos de Dragón XV, Tutorial V2 y PvP BOT por nivel)
 - Android APK: v131 / versionCode 131 / `com.hallvalla.game`
 
 ## First setup
@@ -171,4 +171,12 @@ Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
 - Los vales antiguos guardados como `minePuzzleVouchers` se migran automáticamente al nuevo saldo remoto al abrir/sincronizar la tienda.
 - Los nuevos premios de pieza de la Ruleta se acreditan al saldo remoto; las recompensas de Maestría usan el mismo sistema cuando está disponible y conservan una cola de compatibilidad si Firebase no responde.
 - Mensajes de error separados para compra con gemas y canje gratis.
+- No se modifica la APK Android.
+
+
+## v172 — Mina + lectura del Grimorio
+- El canje de piezas gratis deja de depender de `runTransaction()` sobre `/mine/shop`, evitando el aborto prematuro cuando RTDB entrega primero un valor local nulo/vacío.
+- El canje obtiene primero el estado remoto fresco y aplica un `update()` multipath único: `freePieces - 1` + `pieces + 1`. Las Rules v171 siguen validando que ambos cambios ocurran juntos.
+- Tras escribir, se vuelve a leer Firebase y se confirma que ambos contadores coincidan antes de actualizar la UI local.
+- El Grimorio muestra una barra de desplazamiento vertical visible con estética HallValla para capítulos largos; cada nueva página comienza arriba.
 - No se modifica la APK Android.

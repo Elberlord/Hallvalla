@@ -1,0 +1,13 @@
+HallValla v172
+
+1. Mina / tienda de No Muertos
+- El canje de freePieces usa lectura remota fresca de /users/{uid}/mine/shop.
+- Escribe en un solo update multipath: freePieces - 1 y units/{cardKey}/pieces + 1.
+- Vuelve a leer Firebase para confirmar ambos valores.
+- Compatible con las Rules de v171; no requiere una regla nueva para este cambio.
+
+2. Grimorio
+- Barra vertical visible y estilizada para capítulos largos.
+- scrollTop vuelve a 0 al cargar/abrir una nueva página de historia.
+
+Android/APK no modificado.

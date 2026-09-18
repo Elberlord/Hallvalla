@@ -629,6 +629,8 @@ function setAdventureGrimoireContent(title,text,meta=""){
   if(titleEl)titleEl.textContent=adventureGrimoireContext.title;
   if(textEl)textEl.textContent=adventureGrimoireContext.text;
   if(metaEl)metaEl.textContent=adventureGrimoireContext.meta;
+  const copy=document.querySelector("#adventureGrimoireModal .adventure-grimoire-copy");
+  if(copy)copy.scrollTop=0;
 }
 function openAdventureGrimoire(){
   const modal=$("adventureGrimoireModal");
@@ -636,6 +638,8 @@ function openAdventureGrimoire(){
   setAdventureGrimoireContent(adventureGrimoireContext.title,adventureGrimoireContext.text,adventureGrimoireContext.meta);
   modal.classList.remove("hidden");
   modal.setAttribute("aria-hidden","false");
+  const copy=modal.querySelector(".adventure-grimoire-copy");
+  if(copy)copy.scrollTop=0;
 }
 function setAdventureGrimoireSpeechUi(state="idle") {
   const play=$("adventureGrimoirePlayBtn"),pause=$("adventureGrimoirePauseBtn");

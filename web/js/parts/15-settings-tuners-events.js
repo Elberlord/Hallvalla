@@ -4058,20 +4058,38 @@ async function buyHallvallaMineShopPiece(cardKey,button=null){
     }else{
       const userId=getHallvallaMineUserUid();if(!userId)throw new Error("Usuario no autenticado");
       const shopRef=ref(db,`users/${userId}/mine/shop`);
-      const result=await runTransaction(shopRef,raw=>{
-        const shop=normalizeHallvallaMineShopState(raw||{}),unit=shop.units?.[key]||createHallvallaMineShopUnitState();
-        if(unit.pieces>=25)return;
-        if(useVoucher){
-          if(shop.freePieces<=0)return;
-          shop.freePieces-=1;
-          shop.units[key]={pieces:unit.pieces+1,lastPurchaseDay:unit.lastPurchaseDay};
-        }else{
-          if(unit.lastPurchaseDay===day)return;
-          shop.units[key]={pieces:unit.pieces+1,lastPurchaseDay:day};
+      if(useVoucher){
+        /* v172: RTDB puede invocar runTransaction() primero con null/caché vacía y
+           abortar antes de consultar el servidor. Para el canje leemos el estado
+           remoto fresco y escribimos vale+piezas en un solo update multipath.
+           Las Rules v171 validan ambos cambios juntos; si otro cliente se adelanta,
+           Firebase rechaza todo y el vale permanece intacto. */
+        const freshSnapshot=await get(shopRef);
+        if(!freshSnapshot?.exists?.())throw new Error("La tienda remota no está inicializada");
+        const fresh=normalizeHallvallaMineShopState(freshSnapshot.val()||{}),freshUnit=fresh.units?.[key]||createHallvallaMineShopUnitState();
+        if(freshUnit.pieces>=25){nextState=fresh;committed=true;}
+        else{
+          if(fresh.freePieces<=0)throw new Error("Firebase no registra piezas gratis disponibles");
+          await update(shopRef,{
+            freePieces:fresh.freePieces-1,
+            [`units/${key}/pieces`]:freshUnit.pieces+1
+          });
+          const confirmedSnapshot=await get(shopRef);
+          if(!confirmedSnapshot?.exists?.())throw new Error("Firebase no devolvió el estado confirmado");
+          nextState=normalizeHallvallaMineShopState(confirmedSnapshot.val()||{});
+          if(nextState.freePieces!==fresh.freePieces-1||Number(nextState.units?.[key]?.pieces||0)!==freshUnit.pieces+1)throw new Error("El canje no coincidió con el estado confirmado");
+          cacheHallvallaMineShopState(nextState);
+          committed=true;
         }
-        return shop;
-      },{applyLocally:false});
-      if(result?.committed){nextState=normalizeHallvallaMineShopState(result.snapshot.val()||{});cacheHallvallaMineShopState(nextState);committed=true;}
+      }else{
+        const result=await runTransaction(shopRef,raw=>{
+          const shop=normalizeHallvallaMineShopState(raw||{}),unit=shop.units?.[key]||createHallvallaMineShopUnitState();
+          if(unit.pieces>=25||unit.lastPurchaseDay===day)return;
+          shop.units[key]={pieces:unit.pieces+1,lastPurchaseDay:day};
+          return shop;
+        },{applyLocally:false});
+        if(result?.committed){nextState=normalizeHallvallaMineShopState(result.snapshot.val()||{});cacheHallvallaMineShopState(nextState);committed=true;}
+      }
     }
     if(!committed){
       if(status)status.textContent=useVoucher?"El canje de la pieza gratis no fue confirmado. Tu vale no se consumió.":"La compra no fue confirmada. No se descontaron gemas.";
