@@ -17,8 +17,8 @@ The workflow `.github/workflows/publish-hallvalla-public.yml` builds a Pages art
 The APK signing key is deliberately NOT included in this repository package.
 
 ## Current versions
-- Browser/gameplay base: v166
-- Public distribution shell: v166 (PvP con EXP de cuenta y bajas válidas para Maestría de unidades/líderes; conserva Mapas 12–20 Nv.34–60, Mapa 11, Grimorio narrativo, limpieza DEV de Hua Lan, corrección v163 de tabs del evento, Xsolla, Contratos de Dragón XV, Tutorial V2 y PvP BOT por nivel)
+- Browser/gameplay base: v168
+- Public distribution shell: v168 (campo simplificado a Vida/Ataque/Guardia; PREC/EVA siguen internas; conserva ajustes v167, PvP EXP/Maestría, Mapas 11–20, Xsolla, Contratos de Dragón XV, Tutorial V2 y PvP BOT por nivel)
 - Android APK: v131 / versionCode 131 / `com.hallvalla.game`
 
 ## First setup
@@ -125,3 +125,22 @@ Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
 - Ataques básicos, magias de daño lanzadas por el líder y habilidades automáticas de líder (Barrido de Guerra, Lluvia de flechas y Descarga arcana) pueden acreditar bajas al líder.
 - El panel del líder muestra su progreso de Maestría por bajas.
 - La Maestría acumulativa de cuenta también reconoce la derrota del líder rival como una baja válida.
+
+
+## v167 — Web UI estable antes de rehacer Android
+- Beast Master: coordenadas finales confirmadas: Información (592,-229), Recompensas (209,-110), Eventos globales (-176,9).
+- Se actualizan tanto el preset PROD del evento como el Control Universal `?dev`, con migración nueva para navegadores que ya tenían v163 guardada.
+- El acceso al Grimorio deja de ser un rectángulo con texto y pasa a ser un icono visual de libro abierto, manteniendo accesibilidad mediante `aria-label`/`title`.
+- No se modifica el APK Android en esta build; los problemas de WebView/móvil se abordarán sobre esta base web estable.
+- Xsolla: se conserva la divulgación de probabilidades; la restricción efectiva de Bélgica, Brasil y China corresponde al Publisher Account de Xsolla.
+
+
+## v168 — Campo simplificado: Vida / Ataque / Guardia
+- Las unidades del campo muestran siempre los tres stats públicos definidos: Vida, Ataque y Guardia.
+- Se elimina del render del campo la alternancia AT/GD por turno: ambos valores permanecen visibles simultáneamente.
+- Precisión y Evasión continúan funcionando exactamente en la resolución interna de impactos, desgaste, IA y efectos, pero sus valores dejan de mostrarse como badges públicos del campo.
+- Se elimina del campo el badge de estado que revelaba el desgaste numérico de Evasión.
+- La descripción pública de Guardia defensiva deja de revelar el modificador numérico de Precisión, sin cambiar su cálculo interno.
+- El editor DEV de badges deja de ofrecer objetivos de Precisión/Evasión, ya que esos emblemas ya no se renderizan en combate.
+- Se sincronizan las huellas de caché del loader para `hvdev.js` y `17-dragon-contracts.js`, que estaban heredadas de una versión anterior.
+- Android/APK no se modifica en esta build.

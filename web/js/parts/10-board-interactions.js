@@ -503,7 +503,7 @@ function getUnitContextOptions(u){
       const moveHint=u.acted?"Ya usó su acción":u.moved?"Ya se movió":isUnitMoveWindow(u)?"Mover ahora":"Mover en Action Phase";
       opts.push({key:"mov",label:"MOV",hint:moveHint});
     }
-    opts.push({key:"def",label:"DEF",hint:(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey)?"No puede defenderse este turno":(u.defenseModeReady?"Ya está en guardia defensiva":(u.acted?"Ya usó su acción":"Postura defensiva: +2 GD y -10% precisión al primer ataque"))});
+    opts.push({key:"def",label:"DEF",hint:(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey)?"No puede defenderse este turno":(u.defenseModeReady?"Ya está en guardia defensiva":(u.acted?"Ya usó su acción":"Postura defensiva: +2 GD y dificulta el primer ataque recibido"))});
     if(unitHasContextEffect(u))opts.push({key:"effect",label:"EFFECT",hint:"Efecto"});
     opts.push({key:"attk",label:"ATTK",hint:isKhalidChainAttackReady(u)?"Espada Invicta: puede seguir atacando con penalización acumulada.":(u.acted?"Ya atacó o defendió":"Atacar en Action Phase")});
   }
@@ -1119,7 +1119,7 @@ async function activateDefenseStance(u){
     defenseFxEvent:null,
     floatFxEvent:null
   });
-  await pushLog(`J${myPlayer} pone a ${u.name} en Guardia defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión. Dura hasta recibir ese ataque o hasta el inicio de su próximo turno.`);
+  await pushLog(`J${myPlayer} pone a ${u.name} en Guardia defensiva: +2 Guardia y mejora su defensa ante el primer ataque recibido. Dura hasta recibir ese ataque o hasta el inicio de su próximo turno.`);
 }
 function handleUnitContextAction(action){
   const u=unitContextSelection?getUnit(unitContextSelection.unitId):null;

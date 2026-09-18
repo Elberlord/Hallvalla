@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"/>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260917.166">
-<meta name="hallvalla-build" content="v8_MODULAR_20260917.166">
-<meta name="hallvalla-build-name" content="PvP EXP + Maestría por bajas · 20260917.166">
+<meta name="hallvalla-version" content="20260918.168">
+<meta name="hallvalla-build" content="v8_MODULAR_20260918.168">
+<meta name="hallvalla-build-name" content="Campo AT/GD/HP · PREC/EVA internas · 20260918.168">
 <link rel="stylesheet" href="styles.css?h=141bc4f7757f"/>
 
 <link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.90">
@@ -678,8 +678,9 @@
 <div id="adventurePanel" class="overlay-panel hidden">
   <div class="modal-card adventure-card">
     <button id="adventureGrimoireBtn" class="adventure-grimoire-trigger" type="button" aria-label="Abrir Grimorio" title="Grimorio">
-      <span class="adventure-grimoire-trigger-art" aria-hidden="true"></span>
-      <strong>GRIMORIO</strong>
+      <span class="adventure-grimoire-trigger-art" aria-hidden="true">
+        <span class="adventure-grimoire-trigger-rune"></span>
+      </span>
     </button>
     <div id="adventureGrimoireModal" class="adventure-grimoire-modal hidden" aria-hidden="true">
       <section class="adventure-grimoire-page" role="dialog" aria-modal="true" aria-labelledby="adventureGrimoireTitle">
@@ -1405,8 +1406,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
         <option value="atkLeader">Ataque · líderes</option>
         <option value="guardUnit">Guardia · unidades</option>
         <option value="guardLeader">Guardia · líderes</option>
-        <option value="precision">Precisión · unidades</option>
-        <option value="evasion">Evasión · unidades</option>
       </select>
     </label>
 
@@ -1501,7 +1500,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
         <span>Tamaño completo <output id="fieldCardScaleValue">100%</output></span>
         <input id="fieldCardScaleInput" type="range" min="45" max="150" step="1" value="100">
       </label>
-      <p>El retrato, marco, badges de HP/AT/GD/PREC/EVA y badges de buffs/debuffs se escalan juntos.</p>
+      <p>El retrato, marco, badges de HP/AT/GD y badges de buffs/debuffs se escalan juntos.</p>
       <button id="resetFieldCardScaleBtn" class="btn ghost full" type="button">Restablecer tamaño</button>
     </section>
 
@@ -1542,6 +1541,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=c76e9622edf7"></script>
+<script type="module" src="js/bootstrap-loader.js?h=f21f6a04739d"></script>
 </body>
 </html>

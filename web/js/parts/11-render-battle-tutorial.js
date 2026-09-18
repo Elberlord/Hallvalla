@@ -320,9 +320,9 @@ function getUnitStatusEntries(u){
   if(n(u.tempGuardBuff)>0)add(`+${n(u.tempGuardBuff)} GD`,`Guardia aumentada`,n(u.steelWallBuffs)>0?`Guardia aumentada por Muro de acero (${n(u.steelWallBuffs)} acumulación${n(u.steelWallBuffs)===1?"":"es"}). Se limpia al inicio del próximo turno del dueño.`:`Guardia temporal adicional.`,"buff guard-buff","buff");
   if(n(u.tempGuardBuff)<0)add(`${n(u.tempGuardBuff)} GD`,`Guardia reducida`,`Guardia reducida por trampa o efecto temporal.`,"debuff guard-debuff","debuff");
   if(n(u.warningRuneGuard)>0)add(`◆ +${n(u.warningRuneGuard)} GD`,`Runa de advertencia`,`La próxima vez que esta unidad sea atacada, obtiene +${n(u.warningRuneGuard)} Guardia durante ese combate y la runa se consume.${u.warningRuneCardName?` Origen: ${u.warningRuneCardName}.`:""}`,"buff guard-buff","buff");
-  if(u.defenseModeReady)add(`DEF +2 GD`,`Guardia defensiva`,`Postura defensiva: +2 Guardia y el primer ataque que reciba tiene -10% precisión. Se consume con ese ataque o al inicio de su próximo turno, lo que ocurra primero.`,"buff guard-buff","defense");
-  const evasionSpent=getEvasionPressure(u);
-  if(evasionSpent>0&&!u.leader)add(`-${evasionSpent} EVA`,`Evasión reducida`,`Destreza/Agilidad gastadas por atacar o por presión de ataques recibidos. Se restaura al inicio de su próximo turno.`,"debuff eva-debuff","debuff");
+  if(u.defenseModeReady)add(`DEF +2 GD`,`Guardia defensiva`,`Postura defensiva: +2 Guardia y mejora su defensa ante el primer ataque recibido. Se consume con ese ataque o al inicio de su próximo turno, lo que ocurra primero.`,"buff guard-buff","defense");
+  /* v168: Precisión/Evasión siguen existiendo como mecánica interna, pero su
+     reserva/desgaste ya no se publica como badge de estado en el campo. */
   if(hasBleeding(u))add(`Sangrado`,`Sangrado`,`Sangrado: pierde ${u.bleedDamage||1} Vida al inicio de su turno${getBleedTurnsText(u)}${u.bleedTurnsRemaining?` (${u.bleedTurnsRemaining} turno${u.bleedTurnsRemaining===1?"":"s"} restante${u.bleedTurnsRemaining===1?"":"s"})`:""}.${u.bleedSourceName?` Origen: ${u.bleedSourceName}.`:""}`,"debuff bleed","bleed");
   if(hasActiveBlessedArmor(u))add(`1ra muerte negada`,`Armadura bendita`,`La primera muerte del líder fue negada. Su vida quedó en 1 y no puede perder Vida durante el resto de este turno.`,"buff guard-buff","buff");
   if(u.leader&&u.leaderType==="archer"&&u.leaderAbility==="arrow_rain")add(`Auto · fin rival`,`Lluvia de flechas`,`Habilidad Nv.5 automática: al final del turno rival, si hay unidades enemigas a rango 3 o menos, inflige 1 daño directo a todas las que estén dentro de rango 3, ignorando Guardia y stats. También afecta Sigilo.`,"buff dex-buff","buff");
@@ -442,32 +442,6 @@ function getUnitTopLeftTitle(u){
   const bonus=typeof getUnitMasteryStatBonusByRank==="function"?getUnitMasteryStatBonusByRank(rank):getUnitMasteryHpBonusByRank(rank);
   return `Rango de maestría de ${u.name}: ${romanUnitRank(rank)} · ${getUnitMasteryProgressText(u)} · Bonus actual: +${bonus} DX / GD / HP / AT / AG. Máximo: Rango XV.`;
 }
-function getUnitAuxStatData(u){
-  if(!u)return {text:"",kind:"guard",title:""};
-  if(u.leader){
-    const guard=displayEffectiveGuard(u);
-    return {text:String(guard),kind:"guard",title:`Guardia/armadura actual: ${guard}${u?.defenseModeReady?" (incluye +2 por DEF)":""}`};
-  }
-  const activeOwner=Number(publicState?.currentPlayer||0);
-  if(activeOwner&&activeOwner===Number(u.owner)){
-    const precisionScore=Math.max(0,Number(getAttackPrecisionScore(u,{})||0));
-    return {text:String(precisionScore),kind:"precision",title:`Precisión disponible actual: ${precisionScore}. Se calcula con Destreza + Agilidad menos lo gastado este turno.`};
-  }
-  const evasionScore=Math.max(0,Number(getAvailableEvasionScore(u,{})||0));
-  return {text:String(evasionScore),kind:"eva",title:`Evasión disponible actual: ${evasionScore}. Se calcula con Destreza + Agilidad menos presión o gasto del turno.`};
-}
-function getUnitPrimaryBoardStatData(u){
-  if(!u)return {text:"",kind:"attack",label:"AT",title:""};
-  const activeOwner=Number(publicState?.currentPlayer||0);
-  const unitOwner=Number(u?.owner||0);
-  const isOwnerTurn=!!(activeOwner&&unitOwner&&activeOwner===unitOwner);
-  if(isOwnerTurn){
-    const atk=Math.max(0,effectiveAtk(u));
-    return {text:String(atk),kind:"attack",label:"AT",title:`AT actual: ${atk}. Turno del dueño de la unidad; este espacio muestra cuánto pega al atacar.`};
-  }
-  const guard=displayEffectiveGuard(u);
-  return {text:String(guard),kind:"guard",label:"GD",title:`GD actual: ${guard}${u?.defenseModeReady?" (incluye +2 por DEF)":""}. Turno rival; este espacio muestra cuánto resiste antes de perder Vida.`};
-}
 function makeSafeBadgeIdPart(value){
   return String(value==null?"":value).replace(/[^a-zA-Z0-9_-]/g,"_")||"hp";
 }
@@ -540,53 +514,23 @@ function getAttackBadgeHtml(u,scope="unit"){
     </span>
   </span>`;
 }
-function getFieldStatBadgeHtml(kind,value,titleText=""){
-  const safeKind=kind==="precision"?"precision":"eva";
-  const numeric=Math.max(0,Number(value||0));
-  const title=escapeHtml(titleText||`${safeKind==="precision"?"Precisión":"Evasión"} actual: ${numeric}`);
-  const frameHref=safeKind==="precision"?'assets/ui/precision_crosshair_emblem.webp?v=2':'assets/ui/evasion_rogue_emblem.webp?v=2';
-  return `<span class="field-stat-emblem-badge field-stat-emblem-${safeKind}" title="${title}" aria-label="${title}">
-    <span class="field-stat-emblem-shell" aria-hidden="true">
-      <img class="field-stat-emblem-img" src="${frameHref}" alt="" draggable="false" data-hv-hide-on-error="1"/>
-      <span class="field-stat-emblem-medallion"><b>${escapeHtml(String(numeric))}</b></span>
-    </span>
-  </span>`;
-}
-function getPrecisionBadgeHtml(u){
-  if(!u)return "";
-  const precisionScore=Math.max(0,Number(getAttackPrecisionScore(u,{})||0));
-  const title=`Precisión disponible actual: ${precisionScore}. Se calcula con Destreza + Agilidad menos lo gastado este turno.`;
-  return getFieldStatBadgeHtml("precision",precisionScore,title);
-}
-function getEvasionBadgeHtml(u){
-  if(!u)return "";
-  const evasionScore=Math.max(0,Number(getAvailableEvasionScore(u,{})||0));
-  const title=`Evasión disponible actual: ${evasionScore}. Se calcula con Destreza + Agilidad menos presión o gasto del turno.`;
-  return getFieldStatBadgeHtml("eva",evasionScore,title);
-}
 function getUnitBottomFrameHtml(u){
   if(!u)return "";
-  const aux=getUnitAuxStatData(u);
-  const primary=getUnitPrimaryBoardStatData(u);
   const topLeftText=getUnitTopLeftText(u);
   const topLeftTitle=getUnitTopLeftTitle(u);
-  const primaryHtml=primary.kind==="guard"
-    ? `<span class="unit-stat-orb stat-orb-atk stat-orb-primary guard stat-badge-guard-wrap" data-board-stat="${escapeHtml(primary.label)}" title="${escapeHtml(primary.title)}">${getGuardBadgeHtml(u,"unit-primary")}</span>`
-    : primary.kind==="attack"
-      ? `<span class="unit-stat-orb stat-orb-atk stat-orb-primary attack stat-badge-atk-wrap" data-board-stat="${escapeHtml(primary.label)}" title="${escapeHtml(primary.title)}">${getAttackBadgeHtml(u,"unit-primary")}</span>`
-      : `<span class="unit-stat-orb stat-orb-atk stat-orb-primary ${escapeHtml(primary.kind)}" data-board-stat="${escapeHtml(primary.label)}" title="${escapeHtml(primary.title)}"><b>${escapeHtml(primary.text)}</b></span>`;
-  const auxHtml=aux.kind==="guard"
-    ? `<span class="unit-stat-orb stat-orb-aux guard stat-badge-guard-wrap" title="${escapeHtml(aux.title)}">${getGuardBadgeHtml(u,"unit-aux")}</span>`
-    : aux.kind==="precision"
-      ? `<span class="unit-stat-orb stat-orb-aux precision stat-badge-precision-wrap" title="${escapeHtml(aux.title)}">${getPrecisionBadgeHtml(u,"unit-aux")}</span>`
-      : aux.kind==="eva"
-        ? `<span class="unit-stat-orb stat-orb-aux eva stat-badge-eva-wrap" title="${escapeHtml(aux.title)}">${getEvasionBadgeHtml(u,"unit-aux")}</span>`
-        : `<span class="unit-stat-orb stat-orb-aux ${escapeHtml(aux.kind)}" title="${escapeHtml(aux.title)}"><b>${escapeHtml(aux.text)}</b></span>`;
+  const atk=Math.max(0,Number(effectiveAtk(u)||0));
+  const guard=Math.max(0,Number(displayEffectiveGuard(u)||0));
+  const attackTitle=`AT actual: ${atk}.`;
+  const guardTitle=`GD actual: ${guard}${u?.defenseModeReady?" (incluye +2 por DEF)":""}.`;
+  /* v168: lectura pública fija del campo. Ataque, Guardia y Vida son los
+     únicos stats visibles. PREC/EVA continúan resolviéndose por debajo. */
+  const attackHtml=`<span class="unit-stat-orb stat-orb-atk stat-orb-primary attack stat-badge-atk-wrap" data-board-stat="AT" title="${escapeHtml(attackTitle)}">${getAttackBadgeHtml(u,"unit-primary")}</span>`;
+  const guardHtml=`<span class="unit-stat-orb stat-orb-aux guard stat-badge-guard-wrap" data-board-stat="GD" title="${escapeHtml(guardTitle)}">${getGuardBadgeHtml(u,"unit-aux")}</span>`;
   return `<div class="unit-ornate-ui">
     <span class="unit-stat-orb stat-orb-cost" title="${escapeHtml(topLeftTitle)}"><b>${escapeHtml(topLeftText)}</b></span>
     <span class="unit-hp-heart-anchor">${getHpHeartBadgeHtml(u,"unit")}</span>
-    ${primaryHtml}
-    ${auxHtml}
+    ${attackHtml}
+    ${guardHtml}
   </div>`;
 }
 

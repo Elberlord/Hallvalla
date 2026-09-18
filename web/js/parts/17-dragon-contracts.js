@@ -522,6 +522,7 @@ const HALLVALLA_EVENT_UI_STORAGE_KEY="hallvalla_event_ui_settings_v21_fire_clean
 const HALLVALLA_EVENT_UI_LAYOUT_FIX_151_KEY="hallvalla_event_ui_layout_fix_151";
 const HALLVALLA_EVENT_UI_LAYOUT_FIX_152_KEY="hallvalla_event_ui_layout_fix_152";
 const HALLVALLA_EVENT_UI_LAYOUT_FIX_163_KEY="hallvalla_event_ui_layout_fix_163_event_tabs";
+const HALLVALLA_EVENT_UI_LAYOUT_FIX_167_KEY="hallvalla_event_ui_layout_fix_167_event_tabs";
 
 const HALLVALLA_HUD_DEFAULT=Object.freeze({x:0,y:0,scale:100,width:100,height:100,padding:0,gap:0});
 /* Configuración DE FÁBRICA confirmada por el usuario (2026-08-08). */
@@ -563,8 +564,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.tab.info": {
-    "x": 687.8261108398438,
-    "y": -220.00001525878906,
+    "x": 592,
+    "y": -229,
     "scale": 70,
     "width": 100,
     "height": 100,
@@ -572,8 +573,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.tab.rewards": {
-    "x": 421.739013671875,
-    "y": -109.52177429199219,
+    "x": 209,
+    "y": -110,
     "scale": 70,
     "width": 100,
     "height": 100,
@@ -581,8 +582,8 @@ const HALLVALLA_HUD_PRESET=Object.freeze({
     "gap": 0
   },
   "beast.tab.global": {
-    "x": 103,
-    "y": 0,
+    "x": -176,
+    "y": 9,
     "scale": 70,
     "width": 100,
     "height": 100,
@@ -1267,6 +1268,26 @@ function getHallvallaEventUiSettings(){
         });
         if(stored)localStorage.setItem(HALLVALLA_EVENT_UI_STORAGE_KEY,JSON.stringify(raw));
         localStorage.setItem(HALLVALLA_EVENT_UI_LAYOUT_FIX_163_KEY,"1");
+      }
+    }catch(_){ }
+    /* v167: nueva calibración confirmada por el usuario. La anterior se obtuvo
+       arrastrando los botones y no representaba las coordenadas finales. Esta
+       migración pisa SOLO x/y de Información, Recompensas y Eventos globales,
+       conservando escala y cualquier otro ajuste del HUD. */
+    try{
+      if(localStorage.getItem(HALLVALLA_EVENT_UI_LAYOUT_FIX_167_KEY)!=="1"){
+        raw.hud=raw.hud&&typeof raw.hud==="object"?{...raw.hud}:{};
+        const fixes={
+          "beast.tab.info":{x:592,y:-229},
+          "beast.tab.rewards":{x:209,y:-110},
+          "beast.tab.global":{x:-176,y:9}
+        };
+        Object.entries(fixes).forEach(([key,pos])=>{
+          const current=raw.hud[key]&&typeof raw.hud[key]==="object"?raw.hud[key]:{};
+          raw.hud[key]={...current,x:pos.x,y:pos.y};
+        });
+        localStorage.setItem(HALLVALLA_EVENT_UI_STORAGE_KEY,JSON.stringify(raw));
+        localStorage.setItem(HALLVALLA_EVENT_UI_LAYOUT_FIX_167_KEY,"1");
       }
     }catch(_){ }
     const hud={};

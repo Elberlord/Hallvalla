@@ -1,0 +1,23 @@
+HallValla v167 · 2026-09-18
+
+ALCANCE
+- Estabilizar la versión web antes de rehacer la APK Android.
+
+CAMBIOS
+1. Evento Beast Master
+   - Información: x=592, y=-229.
+   - Recompensas: x=209, y=-110.
+   - Eventos globales: x=-176, y=9.
+   - Las coordenadas se aplican en el preset normal del HUD y en Control Universal ?dev.
+   - Se añade migración v167 independiente para sobrescribir la calibración v163 ya guardada sin borrar otros ajustes.
+
+2. Grimorio
+   - El botón rectangular con la palabra GRIMORIO se reemplaza por un icono de libro abierto construido con CSS.
+   - Se mantiene el mismo botón/ID y por tanto la misma lógica de apertura; solo cambia su presentación.
+
+3. Android
+   - No se modifica ni recompila la APK en v167.
+   - Se deja para la siguiente etapa el diagnóstico/reconstrucción de WebView, constructor de mazo, controles táctiles, home móvil y ruleta.
+
+4. Xsolla
+   - No se añade geobloqueo cliente. La restricción de Bélgica, Brasil y China debe aplicarse en Xsolla Publisher Account.

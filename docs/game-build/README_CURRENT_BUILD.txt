@@ -1,3 +1,4 @@
+20260918.167 · Web UI: coordenadas finales Beast Master sincronizadas en PROD/DEV; Grimorio sustituido por icono de libro abierto; APK Android sin cambios.
 HallValla · CURRENT BUILD 20260917.163
 
 - Beast Master: Información, Recompensas y Eventos globales recuperan exactamente las posiciones aprobadas.

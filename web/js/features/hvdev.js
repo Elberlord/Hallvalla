@@ -867,6 +867,7 @@
   const STORAGE_KEY="hallvalla_universal_layout_dev_v1";
   const PANEL_KEY="hallvalla_universal_layout_panel_v1";
   const EVENT_TABS_FIX_KEY="hallvalla_universal_layout_dev_fix_163_event_tabs";
+  const EVENT_TABS_FIX_167_KEY="hallvalla_universal_layout_dev_fix_167_event_tabs";
   const STALE_HUA_LAN_FIX_KEY="hallvalla_universal_layout_dev_fix_164_remove_stale_hua_lan";
   const $=(s,r=document)=>r.querySelector(s);
   const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
@@ -905,6 +906,23 @@
         localStorage.setItem(EVENT_TABS_FIX_KEY,"1");
       }
     }catch(error){console.warn("[HallValla][UniversalDev] No se pudo sincronizar el layout v163 del evento.",error);}
+    /* v167: sincroniza las coordenadas finales enviadas por el usuario. Se usa
+       una clave nueva para corregir también navegadores que ya ejecutaron v163. */
+    try{
+      if(localStorage.getItem(EVENT_TABS_FIX_167_KEY)!=="1"){
+        const fixes={
+          'button[data-beast-tab="global"]:nth-of-type(3)':{x:-176,y:9},
+          'button[data-beast-tab="rewards"]:nth-of-type(2)':{x:209,y:-110},
+          'button[data-beast-tab="info"]:nth-of-type(1)':{x:592,y:-229}
+        };
+        for(const [selector,pos] of Object.entries(fixes)){
+          const current=config.items[selector]&&typeof config.items[selector]==="object"?config.items[selector]:{};
+          config.items[selector]=normalizeState({...current,...pos,label:current.label||"button"});
+        }
+        writeConfig();
+        localStorage.setItem(EVENT_TABS_FIX_167_KEY,"1");
+      }
+    }catch(error){console.warn("[HallValla][UniversalDev] No se pudo sincronizar el layout v167 del evento.",error);}
     /* v164: elimina únicamente el selector residual del constructor de mazos que
        quedó etiquetado como Hua Lan. El selector era posicional, por lo que podía
        terminar moviendo +5 px a cualquier carta que ocupara el índice 20. */

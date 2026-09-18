@@ -29671,40 +29671,72 @@ body.hv-mobile-landscape .map-node-farm-badge{font-size:8px;padding:2px 5px;top:
 }
 .adventure-grimoire-trigger{
   position:absolute;
-  top:16px;
+  top:14px;
   right:18px;
   z-index:90;
-  width:116px;
-  height:72px;
+  width:76px;
+  height:66px;
   padding:0;
   border:0;
   background:transparent;
-  color:#ffe4a1;
   cursor:pointer;
-  filter:drop-shadow(0 8px 12px rgba(0,0,0,.55));
+  filter:drop-shadow(0 7px 8px rgba(0,0,0,.72));
+  transition:transform .16s ease,filter .16s ease;
 }
 .adventure-grimoire-trigger-art{
   position:absolute;
-  inset:0;
-  border-radius:18px;
-  background-image:linear-gradient(180deg,rgba(7,4,2,.18),rgba(7,4,2,.58)),url("assets/ui/deck_forge/spellbook_drawer_asset.webp");
-  background-size:190% auto;
-  background-position:54% 36%;
-  border:1px solid rgba(236,184,76,.68);
-  box-shadow:inset 0 0 0 2px rgba(74,41,11,.65),0 0 18px rgba(236,166,49,.22);
+  inset:4px 2px 5px;
+  background:linear-gradient(90deg,transparent 46%,rgba(45,20,4,.92) 48%,#d8a84d 50%,rgba(45,20,4,.92) 52%,transparent 54%);
+  pointer-events:none;
 }
-.adventure-grimoire-trigger strong{
+.adventure-grimoire-trigger-art::before,
+.adventure-grimoire-trigger-art::after{
+  content:"";
   position:absolute;
-  left:50%;
-  bottom:8px;
-  transform:translateX(-50%);
-  font-family:Georgia,"Times New Roman",serif;
-  font-size:13px;
-  letter-spacing:1.3px;
-  text-shadow:0 2px 4px #000,0 0 7px #000;
-  white-space:nowrap;
+  top:5px;
+  bottom:5px;
+  width:48%;
+  background:
+    linear-gradient(180deg,rgba(255,242,187,.96),rgba(205,154,77,.96) 68%,rgba(113,66,25,.98)),
+    repeating-linear-gradient(180deg,transparent 0 7px,rgba(83,47,16,.18) 7px 8px);
+  border:2px solid #7d4a18;
+  box-shadow:inset 0 0 0 1px rgba(255,224,146,.42),0 3px 7px rgba(0,0,0,.48);
 }
-.adventure-grimoire-trigger:hover{transform:translateY(-1px) scale(1.02);}
+.adventure-grimoire-trigger-art::before{
+  left:1px;
+  border-radius:10px 2px 7px 12px;
+  clip-path:polygon(0 8%,100% 0,100% 94%,0 100%);
+  transform:perspective(90px) rotateY(8deg);
+  transform-origin:right center;
+}
+.adventure-grimoire-trigger-art::after{
+  right:1px;
+  border-radius:2px 10px 12px 7px;
+  clip-path:polygon(0 0,100% 8%,100% 100%,0 94%);
+  transform:perspective(90px) rotateY(-8deg);
+  transform-origin:left center;
+}
+.adventure-grimoire-trigger-rune{
+  position:absolute;
+  z-index:3;
+  left:50%;
+  top:23px;
+  width:12px;
+  height:12px;
+  border:2px solid #6f3a12;
+  background:#dba744;
+  box-shadow:0 0 0 1px rgba(255,232,163,.35),0 0 8px rgba(246,184,70,.5);
+  transform:translate(-50%,-50%) rotate(45deg);
+}
+.adventure-grimoire-trigger:hover{
+  transform:translateY(-2px) scale(1.06);
+  filter:drop-shadow(0 9px 10px rgba(0,0,0,.78)) brightness(1.06);
+}
+.adventure-grimoire-trigger:focus-visible{
+  outline:2px solid #f0c36a;
+  outline-offset:3px;
+  border-radius:12px;
+}
 .adventure-grimoire-modal{
   position:absolute;
   inset:0;
@@ -29818,8 +29850,8 @@ body.hv-mobile-landscape .map-node-farm-badge{font-size:8px;padding:2px 5px;top:
 }
 .adventure-grimoire-audio button:hover{transform:scale(1.06);}
 @media(max-width:820px){
-  .adventure-grimoire-trigger{width:88px;height:56px;top:8px;right:8px;}
-  .adventure-grimoire-trigger strong{font-size:10px;bottom:5px;}
+  .adventure-grimoire-trigger{width:60px;height:52px;top:8px;right:8px;}
+  .adventure-grimoire-trigger-rune{top:18px;width:9px;height:9px;}
   .adventure-grimoire-modal{padding:8px;}
   .adventure-grimoire-page{width:98vw;height:88vh;}
   .adventure-grimoire-page::before{inset:-5%;background-size:160% auto;background-position:55% 52%;}
