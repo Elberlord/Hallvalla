@@ -839,7 +839,7 @@
 
 
 /* ============================================================
-   HallValla DEV · CONTROL UNIVERSAL LIBRE · 1366×636
+   HallValla DEV · CONTROL UNIVERSAL LIBRE v4 · 1366×636
    - Solo existe con ?dev.
    - Arrastre libre y directo: seleccionar -> arrastrar.
    - No fuerza los elementos a una caja durante el movimiento.
@@ -852,8 +852,8 @@
   "use strict";
   if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return;
 
-  const STORAGE_KEY="hallvalla_universal_layout_dev_v3_free_1366";
-  const PANEL_KEY="hallvalla_universal_layout_panel_v3_free_1366";
+  const STORAGE_KEY="hallvalla_universal_layout_dev_v4_force_1366";
+  const PANEL_KEY="hallvalla_universal_layout_panel_v4_force_1366";
   const DESIGN_W=1366;
   const DESIGN_H=636;
   const MIN_GRAB=28;
@@ -863,7 +863,7 @@
   const cssEscape=value=>globalThis.CSS?.escape?globalThis.CSS.escape(String(value)):String(value).replace(/[^a-zA-Z0-9_-]/g,ch=>`\\${ch}`);
 
   const originalStyles=new WeakMap();
-  let config={version:3,items:{}};
+  let config={version:4,items:{}};
   let selected=null;
   let selectedSelector="";
   let hoverTarget=null;
@@ -893,7 +893,7 @@
   function readConfig(){
     try{
       const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");
-      if(raw&&typeof raw==="object"&&raw.items&&typeof raw.items==="object")config={version:3,items:{...raw.items}};
+      if(raw&&typeof raw==="object"&&raw.items&&typeof raw.items==="object")config={version:4,items:{...raw.items}};
     }catch(error){console.warn('[HallValla][UniversalFree] No se pudo leer la configuración.',error);}
   }
   function writeConfig(){
@@ -903,27 +903,37 @@
   function captureOriginal(node){
     if(!node||originalStyles.has(node))return;
     originalStyles.set(node,{
-      translate:node.style.translate||"",
-      scale:node.style.scale||"",
-      opacity:node.style.opacity||"",
-      zIndex:node.style.zIndex||"",
+      translate:node.style.getPropertyValue('translate')||"",
+      translatePriority:node.style.getPropertyPriority('translate')||"",
+      scale:node.style.getPropertyValue('scale')||"",
+      scalePriority:node.style.getPropertyPriority('scale')||"",
+      opacity:node.style.getPropertyValue('opacity')||"",
+      opacityPriority:node.style.getPropertyPriority('opacity')||"",
+      zIndex:node.style.getPropertyValue('z-index')||"",
+      zIndexPriority:node.style.getPropertyPriority('z-index')||"",
       background:node.style.getPropertyValue('background')||"",
       backgroundPriority:node.style.getPropertyPriority('background')||"",
       border:node.style.getPropertyValue('border')||"",
       borderPriority:node.style.getPropertyPriority('border')||"",
       boxShadow:node.style.getPropertyValue('box-shadow')||"",
       boxShadowPriority:node.style.getPropertyPriority('box-shadow')||"",
-      visibility:node.style.visibility||"",
-      pointerEvents:node.style.pointerEvents||""
+      visibility:node.style.getPropertyValue('visibility')||"",
+      visibilityPriority:node.style.getPropertyPriority('visibility')||"",
+      pointerEvents:node.style.getPropertyValue('pointer-events')||"",
+      pointerEventsPriority:node.style.getPropertyPriority('pointer-events')||""
     });
   }
   function restoreNode(node){
     const o=originalStyles.get(node);if(!node||!o)return;
-    node.style.translate=o.translate;node.style.scale=o.scale;node.style.opacity=o.opacity;node.style.zIndex=o.zIndex;
+    if(o.translate)node.style.setProperty('translate',o.translate,o.translatePriority);else node.style.removeProperty('translate');
+    if(o.scale)node.style.setProperty('scale',o.scale,o.scalePriority);else node.style.removeProperty('scale');
+    if(o.opacity)node.style.setProperty('opacity',o.opacity,o.opacityPriority);else node.style.removeProperty('opacity');
+    if(o.zIndex)node.style.setProperty('z-index',o.zIndex,o.zIndexPriority);else node.style.removeProperty('z-index');
     if(o.background)node.style.setProperty('background',o.background,o.backgroundPriority);else node.style.removeProperty('background');
     if(o.border)node.style.setProperty('border',o.border,o.borderPriority);else node.style.removeProperty('border');
     if(o.boxShadow)node.style.setProperty('box-shadow',o.boxShadow,o.boxShadowPriority);else node.style.removeProperty('box-shadow');
-    node.style.visibility=o.visibility;node.style.pointerEvents=o.pointerEvents;
+    if(o.visibility)node.style.setProperty('visibility',o.visibility,o.visibilityPriority);else node.style.removeProperty('visibility');
+    if(o.pointerEvents)node.style.setProperty('pointer-events',o.pointerEvents,o.pointerEventsPriority);else node.style.removeProperty('pointer-events');
   }
   function normalizeState(raw={}){
     return {
@@ -985,14 +995,22 @@
     if(!node||isDevNode(node))return;
     captureOriginal(node);node.dataset.hvUniversalTarget=selector;
     const o=originalStyles.get(node)||{};
-    node.style.translate=(state.x!==0||state.y!==0)?`${state.x}px ${state.y}px`:(o.translate||'');
-    node.style.scale=(state.sx!==100||state.sy!==100)?`${state.sx/100} ${state.sy/100}`:(o.scale||'');
-    node.style.opacity=state.opacity!==100?String(state.opacity/100):(o.opacity||'');
-    node.style.zIndex=state.z!==0?String(state.z):(o.zIndex||'');
+    if(state.x!==0||state.y!==0)node.style.setProperty('translate',state.x+'px '+state.y+'px','important');
+    else if(o.translate)node.style.setProperty('translate',o.translate,o.translatePriority);else node.style.removeProperty('translate');
+    if(state.sx!==100||state.sy!==100)node.style.setProperty('scale',(state.sx/100)+' '+(state.sy/100),'important');
+    else if(o.scale)node.style.setProperty('scale',o.scale,o.scalePriority);else node.style.removeProperty('scale');
+    if(state.opacity!==100)node.style.setProperty('opacity',String(state.opacity/100),'important');
+    else if(o.opacity)node.style.setProperty('opacity',o.opacity,o.opacityPriority);else node.style.removeProperty('opacity');
+    if(state.z!==0)node.style.setProperty('z-index',String(state.z),'important');
+    else if(o.zIndex)node.style.setProperty('z-index',o.zIndex,o.zIndexPriority);else node.style.removeProperty('z-index');
     if(state.backgroundOff)node.style.setProperty('background','transparent','important');else if(o.background)node.style.setProperty('background',o.background,o.backgroundPriority);else node.style.removeProperty('background');
     if(state.borderOff)node.style.setProperty('border','0','important');else if(o.border)node.style.setProperty('border',o.border,o.borderPriority);else node.style.removeProperty('border');
     if(state.shadowOff)node.style.setProperty('box-shadow','none','important');else if(o.boxShadow)node.style.setProperty('box-shadow',o.boxShadow,o.boxShadowPriority);else node.style.removeProperty('box-shadow');
-    if(state.hidden){node.style.visibility='hidden';node.style.pointerEvents='none';}else{node.style.visibility=o.visibility||'';node.style.pointerEvents=o.pointerEvents||'';}
+    if(state.hidden){node.style.setProperty('visibility','hidden','important');node.style.setProperty('pointer-events','none','important');}
+    else{
+      if(o.visibility)node.style.setProperty('visibility',o.visibility,o.visibilityPriority);else node.style.removeProperty('visibility');
+      if(o.pointerEvents)node.style.setProperty('pointer-events',o.pointerEvents,o.pointerEventsPriority);else node.style.removeProperty('pointer-events');
+    }
   }
   function applySelector(selector){
     if(!selector||!config.items[selector])return;
@@ -1020,7 +1038,7 @@
   }
   function resetAll(){
     for(const selector of Object.keys(config.items)){let nodes=[];try{nodes=$$(selector);}catch(_){ }nodes.forEach(node=>{restoreNode(node);node.removeAttribute('data-hv-universal-target');});}
-    config={version:3,items:{}};writeConfig();syncPanel();syncSavedSelect();setStatus('Todos los ajustes DEV de esta versión fueron limpiados.');
+    config={version:4,items:{}};writeConfig();syncPanel();syncSavedSelect();setStatus('Todos los ajustes DEV de esta versión fueron limpiados.');
   }
   function setPicking(on){
     picking=!!on;document.documentElement.classList.toggle('hv-universal-picking',picking);
@@ -1130,7 +1148,7 @@
     for(const [selector,raw] of Object.entries(config.items)){const option=document.createElement('option');option.value=selector;option.textContent=raw.label||selector;select.appendChild(option);}
     if(previous&&config.items[previous])select.value=previous;
   }
-  function exportJson(){return JSON.stringify({version:3,designStage:{width:DESIGN_W,height:DESIGN_H,mode:'fixed'},units:'design-px',editor:'free-drag-v3',items:config.items},null,2);}
+  function exportJson(){return JSON.stringify({version:4,designStage:{width:DESIGN_W,height:DESIGN_H,mode:'fixed'},units:'design-px',editor:'free-drag-v4-force-important',items:config.items},null,2);}
   function exportCss(){
     return Object.entries(config.items).map(([selector,raw])=>{const s=normalizeState(raw),rules=[`translate:${s.x}px ${s.y}px`,`scale:${s.sx/100} ${s.sy/100}`,`opacity:${s.opacity/100}`];if(s.z)rules.push(`z-index:${s.z}`);if(s.backgroundOff)rules.push('background:transparent!important');if(s.borderOff)rules.push('border:0!important');if(s.shadowOff)rules.push('box-shadow:none!important');if(s.hidden)rules.push('visibility:hidden!important','pointer-events:none!important');return `${selector}{${rules.join(';')};}`;}).join('\n');
   }
@@ -1144,7 +1162,7 @@
     if($('#hvUniversalLayoutTuner'))return;
     const panel=document.createElement('aside');panel.id='hvUniversalLayoutTuner';panel.dataset.hvDevTool='';panel.className='hv-universal-layout-tuner hidden';
     panel.innerHTML=`
-      <header id="hvUniversalDragHandle" class="hv-universal-head"><div><b>CONTROL UNIVERSAL LIBRE · 1366×636</b><small>Selecciona y arrastra directamente · JSON canónico</small></div><button id="hvUniversalClose" type="button">×</button></header>
+      <header id="hvUniversalDragHandle" class="hv-universal-head"><div><b>CONTROL UNIVERSAL LIBRE v4 · 1366×636</b><small>DEV fuerza reglas !important · JSON canónico</small></div><button id="hvUniversalClose" type="button">×</button></header>
       <div class="hv-universal-body">
         <button id="hvUniversalPick" class="hv-universal-primary" type="button">🎯 SELECCIONAR / ARRASTRAR</button>
         <button id="hvUniversalPickMode" class="hv-universal-primary hv-universal-mode" type="button">SELECCIÓN: HITBOX</button>
@@ -1153,7 +1171,7 @@
         <input id="hvUniversalSelector" class="hv-universal-selector" readonly aria-label="Selector CSS">
         <select id="hvUniversalSaved" class="hv-universal-saved"></select>
         <div class="hv-universal-nav"><button id="hvUniversalParent" type="button">↑ PADRE</button><button id="hvUniversalChild" type="button">↓ HIJO</button><button id="hvUniversalCenter" type="button">◎ CENTRAR</button></div>
-        <div class="hv-universal-free-note">MOVER ES LIBRE: arrastra el elemento seleccionado. Si lo sueltas totalmente fuera, queda una franja recuperable.</div>
+        <div class="hv-universal-free-note">MOVER ES LIBRE: DEV fuerza posición/tamaño incluso sobre reglas !important del juego.</div>
         <label>X <input id="hvUniversalX" type="number" step="1"></label>
         <label>Y <input id="hvUniversalY" type="number" step="1"></label>
         <label>ANCHO VISUAL % <input id="hvUniversalSX" type="number" min="5" max="800" step="1"></label>
