@@ -232,3 +232,10 @@ Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
 - Eliminados los tres assets WEBP exclusivos de esos controles.
 - El combate fluido conserva el arsenal TR, selección contextual, configuración, Vida/Ataque/Guardia y automatización de unidades.
 - No se modificó la APK ni las reglas de Firebase.
+## v178 — Reparación de arranque modular
+- Corregida una dependencia circular introducida por el modelo de velocidad: el registro inicial de cartas podía calcular MOV antes de que se cargaran los helpers de Gengis/Hannibal.
+- Los helpers de penalización necesarios durante bootstrap ahora viven en el módulo de reglas de combate (`06`) y ya no dependen del módulo de acciones (`08`) que se carga después.
+- Esto evita la cascada de `ReferenceError` que hacía aparecer como ausentes catálogos, aventura, dragones y selección de líder aunque el perfil de Firebase siguiera intacto.
+- Se conservan la limpieza de controles heredados de v177 y la calibración de velocidad de v176.
+- No se modifican la APK ni las reglas de Firebase.
+

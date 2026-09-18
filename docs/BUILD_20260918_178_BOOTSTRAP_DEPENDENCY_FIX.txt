@@ -1,0 +1,19 @@
+HallValla v178 — Reparación de arranque modular
+
+Problema observado en v177 en una carga limpia:
+- getGenghisMovDebuff is not defined
+- IMPROVED_MAGIC_TRAP_PACK is not defined
+- CARD_VISUALS_BY_KEY is not defined
+- SALADIN_TOKEN_CARD is not defined
+- ADVENTURE_CHAPTERS is not defined
+- La UI podía volver a pedir selección de líder aunque el perfil remoto siguiera intacto.
+
+Causa:
+El modelo de velocidad introducido anteriormente hacía que el registro inicial de SALADIN_TOKEN_CARD calculase el cooldown de movimiento durante la evaluación de 06-decks-units-combat-rules.js. effectiveMov dependía de helpers de Gengis/Hannibal/Khalid que todavía estaban declarados en 08-actions-inspector.js, módulo que se carga después. El primer ReferenceError interrumpía la inicialización de las constantes restantes de 06 y provocaba los errores en cascada.
+
+Corrección:
+- getKhalidAttackPenalty, getGenghisMovDebuff, getHannibalMovDebuff y getHannibalAtkDebuff se trasladan a 06-decks-units-combat-rules.js.
+- Se eliminan sus declaraciones duplicadas de 08-actions-inspector.js.
+- Se actualizan BUILD/cache/hashes a 20260918.178.
+- Se conserva la eliminación de Mano/Cancelar/Siguiente fase/Acciones realizada en v177.
+- No se modifican datos de perfil, APK ni reglas de Firebase.

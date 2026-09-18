@@ -36,10 +36,6 @@ function getUnitAttackRange(u){
 function isMulanExecutionMoveReady(u){return !!(u&&u.key==="mulan"&&u.mulanExecutionMoveReady);}
 function isMulanExecutionChoiceReady(u){return !!(u&&u.key==="mulan"&&u.mulanExecutionChoiceReady);}
 function isKhalidChainAttackReady(u){return !!(u&&u.key==="khalid_ibn_al_walid"&&u.khalidChainReady);}
-function getKhalidAttackPenalty(u){return u?.key==="khalid_ibn_al_walid"?Math.max(0,Number(u.khalidAttackPenalty||0)):0;}
-function getGenghisMovDebuff(u){return u&&u.genghisMovDebuffTurnKey&&u.genghisMovDebuffTurnKey===publicState?.turnKey?Math.max(1,Number(u.genghisMovDebuff||1)):0;}
-function getHannibalMovDebuff(u){return u&&u.hannibalMovDebuffTurnKey&&u.hannibalMovDebuffTurnKey===publicState?.turnKey?Math.max(1,Number(u.hannibalMovDebuff||1)):0;}
-function getHannibalAtkDebuff(u){return u&&u.hannibalAtkDebuffTurnKey&&u.hannibalAtkDebuffTurnKey===publicState?.turnKey?Math.max(1,Number(u.hannibalAtkDebuff||1)):0;}
 function canUnitDeclareAttack(u){
   const live=getLiveUnitRef(u);
   if(!live)return false;
