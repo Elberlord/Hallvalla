@@ -1,3 +1,10 @@
+20260918.171 · Mina: piezas gratis con canje atómico en Firebase.
+- `freePieces` pasa a ser el saldo remoto de vales de la tienda No Muerto.
+- Un canje confirmado hace −1 vale y +1 pieza en la misma transacción.
+- Migración automática de `minePuzzleVouchers` antiguos al abrir la tienda.
+- Requiere desplegar `backend/firebase/database.rules.json` actualizado junto con la web.
+- APK Android sin cambios.
+
 20260918.167 · Web UI: coordenadas finales Beast Master sincronizadas en PROD/DEV; Grimorio sustituido por icono de libro abierto; APK Android sin cambios.
 HallValla · CURRENT BUILD 20260917.163
 

@@ -579,7 +579,10 @@ function claimAccountMasteryRewards(requests=[]){
     profile.gold=Math.max(0,Number(profile.gold||0))+goldGain;
     profile.gems=Math.max(0,Number(profile.gems||0))+gemsGain;
     profile.fragments=Math.max(0,Number(profile.fragments||0))+fragmentsGain;
-    profile.minePuzzleVouchers=Math.max(0,Math.floor(Number(profile.minePuzzleVouchers||0)))+minePieceGain;
+    if(minePieceGain>0){
+      if(typeof grantHallvallaMineShopFreePieces==="function")void grantHallvallaMineShopFreePieces(minePieceGain,"account_mastery");
+      else profile.minePuzzleVouchers=Math.max(0,Math.floor(Number(profile.minePuzzleVouchers||0)))+minePieceGain;
+    }
     profile.freeMineDisasterClears=Math.max(0,Math.floor(Number(profile.freeMineDisasterClears||0)))+freeDisasterClearGain;
     profile.actionMasteries=book;
     savePlayerProfile(profile);

@@ -1,0 +1,16 @@
+HallValla v171 — Mina / pieza gratis atómica
+
+Problema reparado
+- La v170 intentaba incrementar `pieces` manteniendo `lastPurchaseDay` al usar un vale.
+- Las reglas solo aceptaban el incremento ligado a una compra diaria, por lo que Firebase rechazaba el canje.
+
+Solución
+- Nuevo saldo remoto `users/{uid}/mine/shop/freePieces`.
+- El canje usa una transacción sobre `users/{uid}/mine/shop`: decrementa `freePieces` y aumenta exactamente una pieza del No Muerto.
+- Reglas de Firebase validan que una reducción de `freePieces` sea exactamente de 1 y coincida con un incremento total de exactamente 1 pieza.
+- La compra con gemas mantiene `freePieces` intacto y actualiza `lastPurchaseDay` como antes.
+- Un vale puede usarse incluso si ya se compró la pieza diaria; varios vales pueden aplicarse el mismo día.
+- Vales heredados `minePuzzleVouchers` se importan automáticamente.
+
+Despliegue
+IMPORTANTE: publicar la web no despliega las reglas de Realtime Database. Antes de probar el canje en producción, desplegar `backend/firebase/database.rules.json` al proyecto `hallvalla-online` (por ejemplo `firebase deploy --only database`).
