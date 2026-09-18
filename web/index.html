@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"/>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260918.168">
-<meta name="hallvalla-build" content="v8_MODULAR_20260918.168">
-<meta name="hallvalla-build-name" content="Campo AT/GD/HP · PREC/EVA internas · 20260918.168">
-<link rel="stylesheet" href="styles.css?h=141bc4f7757f"/>
+<meta name="hallvalla-version" content="20260918.170">
+<meta name="hallvalla-build" content="v8_MODULAR_20260918.170">
+<meta name="hallvalla-build-name" content="UI web · iconografía WEBP canónica · 20260918.170">
+<link rel="stylesheet" href="styles.css?h=c472d4ff5251"/>
 
 <link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.90">
 <link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.90">
@@ -678,9 +678,7 @@
 <div id="adventurePanel" class="overlay-panel hidden">
   <div class="modal-card adventure-card">
     <button id="adventureGrimoireBtn" class="adventure-grimoire-trigger" type="button" aria-label="Abrir Grimorio" title="Grimorio">
-      <span class="adventure-grimoire-trigger-art" aria-hidden="true">
-        <span class="adventure-grimoire-trigger-rune"></span>
-      </span>
+      <img class="adventure-grimoire-trigger-icon" src="assets/ui/grimoire/book.webp" alt="" draggable="false" aria-hidden="true">
     </button>
     <div id="adventureGrimoireModal" class="adventure-grimoire-modal hidden" aria-hidden="true">
       <section class="adventure-grimoire-page" role="dialog" aria-modal="true" aria-labelledby="adventureGrimoireTitle">
@@ -691,9 +689,9 @@
           <div id="adventureGrimoireText" class="adventure-grimoire-text"></div>
         </div>
         <nav class="adventure-grimoire-audio" aria-label="Narración del Grimorio">
-          <button id="adventureGrimoirePlayBtn" type="button" aria-label="Leer en voz alta" title="Leer">▶</button>
-          <button id="adventureGrimoirePauseBtn" type="button" aria-label="Pausar o continuar lectura" title="Pausar / continuar">Ⅱ</button>
-          <button id="adventureGrimoireStopBtn" type="button" aria-label="Detener lectura" title="Detener">■</button>
+          <button id="adventureGrimoirePlayBtn" type="button" aria-label="Leer en voz alta" title="Leer"><img src="assets/ui/grimoire/play.webp" alt="" draggable="false"></button>
+          <button id="adventureGrimoirePauseBtn" type="button" aria-label="Pausar o continuar lectura" title="Pausar / continuar"><img src="assets/ui/grimoire/pause.webp" alt="" draggable="false"></button>
+          <button id="adventureGrimoireStopBtn" type="button" aria-label="Detener lectura" title="Detener"><img src="assets/ui/grimoire/stop.webp" alt="" draggable="false"></button>
         </nav>
       </section>
     </div>
@@ -1541,6 +1539,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=f21f6a04739d"></script>
+<script type="module" src="js/bootstrap-loader.js?h=e763b35dec7a"></script>
 </body>
 </html>

@@ -247,16 +247,14 @@ initActionsHudTuner();
 /* ---------------------------------------------------------------------------
    7HFIELDSTAT MASTER · Control total de iconos, aros y números
    --------------------------------------------------------------------------- */
-const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_master_v7_unit_icons_420";
+const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_master_v8_public_three_stats";
 const FIELD_STAT_BADGE_TARGETS={
-  hpUnit:{label:"Vida · unidades", css:"hp-unit", type:"hp", defaults:{iconScale:205,iconX:-25,iconY:38,ringScale:220,ringX:0,ringY:0,ringStroke:2.6,numSize:32,numWeight:100,numScaleX:117,numScaleY:110,numX:-0.2,numY:5.2}},
+  hpUnit:{label:"Vida · unidades", css:"hp-unit", type:"hp", defaults:{iconScale:205,iconX:-29,iconY:38,ringScale:220,ringX:0,ringY:0,ringStroke:2.6,numSize:32,numWeight:100,numScaleX:117,numScaleY:110,numX:-0.2,numY:5.2}},
   hpLeader:{label:"Vida · líderes", css:"hp-leader", type:"hp", defaults:{iconScale:125,iconX:-4,iconY:-32,ringScale:177,ringX:0,ringY:0,ringStroke:0.9,numSize:28,numWeight:100,numScaleX:100,numScaleY:100,numX:0,numY:-2}},
-  atkUnit:{label:"Ataque · unidades", css:"atk-unit", type:"badge", defaults:{iconScale:420,iconX:-3,iconY:-1,ringScale:168,ringX:-1,ringY:-3,ringStroke:0.2,numSize:15.8,numWeight:100,numScaleX:46,numScaleY:44,numX:-5,numY:2}},
+  atkUnit:{label:"Ataque · unidades", css:"atk-unit", type:"badge", defaults:{iconScale:420,iconX:-3,iconY:-1,ringScale:168,ringX:-1,ringY:-3,ringStroke:0.2,numSize:15.8,numWeight:100,numScaleX:46,numScaleY:44,numX:-2.4,numY:2.8}},
   atkLeader:{label:"Ataque · líderes", css:"atk-leader", type:"badge", defaults:{iconScale:125,iconX:-2,iconY:-26,ringScale:76,ringX:4,ringY:-27,ringStroke:0.3,numSize:13.8,numWeight:200,numScaleX:100,numScaleY:100,numX:0,numY:0}},
-  guardUnit:{label:"Guardia · unidades", css:"guard-unit", type:"badge", defaults:{iconScale:420,iconX:-2,iconY:-2,ringScale:203,ringX:0,ringY:0,ringStroke:0.2,numSize:6,numWeight:100,numScaleX:95,numScaleY:77,numX:-5.4,numY:-2.8}},
-  guardLeader:{label:"Guardia · líderes", css:"guard-leader", type:"badge", defaults:{iconScale:140,iconX:2,iconY:-25,ringScale:82,ringX:2,ringY:-10,ringStroke:0.2,numSize:16.4,numWeight:100,numScaleX:99,numScaleY:102,numX:10.2,numY:-20}},
-  precision:{label:"Precisión · unidades", css:"precision", type:"field", defaults:{iconScale:420,iconX:4,iconY:-2,ringScale:220,ringX:2,ringY:-3,ringStroke:0.2,numSize:7.8,numWeight:100,numScaleX:86,numScaleY:63,numX:-2.8,numY:-0.2}},
-  evasion:{label:"Evasión · unidades", css:"evasion", type:"field", defaults:{iconScale:420,iconX:4,iconY:-1,ringScale:201,ringX:2,ringY:0,ringStroke:0.2,numSize:6,numWeight:100,numScaleX:100,numScaleY:100,numX:-3.6,numY:-2}}
+  guardUnit:{label:"Guardia · unidades", css:"guard-unit", type:"badge", defaults:{iconScale:420,iconX:-2,iconY:-2,ringScale:203,ringX:0,ringY:0,ringStroke:0.2,numSize:6,numWeight:100,numScaleX:95,numScaleY:77,numX:-4.4,numY:-2.8}},
+  guardLeader:{label:"Guardia · líderes", css:"guard-leader", type:"badge", defaults:{iconScale:140,iconX:2,iconY:-25,ringScale:82,ringX:2,ringY:-10,ringStroke:0.2,numSize:16.4,numWeight:100,numScaleX:99,numScaleY:102,numX:10.2,numY:-20}}
 };
 const FIELD_STAT_CONTROL_DEFS=[
   {key:"iconScale",input:"fieldBadgeIconScaleInput",output:"fieldBadgeIconScaleValue",suffix:"%",prop:"icon-scale",factor:100,min:40,max:500,step:1},
@@ -2976,16 +2974,16 @@ const HALLVALLA_MINE_WHEEL_OUTCOMES=Object.freeze((()=>{
 })());
 const HALLVALLA_MINE_WHEEL_BY_ID=new Map(HALLVALLA_MINE_WHEEL_OUTCOMES.map(def=>[def.id,def]));
 const HALLVALLA_MINE_WHEEL_CATEGORIES=Object.freeze([
-  Object.freeze({id:"gold_pos",kind:"positive",name:"Oro positivo",asset:"assets/mine/rewards/icons/gold_pos.webp"}),
-  Object.freeze({id:"gold_neg",kind:"negative",name:"Oro negativo",asset:"assets/mine/rewards/icons/gold_neg.webp"}),
-  Object.freeze({id:"gems_pos",kind:"positive",name:"Gemas y Premio Mayor",asset:"assets/mine/rewards/icons/gems_pos.webp"}),
-  Object.freeze({id:"gems_neg",kind:"negative",name:"Pérdida de gemas",asset:"assets/mine/rewards/icons/gems_neg.webp"}),
-  Object.freeze({id:"fragments_pos",kind:"positive",name:"Fragmentos positivos",asset:"assets/mine/rewards/icons/fragments_pos.webp"}),
-  Object.freeze({id:"fragments_neg",kind:"negative",name:"Fragmentos negativos",asset:"assets/mine/rewards/icons/fragments_neg.webp"}),
-  Object.freeze({id:"boost_pos",kind:"positive",name:"Bonificaciones de Mina",asset:"assets/mine/rewards/icons/boost_pos.webp"}),
-  Object.freeze({id:"penalty_neg",kind:"negative",name:"Penalizaciones de giro",asset:"assets/mine/rewards/icons/penalty_neg.webp"}),
-  Object.freeze({id:"pieces_pos",kind:"positive",name:"Piezas del Osario",asset:"assets/mine/rewards/icons/pieces_pos.webp"}),
-  Object.freeze({id:"neutral",kind:"neutral",name:"Sin hallazgo",asset:"assets/mine/rewards/icons/neutral.webp"})
+  Object.freeze({id:"gold_pos",kind:"positive",name:"Oro positivo",asset:"assets/mine/rewards/clean/gold_pos.webp"}),
+  Object.freeze({id:"gold_neg",kind:"negative",name:"Oro negativo",asset:"assets/mine/rewards/clean/gold_neg.webp"}),
+  Object.freeze({id:"gems_pos",kind:"positive",name:"Gemas y Premio Mayor",asset:"assets/mine/rewards/clean/gems_pos.webp"}),
+  Object.freeze({id:"gems_neg",kind:"negative",name:"Pérdida de gemas",asset:"assets/mine/rewards/clean/gems_neg.webp"}),
+  Object.freeze({id:"fragments_pos",kind:"positive",name:"Fragmentos positivos",asset:"assets/mine/rewards/clean/fragments_pos.webp"}),
+  Object.freeze({id:"fragments_neg",kind:"negative",name:"Fragmentos negativos",asset:"assets/mine/rewards/clean/fragments_neg.webp"}),
+  Object.freeze({id:"boost_pos",kind:"positive",name:"Bonificaciones de Mina",asset:"assets/mine/rewards/clean/boost_pos.webp"}),
+  Object.freeze({id:"penalty_neg",kind:"negative",name:"Penalizaciones de giro",asset:"assets/mine/rewards/clean/penalty_neg.webp"}),
+  Object.freeze({id:"pieces_pos",kind:"positive",name:"Piezas del Osario",asset:"assets/mine/rewards/clean/pieces_pos.webp"}),
+  Object.freeze({id:"neutral",kind:"neutral",name:"Sin hallazgo",asset:"assets/mine/rewards/clean/neutral.webp"})
 ]);
 const HALLVALLA_MINE_WHEEL_CATEGORY_BY_ID=new Map(HALLVALLA_MINE_WHEEL_CATEGORIES.map(def=>[def.id,def]));
 function getHallvallaMineWheelCategoryId(def){
@@ -3133,6 +3131,7 @@ function showHallvallaMineWheelPrizeCategory(catId,state=getHallvallaMineWheelSt
   if(!detail||!summary)return;
   hallvallaMineWheelPrizeCategorySelected=String(catId||"");
   const {safe,cat,remaining,exhausted,stateLabel}=summary;
+  detail.dataset.kind=cat.kind;
   if(icon){icon.src=cat.asset;icon.alt=cat.name;}
   if(kind)kind.textContent=cat.kind==="positive"?"POSITIVO":cat.kind==="negative"?"NEGATIVO":"NEUTRO";
   if(title)title.textContent=cat.name;
@@ -4483,6 +4482,12 @@ async function claimDailyReward(){
     state.claimedAt[availability.index]=now;
     state.lastClaimAt=now;
     saveDailyRewardState(state);
+    // La cuenta Firebase es la fuente compartida entre normal y ?dev.
+    // Subimos de inmediato para que una recarga/otra pestaña no restaure un estado anterior.
+    if(typeof globalThis.hallvallaUploadCloudSave==="function"&&typeof auth!=="undefined"&&auth?.currentUser){
+      try{await globalThis.hallvallaUploadCloudSave(auth.currentUser,{force:true,reason:"daily_reward_claim"});}
+      catch(syncError){console.warn("[HallValla][Daily] Premio aplicado; sincronización inmediata pendiente:",syncError);}
+    }
     const status=$("dailyRewardStatus");
     if(status)status.textContent=`Día ${day} reclamado: ${getDailyRewardLabel(reward)}.`;
     tryPlaySound(reward.type==="pack"?"pack_special":"button_click",reward.type==="pack"?.7:.35);

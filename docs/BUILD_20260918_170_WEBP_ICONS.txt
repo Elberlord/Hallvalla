@@ -1,0 +1,9 @@
+HallValla v170 · WEB · Iconografía WEBP canónica · 2026-09-18
+
+Cambios:
+- 10 iconos de familias de premio de Mina reemplazados por WEBP individuales HallValla.
+- Canvas transparente 768x768 con margen de seguridad >=50 px para evitar recortes.
+- Grimorio principal: assets/ui/grimoire/book.webp.
+- Narración: play.webp, pause.webp y stop.webp; SVG eliminados.
+- Los mismos assets se usan en normal y ?dev.
+- APK Android sin cambios.

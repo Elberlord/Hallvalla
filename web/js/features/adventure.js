@@ -596,6 +596,7 @@ initAdventureMapNodeTuner();
 let adventureGrimoireContext={title:"Grimorio",text:"",meta:""};
 let adventureGrimoireSpeechSession=0;
 let adventureGrimoireSpeechPaused=false;
+let adventureGrimoireSpeechTimer=0;
 
 function getAdventureUiLanguage(){
   const candidates=[];
@@ -636,10 +637,17 @@ function openAdventureGrimoire(){
   modal.classList.remove("hidden");
   modal.setAttribute("aria-hidden","false");
 }
+function setAdventureGrimoireSpeechUi(state="idle") {
+  const play=$("adventureGrimoirePlayBtn"),pause=$("adventureGrimoirePauseBtn");
+  play?.classList.toggle("is-speaking",state==="speaking");
+  pause?.classList.toggle("is-paused",state==="paused");
+}
 function stopAdventureGrimoireNarration(){
   adventureGrimoireSpeechSession++;
   adventureGrimoireSpeechPaused=false;
+  if(adventureGrimoireSpeechTimer){clearTimeout(adventureGrimoireSpeechTimer);adventureGrimoireSpeechTimer=0;}
   try{window.speechSynthesis?.cancel();}catch(_){ }
+  setAdventureGrimoireSpeechUi("idle");
 }
 function closeAdventureGrimoire(){
   stopAdventureGrimoireNarration();
@@ -670,33 +678,46 @@ function speakAdventureGrimoire(){
     void hvAlert?.("Este navegador no ofrece narración por voz.","Grimorio");
     return;
   }
+  const text=String(adventureGrimoireContext.text||$("adventureGrimoireText")?.textContent||"").trim();
+  const paragraphs=splitAdventureNarrationParagraphs(text);
+  if(!paragraphs.length){void hvAlert?.("No hay texto para narrar en esta página.","Grimorio");return;}
   stopAdventureGrimoireNarration();
   const session=++adventureGrimoireSpeechSession;
   const language=normalizeAdventureSpeechLanguage();
-  const voice=getAdventureNarratorVoice(language);
-  const paragraphs=splitAdventureNarrationParagraphs(adventureGrimoireContext.text);
-  if(!paragraphs.length)return;
   let index=0;
-  const next=()=>{
-    if(session!==adventureGrimoireSpeechSession||index>=paragraphs.length)return;
+  const speakNext=()=>{
+    if(session!==adventureGrimoireSpeechSession||index>=paragraphs.length){if(index>=paragraphs.length)setAdventureGrimoireSpeechUi("idle");return;}
+    let voice=getAdventureNarratorVoice(language);
     const utterance=new SpeechSynthesisUtterance(paragraphs[index++]);
     utterance.lang=language;
     if(voice)utterance.voice=voice;
-    utterance.rate=.86;
-    utterance.pitch=.78;
-    utterance.volume=1;
-    utterance.onend=()=>{if(session===adventureGrimoireSpeechSession)setTimeout(next,420);};
-    utterance.onerror=()=>{if(session===adventureGrimoireSpeechSession)setTimeout(next,180);};
-    synth.speak(utterance);
+    utterance.rate=.86; utterance.pitch=.78; utterance.volume=1;
+    utterance.onstart=()=>{if(session===adventureGrimoireSpeechSession)setAdventureGrimoireSpeechUi("speaking");};
+    utterance.onend=()=>{if(session===adventureGrimoireSpeechSession){adventureGrimoireSpeechTimer=setTimeout(speakNext,180);}};
+    utterance.onerror=event=>{
+      if(session!==adventureGrimoireSpeechSession)return;
+      if(event?.error==="canceled"||event?.error==="interrupted")return;
+      adventureGrimoireSpeechTimer=setTimeout(speakNext,120);
+    };
+    try{
+      if(synth.paused)synth.resume();
+      synth.speak(utterance);
+    }catch(error){
+      console.warn("[HallValla][Grimorio] Narración no disponible:",error);
+      setAdventureGrimoireSpeechUi("idle");
+      void hvAlert?.("No se pudo iniciar la narración en este navegador.","Grimorio");
+    }
   };
-  next();
+  // Chrome/Brave puede ignorar speak() inmediatamente después de cancel().
+  // Un pequeño diferido dentro de la misma interacción evita esa carrera.
+  adventureGrimoireSpeechTimer=setTimeout(speakNext,70);
 }
 function toggleAdventureGrimoirePause(){
   const synth=window.speechSynthesis;
   if(!synth)return;
   try{
-    if(synth.paused){synth.resume();adventureGrimoireSpeechPaused=false;}
-    else if(synth.speaking){synth.pause();adventureGrimoireSpeechPaused=true;}
+    if(synth.paused){synth.resume();adventureGrimoireSpeechPaused=false;setAdventureGrimoireSpeechUi("speaking");}
+    else if(synth.speaking){synth.pause();adventureGrimoireSpeechPaused=true;setAdventureGrimoireSpeechUi("paused");}
     else speakAdventureGrimoire();
   }catch(_){ }
 }

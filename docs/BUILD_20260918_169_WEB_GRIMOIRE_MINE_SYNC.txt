@@ -1,0 +1,40 @@
+HallValla v169 · WEB estable · 2026-09-18
+
+Alcance: WEB solamente. APK Android no modificada.
+
+1. MINA / RULETA / PREMIOS POSIBLES
+- Las 10 familias visuales usan recortes aislados con transparencia derivados del arte real de la ruleta.
+- Se eliminan las cajas/fondos visuales del contenedor de iconos.
+- Se conserva la explicación detallada de cada familia y su estado pendiente/agotado.
+
+2. GRIMORIO
+- El acceso usa assets/ui/det_icons/lore.webp como icono canónico en normal y ?dev.
+- Play/Pausa/Stop usan controles gráficos HallValla en assets/ui/grimoire/.
+- La narración speechSynthesis evita la carrera cancel()/speak() mediante arranque diferido y estado explícito.
+
+3. CAMPO
+- El tuner público/DEV contiene solo Vida, Ataque y Guardia.
+- Se aplican exactamente los valores de calibración aprobados para unidades y líderes.
+- Precisión/Evasión continúan internas y no se exponen como badges del campo.
+
+4. CUENTA / FIREBASE
+- Tras reclamar recompensa diaria, se fuerza hallvallaUploadCloudSave() inmediatamente para la cuenta autenticada.
+- La misma clave hallvalla_daily_reward_chain_v1 forma parte del cloudSaveV2, por lo que normal y ?dev comparten el estado de reclamación.
+
+5. EVENTO BEAST MASTER
+- Se conservan las coordenadas aprobadas:
+  Información: x 592 / y -229
+  Recompensas: x 209 / y -110
+  Eventos globales: x -176 / y 9
+
+6. CACHE
+- Build web 20260918.169.
+- Loader, Service Worker y hashes de recursos actualizados.
+
+Validaciones realizadas:
+- node --check en JS modificado, loader y Service Worker.
+- XML válido para los SVG del Grimorio.
+- 10 iconos de premios con transparencia real.
+- hashes internos coherentes.
+- web/dist comparados antes de retirar dist del paquete.
+- APK v131 verificada byte a byte sin cambios.

@@ -17,8 +17,8 @@ The workflow `.github/workflows/publish-hallvalla-public.yml` builds a Pages art
 The APK signing key is deliberately NOT included in this repository package.
 
 ## Current versions
-- Browser/gameplay base: v168
-- Public distribution shell: v168 (campo simplificado a Vida/Ataque/Guardia; PREC/EVA siguen internas; conserva ajustes v167, PvP EXP/Maestría, Mapas 11–20, Xsolla, Contratos de Dragón XV, Tutorial V2 y PvP BOT por nivel)
+- Browser/gameplay base: v170
+- Public distribution shell: v170 (iconografía WEBP canónica para Mina y Grimorio; conserva campo simplificado Vida/Ataque/Guardia, PvP EXP/Maestría, Mapas 11–20, Xsolla, Contratos de Dragón XV, Tutorial V2 y PvP BOT por nivel)
 - Android APK: v131 / versionCode 131 / `com.hallvalla.game`
 
 ## First setup
@@ -144,3 +144,21 @@ Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
 - El editor DEV de badges deja de ofrecer objetivos de Precisión/Evasión, ya que esos emblemas ya no se renderizan en combate.
 - Se sincronizan las huellas de caché del loader para `hvdev.js` y `17-dragon-contracts.js`, que estaban heredadas de una versión anterior.
 - Android/APK no se modifica en esta build.
+
+
+## v169 — Web estable: Grimorio, ruleta y sincronización diaria
+- Grimorio usa un único icono canónico de libro HallValla tanto en normal como en `?dev`.
+- Play/Pausa/Stop usan iconos HallValla y la narración corrige la carrera de Chrome/Brave tras `speechSynthesis.cancel()`.
+- Mina > Premios posibles deja de mostrar cuadrados/fotografías de la ruleta: usa los mismos motivos del arte de la ruleta aislados con transparencia sobre contenedor invisible.
+- Vida/Ataque/Guardia adoptan exactamente los valores de calibración aprobados y el DEV deja de exponer PREC/EVA.
+- La recompensa diaria fuerza guardado Firebase inmediatamente tras reclamar para evitar que normal y `?dev` diverjan.
+- Se mantienen intactas las coordenadas Beast Master v167: Información (592,-229), Recompensas (209,-110), Eventos globales (-176,9).
+
+
+## v170 — Iconografía WEBP canónica
+- Los 10 iconos de familias de premios de la Mina se sustituyen por assets individuales WEBP creados expresamente para HallValla.
+- Cada icono usa un lienzo transparente con margen de seguridad, evitando los recortes que aparecían en la v169.
+- El Grimorio usa el nuevo libro oscuro/dorado con cristal azul como acceso principal.
+- Play, Pausa y Stop usan tres medallones WEBP individuales; se eliminan los SVG anteriores.
+- Normal y `?dev` consumen exactamente los mismos assets.
+- No se modifica la APK Android en esta versión.

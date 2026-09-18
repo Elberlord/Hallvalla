@@ -29860,3 +29860,30 @@ body.hv-mobile-landscape .map-node-farm-badge{font-size:8px;padding:2px 5px;top:
   .adventure-grimoire-audio{right:8%;bottom:4%;}
   .adventure-grimoire-audio button{width:36px;height:36px;font-size:14px;}
 }
+
+
+/* ==========================================================================
+   HallValla v170 · WEBP canónico: Grimorio / Mina / stats públicos
+   ========================================================================== */
+/* Grimorio: una sola imagen canónica en normal y ?dev. */
+#adventurePanel .adventure-grimoire-trigger{width:82px!important;height:82px!important;top:8px!important;right:12px!important;background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible!important;}
+#adventurePanel .adventure-grimoire-trigger-art,#adventurePanel .adventure-grimoire-trigger-rune{display:none!important;}
+#adventurePanel .adventure-grimoire-trigger-icon{display:block;width:100%!important;height:100%!important;object-fit:contain!important;pointer-events:none!important;filter:drop-shadow(0 8px 8px rgba(0,0,0,.72)) drop-shadow(0 0 8px rgba(222,166,61,.20));}
+#adventurePanel .adventure-grimoire-trigger:hover .adventure-grimoire-trigger-icon{filter:drop-shadow(0 10px 10px rgba(0,0,0,.78)) drop-shadow(0 0 12px rgba(235,181,73,.34)) brightness(1.07);}
+.adventure-grimoire-audio button{padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;width:46px!important;height:46px!important;overflow:visible!important;}
+.adventure-grimoire-audio button img{display:block;width:100%!important;height:100%!important;object-fit:contain!important;pointer-events:none!important;filter:drop-shadow(0 5px 7px rgba(0,0,0,.56));}
+.adventure-grimoire-audio button:hover img{filter:drop-shadow(0 7px 9px rgba(0,0,0,.68)) brightness(1.08);}
+.adventure-grimoire-audio button.is-speaking img{filter:drop-shadow(0 0 9px rgba(232,183,76,.75)) brightness(1.12);}
+.adventure-grimoire-audio button.is-paused img{filter:drop-shadow(0 0 8px rgba(111,190,255,.64)) brightness(1.06);}
+
+/* Mina > Premios posibles: iconos aislados, nunca fotografías/recortes cuadrados. */
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-prize-pool-grid{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:4px 2px!important;gap:10px!important;}
+.mine-wheel-prize-icon-btn{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;min-height:54px!important;}
+.mine-wheel-prize-icon-btn img{width:100%!important;height:100%!important;object-fit:contain!important;filter:drop-shadow(0 5px 7px rgba(0,0,0,.62));}
+.mine-wheel-prize-icon-btn:hover,.mine-wheel-prize-icon-btn.is-selected{transform:translateY(-2px) scale(1.07)!important;border:0!important;filter:brightness(1.08)!important;}
+.mine-wheel-prize-icon-btn.is-consumed{filter:grayscale(1) brightness(.35)!important;opacity:.48!important;}
+.mine-wheel-prize-detail-icon{object-fit:contain!important;border:0!important;border-radius:0!important;background:transparent!important;filter:drop-shadow(0 5px 8px rgba(0,0,0,.58));}
+
+/* PREC/EVA siguen en lógica, pero quedan fuera de toda visual pública del campo. */
+.unit-card .stat-badge-precision-wrap,.unit-card .stat-badge-eva-wrap,.unit-card .stat-orb-aux.precision,.unit-card .stat-orb-aux.eva{display:none!important;visibility:hidden!important;opacity:0!important;}
+@media(max-width:820px){#adventurePanel .adventure-grimoire-trigger{width:64px!important;height:64px!important;top:5px!important;right:6px!important}.adventure-grimoire-audio button{width:38px!important;height:38px!important}.mine-wheel-prize-icon-btn{min-height:46px!important;}}
