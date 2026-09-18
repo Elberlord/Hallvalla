@@ -954,7 +954,6 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   highlights=[];
   highlightType="move";
   handOpen=true;
-  actionsCollapsed=false;
   handManualCloseKey="";
   publicState=null;
   privateState=null;

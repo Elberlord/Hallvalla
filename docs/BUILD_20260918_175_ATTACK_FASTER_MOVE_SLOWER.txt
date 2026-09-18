@@ -1,0 +1,19 @@
+HallValla v175 · 2026-09-18
+
+RITMO CONTINUO — PRIORIDAD INVERTIDA
+- Ataque más frecuente que el desplazamiento.
+- Ataque base: 20 000 ms; límites 12–30 s.
+- Movimiento base: 32 000 ms; límites 18–42 s para unidades móviles.
+- AGI sigue acelerando ambas acciones.
+- Arma, armadura, escudo y carga siguen añadiendo inercia.
+- MOV/locomoción conservan ventaja real de movilidad; la marcha general ahora es más lenta y legible.
+- Por regla, el intervalo de movimiento queda al menos 1 s por encima del intervalo de ataque de la misma unidad.
+- Huevo de Dragón MOV 0 continúa inmóvil.
+
+REFERENCIAS APROXIMADAS
+Hattori Hanzō: ATQ 17.5 s · MOV 22.4 s
+Berserker del norte: ATQ 21.8 s · MOV 25.5 s
+Arquero escita montado: ATQ 17.4 s · MOV 18.4 s
+Hombre de armas acorazado: ATQ 28.2 s · MOV 42.0 s
+
+No se agregan nuevos iconos al campo. APK sin cambios. Reglas Firebase sin cambios.

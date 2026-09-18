@@ -55,16 +55,7 @@ const IMMEDIATE_MOVE_UNDO_MS=4500;
 let immediateMoveUndoState=null;
 let immediateMoveUndoTimer=null;
 let immediateMoveUndoInFlight=false;
-function syncBattleCancelUndoUi(){
-  const btn=$("cancelBtn");
-  if(!btn)return;
-  const active=!!immediateMoveUndoState&&Date.now()<=Number(immediateMoveUndoState.expiresAt||0);
-  const label=btn.querySelector(".action-btn-label");
-  if(label)label.textContent=active?"Deshacer MOV":"Cancelar";
-  btn.title=active?"Deshacer el último movimiento inmediato":"Cancelar selección";
-  btn.setAttribute("aria-label",active?"Deshacer último movimiento":"Cancelar selección");
-  btn.classList.toggle("has-immediate-undo",active);
-}
+function syncBattleCancelUndoUi(){}
 function invalidateImmediateMoveUndo(_reason=""){
   immediateMoveUndoState=null;
   if(immediateMoveUndoTimer){battleClearTimeout(immediateMoveUndoTimer);immediateMoveUndoTimer=null;}

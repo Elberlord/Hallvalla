@@ -560,7 +560,7 @@ function hvGamepadSyncHandFocus(){
 }
 function hvGamepadEnterHand(){
   if(!hvGamepadBattleOpen())return;
-  if(!handOpen){document.getElementById("handBtn")?.click();}
+  if(!handOpen){handOpen=true;handManualCloseKey="";if(typeof render==="function")render();}
   if(!handOpen)return;
   hvGamepadState.mode="hand";
   const hand=hvGamepadCurrentHand();
@@ -574,7 +574,7 @@ function hvGamepadEnterHand(){
 function hvGamepadToggleHand(){
   if(!hvGamepadBattleOpen())return;
   if(hvGamepadState.mode==="hand"){
-    if(handOpen)document.getElementById("handBtn")?.click();
+    if(handOpen){handOpen=false;if(typeof render==="function")render();}
     hvGamepadState.mode="board";
     hvGamepadSyncHandFocus();hvGamepadSyncBoardCursor();
     return;
@@ -713,7 +713,7 @@ function hvGamepadCloseTopUi(){
     hvGamepadClearUiFocus();
     if(hvGamepadState.returnToHandAfterDet&&hvGamepadBattleOpen()){
       hvGamepadState.returnToHandAfterDet=false;
-      if(!handOpen)document.getElementById("handBtn")?.click();
+      if(!handOpen){handOpen=true;handManualCloseKey="";if(typeof render==="function")render();}
       if(handOpen){hvGamepadState.mode="hand";requestAnimationFrame(hvGamepadSyncHandFocus);}
       else hvGamepadState.mode="board";
     }else hvGamepadState.returnToHandAfterDet=false;
@@ -850,10 +850,10 @@ function hvGamepadHandleButtons(gp){
     }else if(hvGamepadCloseTopUi()){}
     else if(hvGamepadCloseMine()){}
     else if(battle&&hvGamepadState.mode==="hand"){
-      if(handOpen)document.getElementById("handBtn")?.click();
+      if(handOpen){handOpen=false;if(typeof render==="function")render();}
       hvGamepadState.mode="board";hvGamepadSyncHandFocus();hvGamepadSyncBoardCursor();
-    }else if(battle&&typeof handleBattleCancelButton==="function"){
-      void handleBattleCancelButton();hvGamepadState.mode="board";requestAnimationFrame(hvGamepadSyncBoardCursor);
+    }else if(battle){
+      if(typeof clearSelection==="function")clearSelection();hvGamepadState.mode="board";requestAnimationFrame(hvGamepadSyncBoardCursor);
     }else if(hvGamepadClickUniversalBack()){}
     else{
       document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",code:"Escape",bubbles:true,cancelable:true}));

@@ -17,8 +17,8 @@ The workflow `.github/workflows/publish-hallvalla-public.yml` builds a Pages art
 The APK signing key is deliberately NOT included in this repository package.
 
 ## Current versions
-- Browser/gameplay base: v173
-- Public distribution shell: v173 (tutorial PvP reparado + progreso visible Huevo/Bebé/Joven + Hannibal jinete/elefante compuesto; conserva Mina v172, iconografía WEBP canónica, campo Vida/Ataque/Guardia, PvP EXP/Maestría, Mapas 11–20 y Contratos de Dragón XV)
+- Browser/gameplay base: v175
+- Public distribution shell: v175 (ataque más frecuente y desplazamiento más lento, manteniendo Velocidad de Ataque/Movimiento separadas por AGI/carga; conserva tutorial PvP, progreso Huevo/Bebé/Joven, Hannibal compuesto, Mina v172, iconografía WEBP canónica, campo Vida/Ataque/Guardia, PvP EXP/Maestría, Mapas 11–20 y Contratos de Dragón XV)
 - Android APK: v131 / versionCode 131 / `com.hallvalla.game`
 
 ## First setup
@@ -182,6 +182,39 @@ Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
 - No se modifica la APK Android.
 
 
+
+
+## v176 — Ritmo compacto 10–16 s / 10–18 s
+
+- Se compacta la cadencia general sin perder la diferenciación por unidad.
+- Ataque: intervalo canónico entre 10 y 16 s; AGI alta y poca carga acercan a 10 s, mientras armas/equipo pesados acercan a 16 s.
+- Movimiento: intervalo canónico entre 10 y 18 s; MOV/locomoción, AGI y carga siguen determinando quién avanza antes.
+- Se mantiene la regla de legibilidad: una unidad nunca se desplaza con mayor frecuencia de la que ataca; el movimiento conserva al menos 1 s extra de intervalo respecto a su ataque cuando el cálculo lo requiere.
+- Base de calibración: 13 s ataque y 22 s movimiento antes de modificadores.
+- Huevo de Dragón MOV 0 continúa inmóvil. Campo mantiene únicamente Vida/Ataque/Guardia visibles.
+- APK Android y reglas Firebase sin cambios.
+
+## v175 — Ataque más rápido · movimiento más lento
+
+- Se invierte la prioridad temporal de v174: las unidades atacan con mayor frecuencia de la que se desplazan.
+- Ataque base: 20 s antes de AGI/carga; rango canónico 12–30 s.
+- Movimiento base: 32 s antes de MOV/AGI/carga; rango canónico 18–42 s para unidades móviles. El movimiento conserva al menos 1 s más de intervalo que el ataque de esa misma unidad.
+- Se conserva la diferenciación continua: AGI alta reduce intervalos; armas/armaduras/carga añaden inercia; MOV y locomoción siguen dando ventaja real a caballería, bestias y unidades ágiles.
+- Referencias aproximadas con la misma calibración de v174: Hattori Hanzō ≈ 17.5 s ataque / 22.4 s movimiento; Berserker del norte ≈ 21.8 s / 25.5 s; Arquero escita montado ≈ 17.4 s / 18.4 s; Hombre de armas acorazado ≈ 28.2 s / 42.0 s.
+- El Huevo de Dragón sigue inmóvil y no se añaden iconos nuevos al campo.
+- APK Android y reglas Firebase sin cambios.
+
+## v174 — Velocidad de ataque y movimiento por AGI/peso
+
+- El ritmo global de combate se reduce aproximadamente a la mitad respecto a v173: el intervalo base de ataque pasa de 12 s a 24 s y el de movimiento de 10 s a 20 s antes de modificadores.
+- Velocidad de Ataque y Velocidad de Movimiento son cálculos independientes.
+- AGI reduce el tiempo entre acciones; arma, armadura, escudo y carga aumentan la inercia.
+- Movimiento conserva MOV/locomoción como factor principal y luego aplica AGI + carga.
+- Los buffs/debuffs de AGI y MOV cambian el ritmo dinámicamente durante el combate; no es una cifra congelada al invocar.
+- Límites canónicos: ataque 14–34 s; movimiento móvil 8–30 s. Las unidades inmóviles continúan sin desplazarse.
+- Ejemplos base: Hattori Hanzō ≈ 21.0 s ataque / 14.0 s movimiento; Berserker del norte ≈ 26.2 s / 15.9 s; Hombre de armas acorazado ≈ 33.9 s / 26.8 s; Arquero escita montado ≈ 20.9 s / 11.6 s.
+- El campo mantiene únicamente Vida/Ataque/Guardia visibles; el nuevo ritmo no agrega iconos adicionales al tablero.
+
 ## v173 — Tutorial PvP + crecimiento dracónico + Hannibal compuesto
 - El tutorial de PvP ya no abre un modal vacío: carga el módulo PvP y abre explícitamente la selección de modo antes de enfocar sus pasos.
 - Huevo de Dragón, Dragón Bebé y Dragón Joven cuentan correctamente las eliminaciones aliadas mientras ese compañero permanezca vivo en el campo; también se contabiliza la baja final del líder rival.
@@ -192,3 +225,10 @@ Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
 - El daño de ataques de unidades cuerpo a cuerpo se dirige al elefante y el de ataques de unidades a distancia al jinete. Si cae el elefante, Hannibal continúa desmontado; si cae Hannibal, el elefante continúa como bestia. El daño sobrante de un golpe no salta automáticamente al superviviente.
 - El DET de Hannibal montado muestra la Vida restante de jinete y elefante sin añadir nuevos iconos al campo. Los contraataques usan la misma separación.
 - No se modifica la APK Android ni las reglas de Firebase en esta versión.
+
+## v177 — Limpieza de controles heredados de batalla
+- Retirados físicamente del campo los controles heredados Mano/Mazo, Cancelar y Siguiente fase; también desaparecen los contadores visuales de Mazo de ambos HUD.
+- Retirados los botones Acciones de escritorio/móvil y el editor DEV del HUD de acciones.
+- Eliminados los tres assets WEBP exclusivos de esos controles.
+- El combate fluido conserva el arsenal TR, selección contextual, configuración, Vida/Ataque/Guardia y automatización de unidades.
+- No se modificó la APK ni las reglas de Firebase.

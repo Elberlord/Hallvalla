@@ -830,8 +830,6 @@ function closeHandForBoardFocus(){
   handManualCloseKey=getHandAvailabilityKey();
   const drawer=$("handDrawer");
   if(drawer)drawer.classList.remove("open");
-  const hb=$("handBtn");
-  if(hb)hb.classList.remove("selected");
 }
 function getCardVisualHtml(card,variant="hand-icon") {
   const portrait=getResolvedCardPortraitSource(card);

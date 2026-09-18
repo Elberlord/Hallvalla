@@ -144,8 +144,6 @@ function render(reason="direct"){
   hallvallaRecordRenderDomain("chrome",renderBattleChrome);
   if(publicState.mode==="tutorial")hallvallaRecordRenderDomain("tutorial",renderBasicTutorialCoach);
   if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);
-  const hb=$("handBtn");
-  if(hb)hb.classList.toggle("selected",handOpen);
   maybeShowPhaseAnnouncement();
   maybeShowHonorRecharge();
   maybeShowBattleResult();
@@ -156,7 +154,7 @@ function render(reason="direct"){
   hallvallaBattleRenderPerf.maxMs=Math.max(hallvallaBattleRenderPerf.maxMs,ms);
   hallvallaBattleRenderPerf.lastReason=String(reason||"direct");
 }
-function renderBattleChrome(){const battlefield=document.querySelector(".battlefield");if(battlefield)battlefield.classList.toggle("hand-open",!!handOpen);const side=document.querySelector(".side");if(side)side.classList.toggle("actions-collapsed",!!actionsCollapsed);const btn=$("toggleActionsBtn");if(btn){btn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";btn.setAttribute("aria-expanded",String(!actionsCollapsed));}const mobileActionsBtn=$("mobileToggleActionsBtn");if(mobileActionsBtn){mobileActionsBtn.textContent=actionsCollapsed?"Acciones ▴":"Acciones ▾";mobileActionsBtn.setAttribute("aria-expanded",String(!actionsCollapsed));}const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio general: ON":"Audio general: OFF";const musicBtn=$("battleToggleMusicBtn");if(musicBtn)musicBtn.textContent=gameSettings.music?"Música: ON":"Música: OFF";const sfxBtn=$("battleToggleSfxBtn");if(sfxBtn)sfxBtn.textContent=gameSettings.sfx?"Efectos: ON":"Efectos: OFF";const musicSlider=$("battleMusicVolume");const musicValue=$("battleMusicVolumeValue");const musicPct=getVolumePercent(gameSettings.musicVolume,.32);if(musicSlider){musicSlider.value=String(musicPct);musicSlider.disabled=!gameSettings.sound||!gameSettings.music;}if(musicValue)musicValue.textContent=`${musicPct}%`;const sfxSlider=$("battleSfxVolume");const sfxValue=$("battleSfxVolumeValue");const sfxPct=getVolumePercent(gameSettings.sfxVolume,.58);if(sfxSlider){sfxSlider.value=String(sfxPct);sfxSlider.disabled=!gameSettings.sound||!gameSettings.sfx;}if(sfxValue)sfxValue.textContent=`${sfxPct}%`;}
+function renderBattleChrome(){const battlefield=document.querySelector(".battlefield");if(battlefield)battlefield.classList.toggle("hand-open",!!handOpen);const sound=$("battleToggleSoundBtn");if(sound)sound.textContent=gameSettings.sound?"Audio general: ON":"Audio general: OFF";const musicBtn=$("battleToggleMusicBtn");if(musicBtn)musicBtn.textContent=gameSettings.music?"Música: ON":"Música: OFF";const sfxBtn=$("battleToggleSfxBtn");if(sfxBtn)sfxBtn.textContent=gameSettings.sfx?"Efectos: ON":"Efectos: OFF";const musicSlider=$("battleMusicVolume");const musicValue=$("battleMusicVolumeValue");const musicPct=getVolumePercent(gameSettings.musicVolume,.32);if(musicSlider){musicSlider.value=String(musicPct);musicSlider.disabled=!gameSettings.sound||!gameSettings.music;}if(musicValue)musicValue.textContent=`${musicPct}%`;const sfxSlider=$("battleSfxVolume");const sfxValue=$("battleSfxVolumeValue");const sfxPct=getVolumePercent(gameSettings.sfxVolume,.58);if(sfxSlider){sfxSlider.value=String(sfxPct);sfxSlider.disabled=!gameSettings.sound||!gameSettings.sfx;}if(sfxValue)sfxValue.textContent=`${sfxPct}%`;}
 
 function getHonorStateForOwner(owner,{preferPrivate=false}={}){
   if(!publicState||!owner)return{owner:0,honor:0,maxHonor:0,label:"HONOR",hidden:true};
@@ -1412,8 +1410,6 @@ function getBasicTutorialProtectedRects(target){
     "#playerClock1",
     "#playerClock2",
     "#phaseBanner",
-    "#mobileToggleActionsBtn",
-    ".side",
     "#handDrawer"
   ];
   const nodes=[...document.querySelectorAll(selectors.join(","))];
@@ -1592,7 +1588,6 @@ function runFirstTimeTutorialBefore(action){
 
 function openBattleMenu(){const panel=$("battleMenuPanel");if(panel){panel.classList.remove("hidden");renderBattleChrome();}}
 function closeBattleMenu(){const panel=$("battleMenuPanel");if(panel)panel.classList.add("hidden");}
-function toggleBattleActions(){actionsCollapsed=!actionsCollapsed;renderBattleChrome();}
 function toggleBattleSound(){gameSettings.sound=!gameSettings.sound;saveGameSettings();if(!gameSettings.sound)stopMusic(false);else refreshAudioState();renderBattleChrome();}
 function toggleBattleMusic(){gameSettings.music=!gameSettings.music;if(gameSettings.music&&clampAudioVolume(gameSettings.musicVolume,.32)<=0)gameSettings.musicVolume=.32;saveGameSettings();refreshAudioState();renderBattleChrome();}
 function toggleBattleSfx(){gameSettings.sfx=!gameSettings.sfx;if(gameSettings.sfx&&clampAudioVolume(gameSettings.sfxVolume,.58)<=0)gameSettings.sfxVolume=.58;saveGameSettings();renderBattleChrome();if(gameSettings.sound&&gameSettings.sfx)tryPlaySound("button_click",.25);}

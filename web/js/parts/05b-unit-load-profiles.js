@@ -10,6 +10,74 @@ const HALLVALLA_WEIGHT_PENALTY_THRESHOLDS=Object.freeze({
   penalty2Max:1.40
 });
 
+/* v176 · Ventana temporal compacta aprobada.
+   Ataque y movimiento conservan cálculos independientes por AGI/carga/MOV,
+   pero el ritmo total se compacta para que los ataques ocurran entre ~10–16 s
+   y los desplazamientos entre ~10–18 s. La marcha sigue siendo menos frecuente
+   que el ataque de la misma unidad mediante una separación mínima de 1 s. */
+const HALLVALLA_SPEED_MODEL_VERSION="20260918.176";
+const HALLVALLA_SPEED_TIMING=Object.freeze({
+  attackBaseMs:13000,
+  attackMinMs:10000,
+  attackMaxMs:16000,
+  moveBaseMs:22000,
+  moveMinMs:10000,
+  moveMaxMs:18000,
+  moveAttackGapMs:1000
+});
+function hallvallaClamp(value,min,max){return Math.max(min,Math.min(max,Number(value)||0));}
+function hallvallaSpeedEffectiveAgi(unit){
+  try{if(typeof effectiveAgi==="function")return Math.max(0,Number(effectiveAgi(unit))||0);}catch(_){ }
+  return Math.max(0,Number(unit?.agi||0));
+}
+function hallvallaSpeedLoadProfile(unit){
+  try{return typeof getHallvallaUnitLoadProfile==="function"?getHallvallaUnitLoadProfile(unit):null;}catch(_){return null;}
+}
+function getHallvallaUnitAttackCooldownMs(unit){
+  const agi=hallvallaSpeedEffectiveAgi(unit);
+  const profile=hallvallaSpeedLoadProfile(unit);
+  const burden=Math.max(0,Number(profile?.burdenRatio||unit?.loadBurdenRatio||0));
+  const weaponKg=Math.max(0,Number(profile?.weaponWeightKg||0));
+  const armorKg=Math.max(0,Number(profile?.armorWeightKg||unit?.armorWeightKg||0));
+  const shieldKg=Math.max(0,Number(profile?.shieldGearWeightKg||0));
+  // AGI baja el intervalo. Arma, armadura, escudo y carga añaden inercia.
+  const agilityFactor=hallvallaClamp(1-(agi-5)*0.055,0.72,1.28);
+  const loadFactor=1+Math.min(0.16,burden*0.08)+Math.min(0.14,weaponKg*0.012)+Math.min(0.08,(armorKg+shieldKg)*0.003);
+  const raw=HALLVALLA_SPEED_TIMING.attackBaseMs*agilityFactor*loadFactor;
+  return Math.round(hallvallaClamp(raw,HALLVALLA_SPEED_TIMING.attackMinMs,HALLVALLA_SPEED_TIMING.attackMaxMs));
+}
+function getHallvallaUnitMoveCooldownMs(unit){
+  const mov=Math.max(0,Math.min(5,Number(typeof effectiveMov==="function"?effectiveMov(unit):unit?.mov)||0));
+  if(mov<=0)return Number.POSITIVE_INFINITY;
+  const agi=hallvallaSpeedEffectiveAgi(unit);
+  const profile=hallvallaSpeedLoadProfile(unit);
+  const burden=Math.max(0,Number(profile?.burdenRatio||unit?.loadBurdenRatio||0));
+  const armorKg=Math.max(0,Number(profile?.armorWeightKg||unit?.armorWeightKg||0));
+  const shieldKg=Math.max(0,Number(profile?.shieldGearWeightKg||0));
+  // MOV/locomoción manda primero; AGI afina la frecuencia y el peso castiga el paso.
+  const locomotionBase=HALLVALLA_SPEED_TIMING.moveBaseMs/(0.70+mov*0.30);
+  const agilityFactor=hallvallaClamp(1-(agi-5)*0.04,0.80,1.20);
+  const loadFactor=1+Math.min(0.18,burden*0.10)+Math.min(0.10,(armorKg+shieldKg)*0.0025);
+  const raw=locomotionBase*agilityFactor*loadFactor;
+  // Regla v176: desplazarse nunca puede ocurrir con mayor frecuencia que atacar.
+  // Se conserva al menos 1 s de separación para que el avance del campo sea legible.
+  const attackFloor=getHallvallaUnitAttackCooldownMs(unit)+HALLVALLA_SPEED_TIMING.moveAttackGapMs;
+  return Math.round(hallvallaClamp(Math.max(raw,attackFloor),HALLVALLA_SPEED_TIMING.moveMinMs,HALLVALLA_SPEED_TIMING.moveMaxMs));
+}
+function getHallvallaUnitSpeedProfile(unit){
+  const attackCooldownMs=getHallvallaUnitAttackCooldownMs(unit);
+  const moveCooldownMs=getHallvallaUnitMoveCooldownMs(unit);
+  return Object.freeze({
+    modelVersion:HALLVALLA_SPEED_MODEL_VERSION,
+    agility:hallvallaSpeedEffectiveAgi(unit),
+    attackCooldownMs,
+    moveCooldownMs,
+    attackSeconds:Math.round((attackCooldownMs/1000)*10)/10,
+    moveSeconds:Number.isFinite(moveCooldownMs)?Math.round((moveCooldownMs/1000)*10)/10:null
+  });
+}
+
+
 /* MOV natural cerrado 2026-09-08.
    - Humano/humanoide a pie: base 2 antes de carga.
    - Caballo: base 4; elefante: base 2.
@@ -167,6 +235,12 @@ function applyHallvallaUnitLoadProfile(unit){
     unit.mov=fixedMov??movement.finalMov;
     if(movement.aerial)unit.aerial=true;
   }
+  // Valores base informativos. En combate se recalculan dinámicamente para respetar
+  // buffs/debuffs de AGI y MOV sin convertirlos en un icono público del campo.
+  const speed=getHallvallaUnitSpeedProfile(unit);
+  unit.attackSpeedMs=speed.attackCooldownMs;
+  unit.moveSpeedMs=Number.isFinite(speed.moveCooldownMs)?speed.moveCooldownMs:null;
+  unit.speedModelVersion=speed.modelVersion;
   return unit;
 }
 function applyHallvallaUnitLoadProfiles(cards){
@@ -183,11 +257,16 @@ function auditHallvallaUnitLoadProfiles(cards=globalThis.CARD_TEMPLATES||[]){
 if(typeof CARD_TEMPLATES!=="undefined")applyHallvallaUnitLoadProfiles(CARD_TEMPLATES);
 Object.assign(globalThis,{
   HALLVALLA_LOAD_MODEL_VERSION,
+  HALLVALLA_SPEED_MODEL_VERSION,
+  HALLVALLA_SPEED_TIMING,
   HALLVALLA_WEIGHT_PENALTY_THRESHOLDS,
   HALLVALLA_NATURAL_MOV_BY_KEY,
   HALLVALLA_UNIT_LOAD_PROFILES,
   getHallvallaUnitLoadProfile,
   getHallvallaUnitMovementProfile,
+  getHallvallaUnitAttackCooldownMs,
+  getHallvallaUnitMoveCooldownMs,
+  getHallvallaUnitSpeedProfile,
   applyHallvallaUnitLoadProfile,
   applyHallvallaUnitLoadProfiles,
   auditHallvallaUnitLoadProfiles

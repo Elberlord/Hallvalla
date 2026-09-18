@@ -1,0 +1,21 @@
+HallValla v174 · 2026-09-18
+
+RITMO CONTINUO
+- Se duplica el intervalo base respecto a v173 para reducir a la mitad la velocidad percibida.
+- Ataque base: 24 000 ms. Movimiento base: 20 000 ms.
+- Velocidad de Ataque y Velocidad de Movimiento son independientes.
+- AGI acelera ambas; peso/carga las desacelera.
+- Ataque pondera especialmente peso de arma + armadura/escudo + burdenRatio.
+- Movimiento pondera MOV/locomoción + AGI + burdenRatio + armadura/escudo.
+- Los cálculos usan effectiveAgi/effectiveMov en vivo, de modo que buffs/debuffs cambian el ritmo inmediatamente.
+- Ataque limitado a 14–34 s; movimiento móvil a 8–30 s.
+- Huevo de dragón MOV 0 sigue inmóvil.
+
+EJEMPLOS BASE
+Hattori Hanzō: ATQ 21.0 s · MOV 14.0 s
+Berserker del norte: ATQ 26.2 s · MOV 15.9 s
+Arquero escita montado: ATQ 20.9 s · MOV 11.6 s
+Hombre de armas acorazado: ATQ 33.9 s · MOV 26.8 s
+
+No se agregan nuevos iconos al campo: Vida/Ataque/Guardia siguen siendo los únicos stats públicos sobre las figuras.
+APK sin cambios. Reglas Firebase sin cambios.

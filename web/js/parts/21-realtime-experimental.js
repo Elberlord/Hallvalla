@@ -20,8 +20,10 @@ const HALLVALLA_RT_CFG=Object.freeze({
   aiDeployCooldownMs:280,
   summonCooldownMs:0,
   spawnEgressDelayMs:250,
-  attackCooldownMs:12000,
-  baseMoveCooldownMs:10000,
+  // v176: respaldo/fallback. El ritmo real se calcula por unidad en 05b.
+  // Ventana compacta: ataque 10–16 s; movimiento 10–18 s, con marcha menos frecuente.
+  attackCooldownMs:13000,
+  baseMoveCooldownMs:22000,
   loopMs:100,
   motionLoopMs:250,
   leaderEffectEveryMs:10000,
@@ -1004,8 +1006,13 @@ function hallvallaRtBindArsenal(){
 globalThis.hallvallaRtRenderArsenal=hallvallaRtRenderArsenal;
 
 function hallvallaRtMoveCooldown(unit){
+  if(typeof getHallvallaUnitMoveCooldownMs==="function")return getHallvallaUnitMoveCooldownMs(unit);
   const mov=Math.max(1,Math.min(5,Number(typeof effectiveMov==="function"?effectiveMov(unit):unit?.mov)||1));
-  return Math.max(660,Math.round(HALLVALLA_RT_CFG.baseMoveCooldownMs/(0.70+mov*0.30)));
+  return Math.max(1320,Math.round(HALLVALLA_RT_CFG.baseMoveCooldownMs/(0.70+mov*0.30)));
+}
+function hallvallaRtAttackCooldown(unit){
+  if(typeof getHallvallaUnitAttackCooldownMs==="function")return getHallvallaUnitAttackCooldownMs(unit);
+  return HALLVALLA_RT_CFG.attackCooldownMs;
 }
 function hallvallaRtVisibleEnemy(attacker,target){
   if(!attacker||!target||Number(target.hp||0)<=0||Number(target.owner)===Number(attacker.owner))return false;
@@ -1715,7 +1722,7 @@ async function hallvallaRtAttackReadyUnits(now,maxAttacks=HALLVALLA_RT_CFG.maxAt
     // PERF v119: el cooldown se comprueba ANTES de buscar/ordenar objetivos.
     // Una unidad que aún no puede atacar no consume CPU en targeting 4 veces por segundo.
     const last=Number(hallvallaRtState.attackAt.get(live.id)||0);
-    if(now-last<HALLVALLA_RT_CFG.attackCooldownMs)continue;
+    if(now-last<hallvallaRtAttackCooldown(live))continue;
     const target=hallvallaRtChooseTarget(live,publicState?.units||[]);if(!target||!hallvallaRtCanAttackNow(live,target))continue;
     hallvallaRtState.attackAt.set(live.id,now);
     if(await hallvallaRtAttackUnit(live,target))attacks++;

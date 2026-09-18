@@ -29920,3 +29920,7 @@ body.hv-mobile-landscape .map-node-farm-badge{font-size:8px;padding:2px 5px;top:
   #adventureGrimoireModal .adventure-grimoire-copy{padding-right:24px!important;}
   #adventureGrimoireModal .adventure-grimoire-copy::-webkit-scrollbar{width:10px!important;}
 }
+
+
+/* v177 · Combate fluido: HUD heredado Mano/Cancelar/Siguiente fase retirado del DOM. */
+#toggleActionsBtn,#mobileToggleActionsBtn,#handBtn,#cancelBtn,#endBtn,.actions-visual-panel,.actions-visual-buttons,#actionsHudTuner,#openActionsHudTunerBattleBtn{display:none!important;}

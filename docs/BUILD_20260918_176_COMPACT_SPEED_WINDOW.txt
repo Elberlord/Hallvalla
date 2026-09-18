@@ -1,0 +1,10 @@
+HallValla v176 · 2026-09-18
+
+RITMO CONTINUO — VENTANA COMPACTA
+- Ataque: mínimo 10 000 ms; máximo 16 000 ms; base 13 000 ms antes de modificadores.
+- Movimiento: mínimo 10 000 ms; máximo 18 000 ms; base 22 000 ms antes de modificadores.
+- La frecuencia real sigue calculándose por unidad: AGI acelera; arma/armadura/escudo/carga añaden inercia; MOV y locomoción gobiernan el desplazamiento.
+- Regla de legibilidad: el movimiento no puede ocurrir con mayor frecuencia que el ataque de esa misma unidad; cuando haga falta se fuerza una separación mínima de 1 s.
+- El Huevo de Dragón conserva MOV 0 y permanece inmóvil.
+- No se añaden nuevos stats públicos ni iconos al campo.
+- APK Android sin cambios. Reglas Firebase sin cambios.

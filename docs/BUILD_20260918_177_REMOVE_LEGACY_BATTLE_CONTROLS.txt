@@ -1,0 +1,21 @@
+HallValla v177 · 2026-09-18
+
+UTE: retirar controles heredados del combate fluido.
+
+ELIMINADO DEL CAMPO:
+- Mano/Mazo (botón lateral heredado).
+- Cancelar (botón lateral heredado).
+- Siguiente fase / Fin de turno (botón lateral heredado).
+- Acciones (toggle escritorio y móvil).
+- Contadores visuales Mazo del HUD de jugador y rival.
+- Tuner DEV del HUD de acciones.
+- Assets Hand_Combat_Panel.webp, Cancel_Combat_Panel.webp y NextPhase_Combat_Panel.webp.
+
+SE CONSERVA:
+- Arsenal TR y targeting contextual.
+- Configuración del duelo.
+- Mano interna legacy únicamente como estructura de estado donde aún sea requerida por compatibilidad, sin control visual.
+- rtTargetCancelBtn del targeting TR: no es el control Cancelar heredado; permite abandonar una selección de objetivo concreta.
+
+APK: sin cambios.
+Firebase rules: sin cambios.
