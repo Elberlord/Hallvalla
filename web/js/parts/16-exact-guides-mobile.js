@@ -151,6 +151,10 @@ function getExactEffectGuideData(entity,effectText=""){
    ========================================================== */
 function isMobileLandscapeTarget(){
   try{
+    // Android hvfit usa un escenario lógico 1920×1080. No debe mezclarse con
+    // el responsive táctil antiguo: son dos sistemas de layout incompatibles.
+    // El contenedor nativo ya se ocupa de encoger el escenario completo.
+    if(document.documentElement?.dataset?.hvVirtualViewport||globalThis.__HALLVALLA_VIRTUAL_VIEWPORT__)return false;
     const shortSide=Math.min(
       Number(window.innerWidth||0),
       Number(window.innerHeight||0)

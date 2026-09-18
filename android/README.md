@@ -1,9 +1,9 @@
-# HallValla Android v133 — viewport virtual 1920×1080 + Google login nativo
+# HallValla Android v135 — viewport virtual 1920×1080 + assets locales + gamepad nativo
 
 - applicationId: `com.hallvalla.game`
-- versionCode: `133`
-- versionName: `1.0.133`
-- Sitio cargado: `https://elberlord.github.io/Hallvalla/?apk=133&hvfit=1`
+- versionCode: `135`
+- versionName: `1.0.135`
+- Sitio cargado: `https://elberlord.github.io/Hallvalla/?apk=135&hvfit=1`
 - Firma: debe usar exactamente el mismo `hallvalla-release.p12` de v130.
 - OAuth Web Client usado por Firebase: `496903032464-mcru6mkdr99pgos2fdegarg08eb55ujf.apps.googleusercontent.com`
 
@@ -36,3 +36,12 @@ Si falta esa asociación, Google Play Services devuelve `DEVELOPER_ERROR (10)` y
 - `setLoadWithOverviewMode(true)` permite al WebView reducir el viewport lógico completo hasta el rectángulo 16:9 disponible.
 - Los eventos táctiles siguen siendo nativos del WebView; no se aplica un `transform: scale()` sobre el DOM, evitando separar el dibujo del hit-test.
 - La web normal y la APK estable v131 no reciben `hvfit=1`, así que este experimento no modifica su layout.
+
+
+## Reparación v135 — una sola geometría Android
+- La APK debe compilarse desde este proyecto Gradle. No reutilizar/parchear el APK v131.
+- `MainActivity` crea el WebView dentro de un rectángulo nativo 16:9 centrado y la web usa un viewport lógico 1920×1080.
+- `hvfit=1` desactiva el responsive táctil heredado para que no compita con el escenario virtual.
+- `/Hallvalla/assets/*` se sirve primero desde `app/src/main/assets/web/assets/`; si falta un asset, WebView usa la URL remota.
+- El mando Android usa `InputManager` + `dispatchKeyEvent`/`dispatchGenericMotionEvent` y entrega un gamepad estándar al JS. En PC se conserva `navigator.getGamepads()`.
+- Normal/dev web no cambian a este layout: la geometría virtual solo se activa con `hvfit=1`.

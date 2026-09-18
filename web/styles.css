@@ -2204,7 +2204,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .leader-choice img{
   background:transparent!important;
 }
-@media(max-width:900px), (pointer:coarse){
+@media(max-width:900px){
   .leader-select-overlay{
     align-items:flex-start!important;
     justify-content:center!important;
@@ -2251,7 +2251,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 }
 
 /* Battle/adventure detail cards: keep the text panel readable on phones. */
-@media(max-width:900px), (pointer:coarse){
+@media(max-width:900px){
   .adventure-card{
     width:calc(100vw - 24px)!important;
     height:auto!important;
@@ -2362,7 +2362,7 @@ El CSS original se conserva para no romper visuales. El bloque final
    Objetivo: corregir recortes SOLO en móvil. En PC no cambia nada.
    El problema venía de background-size: cover + max-height en móviles.
 */
-@media(max-width:900px), (pointer:coarse){
+@media(max-width:900px){
   /* Escenas de aventura con arte completo: no cortar los bordes en móvil */
   #adventureGuardianVisual.scene-guardian,
   .adventure-scene-visual.scene-call.has-art,
@@ -2413,7 +2413,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 /* === v7EK Mobile duel opening hand fix ===
    En móvil la mano debe verse al iniciar el duelo igual que en PC.
    Se deja como overlay fijo para que no quede escondida bajo el panel inferior ni bajo la barra del navegador. */
-@media(max-width:980px), (pointer:coarse){
+@media(max-width:980px){
   .hand-drawer.open{
     position:fixed!important;
     left:8px!important;
@@ -2443,7 +2443,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 /* === v7EV: móvil, mano y acciones no se enciman ===
    La mano abierta sube por encima del panel inferior y los botones quedan clicables. */
-@media(max-width:980px), (pointer:coarse){
+@media(max-width:980px){
   .battlefield.hand-open .side:not(.actions-collapsed){
     position:fixed!important;
     
@@ -2472,7 +2472,7 @@ El CSS original se conserva para no romper visuales. El bloque final
   }
   
 }
-@media(max-height:720px) and (max-width:980px), (max-height:720px) and (pointer:coarse){
+@media(max-height:720px) and (max-width:980px){
   .battlefield.hand-open .side:not(.actions-collapsed) .actions-visual-panel{
     width:min(250px,72vw)!important;
   }
@@ -2585,7 +2585,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 /* === PATCH 7FA - Move mobile actions panel to upper center area === */
-@media(max-width:980px), (pointer:coarse){
+@media(max-width:980px){
   .side:not(.actions-collapsed){
     position:fixed!important;
     left:50%!important;
@@ -2630,7 +2630,7 @@ El CSS original se conserva para no romper visuales. El bloque final
     max-height:48px!important;
   }
 }
-@media(max-height:720px) and (max-width:980px), (max-height:720px) and (pointer:coarse){
+@media(max-height:720px) and (max-width:980px){
   .side:not(.actions-collapsed),
   .battlefield.hand-open .side:not(.actions-collapsed){
     top:calc(104px + env(safe-area-inset-top, 0px))!important;
@@ -2704,7 +2704,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 .adventure-scene-visual .adventure-scene-overlay{z-index:2;}
 .adventure-scene-visual .story-actors{z-index:4;}
 .adventure-scene-visual .guardian-actor{z-index:4;}
-@media(max-width:900px), (pointer:coarse){
+@media(max-width:900px){
   .adventure-stage:not(.hidden){
     min-height:calc(100svh - 48px)!important;
   }
@@ -8190,7 +8190,7 @@ El CSS original se conserva para no romper visuales. El bloque final
 
 
 
-@media(max-width:980px), (pointer:coarse){
+@media(max-width:980px){
   #gameShell .battlefield .side,
   #gameShell .battlefield.hand-open .side:not(.actions-collapsed){
     position:fixed!important;
@@ -20240,7 +20240,7 @@ html:not([data-hv-dev-tools="on"]) [data-hv-dev-tool]{display:none!important;}
    - Los marcadores de mover/atacar/invocar, estados persistentes y relojes
      mantienen sus animaciones porque comunican información de juego.
    ========================================================================== */
-@media (max-width:900px), (pointer:coarse){
+@media (max-width:900px){
   /* El blur de fondo fuerza composición de superficies grandes. En móvil las
      tarjetas ya tienen fondos suficientemente opacos para conservar lectura. */
   *{
@@ -21363,7 +21363,7 @@ html.hv-perf-lite .event-splash-spell-art img{
   line-height:1!important;
 }
 
-@media(max-width:900px), (pointer:coarse){
+@media(max-width:900px){
   #adventurePanel:has(#adventureGuardianStage:not(.hidden)) .adventure-card{
     width:calc(100vw - 20px)!important;
     height:min(82svh,620px)!important;
@@ -21615,7 +21615,7 @@ html.hv-perf-lite .event-splash-spell-art img{
 #adventureGuardianVisual.scene-guardian.has-guardian-actor .adventure-scene-copy{
   scrollbar-gutter:stable;
 }
-@media(max-width:900px), (pointer:coarse){
+@media(max-width:900px){
   #adventureMapIntroStage .adventure-scene-copy.narrow{
     max-height:76%!important;
   }
@@ -25349,7 +25349,7 @@ html.hv-layout-editing .hv-online-subtle-back:hover{filter:none!important}
 
 /* En teléfonos el lienzo mantiene exactamente la proporción del arte y nunca
    puede exceder el viewport, aunque cambie la barra del navegador. */
-@media(max-width:900px), (pointer:coarse){
+@media(max-width:900px){
   .adventure-card.hv-adventure-cinematic-fit{
     width:min(100vw,calc(100dvh * 1.7768331562))!important;
     height:min(100dvh,calc(100vw / 1.7768331562))!important;
@@ -25486,7 +25486,7 @@ html.hv-layout-editing .hv-online-subtle-back:hover{filter:none!important}
   width:clamp(145px,14vw,220px)!important;
 }
 
-@media(max-width:900px), (pointer:coarse){
+@media(max-width:900px){
   #adventurePanel .adventure-actions .hv-adventure-image-btn{
     width:clamp(96px,23vw,150px)!important;
   }
@@ -25618,7 +25618,7 @@ html.hv-layout-editing .hv-online-subtle-back:hover{filter:none!important}
 /* Posición radial equivalente al concepto aprobado: MOV arriba, DEF izquierda,
    ATK derecha, EFFECT abajo-izquierda y DET abajo. */
 
-@media(max-width:980px), (pointer:coarse){
+@media(max-width:980px){
   #gameShell .battlefield .player-status-mini{padding-left:17%!important;}
 }
 
@@ -25948,7 +25948,7 @@ body.hv-dragging-board #grid{
 #gameShell .unit-context-star-shell .unit-context-action-effect{grid-column:1 / -1!important;justify-self:center!important;}
 #gameShell .unit-context-star-shell.unit-context-actions-count-1{grid-template-columns:88px!important;width:88px!important;min-width:88px!important;max-width:88px!important;}
 #gameShell .unit-context-star-shell.unit-context-actions-count-3 > .unit-context-btn:last-child{grid-column:1 / -1!important;}
-@media(max-width:980px), (pointer:coarse){
+@media(max-width:980px){
   #gameShell .unit-context-star-shell,
   #gameShell .unit-context-star-shell.unit-context-actions-only{
     grid-template-columns:64px 64px!important;
@@ -29924,3 +29924,40 @@ body.hv-mobile-landscape .map-node-farm-badge{font-size:8px;padding:2px 5px;top:
 
 /* v177 · Combate fluido: HUD heredado Mano/Cancelar/Siguiente fase retirado del DOM. */
 #toggleActionsBtn,#mobileToggleActionsBtn,#handBtn,#cancelBtn,#endBtn,.actions-visual-panel,.actions-visual-buttons,#actionsHudTuner,#openActionsHudTunerBattleBtn{display:none!important;}
+
+
+/* === v180 ANDROID VIRTUAL STAGE GUARD =====================================
+   hvfit=1 is a fixed logical 1920×1080 game stage scaled by the native WebView.
+   Never let legacy phone/coarse-pointer rules hide Home controls in this mode.
+   This is a guard, not a second responsive layout.
+   ======================================================================== */
+html.hv-virtual-app #mainMenu .asset-promo.daily-panel,
+html.hv-virtual-app #mainMenu .asset-promo.welcome-panel{display:block!important;}
+html.hv-virtual-app #mainMenu .asset-bottom{display:flex!important;visibility:visible!important;opacity:1!important;}
+html.hv-virtual-app #mainMenu .bottom-asset-tab{display:flex!important;visibility:visible!important;opacity:1!important;}
+html.hv-virtual-app #mainMenu .bottom-asset-tab img{display:block!important;visibility:visible!important;opacity:1!important;}
+
+/* === v182 DEV CANONICO 1366x636 =========================================
+   ?dev usa solamente Control Universal. El stage lógico es fijo y todo ajuste
+   exportado se expresa en design-px de 1366×636.
+   ======================================================================= */
+html[data-hv-universal-only="1"] #hvDevToolsHubLauncher,
+html[data-hv-universal-only="1"] #hvDevToolsHub,
+html[data-hv-universal-only="1"] #hvOnlineLayoutTunerLauncher,
+html[data-hv-universal-only="1"] #hvBattleLayoutTunerLauncher,
+html[data-hv-universal-only="1"] #hvDetLayoutTunerToggle,
+html[data-hv-universal-only="1"] #openActionsHudTunerBtn,
+html[data-hv-universal-only="1"] #openActionsHudTunerBattleBtn,
+html[data-hv-universal-only="1"] #openFieldStatBadgesTunerBattleBtn,
+html[data-hv-universal-only="1"] #openBattleVisualSizeTunerBtn,
+html[data-hv-universal-only="1"] #openFieldBoardTunerBattleBtn,
+html[data-hv-universal-only="1"] #openBattleClockTunerBtn,
+html[data-hv-universal-only="1"] #openFieldFigureEditorBtn,
+html[data-hv-universal-only="1"] #openAdventureMapNodeTunerBtn,
+html[data-hv-universal-only="1"] #hvForgeDirectTuner{display:none!important;}
+html[data-hv-universal-only="1"] body::after{
+  content:"1366 × 636 · PLANO DEV";position:fixed;right:7px;top:7px;z-index:2147481500;
+  pointer-events:none;padding:4px 7px;border:1px solid rgba(226,176,77,.46);border-radius:5px;
+  background:rgba(0,0,0,.55);color:#d8bd83;font:700 10px/1.2 Consolas,monospace;letter-spacing:.04em;
+}
+.hv-universal-recover{margin-top:6px!important;background:linear-gradient(180deg,#403015,#1d160b)!important;}

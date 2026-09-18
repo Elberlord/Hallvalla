@@ -6,12 +6,20 @@ android {
     namespace 'com.hallvalla.game'
     compileSdk 35
 
+    // Empaqueta siempre los assets del frontend actual sin duplicarlos dentro del repo.
+    // El contenido de web/assets queda disponible en AssetManager como assets/<ruta>.
+    sourceSets {
+        main {
+            assets.srcDirs = ['src/main/assets', '../../web/assets']
+        }
+    }
+
     defaultConfig {
         applicationId 'com.hallvalla.game'
         minSdk 24
         targetSdk 35
-        versionCode 133
-        versionName '1.0.133'
+        versionCode 135
+        versionName '1.0.135'
     }
 
     signingConfigs {
@@ -41,6 +49,10 @@ android {
             applicationIdSuffix '.debug'
             versionNameSuffix '-debug'
         }
+    }
+
+    androidResources {
+        noCompress += ['webp','png','jpg','jpeg','ico','mp3','ogg','wav']
     }
 
     compileOptions {

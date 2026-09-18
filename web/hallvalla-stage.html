@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="es" data-hv-runtime="prod">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"/>
+<script>
+  (()=>{
+    try{
+      const params=new URLSearchParams(location.search);
+      if(params.get("hvfit")!=="1")return;
+      const viewport=document.querySelector('meta[name="viewport"]');
+      if(viewport){
+        viewport.setAttribute("content","width=1366, height=636, user-scalable=no");
+      }
+      document.documentElement.dataset.hvVirtualViewport="1366x636";
+      document.documentElement.dataset.hvAndroidVirtualApp="1";
+      document.documentElement.classList.add("hv-virtual-app");
+      globalThis.__HALLVALLA_VIRTUAL_VIEWPORT__=Object.freeze({width:1366,height:636,mode:"contain",android:true});
+      document.addEventListener("DOMContentLoaded",()=>document.body?.classList.add("hv-virtual-app"),{once:true});
+    }catch(_){ }
+  })();
+</script>
+<script>
+  // v181: esta página ES el juego lógico. index.html es el shell físico.
+  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260918.182"});
+  document.documentElement.dataset.hvDesignStage="1366x636";
+</script>
+<title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
+<meta name="application-name" content="HallValla">
+<meta name="hallvalla-version" content="20260918.182">
+<meta name="hallvalla-build" content="v8_MODULAR_20260918.182">
+<meta name="hallvalla-build-name" content="Design Stage fijo 1366×636 · DEV universal canónico · 20260918.182">
+<link rel="stylesheet" href="styles.css?h=7797462b91e1"/>
+
+<link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.90">
+<link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.90">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/branding/hallvalla_logo_180.png?v=20260913.90">
+</head>
+<!-- HALLVALLA ORGANIZED V2: index conserva la estructura visual original. -->
+<body>
+
+<div id="googleLoginSplash" class="hv-google-login-splash" role="dialog" aria-modal="true" aria-label="Acceso a HallValla">
+  <img class="hv-google-login-splash-bg" src="assets/home/hallvalla_login_google.webp" alt="" aria-hidden="true">
+  <button id="googleLoginSplashBtn" class="hv-google-login-splash-btn" type="button" aria-label="Continuar con Google" title="Continuar con Google">
+    <img class="hv-google-login-splash-btn-art" src="assets/home/continuar_con_google_boton.webp" alt="Continuar con Google">
+  </button>
+</div>
+
+<div id="mainMenu" class="asset-home">
+  <div class="asset-home-bg"></div>
+  <div class="asset-vignette"></div>
+
+  <header class="asset-topbar">
+    <button id="profileBtn" class="asset-profile" type="button">
+      <img class="asset-profile-img" src="assets/home/icon_profile.webp" alt="Perfil">
+      <div class="asset-profile-info">
+        <div id="playerName" class="asset-profile-name">Nuevo jugador</div>
+        <div class="asset-profile-sub">
+          <span id="playerLevel">Nv. 1</span>
+          <span id="playerRank">Recluta</span>
+        </div>
+        <div class="asset-xp">
+          <div id="xpFill" class="asset-xp-fill"></div>
+          <span id="xpText">0/100</span>
+        </div>
+      </div>
+    </button>
+
+    <div class="asset-resource-row">
+      <button class="asset-resource" id="goldPlusBtn" type="button">
+        <img src="assets/home/icon_gold.webp" alt="Oro">
+        <b id="goldValue">0</b>
+        <span>+</span>
+      </button>
+      <button class="asset-resource" id="gemsPlusBtn" type="button">
+        <img src="assets/home/icon_gems.webp" alt="Gemas">
+        <b id="gemsValue">0</b>
+        <span>+</span>
+      </button>
+      <button class="asset-resource" id="fragmentsPlusBtn" type="button">
+        <img src="assets/home/icon_fragments.webp" alt="Fragmentos">
+        <b id="fragmentsValue">0</b>
+        <span>+</span>
+      </button>
+      <button id="friendsBtn" class="asset-small-icon" type="button" aria-label="Amigos">
+        <img src="assets/home/icon_friends.webp" alt="">
+      </button>
+      <button id="notificationsBtn" class="asset-small-icon notification-btn" type="button" aria-label="Notificaciones">
+        <span class="notification-icon">🔔</span>
+        <b id="notificationBadge" class="notification-badge hidden">0</b>
+      </button>
+      <button id="settingsBtn" class="asset-small-icon" type="button" aria-label="Configuración">
+        <img src="assets/home/icon_settings.webp" alt="">
+      </button>
+    </div>
+  </header>
+
+  <section id="homeProgressPanel" class="home-progress-panel">
+    <div>
+      <b id="homeProgressTitle">Aventura 1.1</b>
+      <span id="homeProgressText">Progreso: 0/5 batallas completadas.</span>
+    </div>
+    <div>
+      <b id="homeDeckStatus">Mazos bloqueados</b>
+      <span id="homeCollectionStatus">Derrota al Hechicero guardián para editar mazos.</span>
+    </div>
+  </section>
+
+
+  <main class="asset-main">
+    <section class="asset-column asset-left-column">
+      <button id="adventureBtn" class="image-button" type="button">
+        <img src="assets/home/btn_adventure.webp" alt="Aventura">
+      </button>
+      <button id="onlineBtn" class="image-button" type="button">
+        <img src="assets/home/btn_online.webp" alt="Competir en línea">
+      </button>
+      <button id="missionsBtn" class="image-button missions-home-btn" type="button">
+        <img src="assets/home/btn_missions.webp" alt="Misiones">
+        <b id="missionsRewardBadge" class="missions-reward-badge hidden" aria-label="Recompensas de maestría pendientes">0</b>
+      </button>
+      <button id="mineBtn" class="image-button" type="button">
+        <img src="assets/home/btn_mine.webp" alt="Mina">
+      </button>
+    </section>
+
+    <section class="asset-center">
+      <div class="asset-logo">
+        <div class="asset-logo-mark">HALLVALLA</div>
+        <div class="asset-logo-sub">LA LEYENDA ERES TÚ</div>
+      </div>
+    </section>
+
+    <section class="asset-column asset-right-column">
+      <button id="collectionBtn" class="image-button" type="button">
+        <img src="assets/home/btn_collection.webp" alt="Colección">
+      </button>
+      <button id="forgeBtn" class="image-button" type="button">
+        <img src="assets/home/btn_forge.webp" alt="Forja">
+      </button>
+      <button id="storeBtn" class="image-button" type="button">
+        <img src="assets/home/btn_store.webp" alt="Tienda">
+      </button>
+      <button id="eventsBtn" class="image-button" type="button">
+        <img src="assets/home/btn_events.webp" alt="Eventos">
+      </button>
+    </section>
+  </main>
+
+  <button id="dailyBtn" class="asset-promo daily-panel" type="button" data-daily-status="ready" data-daily-label="RECLAMAR">
+    <img src="assets/home/panel_daily.webp" alt="Recompensa diaria">
+  </button>
+
+  <a id="hallvallaAndroidDownloadBtn" class="hv-android-public-download" href="downloads/HallValla-Android.apk" download="HallValla-Android.apk" aria-label="Descargar HallValla para Android" title="Descargar HallValla para Android">
+    <svg class="hv-android-public-download-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      <g fill="currentColor">
+        <path d="M20.7 17.4 16.2 9.7a1.5 1.5 0 1 1 2.6-1.5l4.6 7.9A24.5 24.5 0 0 1 32 14.6c3 0 5.9.5 8.6 1.5l4.6-7.9a1.5 1.5 0 1 1 2.6 1.5l-4.5 7.7A18.4 18.4 0 0 1 51 31H13a18.4 18.4 0 0 1 7.7-13.6ZM23 24a2.2 2.2 0 1 0 0-4.4A2.2 2.2 0 0 0 23 24Zm18 0a2.2 2.2 0 1 0 0-4.4A2.2 2.2 0 0 0 41 24Z"/>
+        <path d="M13 34h38v17.5a5.5 5.5 0 0 1-5.5 5.5H43v4a3 3 0 1 1-6 0v-4H27v4a3 3 0 1 1-6 0v-4h-2.5a5.5 5.5 0 0 1-5.5-5.5V34Z"/>
+        <rect x="5" y="35" width="6" height="18" rx="3"/>
+        <rect x="53" y="35" width="6" height="18" rx="3"/>
+      </g>
+    </svg>
+    <span class="hv-sr-only">Descargar HallValla para Android</span>
+  </a>
+  <script>
+    (()=>{
+      const params=new URLSearchParams(location.search);
+      const inApp=params.has('apk')||/HallVallaAndroid\//i.test(navigator.userAgent||'');
+      if(inApp){
+        const hide=()=>{const el=document.getElementById('hallvallaAndroidDownloadBtn');if(el)el.hidden=true;};
+        if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hide,{once:true});else hide();
+      }
+    })();
+  </script>
+
+  <div id="dailyRewardPanel" class="daily-reward-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="dailyRewardTitle">
+    <section class="daily-reward-shell">
+      <button id="dailyRewardCloseBtn" class="daily-reward-close" type="button" aria-label="Cerrar recompensa diaria">×</button>
+      <header class="daily-reward-header">
+        <span class="daily-reward-kicker">RECOMPENSA DIARIA</span>
+        <h2 id="dailyRewardTitle">Cadena mensual</h2>
+        <p id="dailyRewardMonthLabel"></p>
+      </header>
+      <div class="daily-reward-summary">
+        <div><span>Progreso</span><strong id="dailyRewardProgress">0/0</strong></div>
+        <div><span>Estado</span><strong id="dailyRewardTimer">Disponible</strong></div>
+        <div><span>Premio actual</span><strong id="dailyRewardCurrent">—</strong></div>
+      </div>
+      <div id="dailyRewardGrid" class="daily-reward-grid" aria-label="Cadena mensual de recompensas"></div>
+      <footer class="daily-reward-footer">
+        <div class="daily-reward-next-copy">
+          <span>Siguiente premio</span>
+          <strong id="dailyRewardNext">—</strong>
+          <small id="dailyRewardRule">La cadena solo avanza cuando reclamas el premio actual.</small>
+        </div>
+      </footer>
+      <p id="dailyRewardStatus" class="daily-reward-status" aria-live="polite"></p>
+    </section>
+  </div>
+
+  <button id="welcomeBtn" class="asset-promo welcome-panel" type="button">
+    <img src="assets/home/panel_welcome.webp" alt="Paquete de bienvenida">
+  </button>
+
+  <footer class="asset-bottom">
+    <button id="clansBtn" class="bottom-asset-tab" type="button">
+      <img src="assets/home/icon_clans.webp" alt="">
+      <span>CLANES</span>
+    </button>
+    <button id="rankingBtn" class="bottom-asset-tab" type="button">
+      <img src="assets/home/icon_ranking.webp" alt="">
+      <span>RANKING</span>
+    </button>
+    <button id="passBtn" class="bottom-asset-tab" type="button">
+      <img src="assets/home/icon_pass.webp" alt="">
+      <span>PASE DE HONOR</span>
+    </button>
+  </footer>
+</div>
+
+
+<div id="mineScreen" class="mine-screen hidden">
+  <header class="mine-topbar">
+    <button id="mineBackBtn" class="mine-back-btn hv-universal-back-btn" type="button" aria-label="Volver al Home"><img class="hv-universal-back-art" src="assets/ui/btn_back_hallvalla.webp" alt="" aria-hidden="true"></button>
+    <div class="mine-title-block">
+      <span class="mine-kicker">Mina</span>
+      <strong id="mineHeaderTitle">Producción</strong>
+    </div>
+    <div class="mine-resource-strip">
+      <div class="mine-resource-pill"><img src="assets/home/icon_gold.webp" alt=""><b id="mineGoldValue">0</b></div>
+      <div class="mine-resource-pill"><img src="assets/home/icon_gems.webp" alt=""><b id="mineGemsValue">0</b></div>
+      <div class="mine-resource-pill"><span class="mine-pill-dot"></span><b id="mineLevelValue">Nv. 1</b></div>
+    </div>
+  </header>
+
+  <div class="mine-layout">
+    <nav class="mine-nav" aria-label="Secciones de la Mina">
+      <button class="mine-nav-btn active" type="button" data-mine-tab="production">
+        <img src="assets/mine/icon_production.webp" alt="">
+        <span>Producción</span>
+      </button>
+      <button class="mine-nav-btn" type="button" data-mine-tab="events">
+        <img src="assets/mine/icon_events.webp" alt="">
+        <span>Eventos</span>
+        <b id="mineEventsBadge" class="mine-events-badge hidden" aria-label="Eventos activos">0</b>
+      </button>
+      <button class="mine-nav-btn" type="button" data-mine-tab="missions">
+        <img src="assets/mine/icon_missions.webp" alt="">
+        <span>Misiones</span>
+      </button>
+      <button class="mine-nav-btn" type="button" data-mine-tab="shop">
+        <img src="assets/mine/icon_shop.webp" alt="">
+        <span>Tienda</span>
+      </button>
+      <button class="mine-nav-btn" type="button" data-mine-tab="rewards">
+        <img src="assets/mine/icon_rewards.webp" alt="">
+        <span>Recompensas</span>
+      </button>
+    </nav>
+
+    <main class="mine-content">
+      <section class="mine-panel active hv50-mine-production-panel" data-mine-panel="production" style="background-image:url('assets/mine/bg_production.webp')">
+        <div class="hv50-mine-production-shade" aria-hidden="true"></div>
+        <div class="hv50-mine-production">
+          <div class="hv50-mine-hud" aria-label="Estado de producción">
+            <span><em>Mineros</em><b id="mineChipActive">0/5</b></span><i></i>
+            <span><em>Espacios</em><b id="mineChipSlots">5/20</b></span><i></i>
+            <span><em>Ritmo</em><b id="mineChipRate">1💎 / 24h</b></span><i></i>
+            <span class="is-accent"><em>Pendiente</em><b id="mineChipPending">0💎</b></span>
+            <span class="hv50-level-ghost" aria-hidden="true"><b id="mineChipLevel">1</b></span>
+          </div>
+
+          <div id="mineLockedNote" class="hv50-mine-lock-note hidden">La Mina se desbloquea en Nivel 2</div>
+
+          <div class="hv50-mine-stage" data-mine-stage>
+            <button id="minePrevPageBtn" class="hv50-mine-page-arrow hv50-mine-page-arrow--prev" type="button" aria-label="Cinco espacios anteriores">‹</button>
+            <div id="mineMinerGrid" class="hv50-mine-slots" aria-live="polite"></div>
+            <button id="mineNextPageBtn" class="hv50-mine-page-arrow hv50-mine-page-arrow--next" type="button" aria-label="Cinco espacios siguientes">›</button>
+          </div>
+
+          <div class="hv50-mine-pagebar" aria-label="Página de espacios">
+            <div id="minePageDots" class="hv50-mine-page-dots"></div>
+            <b id="minePageLabel">01—05</b>
+          </div>
+
+          <div class="hv50-mine-bottom-dock">
+            <div class="hv50-mine-roster-title"><span>UNIDADES</span><strong>DISPONIBLES</strong></div>
+            <div id="mineRosterRow" class="hv50-mine-roster"></div>
+            <div class="hv50-mine-actions" aria-label="Acciones de la Mina">
+              <button id="mineBuySlotBtn" class="hv50-action hv50-action--buy" type="button" aria-label="Comprar nuevo espacio">
+                <span class="hv50-action-ring" aria-hidden="true">
+                  <svg viewBox="0 0 48 48" focusable="false"><path d="M12 34 31 15M18 12l18 18M10 38l6-1 1-6M31 10l7 7M38 31v10M33 36h10"/></svg>
+                </span>
+                <span class="hv50-action-label">Nuevo espacio</span>
+                <small id="mineBuySlotHint" class="hv50-action-hint">Ranura 06 · 5💎</small>
+              </button>
+
+              <button id="mineClaimBtn" class="hv50-action hv50-action--claim" type="button" aria-label="Recoger producción">
+                <span class="hv50-action-ring" aria-hidden="true">
+                  <svg viewBox="0 0 48 48" focusable="false"><path d="M8 15h27l-3 18H12L8 15Zm4 0 3-7h17l3 7M16 38a2 2 0 1 0 0 .1M29 38a2 2 0 1 0 0 .1M36 20h6M39 17v6"/></svg>
+                </span>
+                <span class="hv50-action-label">Recoger todo</span>
+                <small class="hv50-action-hint">Producción lista</small>
+              </button>
+
+              <button id="mineUnassignBtn" class="hv50-action hv50-action--retire" type="button" aria-label="Retirar trabajador">
+                <span class="hv50-action-ring" aria-hidden="true">
+                  <svg viewBox="0 0 48 48" focusable="false"><path d="M10 30c1-9 6-15 14-15s13 6 14 15H10Zm7-14 2-6h10l2 6M24 30v8M18 38h12M35 10h8v8M43 10 33 20"/></svg>
+                </span>
+                <span class="hv50-action-label">Retirar</span>
+                <small class="hv50-action-hint">Trabajador</small>
+              </button>
+            </div>
+          </div>
+
+          <div id="mineSelectedCard" class="hv50-selected-state" aria-hidden="true"></div>
+          <div class="hv50-ready-meta" aria-hidden="true"><b id="mineReadyValue">0💎</b><b id="mineNextValue">--:--:--</b></div>
+          <div id="mineStatusLine" class="hv50-mine-status" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="mine-panel" data-mine-panel="events" style="background-image:url('assets/mine/bg_events.webp')">
+        <div class="mine-event-scene" aria-hidden="true">
+          <img id="mineEventSceneImage" src="assets/mine/bg_events.webp" alt="">
+        </div>
+        <div class="mine-panel-scrim"></div>
+        <div class="mine-panel-content">
+          <div class="mine-chip-row">
+            <span id="mineEventsActiveChip" class="mine-chip">Activos 0</span>
+            <span id="mineEventsPositiveChip" class="mine-chip">0 positivos</span>
+            <span id="mineEventsDamageChip" class="mine-chip">0 daños</span>
+          </div>
+          <div class="mine-event-grid hv52-event-grid" aria-label="Eventos de la Mina">
+            <article class="mine-event-card negative inactive" data-mine-event-key="incendio">
+              <button class="hv52-event-icon-btn" data-mine-event-action type="button" disabled aria-label="Incendio">
+                <img src="assets/mine/events/event_incendio_icon.webp" alt="" aria-hidden="true">
+              </button>
+              <b>Incendio</b>
+              <small data-mine-event-effect>Daño por fuego</small>
+              <span class="hv52-event-action-label" data-mine-event-action-label></span>
+            </article>
+            <article class="mine-event-card negative inactive" data-mine-event-key="inundacion">
+              <button class="hv52-event-icon-btn" data-mine-event-action type="button" disabled aria-label="Inundación">
+                <img src="assets/mine/events/event_inundacion_icon.webp" alt="" aria-hidden="true">
+              </button>
+              <b>Inundación</b>
+              <small data-mine-event-effect>Galerías anegadas</small>
+              <span class="hv52-event-action-label" data-mine-event-action-label></span>
+            </article>
+            <article class="mine-event-card negative inactive" data-mine-event-key="derrumbe">
+              <button class="hv52-event-icon-btn" data-mine-event-action type="button" disabled aria-label="Derrumbe">
+                <img src="assets/mine/events/event_derrumbe_icon.webp" alt="" aria-hidden="true">
+              </button>
+              <b>Derrumbe</b>
+              <small data-mine-event-effect>Galería dañada</small>
+              <span class="hv52-event-action-label" data-mine-event-action-label></span>
+            </article>
+            <article class="mine-event-card positive inactive" data-mine-event-key="tesoro">
+              <button class="hv52-event-icon-btn" data-mine-event-action type="button" disabled aria-label="Tesoro">
+                <img src="assets/mine/events/event_tesoro_icon.webp" alt="" aria-hidden="true">
+              </button>
+              <b>Tesoro</b>
+              <small data-mine-event-effect>+2💎 +120🪙</small>
+              <span class="hv52-event-action-label" data-mine-event-action-label></span>
+            </article>
+            <article class="mine-event-card positive inactive" data-mine-event-key="veta_rica">
+              <button class="hv52-event-icon-btn" data-mine-event-action type="button" disabled aria-label="Veta rica">
+                <img src="assets/mine/events/event_veta_rica_icon.webp" alt="" aria-hidden="true">
+              </button>
+              <b>Veta rica</b>
+              <small data-mine-event-effect>+3💎</small>
+              <span class="hv52-event-action-label" data-mine-event-action-label></span>
+            </article>
+            <article class="mine-event-card positive inactive" data-mine-event-key="camara_secreta">
+              <button class="hv52-event-icon-btn" data-mine-event-action type="button" disabled aria-label="Cámara secreta">
+                <img src="assets/mine/events/event_camara_secreta_icon.webp" alt="" aria-hidden="true">
+              </button>
+              <b>Cámara secreta</b>
+              <small data-mine-event-effect>+2💎 +60 fragmentos</small>
+              <span class="hv52-event-action-label" data-mine-event-action-label></span>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="mine-panel" data-mine-panel="missions" style="background-image:url('assets/mine/bg_missions.webp')">
+        <div class="mine-panel-scrim"></div>
+        <div class="mine-panel-content mine-missions-functional-content">
+          <div class="mine-chip-row">
+            <span id="mineMissionsTotalChip" class="mine-chip">Misiones 8</span>
+            <span id="mineMissionsCompleteChip" class="mine-chip">Completadas 0/8</span>
+            <span id="mineMissionsPendingChip" class="mine-chip">Por reclamar 0</span>
+          </div>
+          <div id="mineMissionGrid" class="mine-mission-grid mine-mission-home-grid"></div>
+          <div id="mineMissionStatus" class="mine-mission-status" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="mine-panel" data-mine-panel="shop" style="background-image:url('assets/mine/bg_shop.webp')">
+        <div class="mine-panel-scrim"></div>
+        <div class="mine-panel-content mine-undead-shop-content">
+          <div class="mine-chip-row">
+            <span class="mine-chip">No Muertos exclusivos</span>
+            <span class="mine-chip">1 pieza · 250💎</span>
+            <span id="mineShopNextChip" class="mine-chip">Nueva rotación --:--:--</span>
+          </div>
+          <div id="mineShopGrid" class="mine-shop-grid mine-undead-shop-grid"></div>
+          <div id="mineShopStatus" class="mine-shop-status" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="mine-panel" data-mine-panel="rewards" style="background-image:url('assets/mine/bg_rewards.webp')">
+        <div class="mine-panel-scrim"></div>
+        <div class="mine-panel-content mine-wheel-panel-content">
+          <div class="mine-chip-row mine-wheel-chip-row">
+            <span id="mineWheelFreeChip" class="mine-chip">Tiros gratis 1/30</span>
+            <span id="mineWheelRemainingChip" class="mine-chip">Premios posibles 50/50</span>
+            <span id="mineWheelNextChip" class="mine-chip">Próximo tiro gratis --:--:--</span>
+          </div>
+          <div class="mine-wheel-stage">
+            <div class="mine-wheel-shell" aria-label="Rueda de la fortuna de la Mina">
+              <div class="mine-wheel-pointer" aria-hidden="true"></div>
+              <div id="mineFortuneWheel" class="mine-fortune-wheel" aria-hidden="true">
+                <div class="mine-wheel-rings"></div>
+                <div class="mine-wheel-hub" aria-hidden="true"></div>
+              </div>
+            </div>
+            <button id="mineWheelSpinBtn" class="mine-wheel-spin-btn" type="button">SPIN</button>
+            <div id="mineWheelPriceHint" class="mine-wheel-price-hint">1 tiro gratuito disponible</div>
+            <button id="mineWheelPrizePoolBtn" class="mine-wheel-prize-pool-btn" type="button" aria-expanded="false" aria-controls="mineWheelPrizePool" aria-label="Ver premios posibles" title="Ver premios posibles">
+              <img src="assets/mine/icon_rewards.webp" alt="" aria-hidden="true" draggable="false">
+            </button>
+            <div id="mineWheelResult" class="mine-wheel-result" aria-live="polite">
+              <b>Rueda de la Mina</b>
+              <span>Presiona SPIN para tentar tu suerte.</span>
+            </div>
+          </div>
+
+          <div id="mineWheelPrizePool" class="mine-wheel-prize-pool" hidden>
+            <div class="mine-wheel-prize-pool-card" role="dialog" aria-modal="true" aria-labelledby="mineWheelPrizePoolTitle">
+              <div class="mine-wheel-prize-pool-head">
+                <h3 id="mineWheelPrizePoolTitle">Premios posibles</h3>
+                <button id="mineWheelPrizePoolCloseBtn" class="mine-wheel-prize-pool-close" type="button" aria-label="Cerrar premios posibles">×</button>
+              </div>
+              <p id="mineWheelPrizePoolStatus" class="mine-wheel-prize-pool-status">Toca un icono para ver qué puede entregar.</p>
+              <div id="mineWheelPrizePoolGrid" class="mine-wheel-prize-pool-grid" aria-label="Familias de premios de la ruleta"></div>
+              <div id="mineWheelPrizeDetail" class="mine-wheel-prize-detail" hidden>
+                <img id="mineWheelPrizeDetailIcon" class="mine-wheel-prize-detail-icon" src="" alt="">
+                <div class="mine-wheel-prize-detail-copy">
+                  <span id="mineWheelPrizeDetailKind"></span>
+                  <h4 id="mineWheelPrizeDetailTitle"></h4>
+                  <p id="mineWheelPrizeDetailState"></p>
+                  <ul id="mineWheelPrizeDetailList"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+
+
+
+<div id="leaderSelectOverlay" class="leader-select-overlay hidden">
+  <div class="leader-select-card leader-select-card-v54">
+    <button id="leaderSelectCloseBtn" class="leader-select-x" type="button" aria-label="Cerrar">×</button>
+    <h1 class="leader-select-title">Elige tu líder</h1>
+    <p class="leader-select-sub">El líder define tu estilo de juego. Los detalles explican niveles, tiers y habilidad de nivel 5.</p>
+    <div class="leader-choice-grid leader-choice-grid-v54">
+      <article class="leader-choice" data-leader-card="warrior">
+        <img data-hv-src="assets/leaders/leader_warrior_3d.webp" data-hv-asset-group="leader-select" decoding="async" alt="Guerrero">
+        <h3>Guerrero</h3>
+        <div class="leader-choice-actions">
+          <button class="leader-detail-btn" type="button" data-leader-detail="warrior">Detalles</button>
+          <button class="leader-select-btn" type="button" data-leader-choice="warrior">Seleccionar</button>
+        </div>
+      </article>
+
+      <article class="leader-choice" data-leader-card="archer">
+        <img data-hv-src="assets/leaders/leader_archer_3d.webp" data-hv-asset-group="leader-select" decoding="async" alt="Arquero">
+        <h3>Arquero</h3>
+        <div class="leader-choice-actions">
+          <button class="leader-detail-btn" type="button" data-leader-detail="archer">Detalles</button>
+          <button class="leader-select-btn" type="button" data-leader-choice="archer">Seleccionar</button>
+        </div>
+      </article>
+
+      <article class="leader-choice" data-leader-card="mage">
+        <img data-hv-src="assets/leaders/leader_mage_3d.webp" data-hv-asset-group="leader-select" decoding="async" alt="Hechicero">
+        <h3>Hechicero</h3>
+        <div class="leader-choice-actions">
+          <button class="leader-detail-btn" type="button" data-leader-detail="mage">Detalles</button>
+          <button class="leader-select-btn" type="button" data-leader-choice="mage">Seleccionar</button>
+        </div>
+      </article>
+
+      <article class="leader-choice" data-leader-card="axe">
+        <img data-hv-src="assets/leaders/leader_axe_3d.webp" data-hv-asset-group="leader-select" decoding="async" alt="Caudillo del Hacha">
+        <h3>Caudillo del Hacha</h3>
+        <div class="leader-choice-actions">
+          <button class="leader-detail-btn" type="button" data-leader-detail="axe">Detalles</button>
+          <button class="leader-select-btn" type="button" data-leader-choice="axe">Seleccionar</button>
+        </div>
+      </article>
+
+      <article class="leader-choice" data-leader-card="cavalry">
+        <img data-hv-src="assets/leaders/leader_cavalry_3d.webp" data-hv-asset-group="leader-select" decoding="async" alt="Señor de la Carga">
+        <h3>Señor de la Carga</h3>
+        <div class="leader-choice-actions">
+          <button class="leader-detail-btn" type="button" data-leader-detail="cavalry">Detalles</button>
+          <button class="leader-select-btn" type="button" data-leader-choice="cavalry">Seleccionar</button>
+        </div>
+      </article>
+
+      <article class="leader-choice" data-leader-card="assassin">
+        <img data-hv-src="assets/leaders/leader_assassin_3d.webp" data-hv-asset-group="leader-select" decoding="async" alt="Maestro de Sombras">
+        <h3>Maestro de Sombras</h3>
+        <div class="leader-choice-actions">
+          <button class="leader-detail-btn" type="button" data-leader-detail="assassin">Detalles</button>
+          <button class="leader-select-btn" type="button" data-leader-choice="assassin">Seleccionar</button>
+        </div>
+      </article>
+
+      <article class="leader-choice" data-leader-card="beastmaster">
+        <img data-hv-src="assets/leaders/leader_beastmaster_3d.webp" data-hv-asset-group="leader-select" decoding="async" alt="Señor de las Bestias">
+        <h3>Señor de las Bestias</h3>
+        <div class="leader-choice-actions">
+          <button class="leader-detail-btn" type="button" data-leader-detail="beastmaster">Detalles</button>
+          <button class="leader-select-btn" type="button" data-leader-choice="beastmaster">Seleccionar</button>
+        </div>
+      </article>
+    </div>
+    <div id="leaderCurrentBadge" class="leader-current-badge"></div>
+  </div>
+</div>
+
+<div id="leaderDetailModal" class="leader-info-modal hidden" aria-hidden="true">
+  <div class="leader-info-card">
+    <button id="leaderDetailCloseBtn" class="leader-info-x" type="button" aria-label="Cerrar">×</button>
+    <div id="leaderDetailBody"></div>
+  </div>
+</div>
+
+<div id="leaderAbilityModal" class="leader-info-modal hidden" aria-hidden="true">
+  <div class="leader-info-card leader-ability-card">
+    <button id="leaderAbilityCloseBtn" class="leader-info-x" type="button" aria-label="Cerrar">×</button>
+    <div id="leaderAbilityBody"></div>
+  </div>
+</div>
+
+<div id="onlineLobby" class="online-visual hidden">
+  <div class="online-visual-bg"></div>
+
+  <section id="onlineModeSelect" class="hv-online-mode-select hidden" aria-label="Competir en línea">
+    <img class="hv-online-mode-bg" data-hv-src="assets/ui/pvp_online/online_mode_select_bg.webp" data-hv-asset-group="pvp-online" decoding="async" alt="Competir en línea">
+    <button id="onlineModeMatchBtn" class="hv-online-mode-btn hv-online-mode-match" type="button" aria-label="Matchmaking">
+      <img data-hv-src="assets/ui/pvp_online/online_matchmaking_btn.webp" data-hv-asset-group="pvp-online" decoding="async" alt="Matchmaking">
+    </button>
+    <button id="onlineModeWagerBtn" class="hv-online-mode-btn hv-online-mode-wager" type="button" aria-label="Apuestas">
+      <img data-hv-src="assets/ui/pvp_online/online_wager_btn.webp" data-hv-asset-group="pvp-online" decoding="async" alt="Apuestas">
+    </button>
+    <button id="onlineModeBackBtn" class="hv-online-mode-btn hv-online-mode-back" type="button" aria-label="Volver al inicio">
+      <img data-hv-src="assets/modal/btn_back_home.webp" data-hv-asset-group="pvp-online" decoding="async" alt="Volver al inicio">
+    </button>
+  </section>
+
+  <section id="onlineMatchmakingView" class="hv-matchmaking-view hidden" aria-live="polite" aria-label="Matchmaking">
+    <img class="hv-matchmaking-bg" data-hv-src="assets/ui/pvp_online/matchmaking_bg.webp" data-hv-asset-group="pvp-online" decoding="async" alt="Matchmaking">
+
+    <div class="hv-match-team hv-match-team-player" aria-label="Tu equipo">
+      <img id="matchmakingPlayerLeader" class="hv-match-leader hv-match-player-leader" alt="Tu líder">
+      <div class="hv-match-principals hv-match-player-principals hidden" aria-hidden="true"></div>
+    </div>
+
+    <div class="hv-match-team hv-match-team-opponent" aria-label="Equipo rival">
+      <img id="matchmakingOpponentLeader" class="hv-match-leader hv-match-opponent-leader" alt="Líder rival">
+      <div class="hv-match-principals hv-match-opponent-principals hidden" aria-hidden="true"></div>
+    </div>
+
+    <div id="matchmakingSearchingState" class="hv-match-searching">
+      <span class="hv-match-search-spinner" aria-hidden="true"></span>
+      <strong>BUSCANDO RIVAL...</strong>
+      <span id="matchmakingLeagueLabel" class="hv-match-league-label">LIGA PIEDRA · 0 PTS</span>
+    </div>
+    <img id="matchmakingVsArt" class="hv-match-vs hidden" data-hv-src="assets/ui/pvp_online/matchmaking_vs.webp" data-hv-asset-group="pvp-online" decoding="async" alt="VS">
+    <button id="matchmakingCancelBtn" class="hv-online-subtle-back hv-match-cancel" type="button">CANCELAR</button>
+  </section>
+
+  <div class="online-modal-art hidden">
+    <img class="online-modal-base" data-hv-src="assets/modal/modal_online_base.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="Competir en línea">
+
+    <button id="createBtn" class="visual-btn visual-create" type="button" aria-label="Crear partida">
+      <img data-hv-src="assets/modal/btn_create_match.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="">
+    </button>
+
+    <div class="visual-input-wrap">
+      <input id="joinCode" class="visual-code-input" aria-label="Código de partida" maxlength="8" autocomplete="off"/>
+    </div>
+
+    <button id="joinBtn" class="visual-btn visual-join" type="button" aria-label="Unirse">
+      <img data-hv-src="assets/modal/btn_join_match.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="">
+    </button>
+
+
+    <button id="backMenuFromLobby" class="visual-btn visual-back" type="button" aria-label="Volver al inicio">
+      <img data-hv-src="assets/modal/btn_back_home.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="">
+    </button>
+
+
+    <div id="lobbyStatus" class="visual-status">Listo para jugar.</div>
+
+    <section id="pvpRoomPanel" class="pvp-room-panel hidden" aria-live="polite" aria-label="Lobby de duelo">
+      <div class="pvp-room-artwrap">
+        <img class="pvp-room-art" data-hv-src="assets/ui/pvp_lobby/duel_room_lobby.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="Lobby de duelo HallValla">
+        <div class="pvp-room-code-line">
+          <strong id="pvpRoomCode">----</strong>
+          <button id="pvpCopyCodeBtn" class="pvp-room-copy-btn" type="button">COPIAR</button>
+        </div>
+        <div id="pvpRuleStrip" class="pvp-rule-strip" aria-live="polite">
+          <div class="pvp-rule-title">REGLAS DEL DUELO</div>
+          <button id="pvpTimerToggleBtn" class="pvp-rule-btn" type="button">Timer: OFF</button>
+          <button id="pvpStakeModeBtn" class="pvp-rule-btn" type="button">Apuesta: Gratis</button>
+          <button id="pvpStakeAmountBtn" class="pvp-rule-btn hidden" type="button">Oro: 500</button>
+          <div id="pvpRulesSummary" class="pvp-rule-summary">Sin temporizador · Sin apuesta</div>
+        </div>
+        <article class="pvp-room-player player1 is-host" data-pvp-room-player="1">
+          <span id="pvpRoomPlayer1Presence" class="pvp-room-presence connected" aria-hidden="true"></span>
+          <strong id="pvpRoomPlayer1Name">Esperando...</strong>
+          <div id="pvpRoomPlayer1Stats" class="pvp-room-player-stats">0 pts · G 0 · P 0 · E 0</div>
+          <span id="pvpRoomPlayer1Check" class="pvp-room-ready-check" aria-hidden="true">✓</span>
+          <em id="pvpRoomPlayer1Ready" class="pvp-room-ready-state hv-sr-only">No listo</em>
+        </article>
+        <article class="pvp-room-player player2" data-pvp-room-player="2">
+          <span id="pvpRoomPlayer2Presence" class="pvp-room-presence waiting" aria-hidden="true"></span>
+          <strong id="pvpRoomPlayer2Name">Rival pendiente</strong>
+          <div id="pvpRoomPlayer2Stats" class="pvp-room-player-stats">0 pts · G 0 · P 0 · E 0</div>
+          <span id="pvpRoomPlayer2Check" class="pvp-room-ready-check" aria-hidden="true">✓</span>
+          <em id="pvpRoomPlayer2Ready" class="pvp-room-ready-state hv-sr-only">Sin rival</em>
+        </article>
+        <button id="pvpReadyBtn" class="pvp-room-hitbox pvp-room-ready-btn" type="button" aria-label="Marcar listo"><span class="hv-sr-only">Listo</span></button>
+        <button id="pvpLeaveBtn" class="pvp-room-hitbox pvp-room-leave-btn" type="button"><span class="hv-sr-only">Salir de la sala</span></button>
+      </div>
+      <div id="pvpRoomMessage" class="pvp-room-message hv-sr-only">Esperando rival...</div>
+    </section>
+    <section id="pvpRpsOverlay" class="pvp-rps-overlay hidden" aria-live="polite" aria-label="Piedra Papel Tijera">
+      <div id="pvpRpsStageChoose" class="pvp-rps-stage">
+        <div class="pvp-rps-copy">
+          <h3 class="pvp-rps-title">Piedra · Papel · Tijera</h3>
+          <p id="pvpRpsSubtitle" class="pvp-rps-subtitle">Ambos jugadores están listos. Elige en secreto.</p>
+        </div>
+        <div class="pvp-rps-choices">
+          <button id="pvpRpsRockBtn" class="pvp-rps-choice" type="button" data-rps-choice="rock" aria-label="Piedra">
+            <img data-hv-src="assets/ui/pvp_rps/rps_rock.webp" data-hv-asset-group="pvp-rps" decoding="async" alt="Piedra">
+            <span>PIEDRA</span>
+          </button>
+          <button id="pvpRpsPaperBtn" class="pvp-rps-choice" type="button" data-rps-choice="paper" aria-label="Papel">
+            <img data-hv-src="assets/ui/pvp_rps/rps_paper.webp" data-hv-asset-group="pvp-rps" decoding="async" alt="Papel">
+            <span>PAPEL</span>
+          </button>
+          <button id="pvpRpsScissorsBtn" class="pvp-rps-choice" type="button" data-rps-choice="scissors" aria-label="Tijera">
+            <img data-hv-src="assets/ui/pvp_rps/rps_scissors.webp" data-hv-asset-group="pvp-rps" decoding="async" alt="Tijera">
+            <span>TIJERA</span>
+          </button>
+        </div>
+        <div id="pvpRpsChooseStatus" class="pvp-rps-status">Esperando elección.</div>
+      </div>
+      <div id="pvpRpsStageResult" class="pvp-rps-stage hidden">
+        <img id="pvpRpsResultArt" class="pvp-rps-result-art" data-hv-src="assets/ui/pvp_rps/result_rock_wins.webp" data-hv-asset-group="pvp-rps-result" decoding="async" alt="Resultado piedra papel tijera">
+        <div class="pvp-rps-result-copy">
+          <div id="pvpRpsResultHeadline" class="pvp-rps-result-headline">RESULTADO</div>
+          <div id="pvpRpsResultSubline" class="pvp-rps-result-subline">Esperando resolución...</div>
+        </div>
+        <div id="pvpRpsDecisionPanel" class="pvp-rps-decision hidden">
+          <div class="pvp-rps-decision-head">Elige tu turno</div>
+          <div class="pvp-rps-turn-actions">
+            <button id="pvpRpsChooseFirstBtn" class="pvp-rps-turn-btn" type="button">PRIMERO</button>
+            <button id="pvpRpsChooseSecondBtn" class="pvp-rps-turn-btn" type="button">SEGUNDO</button>
+          </div>
+        </div>
+        <div id="pvpRpsWaitingPanel" class="pvp-rps-waiting hidden">Esperando la decisión del ganador...</div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="pvpRankingModal" class="pvp-ranking-modal hidden" aria-hidden="true" aria-label="Ranking PvP HallValla">
+  <div class="pvp-ranking-card" role="dialog" aria-modal="true" aria-labelledby="pvpRankingTitle">
+    <button id="pvpRankingCloseBtn" class="pvp-ranking-close" type="button" aria-label="Cerrar ranking">×</button>
+    <div class="pvp-ranking-kicker">HALLVALLA · VS ONLINE</div>
+    <h2 id="pvpRankingTitle" class="pvp-ranking-title">RANKING PvP</h2>
+    <div id="pvpRankingOwnSummary" class="pvp-ranking-own-summary">Cargando tus estadísticas...</div>
+    <div class="pvp-ranking-rules">Victoria +3 · Derrota −2 · Empate 0 · Matchmaking cerrado por liga</div>
+    <div id="pvpRankingList" class="pvp-ranking-list" aria-live="polite"></div>
+  </div>
+</div>
+
+<div id="adventurePanel" class="overlay-panel hidden">
+  <div class="modal-card adventure-card">
+    <button id="adventureGrimoireBtn" class="adventure-grimoire-trigger" type="button" aria-label="Abrir Grimorio" title="Grimorio">
+      <img class="adventure-grimoire-trigger-icon" src="assets/ui/grimoire/book.webp" alt="" draggable="false" aria-hidden="true">
+    </button>
+    <div id="adventureGrimoireModal" class="adventure-grimoire-modal hidden" aria-hidden="true">
+      <section class="adventure-grimoire-page" role="dialog" aria-modal="true" aria-labelledby="adventureGrimoireTitle">
+        <button id="adventureGrimoireCloseBtn" class="adventure-grimoire-close" type="button" aria-label="Cerrar Grimorio">×</button>
+        <div class="adventure-grimoire-copy">
+          <div id="adventureGrimoireMeta" class="adventure-grimoire-meta"></div>
+          <h2 id="adventureGrimoireTitle">Grimorio</h2>
+          <div id="adventureGrimoireText" class="adventure-grimoire-text"></div>
+        </div>
+        <nav class="adventure-grimoire-audio" aria-label="Narración del Grimorio">
+          <button id="adventureGrimoirePlayBtn" type="button" aria-label="Leer en voz alta" title="Leer"><img src="assets/ui/grimoire/play.webp" alt="" draggable="false"></button>
+          <button id="adventureGrimoirePauseBtn" type="button" aria-label="Pausar o continuar lectura" title="Pausar / continuar"><img src="assets/ui/grimoire/pause.webp" alt="" draggable="false"></button>
+          <button id="adventureGrimoireStopBtn" type="button" aria-label="Detener lectura" title="Detener"><img src="assets/ui/grimoire/stop.webp" alt="" draggable="false"></button>
+        </nav>
+      </section>
+    </div>
+    <div id="adventureStoryStage" class="adventure-stage">
+      <div id="adventureSceneVisual" class="adventure-scene-visual scene-call">
+        <div id="adventureSceneMark" class="adventure-scene-mark hidden"></div>
+        <div id="adventureSceneActors" class="story-actors hidden">
+          <img id="adventureSceneActorLeft" class="story-actor left" alt="">
+          <img id="adventureSceneActorRight" class="story-actor right" alt="">
+        </div>
+        <div class="adventure-scene-overlay">
+          <div class="adventure-scene-copy">
+            <div id="adventureProgress" class="adventure-progress">1/2</div>
+            <h2 id="adventureStoryTitle" class="adventure-story-title">El llamado de HallValla</h2>
+            <p id="adventureStoryText" class="adventure-story-text"></p>
+          </div>
+        </div>
+      </div>
+      <div class="adventure-story-footer">
+        <span class="adventure-note">Historia de aventura</span>
+        <div class="adventure-actions">
+          <button id="skipAdventureStoryBtn" class="hv-adventure-image-btn" type="button" aria-label="Saltar"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_saltar.webp" alt="" aria-hidden="true"></button>
+          <button id="nextAdventureStoryBtn" class="hv-adventure-image-btn" type="button" aria-label="Continuar"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_continuar.webp" alt="" aria-hidden="true"></button>
+        </div>
+      </div>
+    </div>
+    <div id="adventureChoiceStage" class="adventure-stage hidden">
+      <div class="adventure-choice-hero">
+        <div class="adventure-scene-overlay">
+          <div class="adventure-scene-copy narrow">
+            <div class="adventure-progress">Elección de leyenda</div>
+            <h2 class="adventure-choice-title">Elige tu primer aliado</h2>
+            <p class="adventure-story-text">Antes de entrar al campo, elige tu carta especial inicial. Tu rival usará el mismo mazo básico, pero sin esta carta especial.</p>
+          </div>
+        </div>
+      </div>
+      <div class="adventure-choice-grid">
+        <button class="adventure-choice" type="button" data-adventure-special="mulan">
+          <img data-hv-src="assets/story/mulan_choice.webp" data-hv-asset-group="adventure" decoding="async" alt="Hua Lan">
+          <div class="adventure-choice-copy">
+            <h3>Hua Lan</h3>
+            <p>Infiltradora veloz. Ideal para jugar alrededor del posicionamiento y castigar ataques por la espalda.</p>
+            <div class="adventure-stats">Costo 2 · AT 4 · HP 4 · GD 3 · DX 4 · MV 3 · RG 1</div>
+          </div>
+        </button>
+        <button class="adventure-choice" type="button" data-adventure-special="wallace">
+          <img data-hv-src="assets/story/wallace_choice.webp" data-hv-asset-group="adventure" decoding="async" alt="William Wallace">
+          <div class="adventure-choice-copy">
+            <h3>William Wallace</h3>
+            <p>Tanque ofensivo. Aguanta el frente y sobrevive a golpes fatales en primera línea.</p>
+            <div class="adventure-stats">Costo 3 · AT 6 · HP 6 · GD 5 · DX 6 · MV 2 · RG 1</div>
+          </div>
+        </button>
+      </div>
+      <div class="adventure-story-footer">
+        <span class="adventure-note">Ambos son héroes de su propia historia. Esta elección define tu primera carta especial de aventura.</span>
+        <div class="adventure-actions">
+          <button id="closeAdventureBtn" class="hv-adventure-image-btn" type="button" aria-label="Volver"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_volver.webp" alt="" aria-hidden="true"></button>
+        </div>
+      </div>
+    </div>
+    <div id="adventureWoundedStage" class="adventure-stage hidden">
+      <div id="adventureWoundedVisual" class="adventure-scene-visual scene-wallace-wounded">
+        <div id="adventureWoundedMark" class="adventure-scene-mark hidden"></div>
+        <div class="adventure-scene-overlay">
+          <div class="adventure-scene-copy">
+            <div class="adventure-progress">Antes del guardián</div>
+            <h2 id="adventureWoundedTitle" class="adventure-story-title">El peso del acero</h2>
+            <p id="adventureWoundedText" class="adventure-story-text"></p>
+          </div>
+        </div>
+      </div>
+      <div class="adventure-story-footer">
+        <span class="adventure-note">El héroe no elegido queda fuera de esta primera prueba.</span>
+        <div class="adventure-actions">
+          <button id="skipWoundedSceneBtn" class="hv-adventure-image-btn" type="button" aria-label="Saltar"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_saltar.webp" alt="" aria-hidden="true"></button>
+          <button id="continueWoundedSceneBtn" class="hv-adventure-image-btn" type="button" aria-label="Continuar"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_continuar.webp" alt="" aria-hidden="true"></button>
+        </div>
+      </div>
+    </div>
+
+    <div id="adventureMapIntroStage" class="adventure-stage hidden">
+      <div class="adventure-map-hero">
+        <div class="adventure-scene-overlay">
+          <div class="adventure-scene-copy narrow">
+            <div id="adventureMapIntroMeta" class="adventure-progress">Aliado elegido</div>
+            <h2 id="adventureMapIntroTitle" class="adventure-story-title">1.1 Los caminos sin bandera</h2>
+            <p id="adventureMapIntroText" class="adventure-story-text">Tú y Terral entráis en HallValla por caminos que la guerra dejó sin dueño. Los primeros desertores parecen simples ladrones, hasta que entre sus cosas aparecen monedas extranjeras recién acuñadas.</p>
+          </div>
+        </div>
+      </div>
+      <div class="adventure-story-footer">
+        <div class="adventure-actions">
+          <button id="skipAdventureMapIntroBtn" class="hv-adventure-image-btn" type="button" aria-label="Ir al mapa"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_ir_mapa.webp" alt="" aria-hidden="true"></button>
+          <button id="continueAdventureMapIntroBtn" class="hv-adventure-image-btn" type="button" aria-label="Siguiente"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_siguiente.webp" alt="" aria-hidden="true"></button>
+        </div>
+      </div>
+    </div>
+
+    <div id="adventureMapStage" class="adventure-stage hidden">
+      <div id="adventureMapNodes" class="adventure-map-nodes"></div>
+      <div class="adventure-story-footer">
+        <span class="adventure-note">Cada combate entrega EXP una sola vez al completarse.</span>
+        <div class="adventure-actions">
+          <button id="openAdventureMapNodeTunerBtn" data-hv-dev-tool class="hv-adventure-image-btn" type="button" aria-label="Ajustar burbujas"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_ajustar_burbujas.webp" alt="" aria-hidden="true"></button>
+          <button id="closeAdventureMapBtn" class="hv-adventure-image-btn" type="button" aria-label="Volver al inicio"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_volver_inicio.webp" alt="" aria-hidden="true"></button>
+        </div>
+      </div>
+    </div>
+
+    <aside id="adventureMapNodeTuner" data-hv-dev-tool class="map-node-tuner hidden" aria-label="Ajustar burbujas del mapa">
+      <div class="map-node-tuner-head">
+        <div>
+          <b>Ajustar burbujas del mapa</b>
+          <small>Mueve y escala cada nodo mientras ves el resultado.</small>
+        </div>
+        <button id="closeAdventureMapNodeTunerBtn" class="map-node-tuner-close" type="button" aria-label="Cerrar">×</button>
+      </div>
+      <div class="map-node-tuner-scroll">
+        <label class="map-node-tuner-control map-node-tuner-target">
+          <span>Burbuja</span>
+          <select id="mapNodeTunerTargetSelect">
+            <option value="all">Todas las burbujas</option>
+          </select>
+        </label>
+        <section class="map-node-tuner-group">
+          <h4>BURBUJA COMPLETA</h4>
+          <label class="map-node-tuner-control"><span>Tamaño <output id="mapNodeSizeValue">100%</output></span><input id="mapNodeSizeInput" type="range" min="40" max="220" step="1" value="100"></label>
+          <label class="map-node-tuner-control"><span>Posición X <output id="mapNodeXValue">0 px</output></span><input id="mapNodeXInput" type="range" min="-220" max="220" step="1" value="0"></label>
+          <label class="map-node-tuner-control"><span>Posición Y <output id="mapNodeYValue">0 px</output></span><input id="mapNodeYInput" type="range" min="-220" max="220" step="1" value="0"></label>
+          <label class="map-node-tuner-control"><span>Opacidad <output id="mapNodeOpacityValue">100%</output></span><input id="mapNodeOpacityInput" type="range" min="20" max="100" step="1" value="100"></label>
+        </section>
+        <section class="map-node-tuner-group">
+          <h4>ARO</h4>
+          <label class="map-node-tuner-control"><span>Tamaño del aro <output id="mapNodeRingSizeValue">100%</output></span><input id="mapNodeRingSizeInput" type="range" min="40" max="220" step="1" value="100"></label>
+          <label class="map-node-tuner-control"><span>Grosor de línea <output id="mapNodeRingStrokeValue">3 px</output></span><input id="mapNodeRingStrokeInput" type="range" min="0" max="10" step="0.1" value="3"></label>
+        </section>
+        <section class="map-node-tuner-group">
+          <h4>TEXTO</h4>
+          <label class="map-node-tuner-control"><span>Tamaño <output id="mapNodeTextSizeValue">24 px</output></span><input id="mapNodeTextSizeInput" type="range" min="8" max="48" step="0.2" value="24"></label>
+          <label class="map-node-tuner-control"><span>Posición X <output id="mapNodeTextXValue">0 px</output></span><input id="mapNodeTextXInput" type="range" min="-60" max="60" step="0.2" value="0"></label>
+          <label class="map-node-tuner-control"><span>Posición Y <output id="mapNodeTextYValue">0 px</output></span><input id="mapNodeTextYInput" type="range" min="-60" max="60" step="0.2" value="0"></label>
+        </section>
+      </div>
+      <div class="map-node-tuner-actions">
+        <button id="resetCurrentMapNodeBtn" class="btn ghost" type="button">Restablecer esta</button>
+        <button id="resetAllMapNodesBtn" class="btn ghost" type="button">Restablecer todo</button>
+        <button id="copyMapNodeValuesBtn" class="btn ghost" type="button">Copiar valores</button>
+        <button id="saveMapNodeTunerBtn" class="btn primary" type="button">Listo</button>
+      </div>
+      <p id="mapNodeTunerStatus" class="map-node-tuner-status" aria-live="polite"></p>
+    </aside>
+
+    <div id="adventureGuardianStage" class="adventure-stage hidden">
+      <div id="adventureGuardianVisual" class="adventure-scene-visual scene-guardian">
+        <div id="adventureGuardianMark" class="adventure-scene-mark hidden"></div>
+        <div id="adventureGuardianActorWrap" class="guardian-actor hidden">
+          <img id="adventureGuardianActor" alt="Hechicero guardián">
+        </div>
+        <div class="adventure-scene-overlay">
+          <div class="adventure-scene-copy">
+            <h2 id="adventureGuardianTitle" class="adventure-story-title">El primer guardián</h2>
+            <p id="adventureGuardianText" class="adventure-story-text">Del otro lado del tablero, un hechicero guardián se alza cubierto por energía oscura.
+
+Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor y la fuerza del aliado que acabas de elegir.</p>
+          </div>
+        </div>
+      </div>
+      <div class="adventure-story-footer guardian-story-footer">
+        <div class="adventure-actions">
+          <button id="backToAdventureChoiceBtn" class="hv-adventure-image-btn" type="button" aria-label="Volver"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_volver.webp" alt="" aria-hidden="true"></button>
+          <button id="startAdventureBattleBtn" class="hv-adventure-image-btn" type="button" aria-label="Iniciar combate"><img class="hv-adventure-btn-art" src="assets/ui/adventure/btn_iniciar_combate.webp" alt="" aria-hidden="true"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div id="packOpeningPanel" class="overlay-panel hidden">
+  <div class="modal-card pack-opening-card">
+    <button id="closePackOpeningBtn" class="adventure-result-close" type="button" aria-label="Cerrar">×</button>
+    <div class="pack-opening-scene">
+      <div class="pack-opening-glow"></div>
+      <div id="packOpeningObject" class="pack-object" role="button" tabindex="0" aria-label="Abrir paquete">
+        <img class="pack-object-image" data-hv-src="assets/home/cartas_basicas.webp" data-hv-asset-group="packs" decoding="async" alt="Cartas básicas">
+      </div>
+      <div id="packOpeningHint" class="pack-opening-hint">Toca el paquete para abrirlo</div>
+      <div id="packRevealGrid" class="pack-reveal-grid hidden"></div>
+    </div>
+    <div class="pack-opening-footer">
+      <div>
+        <b id="packOpeningTitle">Paquete básico</b>
+        <span id="packOpeningStatus">Pendiente de apertura</span>
+      </div>
+      <div class="adventure-actions pack-opening-actions">
+        <button id="packOpeningOddsBtn" class="btn ghost pack-opening-odds-btn" type="button">Probabilidades</button>
+        <button id="openNextPackBtn" class="btn ghost hidden" type="button">Abrir otro</button>
+        <button id="confirmPackCardsBtn" class="btn primary hidden" type="button">Listo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div id="packShopPanel" class="overlay-panel hidden">
+  <div class="modal-card pack-shop-card hv-shop-modal" role="dialog" aria-modal="true" aria-label="Tienda HallValla">
+    <button id="closePackShopBtn" class="adventure-result-close hv-shop-close" type="button" aria-label="Cerrar tienda">×</button>
+    <div id="packShopContent" class="pack-shop-content hv-shop-content"></div>
+    <button id="closePackShopBtn2" class="hv-shop-hidden-close" type="button" aria-label="Cerrar tienda"></button>
+  </div>
+</div>
+
+
+<div id="deckBuilderPanel" class="overlay-panel hidden hv-forge-collection-v2">
+  <div class="modal-card deckbuilder-card">
+    <div class="deckbuilder-leader-tabs" aria-label="Filtros de unidades">
+      <button type="button" data-deck-unit-filter="warrior" aria-label="Guerrero"></button>
+      <button type="button" data-deck-unit-filter="archer" aria-label="Arquero"></button>
+      <button type="button" data-deck-unit-filter="assassin" aria-label="Asesino"></button>
+      <button type="button" data-deck-unit-filter="mage" aria-label="Arcano"></button>
+      <button type="button" data-deck-unit-filter="cavalry" aria-label="Caballería"></button>
+      <button type="button" data-deck-unit-filter="axe" aria-label="Hacha"></button>
+    </div>
+    <button id="closeDeckBuilderBtn" class="adventure-result-close" type="button" aria-label="Cerrar">×</button>
+    <div class="deckbuilder-layout">
+      <div class="deckbuilder-parchment-stage">
+        <aside class="deckbuilder-filters hv-invisible-filter-hitboxes" aria-label="Filtros de cartas">
+          <div id="deckFilterGroup" class="deck-filter-group">
+            <select id="deckTypeFilter" class="deck-select" aria-label="Filtrar por tipo de carta">
+              <option value="all">Todos los tipos</option>
+              <option value="unit">Invocaciones</option>
+              <option value="spell">Magias</option>
+              <option value="trap">Trampas</option>
+              <option value="equipment">Equipo</option>
+            </select>
+            <select id="deckOwnershipFilter" class="deck-select" aria-label="Filtrar por posesión">
+              <option value="all">Todas las cartas</option>
+              <option value="owned">Cartas en posesión</option>
+              <option value="unowned">Cartas no poseídas</option>
+            </select>
+            <select id="deckRarityFilter" class="deck-select" aria-label="Filtrar por rareza">
+              <option value="all">Todas las rarezas</option>
+              <option value="basic">Básica</option>
+              <option value="epic">Épica</option>
+              <option value="glorious">Gloriosa</option>
+              <option value="mythic">Mítica</option>
+              <option value="legendary">Legendaria</option>
+              <option value="demigod">Semidiós</option>
+            </select>
+            <select id="deckBattlePowerFilter" class="deck-select" aria-label="Filtrar por poder de batalla">
+              <option value="all">Todo poder de batalla</option>
+              <option value="dominant">PB 90–100 · Dominante</option>
+              <option value="elite">PB 80–89 · Élite</option>
+              <option value="gold">PB 70–79 · Oro</option>
+              <option value="silver">PB 55–69 · Plata</option>
+              <option value="bronze">PB 40–54 · Bronce</option>
+              <option value="initiation">PB 0–39 · Iniciación</option>
+              <option value="unrated">Magias y trampas · Sin PB</option>
+            </select>
+            <select id="deckBattlePowerSort" class="deck-select" aria-label="Ordenar cartas por estadística">
+              <option value="default">Orden: coste y nombre</option>
+              <option value="hp_desc">Vida: mayor a menor</option>
+              <option value="hp_asc">Vida: menor a mayor</option>
+              <option value="atk_desc">Ataque: mayor a menor</option>
+              <option value="atk_asc">Ataque: menor a mayor</option>
+              <option value="guard_desc">Guardia: mayor a menor</option>
+              <option value="guard_asc">Guardia: menor a mayor</option>
+              <option value="dex_desc">DX: mayor a menor</option>
+              <option value="dex_asc">DX: menor a mayor</option>
+              <option value="agi_desc">AGI: mayor a menor</option>
+              <option value="agi_asc">AGI: menor a mayor</option>
+              <option value="mov_desc">MOV: mayor a menor</option>
+              <option value="mov_asc">MOV: menor a mayor</option>
+              <option value="range_desc">Rango: mayor a menor</option>
+              <option value="range_asc">Rango: menor a mayor</option>
+              <option value="cost_desc">Costo: mayor a menor</option>
+              <option value="cost_asc">Costo: menor a mayor</option>
+              <option value="power_desc">PB: mayor a menor</option>
+              <option value="power_asc">PB: menor a mayor</option>
+            </select>
+          </div>
+        </aside>
+        <section class="deckbuilder-collection">
+          <div id="deckCollectionGrid" class="deck-card-grid"></div>
+          <div id="deckCollectionPager" class="deck-collection-pager" aria-label="Paginación de cartas">
+            <button id="deckCollectionPrevBtn" class="deck-page-btn" type="button" aria-label="Página anterior"></button>
+            <span id="deckCollectionPageInfo" class="deck-page-info" aria-hidden="true"></span>
+            <button id="deckCollectionNextBtn" class="deck-page-btn" type="button" aria-label="Página siguiente"></button>
+          </div>
+        </section>
+      </div>
+      <div id="deckBuilderActionGroup" class="deck-builder-action-group" aria-label="Acciones de Forja">
+        <button id="saveDeckBtn" class="btn primary deck-save-main" type="button" aria-label="Guardar mazo"></button>
+      </div>
+      <section id="deckBuilderDeckPanel" class="deckbuilder-current" aria-hidden="false">
+        <div id="currentDeckList" class="current-deck-list"></div>
+        <div id="deckExtraSlots" class="deck-extra-slots" aria-label="Espacios 21 a 30 del mazo"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div id="profilePanel" class="overlay-panel hidden">
+  <div class="modal-card profile-card">
+    <h2>Perfil del jugador</h2>
+    <p class="profile-help">Cambia tu nombre de usuario. El primer cambio es gratis; desde el segundo cambio cuesta 100 gemas.</p>
+    <div class="profile-name-box">
+      <label for="profileNameInput">Nombre de usuario</label>
+      <input id="profileNameInput" class="profile-name-input" type="text" maxlength="18" placeholder="Escribe tu nombre">
+      <small id="profileRenameRule">Primer cambio gratis.</small>
+    </div>
+    <div class="profile-cost-box">
+      <span>Gemas disponibles</span>
+      <b id="profileGemsValue">0</b>
+    </div>
+    <section class="profile-promo-box profile-promo-box--dev-compact" data-hv-dev-tool aria-label="Herramienta interna de pruebas">
+      <div class="profile-promo-controls">
+        <input id="profilePromoInput" class="profile-name-input profile-promo-input" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Código interno">
+        <button id="activateProfilePromoBtn" class="btn primary" type="button">Activar</button>
+        <button id="deactivateProfilePromoBtn" class="btn ghost hidden" type="button">Desactivar</button>
+      </div>
+      <small id="profilePromoStatus" class="profile-promo-status" aria-live="polite">Inactivo.</small>
+    </section>
+    <p id="profileRenameMessage" class="profile-message" aria-live="polite"></p>
+    <div class="adventure-actions">
+      <button id="saveProfileNameBtn" class="btn primary" type="button">Guardar nombre</button>
+      <button id="manageAccountBtn" class="btn ghost" type="button">Cuenta</button>
+      <button id="manageFriendsBtn" class="btn ghost" type="button">Amigos</button>
+      <button id="closeProfilePanelBtn" class="btn ghost" type="button">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div id="accountPanel" class="overlay-panel hidden" aria-labelledby="accountPanelTitle">
+  <div class="modal-card hv-account-card">
+    <h2 id="accountPanelTitle">Cuenta HallValla</h2>
+    <p id="accountStatusText" class="hv-account-status" aria-live="polite">Comprobando cuenta...</p>
+
+    <div id="accountAnonymousView">
+      <p class="hv-account-help">HallValla requiere una cuenta de Google. Tu progreso, amigos, PvP y compras quedan ligados a tu UID permanente de Firebase.</p>
+      <div class="hv-account-google-only-actions">
+        <button id="accountGoogleLoginBtn" class="btn primary" type="button">Continuar con Google</button>
+      </div>
+    </div>
+
+    <div id="accountPermanentView" class="hidden">
+      <div class="hv-account-summary">
+        <span>Correo</span><b id="accountEmailValue">—</b>
+        <span>Verificación</span><b id="accountVerificationValue">—</b>
+        <span>Google</span><b id="accountGoogleValue">—</b>
+        <span>Nube</span><b id="accountCloudValue">—</b>
+      </div>
+      <div class="hv-account-inline-actions">
+        <button id="accountLinkGoogleBtn" class="btn ghost" type="button">Vincular Google</button>
+        <button id="accountSyncNowBtn" class="btn primary" type="button">Sincronizar ahora</button>
+        <button id="accountSignOutBtn" class="btn ghost" type="button">Cerrar sesión</button>
+      </div>
+    </div>
+
+    <p id="accountMessage" class="profile-message" aria-live="polite"></p>
+    <div class="adventure-actions">
+      <button id="closeAccountPanelBtn" class="btn ghost" type="button">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div id="friendsPanel" class="overlay-panel hidden" aria-labelledby="friendsPanelTitle">
+  <div class="modal-card hv-friends-card">
+    <h2 id="friendsPanelTitle">Amigos</h2>
+    <p class="hv-friends-help">Añade jugadores con los que te hayas enfrentado y gestiona solicitudes de amistad.</p>
+
+    <div id="friendsAccountGate" class="hidden">
+      <p>Necesitas una cuenta permanente para usar Amigos.</p>
+      <button id="openAccountFromFriendsBtn" class="btn primary" type="button">Abrir Cuenta</button>
+    </div>
+
+    <div id="friendsContent">
+      <section class="hv-friends-section" aria-labelledby="friendsListTitle">
+        <h3 id="friendsListTitle">Mis amigos</h3>
+        <div id="friendsList" class="hv-friends-list"><p class="hv-friends-empty">Cargando...</p></div>
+      </section>
+      <section class="hv-friends-section" aria-labelledby="friendRequestsTitle">
+        <h3 id="friendRequestsTitle">Solicitudes</h3>
+        <div id="friendRequestsList" class="hv-friends-list"><p class="hv-friends-empty">Cargando...</p></div>
+      </section>
+      <section class="hv-friends-section" aria-labelledby="recentOpponentsTitle">
+        <h3 id="recentOpponentsTitle">Últimos rivales</h3>
+        <p class="hv-friends-note">Aquí aparecerán tus rivales de partidas PvP online. Desde esta lista puedes enviarles una solicitud.</p>
+        <div id="recentOpponentsList" class="hv-friends-list"><p class="hv-friends-empty">Cargando...</p></div>
+      </section>
+    </div>
+
+    <p id="friendsMessage" class="profile-message" aria-live="polite"></p>
+    <div class="adventure-actions">
+      <button id="closeFriendsPanelBtn" class="btn ghost" type="button">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div id="notificationsPanel" class="overlay-panel hidden" aria-label="Notificaciones">
+  <div class="modal-card notifications-card" role="dialog" aria-modal="true">
+    <div id="notificationsList" class="notifications-list"></div>
+    <div class="notification-quick-actions" aria-label="Acciones rápidas">
+      <button id="openPacksFromNotificationsBtn" class="notification-quick-icon notification-pack-icon hidden" type="button" aria-label="Abrir paquetes" title="Abrir paquetes"><span class="hv-sr-only">Abrir paquetes</span></button>
+      <button id="openDeckBuilderFromNotificationsBtn" class="notification-quick-icon notification-deck-icon hidden" type="button" aria-label="Ir a mazos" title="Ir a mazos"><span class="hv-sr-only">Ir a mazos</span></button>
+    </div>
+    <button id="openMissionsFromNotificationsBtn" class="hidden" type="button" aria-hidden="true" tabindex="-1"></button>
+    <button id="closeNotificationsBtn" class="hidden" type="button" aria-hidden="true" tabindex="-1"></button>
+  </div>
+</div>
+
+<div id="settingsPanel" class="overlay-panel hidden">
+  <div class="modal-card">
+    <h2>Configuración</h2>
+    <div class="settings-learning-zone">
+      <b>Aprendizaje de IA</b>
+      <p>La campaña guarda un diario táctico legible con lo que la IA observa del mazo humano, qué counters intentó, qué sobrevivió y qué hipótesis aprendió del duelo.</p>
+      <button id="exportAiLearningLogBtn" class="btn ghost full" type="button">Exportar log de aprendizaje (.txt)</button>
+      <p id="aiLearningLogStatus" class="settings-reset-status"></p>
+    </div>
+    <div id="rtKeyboardBindings" class="settings-controls-zone">
+      <b>Controles TR · teclado</b>
+      <p>Elige cualquier tecla. Los tres botones principales cambian de función según estés en categorías, cartas u objetivo.</p>
+      <div class="rt-keybind-grid">
+        <button type="button" data-rt-bind-action="choice1"><span>Botón 1 · Unidades / opción 1</span><strong data-rt-bind-value>X</strong></button>
+        <button type="button" data-rt-bind-action="choice2"><span>Botón 2 · Magias / opción 2 / confirmar</span><strong data-rt-bind-value>A</strong></button>
+        <button type="button" data-rt-bind-action="choice3"><span>Botón 3 · Trampas / opción 3</span><strong data-rt-bind-value>Y</strong></button>
+        <button type="button" data-rt-bind-action="pagePrev"><span>Página anterior</span><strong data-rt-bind-value>Q</strong></button>
+        <button type="button" data-rt-bind-action="pageNext"><span>Página siguiente</span><strong data-rt-bind-value>E</strong></button>
+        <button type="button" data-rt-bind-action="cancel"><span>Volver / cancelar</span><strong data-rt-bind-value>B</strong></button>
+        <button type="button" data-rt-bind-action="up"><span>Cursor arriba</span><strong data-rt-bind-value>↑</strong></button>
+        <button type="button" data-rt-bind-action="down"><span>Cursor abajo</span><strong data-rt-bind-value>↓</strong></button>
+        <button type="button" data-rt-bind-action="left"><span>Cursor izquierda</span><strong data-rt-bind-value>←</strong></button>
+        <button type="button" data-rt-bind-action="right"><span>Cursor derecha</span><strong data-rt-bind-value>→</strong></button>
+      </div>
+      <button id="rtKeybindResetBtn" class="btn ghost full" type="button">Restaurar controles TR</button>
+      <p id="rtKeybindStatus" class="settings-reset-status">Los mismos botones son contextuales: menú → opción → confirmar.</p>
+    </div>
+    <div class="settings-danger-zone">
+      <b>Pruebas / partida nueva</b>
+      <p>Reinicia solo los datos locales del progreso. No borra Firebase, no borra usuarios y conserva el líder elegido.</p>
+      <button id="resetLocalProgressBtn" class="btn ghost full" type="button">Nueva partida local segura</button>
+      <button id="startBasicTutorialFromSettingsBtn" class="btn ghost full" type="button">Tutorial básico</button>
+      <button id="openActionsHudTunerBtn" data-hv-dev-tool class="btn ghost full" type="button">Ajustar HUD de acciones</button>
+      <p id="settingsResetStatus" class="settings-reset-status"></p>
+    </div>
+    <button type="button" id="closeSettingsBtn" class="btn primary full">Guardar y volver</button>
+  </div>
+</div>
+
+
+<div id="missionsPanel" class="overlay-panel hidden hv-missions-panel">
+  <div id="missionsVisualShell" class="hv-missions-visual-shell" aria-label="Misiones y Maestrías">
+    <img class="hv-missions-panel-art" src="assets/ui/missions/missions_masteries_panel.webp" alt="" draggable="false">
+
+    <!-- El X ya forma parte del arte. Esta zona transparente conserva su función. -->
+    <button id="closeMissionsX" class="hv-missions-close-hotspot" type="button" aria-label="Cerrar Misiones y Maestrías"></button>
+
+    <!-- Capas dinámicas: el arte queda limpio; progreso, cifras y estados viven en HTML. -->
+    <div id="tutorialMissionList" class="hv-missions-dynamic-layer hv-tutorial-visual-layer"></div>
+    <div id="accountMasteryList" class="hv-missions-dynamic-layer hv-mastery-visual-layer"></div>
+
+    <button id="claimAllMasteryRewardsBtn" class="hv-mission-image-button hv-mission-claim-all" type="button" aria-label="Reclamar todas las recompensas pendientes">
+      <img src="assets/ui/missions/btn_reclamar_todo.webp" alt="Reclamar todo" draggable="false">
+    </button>
+
+    <!-- Compatibilidad con el cierre anterior; visualmente no ocupa espacio. -->
+    <button id="closeMissionsBtn" class="hidden" type="button" tabindex="-1" aria-hidden="true">Cerrar</button>
+  </div>
+
+  <!-- Herramienta visual de ajuste. El botón y el panel se pueden arrastrar libremente. -->
+  <button id="missionsLayoutTunerHandle" class="hv-missions-tuner-handle" type="button">Controles</button>
+  <aside id="missionsLayoutTuner" class="hv-missions-layout-tuner hidden" aria-label="Ajuste visual de Misiones y Maestrías">
+    <div id="missionsLayoutTunerDrag" class="hv-missions-layout-tuner-head">
+      <div><b>Ajuste de Misiones</b><small>Mueve y escala barras, números y botones sobre el arte final.</small></div>
+      <button id="missionsLayoutTunerClose" type="button" aria-label="Cerrar controles">×</button>
+    </div>
+    <div class="hv-missions-layout-tuner-body">
+      <label><span>Tarjeta</span><select id="missionsTunerSlot"></select></label>
+      <label><span>Elemento</span><select id="missionsTunerElement"><option value="bar">Barra</option><option value="number">Número</option><option value="button">Botón</option></select></label>
+      <div class="hv-missions-tuner-grid">
+        <label><span>X</span><input id="missionsTunerX" type="range" min="0" max="1619" step="1"><output id="missionsTunerXOut"></output></label>
+        <label><span>Y</span><input id="missionsTunerY" type="range" min="0" max="972" step="1"><output id="missionsTunerYOut"></output></label>
+        <label><span>Ancho</span><input id="missionsTunerW" type="range" min="4" max="500" step="1"><output id="missionsTunerWOut"></output></label>
+        <label><span>Alto</span><input id="missionsTunerH" type="range" min="2" max="180" step="1"><output id="missionsTunerHOut"></output></label>
+        <label id="missionsTunerFontRow"><span>Tamaño número</span><input id="missionsTunerFont" type="range" min="8" max="54" step="1"><output id="missionsTunerFontOut"></output></label>
+      </div>
+      <div class="hv-missions-tuner-actions">
+        <button id="missionsTunerReset" class="btn ghost" type="button">Restablecer</button>
+        <button id="missionsTunerExport" class="btn primary" type="button">Exportar JSON</button>
+      </div>
+      <small id="missionsTunerStatus" class="hv-missions-tuner-status">Los cambios se guardan localmente mientras ajustas.</small>
+    </div>
+  </aside>
+</div>
+
+<div id="passPanel" class="overlay-panel hidden">
+  <div class="modal-card pass-card">
+    <h2>Pase de Honor</h2>
+    <p>Completa misiones, gana EXP del pase y desbloquea recompensas.</p>
+    <div class="pass-lanes">
+      <div><b>Ruta gratuita</b><span>Oro, fragmentos, sobres básicos.</span></div>
+      <div><b>Ruta premium</b><span>Gemas, cosméticos, marcos y cartas promocionales.</span></div>
+    </div>
+    <button type="button" id="closePassBtn" class="btn primary full">Volver</button>
+  </div>
+</div>
+<div id="gameShell" class="game-shell hidden"><div class="battlefield"><section id="pvpStep5ArenaGate" class="pvp-step5-arena-gate hidden" aria-live="polite" aria-label="Entrada sincronizada a arena PvP">
+  <div class="pvp-step5-arena-card">
+    <div class="pvp-step5-kicker">VS ONLINE · PASO 5</div>
+    <h2>ARENA CONECTADA</h2>
+    <p id="pvpStep5ArenaStatus" class="pvp-step5-status">Preparando el estado base del duelo...</p>
+    <div class="pvp-step5-code">SALA <strong id="pvpStep5Code">--------</strong></div>
+    <div class="pvp-step5-versus">
+      <article><span>JUGADOR 1</span><strong id="pvpStep5Player1">Jugador 1</strong><em id="pvpStep5Player1Order">—</em></article>
+      <b>VS</b>
+      <article><span>JUGADOR 2</span><strong id="pvpStep5Player2">Jugador 2</strong><em id="pvpStep5Player2Order">—</em></article>
+    </div>
+    <div class="pvp-step5-rules">
+      <span id="pvpStep5Timer">Timer: OFF</span>
+      <span id="pvpStep5Stake">Apuesta: Gratis</span>
+      <span id="pvpStep5Start">Inicia: —</span>
+    </div>
+    <div class="pvp-step5-lock">ESTADO BASE SINCRONIZADO</div>
+    <p class="pvp-step5-note">Ya estás dentro del duelo. En este paso todavía no se activan cartas, Honor, fases, movimientos ni efectos.</p>
+    <button id="pvpStep5LeaveBtn" class="pvp-step5-leave" type="button">SALIR DEL DUELO DE PRUEBA</button>
+  </div>
+</section><section id="pvpStep6aCombatGate" class="pvp-step6a-combat-gate hidden" aria-live="polite" aria-label="Fases y cambio de turno del duelo PvP">
+  <div class="pvp-step6a-card">
+    <div class="pvp-step6a-kicker">VS ONLINE · PASO 6D</div>
+    <h2>PRIMERAS CARTAS JUGABLES</h2>
+    <p id="pvpStep6aStatus" class="pvp-step6a-status">Esperando el estado oficial del duelo...</p>
+    <div class="pvp-step6a-turn-row">
+      <span>TURNO</span><strong id="pvpStep6aTurn">1</strong>
+    </div>
+    <div id="pvpStep6aLocalState" class="pvp-step6a-local-state">ESPERA</div>
+    <div class="pvp-step6a-versus">
+      <article><span>JUGADOR 1</span><strong id="pvpStep6aPlayer1">Jugador 1</strong><em id="pvpStep6aPlayer1State">—</em></article>
+      <b>VS</b>
+      <article><span>JUGADOR 2</span><strong id="pvpStep6aPlayer2">Jugador 2</strong><em id="pvpStep6aPlayer2State">—</em></article>
+    </div>
+    <div class="pvp-step6a-state-strip">
+      <span id="pvpStep6aPhase">Fase: Inicio de turno</span>
+      <span id="pvpStep6aTimer">Timer: OFF</span>
+      <span id="pvpStep6aStake">Apuesta: Gratis</span>
+    </div>
+    <div class="pvp-step6a-lock">FUENTE OFICIAL · FIREBASE</div>
+    <p class="pvp-step6a-note">En 6D la mano y el Honor siguen siendo privados, pero ya puedes jugar una carta durante Main Phase o Action Phase. El coste se descuenta del Honor de forma sincronizada y la carta jugada se revela a ambos jugadores. Sus efectos, posición en tablero, movimiento y ataques siguen bloqueados hasta los siguientes bloques.</p>
+    <section class="pvp-step6c-resource-panel" aria-label="Mano y Honor privados">
+      <div class="pvp-step6c-resource-head">
+        <span>HONOR PROPIO <strong id="pvpStep6cOwnHonor">0/0</strong></span>
+        <span>MANO <strong id="pvpStep6cOwnHandCount">0</strong></span>
+        <span>MAZO <strong id="pvpStep6cOwnDeckCount">0</strong></span>
+      </div>
+      <div class="pvp-step6c-private-label">MANO PRIVADA · SOLO TÚ VES ESTAS CARTAS</div>
+      <div id="pvpStep6cHand" class="pvp-step6c-hand"><div class="pvp-step6c-hand-wait">Preparando mano privada...</div></div>
+      <div id="pvpStep6dPlayHint" class="pvp-step6d-play-hint">Las cartas se habilitan en Main Phase y Action Phase.</div>
+    </section>
+    <section class="pvp-step6d-played-panel" aria-label="Cartas jugadas y reveladas">
+      <div class="pvp-step6d-played-title">CARTAS JUGADAS · VISIBLES PARA AMBOS</div>
+      <div class="pvp-step6d-played-grid">
+        <article><span id="pvpStep6dPlayed1Label">JUGADOR 1</span><div id="pvpStep6dPlayed1" class="pvp-step6d-played-list"><em>Ninguna carta jugada.</em></div></article>
+        <article><span id="pvpStep6dPlayed2Label">JUGADOR 2</span><div id="pvpStep6dPlayed2" class="pvp-step6d-played-list"><em>Ninguna carta jugada.</em></div></article>
+      </div>
+      <div class="pvp-step6d-played-note">En 6D jugar una carta confirma coste + salida de la mano + revelación pública. Todavía no se resuelven sus efectos.</div>
+    </section>
+    <div class="pvp-step6b-controls">
+      <button id="pvpStep6bAdvanceBtn" class="pvp-step6b-advance" type="button" disabled>SIGUIENTE FASE</button>
+      <div id="pvpStep6bHint" class="pvp-step6b-hint">Esperando al jugador activo.</div>
+    </div>
+    <button id="pvpStep6aLeaveBtn" class="pvp-step6a-leave" type="button">SALIR DEL DUELO DE PRUEBA</button>
+  </div>
+</section><div class="battle-tools"><button id="battleMenuBtn" class="battle-tool-btn" type="button" aria-label="Abrir configuración de duelo">⚙️</button></div><div id="hudP1" class="player-status-hud hud-player-left" aria-label="HUD del jugador">
+  <div class="player-status-card">
+    <div class="player-status-head">
+      <b id="p1HudName" class="player-status-name">Nuevo jugador</b>
+      <span id="p1Badge" class="player-status-turn">Turno</span>
+    </div>
+    <div class="player-status-row">
+      <div class="player-status-mini player-status-life"><span>Vida</span><strong id="p1Life">0</strong></div>
+      <div class="player-status-mini player-status-hand"><span>Mano</span><strong id="p1Hand">0</strong></div>
+    </div>
+    <span id="p1Honor" class="hud-hidden-value" aria-hidden="true">0</span>
+  </div>
+</div>
+<div id="rtArsenalPanel" class="rt-arsenal-panel" aria-label="Selector táctico TR" hidden>
+  <div class="rt-arsenal-context"><button type="button" class="rt-arsenal-back" data-rt-back aria-label="Volver" hidden><span aria-hidden="true">↶</span><span class="rt-back-bind-host"></span></button><strong id="rtArsenalContextTitle" hidden></strong></div>
+  <div class="rt-arsenal-categories" role="tablist" aria-label="Tipo de carta">
+    <button type="button" class="rt-arsenal-category" data-rt-category="unit" aria-label="Unidades"><img src="assets/ui/realtime/category-units.webp" alt=""><span class="rt-category-bind-host"></span></button>
+    <button type="button" class="rt-arsenal-category" data-rt-category="spell" aria-label="Magias"><img src="assets/ui/realtime/category-spells.webp" alt=""><span class="rt-category-bind-host"></span></button>
+    <button type="button" class="rt-arsenal-category" data-rt-category="trap" aria-label="Trampas"><img src="assets/ui/realtime/category-traps.webp" alt=""><span class="rt-category-bind-host"></span></button>
+  </div>
+  <div class="rt-arsenal-pagebar" hidden><button type="button" data-rt-page="prev" aria-label="Página anterior"><span class="rt-page-arrow">‹</span><span class="rt-page-bind-host"></span></button><span id="rtArsenalPageLabel">1/1</span><button type="button" data-rt-page="next" aria-label="Página siguiente"><span class="rt-page-arrow">›</span><span class="rt-page-bind-host"></span></button></div>
+  <div id="rtArsenalCards" class="rt-arsenal-cards" hidden></div>
+</div>
+<button id="rtTargetCancelBtn" class="rt-target-cancel" type="button" aria-label="Cancelar selección" hidden>↶</button>
+<div id="hudP2" class="player-status-hud hud-player-right" aria-label="HUD de la IA">
+  <div class="player-status-card">
+    <div class="player-status-head">
+      <b id="p2HudName" class="player-status-name">Hechicero guardián</b>
+      <span id="p2Badge" class="player-status-turn">Espera</span>
+    </div>
+    <div class="player-status-row">
+      <div class="player-status-mini player-status-life"><span>Vida</span><strong id="p2Life">0</strong></div>
+      <div class="player-status-mini player-status-hand"><span>Mano</span><strong id="p2Hand">0</strong></div>
+    </div>
+    <span id="p2Honor" class="hud-hidden-value" aria-hidden="true">0</span>
+  </div>
+</div><div id="phaseBanner" class="phase-banner">ONLINE</div><div id="turnTimerHud" class="battle-clock-hud battle-clock-turn-hud" data-clock-target="turn" aria-label="Tiempo de turno"><span class="turn-timer-label">TURNO</span><strong id="turnTimerValue">03:00</strong></div><div id="playerClock1" class="battle-clock-hud duel-clock-hud duel-clock-p1" data-clock-target="p1" aria-label="Reloj del jugador 1"><span class="duel-clock-label">J1</span><strong id="playerClock1Value">15:00</strong></div><div id="playerClock2" class="battle-clock-hud duel-clock-hud duel-clock-p2" data-clock-target="p2" aria-label="Reloj del jugador 2"><span class="duel-clock-label">J2</span><strong id="playerClock2Value">15:00</strong></div><div id="phaseAnnounce" class="phase-announce" aria-live="polite"></div><div id="honorRechargeModal" class="honor-recharge-modal" aria-live="polite"></div><div id="turnHonorHud" class="turn-honor-hud" aria-live="polite"><span id="turnHonorHudText" class="turn-honor-content"><span class="turn-honor-label">HONOR</span> <strong id="turnHonorHudValue">0/0</strong></span></div><div id="rivalHonorHud" class="turn-honor-hud rival-honor-hud" aria-live="polite" aria-label="Honor del rival"><span id="rivalHonorHudText" class="turn-honor-content"><span class="turn-honor-label">HONOR</span> <strong id="rivalHonorHudValue">0/0</strong></span></div><div id="unitContextMenu" class="unit-context-menu hidden" aria-label="Menú de invocación"></div><div id="battleFxLayer" class="battle-fx-layer" aria-hidden="true"></div><div id="eventSplashOverlay" class="event-splash-overlay" aria-live="polite" aria-hidden="true"></div><div id="demigodSummonModal" class="demigod-summon-modal hidden" aria-live="polite"></div><div id="hint" class="battle-hint">Selecciona una carta o unidad.</div><div class="grid-wrap"><div id="grid" class="grid"></div></div><div id="log" class="event-history-dock" aria-label="Historial visual de eventos de combate" aria-hidden="true"></div><div id="handDrawer" class="hand-drawer"><div class="hand-top"><b>Spellbook</b><span id="handInfo"></span></div><div id="handRow" class="hand-row"></div></div></div></div>
+<div id="cardInspectModal" class="card-inspect-modal hidden"><div class="card-inspect-card det-v32-card"></div></div>
+<div id="battleMenuPanel" class="battle-menu-panel hidden"><div class="battle-menu-card"><h2>Configuración del duelo</h2><p class="battle-menu-note">Control rápido para móvil y PC.</p><button id="battleToggleSoundBtn" class="btn full" type="button">Audio general: activado</button><div class="battle-audio-controls" aria-label="Controles de audio del duelo"><div class="battle-audio-row"><div class="battle-audio-head"><button id="battleToggleMusicBtn" class="battle-audio-toggle" type="button">Música: ON</button><span id="battleMusicVolumeValue" class="battle-audio-value">32%</span></div><input id="battleMusicVolume" class="battle-audio-slider" type="range" min="0" max="100" step="1" value="32" aria-label="Volumen de música"></div><div class="battle-audio-row"><div class="battle-audio-head"><button id="battleToggleSfxBtn" class="battle-audio-toggle" type="button">Efectos: ON</button><span id="battleSfxVolumeValue" class="battle-audio-value">58%</span></div><input id="battleSfxVolume" class="battle-audio-slider" type="range" min="0" max="100" step="1" value="58" aria-label="Volumen de efectos"></div></div><button id="openFieldStatBadgesTunerBattleBtn" data-hv-dev-tool class="btn full" type="button">Ajustar iconos / aros / números</button><button id="openBattleVisualSizeTunerBtn" data-hv-dev-tool class="btn full" type="button">Ajustar líderes y cartas de mano</button><button id="openFieldBoardTunerBattleBtn" data-hv-dev-tool class="btn full" type="button">Ajustar cartas del campo y cuadrícula</button><button id="openBattleClockTunerBtn" data-hv-dev-tool class="btn full" type="button">Ajustar relojes del duelo</button><button id="battleResetBtn" class="btn full" type="button">Reiniciar duelo</button><button id="battleDeleteCloudBattleBtn" class="btn full" type="button">Borrar solo este duelo en Firebase</button><button id="battleLeaveBtn" class="btn full" type="button">Salir al menú</button><button id="battleCloseMenuBtn" class="btn primary full" type="button">Volver al duelo</button></div></div>
+
+
+<div id="battleClockTuner" data-hv-dev-tool class="battle-clock-tuner hidden" aria-label="Control de relojes del duelo">
+  <div class="battle-clock-tuner-head">
+    <div>
+      <b>Ajustar relojes del duelo</b>
+      <small>Separa el reloj de turno, el de J1 y el de J2. Puedes usar controles o arrastrarlos directamente sobre el campo.</small>
+    </div>
+    <button id="closeBattleClockTunerBtn" class="battle-clock-tuner-x" type="button" aria-label="Cerrar ajuste">×</button>
+  </div>
+  <div class="battle-clock-tuner-grid">
+    <label class="battle-clock-tuner-control">
+      <span>Reloj</span>
+      <select id="battleClockTargetSelect" class="battle-clock-select">
+        <option value="turn">Turno</option>
+        <option value="p1">Jugador 1</option>
+        <option value="p2">Jugador 2</option>
+      </select>
+    </label>
+    <label class="battle-clock-tuner-control">
+      <span>Horizontal <output id="battleClockXValue">0 px</output></span>
+      <input id="battleClockXInput" type="range" min="-520" max="520" step="1" value="0">
+    </label>
+    <label class="battle-clock-tuner-control">
+      <span>Vertical <output id="battleClockYValue">0 px</output></span>
+      <input id="battleClockYInput" type="range" min="-320" max="420" step="1" value="0">
+    </label>
+    <label class="battle-clock-tuner-control">
+      <span>Tamaño <output id="battleClockScaleValue">100%</output></span>
+      <input id="battleClockScaleInput" type="range" min="55" max="160" step="1" value="100">
+    </label>
+  </div>
+  <div class="battle-clock-tuner-actions">
+    <button id="resetBattleClockCurrentBtn" class="btn ghost" type="button">Restablecer actual</button>
+    <button id="resetBattleClockAllBtn" class="btn ghost" type="button">Restablecer todo</button>
+    <button id="copyBattleClockValuesBtn" class="btn ghost" type="button">Copiar valores</button>
+    <button id="saveBattleClockTunerBtn" class="btn primary" type="button">Listo</button>
+  </div>
+  <p id="battleClockTunerStatus" class="battle-clock-tuner-status" aria-live="polite"></p>
+</div>
+
+<div id="fieldStatBadgesTuner" data-hv-dev-tool class="field-stat-badges-tuner hidden" aria-label="Control maestro de iconos, aros y números del campo">
+  <div class="field-stat-badges-tuner-head">
+    <div>
+      <b>Ajustar iconos / aros / números</b>
+      <small>Control total en vivo. Elige el badge que quieres tocar y modifica icono, aro y número por separado mientras ves el campo.</small>
+    </div>
+    <button id="closeFieldStatBadgesTunerBtn" class="field-stat-badges-tuner-x" type="button" aria-label="Cerrar ajuste">×</button>
+  </div>
+
+  <div class="field-stat-badges-master-body">
+    <label class="field-stat-badges-tuner-control field-stat-badges-target">
+      <span>Elemento</span>
+      <select id="fieldBadgeTargetSelect" class="field-stat-select">
+        <option value="hpUnit">Vida · unidades</option>
+        <option value="hpLeader">Vida · líderes</option>
+        <option value="atkUnit">Ataque · unidades</option>
+        <option value="atkLeader">Ataque · líderes</option>
+        <option value="guardUnit">Guardia · unidades</option>
+        <option value="guardLeader">Guardia · líderes</option>
+      </select>
+    </label>
+
+    <div class="field-stat-badges-tuner-grid single-col">
+      <section class="field-stat-badges-tuner-group">
+        <h4>ICONO / EMBLEMA</h4>
+        <label class="field-stat-badges-tuner-control"><span>Tamaño <output id="fieldBadgeIconScaleValue">100%</output></span><input id="fieldBadgeIconScaleInput" type="range" min="40" max="500" step="1" value="100"></label>
+        <label class="field-stat-badges-tuner-control"><span>Posición X <output id="fieldBadgeIconXValue">0 px</output></span><input id="fieldBadgeIconXInput" type="range" min="-80" max="80" step="1" value="0"></label>
+        <label class="field-stat-badges-tuner-control"><span>Posición Y <output id="fieldBadgeIconYValue">0 px</output></span><input id="fieldBadgeIconYInput" type="range" min="-80" max="80" step="1" value="0"></label>
+      </section>
+
+      <section class="field-stat-badges-tuner-group">
+        <h4>ARO / CÍRCULO</h4>
+        <label class="field-stat-badges-tuner-control"><span>Tamaño <output id="fieldBadgeRingScaleValue">100%</output></span><input id="fieldBadgeRingScaleInput" type="range" min="40" max="220" step="1" value="100"></label>
+        <label class="field-stat-badges-tuner-control"><span>Posición X <output id="fieldBadgeRingXValue">0 px</output></span><input id="fieldBadgeRingXInput" type="range" min="-40" max="40" step="1" value="0"></label>
+        <label class="field-stat-badges-tuner-control"><span>Posición Y <output id="fieldBadgeRingYValue">0 px</output></span><input id="fieldBadgeRingYInput" type="range" min="-40" max="40" step="1" value="0"></label>
+        <label class="field-stat-badges-tuner-control"><span>Grueso línea <output id="fieldBadgeRingStrokeValue">1.2 px</output></span><input id="fieldBadgeRingStrokeInput" type="range" min="0.2" max="4" step="0.1" value="1.2"></label>
+      </section>
+
+      <section class="field-stat-badges-tuner-group">
+        <h4>NÚMERO</h4>
+        <label class="field-stat-badges-tuner-control"><span>Tamaño <output id="fieldBadgeNumSizeValue">16 px</output></span><input id="fieldBadgeNumSizeInput" type="range" min="6" max="32" step="0.2" value="16"></label>
+        <label class="field-stat-badges-tuner-control"><span>Grosor <output id="fieldBadgeNumWeightValue">900</output></span><input id="fieldBadgeNumWeightInput" type="range" min="100" max="900" step="100" value="900"></label>
+        <label class="field-stat-badges-tuner-control"><span>Ancho <output id="fieldBadgeNumScaleXValue">100%</output></span><input id="fieldBadgeNumScaleXInput" type="range" min="40" max="180" step="1" value="100"></label>
+        <label class="field-stat-badges-tuner-control"><span>Alto <output id="fieldBadgeNumScaleYValue">100%</output></span><input id="fieldBadgeNumScaleYInput" type="range" min="40" max="180" step="1" value="100"></label>
+        <label class="field-stat-badges-tuner-control"><span>Posición X <output id="fieldBadgeNumXValue">0 px</output></span><input id="fieldBadgeNumXInput" type="range" min="-20" max="20" step="0.2" value="0"></label>
+        <label class="field-stat-badges-tuner-control"><span>Posición Y <output id="fieldBadgeNumYValue">0 px</output></span><input id="fieldBadgeNumYInput" type="range" min="-20" max="20" step="0.2" value="0"></label>
+      </section>
+    </div>
+  </div>
+
+  <div class="field-stat-badges-tuner-actions">
+    <button id="resetCurrentFieldBadgeBtn" class="btn ghost" type="button">Restablecer este</button>
+    <button id="resetFieldStatBadgesTunerBtn" class="btn ghost" type="button">Restablecer todo</button>
+    <button id="copyFieldStatBadgesValuesBtn" class="btn ghost" type="button">Copiar valores</button>
+    <button id="saveFieldStatBadgesTunerBtn" class="btn primary" type="button">Listo</button>
+  </div>
+  <p id="fieldStatBadgesTunerStatus" class="field-stat-badges-tuner-status" aria-live="polite"></p>
+</div>
+
+<div id="battleVisualSizeTuner" data-hv-dev-tool class="battle-visual-size-tuner hidden" aria-label="Control de tamaño y posición de líderes y tamaño de cartas en mano">
+  <div class="battle-visual-size-head">
+    <div>
+      <b>Ajustar líderes y cartas de mano</b>
+      <small>Modifica cada líder por separado mientras ves el campo. También puedes reducir las cartas de la mano.</small>
+    </div>
+    <button id="closeBattleVisualSizeTunerBtn" class="battle-visual-size-close" type="button" aria-label="Cerrar ajuste">×</button>
+  </div>
+
+  <div class="battle-visual-size-body">
+    <section class="battle-visual-size-group">
+      <h4>TU LÍDER</h4>
+      <label class="battle-visual-size-control"><span>Tamaño <output id="playerLeaderScaleValue">74%</output></span><input id="playerLeaderScaleInput" type="range" min="45" max="180" step="1" value="74"></label>
+      <label class="battle-visual-size-control"><span>Horizontal <output id="playerLeaderXValue">0 px</output></span><input id="playerLeaderXInput" type="range" min="-120" max="120" step="1" value="0"></label>
+      <label class="battle-visual-size-control"><span>Vertical <output id="playerLeaderYValue">0 px</output></span><input id="playerLeaderYInput" type="range" min="-120" max="120" step="1" value="0"></label>
+    </section>
+
+    <section class="battle-visual-size-group">
+      <h4>LÍDER RIVAL</h4>
+      <label class="battle-visual-size-control"><span>Tamaño <output id="enemyLeaderScaleValue">74%</output></span><input id="enemyLeaderScaleInput" type="range" min="45" max="180" step="1" value="74"></label>
+      <label class="battle-visual-size-control"><span>Horizontal <output id="enemyLeaderXValue">-5 px</output></span><input id="enemyLeaderXInput" type="range" min="-120" max="120" step="1" value="-5"></label>
+      <label class="battle-visual-size-control"><span>Vertical <output id="enemyLeaderYValue">-30 px</output></span><input id="enemyLeaderYInput" type="range" min="-120" max="120" step="1" value="-30"></label>
+    </section>
+
+    <section class="battle-visual-size-group">
+      <h4>CARTAS EN MANO</h4>
+      <label class="battle-visual-size-control"><span>Tamaño <output id="battleHandCardScaleValue">67%</output></span><input id="battleHandCardScaleInput" type="range" min="35" max="120" step="1" value="67"></label>
+    </section>
+  </div>
+
+  <div class="battle-visual-size-actions">
+    <button id="resetBattleVisualSizeTunerBtn" class="btn ghost" type="button">Restablecer</button>
+    <button id="copyBattleVisualSizeValuesBtn" class="btn ghost" type="button">Copiar valores</button>
+    <button id="saveBattleVisualSizeTunerBtn" class="btn primary" type="button">Listo</button>
+  </div>
+  <p id="battleVisualSizeTunerStatus" class="battle-visual-size-status" aria-live="polite"></p>
+</div>
+
+<div id="fieldBoardTuner" data-hv-dev-tool class="field-board-tuner hidden" aria-label="Control de cartas del campo y estructura de la cuadrícula">
+  <div class="field-board-tuner-head">
+    <div>
+      <b>Cartas del campo y cuadrícula</b>
+      <small>Escala la carta completa —incluidos stats, buffs y debuffs— y añade o quita filas/columnas como una hoja de cálculo.</small>
+    </div>
+    <button id="closeFieldBoardTunerBtn" class="field-board-tuner-x" type="button" aria-label="Cerrar ajuste">×</button>
+  </div>
+
+  <div class="field-board-tuner-body">
+    <section class="field-board-tuner-group">
+      <h4>CARTAS EN EL CAMPO</h4>
+      <label class="field-board-tuner-control">
+        <span>Tamaño completo <output id="fieldCardScaleValue">100%</output></span>
+        <input id="fieldCardScaleInput" type="range" min="45" max="150" step="1" value="100">
+      </label>
+      <p>El retrato, marco, badges de HP/AT/GD y badges de buffs/debuffs se escalan juntos.</p>
+      <button id="resetFieldCardScaleBtn" class="btn ghost full" type="button">Restablecer tamaño</button>
+    </section>
+
+    <section class="field-board-tuner-group field-board-grid-editor">
+      <h4>ESTRUCTURA DEL CAMPO</h4>
+      <div id="fieldBoardDimensionsSummary" class="field-board-dimensions-summary">5 columnas × 7 filas = 35 celdas</div>
+      <div class="field-board-step-row">
+        <span>Filas</span>
+        <button class="field-board-step-btn" data-field-board-step="row-remove" type="button" aria-label="Quitar una fila">−</button>
+        <output id="fieldBoardRowsValue">7</output>
+        <button class="field-board-step-btn" data-field-board-step="row-add" type="button" aria-label="Añadir una fila">+</button>
+      </div>
+      <div class="field-board-step-row">
+        <span>Columnas / celdas por fila</span>
+        <button class="field-board-step-btn" data-field-board-step="col-remove" type="button" aria-label="Quitar una columna">−</button>
+        <output id="fieldBoardColsValue">5</output>
+        <button class="field-board-step-btn" data-field-board-step="col-add" type="button" aria-label="Añadir una columna">+</button>
+      </div>
+      <p id="fieldBoardPermissionNote">Los cambios se aplican al duelo actual.</p>
+      <button id="resetFieldBoardGridBtn" class="btn ghost full" type="button">Volver a campo 5 × 9</button>
+    </section>
+  </div>
+
+  <div class="field-board-tuner-actions">
+    <button id="copyFieldBoardValuesBtn" class="btn ghost" type="button">Copiar valores</button>
+    <button id="saveFieldBoardTunerBtn" class="btn primary" type="button">Listo</button>
+  </div>
+  <p id="fieldBoardTunerStatus" class="field-board-tuner-status" aria-live="polite"></p>
+</div>
+
+<div id="mobileRotateOverlay" class="mobile-rotate-overlay hidden" aria-hidden="true">
+  <div class="mobile-rotate-card">
+    <div class="mobile-rotate-icon">↻</div>
+    <h2>Juega en horizontal</h2>
+    <p>En móvil, HallValla se ve y funciona mejor en modo horizontal. Gira el teléfono para continuar.</p>
+    <button id="mobileRotateTryBtn" class="btn primary full" type="button">Intentar modo horizontal</button>
+    <small>Si el navegador no puede forzarlo, gíralo manualmente.</small>
+  </div>
+</div>
+
+<script type="module" src="js/bootstrap-loader.js?h=789b2b431789"></script>
+</body>
+</html>

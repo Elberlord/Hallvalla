@@ -869,6 +869,76 @@
   let elementDrag=null;
   let panelDrag=null;
   let mutationFrame=0;
+  const DESIGN_W=1366;
+  const DESIGN_H=636;
+  const DESIGN_MARGIN=4;
+
+  function designRect(){return {left:0,top:0,right:DESIGN_W,bottom:DESIGN_H,width:DESIGN_W,height:DESIGN_H};}
+  function rectIsFullyOutside(rect){return !!rect&&(rect.right<=0||rect.bottom<=0||rect.left>=DESIGN_W||rect.top>=DESIGN_H);}
+  function normalizePickNode(node){
+    if(!node)return null;
+    const interactive=node.closest?.('button,a[href],input,select,textarea,[role="button"],[onclick],[tabindex]:not([tabindex="-1"]),[data-action]');
+    if(interactive&&!isDevNode(interactive))return interactive;
+    return node;
+  }
+  function correctionToKeepInside(node){
+    if(!node||!node.isConnected)return {dx:0,dy:0};
+    const r=node.getBoundingClientRect();
+    if(!(r.width>0&&r.height>0))return {dx:0,dy:0};
+    let dx=0,dy=0;
+    if(r.width<=DESIGN_W-DESIGN_MARGIN*2){
+      if(r.left<DESIGN_MARGIN)dx=DESIGN_MARGIN-r.left;
+      else if(r.right>DESIGN_W-DESIGN_MARGIN)dx=(DESIGN_W-DESIGN_MARGIN)-r.right;
+    }else if(r.right<=DESIGN_MARGIN||r.left>=DESIGN_W-DESIGN_MARGIN){
+      dx=(DESIGN_W-r.width)/2-r.left;
+    }
+    if(r.height<=DESIGN_H-DESIGN_MARGIN*2){
+      if(r.top<DESIGN_MARGIN)dy=DESIGN_MARGIN-r.top;
+      else if(r.bottom>DESIGN_H-DESIGN_MARGIN)dy=(DESIGN_H-DESIGN_MARGIN)-r.bottom;
+    }else if(r.bottom<=DESIGN_MARGIN||r.top>=DESIGN_H-DESIGN_MARGIN){
+      dy=(DESIGN_H-r.height)/2-r.top;
+    }
+    return {dx,dy};
+  }
+  function keepSelectedInsideStage({silent=false}={}){
+    if(!selected||!selectedSelector||isDevNode(selected))return false;
+    const fix=correctionToKeepInside(selected);
+    if(Math.abs(fix.dx)<.5&&Math.abs(fix.dy)<.5)return false;
+    const current=stateFor(selectedSelector);
+    config.items[selectedSelector]=normalizeState({...current,x:current.x+fix.dx,y:current.y+fix.dy,label:nodeLabel(selected)});
+    writeConfig();
+    applySelector(selectedSelector);
+    if(!silent)setStatus('El elemento intentó salir del plano 1366×636 y fue devuelto automáticamente.');
+    return true;
+  }
+  function offscreenCandidates(){
+    const selectors='button,a[href],input,select,textarea,[role="button"],[onclick],[tabindex]:not([tabindex="-1"]),[data-action]';
+    const seen=new Set(),out=[];
+    for(const raw of $$(selectors)){
+      const node=normalizePickNode(raw);
+      if(!node||seen.has(node)||isDevNode(node))continue;
+      seen.add(node);
+      const cs=getComputedStyle(node);
+      if(cs.display==='none'||cs.visibility==='hidden'||Number(cs.opacity)===0)continue;
+      if(node.closest?.('[hidden],.hidden'))continue;
+      const r=node.getBoundingClientRect();
+      if(!(r.width>2&&r.height>2)||!rectIsFullyOutside(r))continue;
+      out.push(node);
+    }
+    return out;
+  }
+  function recoverNextOffscreen(){
+    const node=offscreenCandidates()[0];
+    if(!node){setStatus('No encontré controles visibles completamente fuera del plano 1366×636.');return;}
+    selectNode(node);
+    const r=node.getBoundingClientRect();
+    const targetX=Math.max(DESIGN_MARGIN,Math.min(DESIGN_W-DESIGN_MARGIN-Math.min(r.width,DESIGN_W-DESIGN_MARGIN*2),(DESIGN_W-r.width)/2));
+    const targetY=Math.max(DESIGN_MARGIN,Math.min(DESIGN_H-DESIGN_MARGIN-Math.min(r.height,DESIGN_H-DESIGN_MARGIN*2),(DESIGN_H-r.height)/2));
+    const current=stateFor(selectedSelector);
+    config.items[selectedSelector]=normalizeState({...current,x:current.x+(targetX-r.left),y:current.y+(targetY-r.top),label:nodeLabel(node)});
+    writeConfig();applySelector(selectedSelector);syncPanel();syncSavedSelect();
+    setStatus('Recuperé un control que estaba fuera del plano. Ya puedes arrastrarlo.');
+  }
 
   function readConfig(){
     try{
@@ -1066,6 +1136,7 @@
     config.items[selectedSelector]=state;
     writeConfig();
     applySelector(selectedSelector);
+    keepSelectedInsideStage({silent:true});
     syncPanel();
     syncSavedSelect();
   }
@@ -1073,11 +1144,18 @@
     document.querySelectorAll('.hv-universal-selected,.hv-universal-hover').forEach(node=>node.classList.remove('hv-universal-selected','hv-universal-hover'));
   }
   function selectNode(node){
+    node=normalizePickNode(node);
     if(!node||isDevNode(node)||node===document.body||node===document.documentElement)return;
     clearSelectionClasses();
     selected=node;
     selectedSelector=buildSelector(node);
     selected.classList.add("hv-universal-selected");
+    if(rectIsFullyOutside(selected.getBoundingClientRect())){
+      const selector=selectedSelector,current=stateFor(selector),r=selected.getBoundingClientRect();
+      config.items[selector]=normalizeState({...current,x:current.x+((DESIGN_W-r.width)/2-r.left),y:current.y+((DESIGN_H-r.height)/2-r.top),label:nodeLabel(selected)});
+      writeConfig();applySelector(selector);
+    }
+    keepSelectedInsideStage({silent:true});
     syncPanel();
   }
   function selectBySelector(selector){
@@ -1113,14 +1191,14 @@
   }
   function onPickMove(event){
     if(!picking)return;
-    const node=document.elementFromPoint(event.clientX,event.clientY);
+    const node=normalizePickNode(document.elementFromPoint(event.clientX,event.clientY));
     if(!node||isDevNode(node)||node===hoverTarget)return;
     hoverTarget?.classList.remove("hv-universal-hover");
     hoverTarget=node;hoverTarget.classList.add("hv-universal-hover");
   }
   function onPickClick(event){
     if(!picking)return;
-    const node=document.elementFromPoint(event.clientX,event.clientY);
+    const node=normalizePickNode(document.elementFromPoint(event.clientX,event.clientY));
     if(!node||isDevNode(node))return;
     event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
     hoverTarget?.classList.remove("hv-universal-hover");hoverTarget=null;
@@ -1174,7 +1252,7 @@
     }
     if(previous&&config.items[previous])select.value=previous;
   }
-  function exportJson(){return JSON.stringify({version:1,items:config.items},null,2);}
+  function exportJson(){return JSON.stringify({version:2,designStage:{width:DESIGN_W,height:DESIGN_H,mode:"fixed"},units:"design-px",items:config.items},null,2);}
   function exportCss(){
     return Object.entries(config.items).map(([selector,raw])=>{
       const s=normalizeState(raw),rules=[`translate:${s.x}px ${s.y}px`,`scale:${s.sx/100} ${s.sy/100}`,`opacity:${s.opacity/100}`];
@@ -1228,9 +1306,10 @@
     if($("#hvUniversalLayoutTuner"))return;
     const panel=document.createElement("aside");panel.id="hvUniversalLayoutTuner";panel.dataset.hvDevTool="";panel.className="hv-universal-layout-tuner hidden";
     panel.innerHTML=`
-      <header id="hvUniversalDragHandle" class="hv-universal-head"><div><b>CONTROL UNIVERSAL</b><small>Cualquier elemento · ?dev</small></div><button id="hvUniversalClose" type="button">×</button></header>
+      <header id="hvUniversalDragHandle" class="hv-universal-head"><div><b>CONTROL UNIVERSAL · 1366×636</b><small>Plano fijo · JSON canónico · ?dev</small></div><button id="hvUniversalClose" type="button">×</button></header>
       <div class="hv-universal-body">
         <button id="hvUniversalPick" class="hv-universal-primary" type="button">🎯 SELECCIONAR EN PANTALLA</button>
+        <button id="hvUniversalRecover" class="hv-universal-primary hv-universal-recover" type="button">↩ RECUPERAR SIGUIENTE FUERA DEL PLANO</button>
         <div class="hv-universal-selected-label" id="hvUniversalSelected">Selecciona un elemento</div>
         <input id="hvUniversalSelector" class="hv-universal-selector" readonly aria-label="Selector CSS">
         <select id="hvUniversalSaved" class="hv-universal-saved"></select>
@@ -1248,6 +1327,7 @@
     document.body.appendChild(panel);
     $("#hvUniversalClose",panel).addEventListener("click",()=>closePanel());
     $("#hvUniversalPick",panel).addEventListener("click",()=>setPicking(!picking));
+    $("#hvUniversalRecover",panel).addEventListener("click",recoverNextOffscreen);
     $("#hvUniversalParent",panel).addEventListener("click",()=>{if(selected?.parentElement&&!isDevNode(selected.parentElement))selectNode(selected.parentElement);});
     $("#hvUniversalChild",panel).addEventListener("click",()=>{const child=selected?.firstElementChild;if(child&&!isDevNode(child))selectNode(child);});
     $("#hvUniversalDragToggle",panel).addEventListener("click",()=>setDragEnabled(!dragEnabled));
@@ -1301,7 +1381,12 @@
 
   readConfig();
   globalThis.hvUniversalLayoutDevOpen=openPanel;
-  globalThis.hvUniversalLayoutDevExport=()=>({json:exportJson(),css:exportCss()});
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>{applyAll();bindGlobalEvents();},{once:true});
-  else{applyAll();bindGlobalEvents();}
+  globalThis.hvUniversalLayoutDevExport=()=>({json:exportJson(),css:exportCss(),designStage:{width:DESIGN_W,height:DESIGN_H}});
+  const bootUniversalDev=()=>{
+    applyAll();bindGlobalEvents();
+    document.documentElement.dataset.hvUniversalOnly="1";
+    requestAnimationFrame(()=>{openPanel();setStatus('Plano fijo 1366×636. Nada seleccionado podrá salir completamente del área editable.');});
+  };
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bootUniversalDev,{once:true});
+  else bootUniversalDev();
 })();

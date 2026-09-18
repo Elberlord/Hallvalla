@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 20260914.122 · Gamepad estándar (PC / Android)
+/* HallValla 20260918.180 · Gamepad estándar (PC / Android)
    Layout principal estilo Xbox:
    A confirmar/seleccionar/mover/atacar · B volver/cerrar universal · X DEF · Y DET
    View/Back mano · Menu/Start = clic izquierdo universal del cursor virtual · TR: LB recoge orbe, RB escudo del líder.
@@ -49,6 +49,40 @@ const hvGamepadState={
   perfIdleFrames:0,
   perfButtonEdges:0,
   perfPointerMoves:0
+};
+
+const HV_NATIVE_GAMEPAD_INDEX=9000;
+const hvNativeGamepadState={
+  connected:false,
+  gp:null
+};
+function hvGamepadBuildNativePad(payload={}){
+  const values=Array.isArray(payload.buttons)?payload.buttons:[];
+  const buttons=Array.from({length:17},(_,i)=>{
+    const value=Math.max(0,Math.min(1,Number(values[i]||0)));
+    return {pressed:value>.5,touched:value>.02,value};
+  });
+  const axes=(Array.isArray(payload.axes)?payload.axes:[]).slice(0,4).map(v=>Math.max(-1,Math.min(1,Number(v)||0)));
+  while(axes.length<4)axes.push(0);
+  return {
+    id:String(payload.id||"Android Native Gamepad"),
+    index:HV_NATIVE_GAMEPAD_INDEX,
+    connected:true,
+    mapping:String(payload.mapping||"standard"),
+    timestamp:Number(payload.timestamp||performance.now()),
+    buttons,axes,
+    vibrationActuator:null,hapticActuators:[]
+  };
+}
+globalThis.__hallvallaNativeGamepadUpdate=(payload={})=>{
+  try{
+    if(typeof payload==="string")payload=JSON.parse(payload);
+    const connected=!!payload?.connected;
+    hvNativeGamepadState.connected=connected;
+    hvNativeGamepadState.gp=connected?hvGamepadBuildNativePad(payload):null;
+    if(connected)hvGamepadConnect(hvNativeGamepadState.gp);
+    else if(hvGamepadState.index===HV_NATIVE_GAMEPAD_INDEX)hvGamepadDisconnect();
+  }catch(error){console.warn("[HallValla][GAMEPAD] bridge nativo inválido:",error);}
 };
 
 function hvGamepadInstallStyles(){
@@ -244,17 +278,24 @@ function hvGamepadPointerClick(button=0){
 }
 
 function hvGamepadAvailablePads(){
-  if(typeof navigator.getGamepads!=="function")return[];
-  try{return Array.from(navigator.getGamepads()||[]).filter(Boolean);}catch(_){return[];}
+  const out=[];
+  if(hvNativeGamepadState.connected&&hvNativeGamepadState.gp)out.push(hvNativeGamepadState.gp);
+  if(typeof navigator.getGamepads==="function"){
+    try{out.push(...Array.from(navigator.getGamepads()||[]).filter(Boolean));}catch(_){ }
+  }
+  return out;
 }
 function hvGamepadResolveActive(){
-  if(typeof navigator.getGamepads!=="function")return null;
-  try{
-    const pads=navigator.getGamepads()||[];
-    const preferred=Number(hvGamepadState.index);
-    if(preferred>=0&&pads[preferred])return pads[preferred];
-    for(let i=0;i<pads.length;i++)if(pads[i])return pads[i];
-  }catch(_){ }
+  if(hvGamepadState.index===HV_NATIVE_GAMEPAD_INDEX&&hvNativeGamepadState.connected)return hvNativeGamepadState.gp;
+  if(hvNativeGamepadState.connected&&hvNativeGamepadState.gp)return hvNativeGamepadState.gp;
+  if(typeof navigator.getGamepads==="function"){
+    try{
+      const pads=navigator.getGamepads()||[];
+      const preferred=Number(hvGamepadState.index);
+      if(preferred>=0&&pads[preferred])return pads[preferred];
+      for(let i=0;i<pads.length;i++)if(pads[i])return pads[i];
+    }catch(_){ }
+  }
   return null;
 }
 function hvGamepadConnect(gp){
@@ -895,16 +936,13 @@ function hvGamepadScan(){
   if(gp)hvGamepadConnect(gp);else if(hvGamepadState.connected)hvGamepadDisconnect();
 }
 function hvGamepadInit(){
-  if(typeof navigator.getGamepads!=="function"){
-    console.info("[HallValla][GAMEPAD] Gamepad API no disponible en este navegador.");
-    return;
-  }
+  if(typeof navigator.getGamepads!=="function")console.info("[HallValla][GAMEPAD] Gamepad API web no disponible; esperando bridge nativo Android si existe.");
   hvGamepadInstallStyles();
   hvGamepadShowBadge("",{disconnected:true});
 
 function hvGamepadDebugSnapshot(){
   const modal=hvGamepadVisibleModal();
-  return {connected:hvGamepadState.connected,index:hvGamepadState.index,id:hvGamepadState.id,mapping:hvGamepadState.mapping,pointerVisible:hvGamepadState.pointerVisible,pointerMode:hvGamepadState.pointerMode,pointerX:hvGamepadState.pointerX,pointerY:hvGamepadState.pointerY,lastPointerClick:hvGamepadState.lastPointerClick,modal:modal?.id||modal?.className||null,perf:{frames:hvGamepadState.perfFrames,idleFrames:hvGamepadState.perfIdleFrames,buttonEdges:hvGamepadState.perfButtonEdges,pointerMoves:hvGamepadState.perfPointerMoves},target:(()=>{const t=hvGamepadPointerClickTarget();return t?{tag:t.tagName,id:t.id||"",text:String(t.textContent||"").trim().slice(0,80),action:t.dataset?.battleOutcomeAction||"",cardId:t.dataset?.rtCardId||""}:null;})()};
+  return {connected:hvGamepadState.connected,index:hvGamepadState.index,id:hvGamepadState.id,mapping:hvGamepadState.mapping,native:hvNativeGamepadState.connected,pointerVisible:hvGamepadState.pointerVisible,pointerMode:hvGamepadState.pointerMode,pointerX:hvGamepadState.pointerX,pointerY:hvGamepadState.pointerY,lastPointerClick:hvGamepadState.lastPointerClick,modal:modal?.id||modal?.className||null,perf:{frames:hvGamepadState.perfFrames,idleFrames:hvGamepadState.perfIdleFrames,buttonEdges:hvGamepadState.perfButtonEdges,pointerMoves:hvGamepadState.perfPointerMoves},target:(()=>{const t=hvGamepadPointerClickTarget();return t?{tag:t.tagName,id:t.id||"",text:String(t.textContent||"").trim().slice(0,80),action:t.dataset?.battleOutcomeAction||"",cardId:t.dataset?.rtCardId||""}:null;})()};
 }
 globalThis.__HALLVALLA_GAMEPAD_DEBUG__=hvGamepadDebugSnapshot;
 
@@ -927,7 +965,7 @@ globalThis.__HALLVALLA_GAMEPAD_DEBUG__=hvGamepadDebugSnapshot;
 Object.assign(globalThis,{
   HallVallaGamepad:Object.freeze({
     buttons:HV_GAMEPAD_BUTTONS,
-    getState:()=>({connected:hvGamepadState.connected,index:hvGamepadState.index,id:hvGamepadState.id,mapping:hvGamepadState.mapping,mode:hvGamepadState.mode,pointerMode:hvGamepadState.pointerMode,pointerVisible:hvGamepadState.pointerVisible,pointerX:hvGamepadState.pointerX,pointerY:hvGamepadState.pointerY}),
+    getState:()=>({connected:hvGamepadState.connected,index:hvGamepadState.index,id:hvGamepadState.id,mapping:hvGamepadState.mapping,native:hvNativeGamepadState.connected,mode:hvGamepadState.mode,pointerMode:hvGamepadState.pointerMode,pointerVisible:hvGamepadState.pointerVisible,pointerX:hvGamepadState.pointerX,pointerY:hvGamepadState.pointerY}),
     rescan:hvGamepadScan
   })
 });

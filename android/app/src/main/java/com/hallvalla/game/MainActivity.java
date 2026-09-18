@@ -3,9 +3,13 @@ package com.hallvalla.game;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
+import android.hardware.input.InputManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.InputDevice;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.view.Window;
@@ -14,6 +18,8 @@ import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
+import android.webkit.MimeTypeMap;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -26,21 +32,47 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 
 import org.json.JSONObject;
+import org.json.JSONArray;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 public class MainActivity extends Activity {
-    private static final String HOME_URL = "https://elberlord.github.io/Hallvalla/?apk=133&hvfit=1";
+    private static final String HOME_URL = "https://elberlord.github.io/Hallvalla/?apk=135&hvfit=1";
     private static final String TRUSTED_HOST = "elberlord.github.io";
     private static final String WEB_CLIENT_ID = "496903032464-mcru6mkdr99pgos2fdegarg08eb55ujf.apps.googleusercontent.com";
     private static final int RC_GOOGLE_SIGN_IN = 7311;
     private static final int VIRTUAL_WIDTH = 1920;
     private static final int VIRTUAL_HEIGHT = 1080;
     private static final float VIRTUAL_ASPECT = (float) VIRTUAL_WIDTH / (float) VIRTUAL_HEIGHT;
+    private static final String LOCAL_ASSET_PATH_PREFIX = "/Hallvalla/assets/";
+    private static final String LOCAL_ASSET_DIR = "";
+    private static final int NATIVE_GAMEPAD_BUTTON_COUNT = 17;
 
     private FrameLayout viewportRoot;
     private WebView webView;
     private GoogleSignInClient googleSignInClient;
     private boolean googleSignInInFlight = false;
     private String pendingGoogleMode = "splash";
+    private InputManager inputManager;
+    private int activeGamepadDeviceId = -1;
+    private final float[] nativeGamepadButtons = new float[NATIVE_GAMEPAD_BUTTON_COUNT];
+    private final float[] nativeGamepadAxes = new float[]{0f, 0f, 0f, 0f};
+    private long lastNativeGamepadEmitMs = 0L;
+    private boolean hallVallaPageReady = false;
+
+    private final InputManager.InputDeviceListener inputDeviceListener = new InputManager.InputDeviceListener() {
+        @Override public void onInputDeviceAdded(int deviceId) { refreshNativeGamepadDevice(deviceId); }
+        @Override public void onInputDeviceChanged(int deviceId) { refreshNativeGamepadDevice(deviceId); }
+        @Override public void onInputDeviceRemoved(int deviceId) {
+            if (deviceId == activeGamepadDeviceId) {
+                activeGamepadDeviceId = -1;
+                clearNativeGamepadState();
+                findAnyNativeGamepad();
+                emitNativeGamepadState(true);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,8 +87,9 @@ public class MainActivity extends Activity {
             .requestProfile()
             .build();
         googleSignInClient = GoogleSignIn.getClient(this, googleOptions);
+        inputManager = (InputManager) getSystemService(INPUT_SERVICE);
 
-        // v133: el teléfono deja de decidir la relación de aspecto del juego.
+        // v135: el teléfono deja de decidir la relación de aspecto del juego.
         // Creamos un escenario nativo 16:9 tipo `contain`: el rectángulo mayor
         // que cabe en la pantalla sin deformarse. Las bandas sobrantes quedan
         // negras y absorben notch/cutout en teléfonos muy panorámicos.
@@ -99,7 +132,7 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(false);
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setLoadsImagesAutomatically(true);
-        // v133: la web solicita un viewport lógico 1920x1080 con `hvfit=1`.
+        // v135: la web solicita un viewport lógico 1920x1080 con `hvfit=1`.
         // OverviewMode ahora sí es intencional: reduce ESE escenario completo al
         // WebView 16:9 calculado arriba. No estira X/Y por separado.
         settings.setUseWideViewPort(true);
@@ -110,7 +143,7 @@ public class MainActivity extends Activity {
         settings.setSupportZoom(false);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setUserAgentString(settings.getUserAgentString() + " HallVallaAndroid/133");
+        settings.setUserAgentString(settings.getUserAgentString() + " HallVallaAndroid/135");
 
         CookieManager cookies = CookieManager.getInstance();
         cookies.setAcceptCookie(true);
@@ -119,6 +152,12 @@ public class MainActivity extends Activity {
         webView.addJavascriptInterface(new HallVallaAndroidBridge(), "HallVallaAndroid");
         webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                WebResourceResponse local = tryOpenBundledAsset(request);
+                return local != null ? local : super.shouldInterceptRequest(view, request);
+            }
+
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
@@ -138,8 +177,12 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                if (isTrustedHallVallaUrl(url)) {
+                hallVallaPageReady = isTrustedHallVallaUrl(url);
+                if (hallVallaPageReady) {
                     installNativeGoogleBridge();
+                    installNativeContainerMarker();
+                    findAnyNativeGamepad();
+                    emitNativeGamepadState(true);
                 }
             }
         });
@@ -178,6 +221,189 @@ public class MainActivity extends Activity {
         webView.setLayoutParams(next);
         webView.requestLayout();
         webView.setVisibility(View.VISIBLE);
+    }
+
+    private WebResourceResponse tryOpenBundledAsset(WebResourceRequest request) {
+        if (request == null || !"GET".equalsIgnoreCase(request.getMethod())) return null;
+        try {
+            Uri uri = request.getUrl();
+            if (uri == null || !"https".equalsIgnoreCase(uri.getScheme()) || !TRUSTED_HOST.equalsIgnoreCase(uri.getHost())) return null;
+            String path = uri.getPath() == null ? "" : uri.getPath();
+            if (!path.startsWith(LOCAL_ASSET_PATH_PREFIX)) return null;
+            String relative = path.substring(LOCAL_ASSET_PATH_PREFIX.length());
+            if (relative.isEmpty() || relative.contains("..") || relative.startsWith("/")) return null;
+            InputStream input = getAssets().open(LOCAL_ASSET_DIR + relative, android.content.res.AssetManager.ACCESS_STREAMING);
+            String extension = MimeTypeMap.getFileExtensionFromUrl(relative);
+            String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension == null ? "" : extension.toLowerCase());
+            if (mime == null) {
+                if (relative.endsWith(".webp")) mime = "image/webp";
+                else if (relative.endsWith(".ico")) mime = "image/x-icon";
+                else if (relative.endsWith(".json")) mime = "application/json";
+                else mime = "application/octet-stream";
+            }
+            WebResourceResponse response = new WebResourceResponse(mime, null, input);
+            response.setResponseHeaders(java.util.Collections.singletonMap("Cache-Control", "public, max-age=31536000, immutable"));
+            return response;
+        } catch (IOException ignored) {
+            // Asset nuevo aún no incluido en esta APK: WebView continúa hacia GitHub Pages.
+            return null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private void installNativeContainerMarker() {
+        evaluateOnHallValla("window.__HALLVALLA_NATIVE_CONTAINER__=Object.freeze({version:135,virtualWidth:1920,virtualHeight:1080,mode:'contain',localAssets:true,nativeGamepad:true});document.documentElement.dataset.hvNativeContainer='135';");
+    }
+
+    private boolean isGamepadDevice(InputDevice device) {
+        if (device == null) return false;
+        int sources = device.getSources();
+        return (sources & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD ||
+               (sources & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK;
+    }
+
+    private void clearNativeGamepadState() {
+        java.util.Arrays.fill(nativeGamepadButtons, 0f);
+        java.util.Arrays.fill(nativeGamepadAxes, 0f);
+    }
+
+    private void findAnyNativeGamepad() {
+        if (inputManager == null) return;
+        if (activeGamepadDeviceId >= 0) {
+            InputDevice current = inputManager.getInputDevice(activeGamepadDeviceId);
+            if (isGamepadDevice(current)) return;
+            activeGamepadDeviceId = -1;
+        }
+        for (int id : inputManager.getInputDeviceIds()) {
+            InputDevice device = inputManager.getInputDevice(id);
+            if (isGamepadDevice(device)) {
+                activeGamepadDeviceId = id;
+                return;
+            }
+        }
+    }
+
+    private void refreshNativeGamepadDevice(int deviceId) {
+        if (inputManager == null) return;
+        InputDevice device = inputManager.getInputDevice(deviceId);
+        if (isGamepadDevice(device)) {
+            activeGamepadDeviceId = deviceId;
+            emitNativeGamepadState(true);
+        }
+    }
+
+    private int mapGamepadKeyCode(int keyCode) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BUTTON_A: return 0;
+            case KeyEvent.KEYCODE_BUTTON_B: return 1;
+            case KeyEvent.KEYCODE_BUTTON_X: return 2;
+            case KeyEvent.KEYCODE_BUTTON_Y: return 3;
+            case KeyEvent.KEYCODE_BUTTON_L1: return 4;
+            case KeyEvent.KEYCODE_BUTTON_R1: return 5;
+            case KeyEvent.KEYCODE_BUTTON_L2: return 6;
+            case KeyEvent.KEYCODE_BUTTON_R2: return 7;
+            case KeyEvent.KEYCODE_BUTTON_SELECT: return 8;
+            case KeyEvent.KEYCODE_BUTTON_START: return 9;
+            case KeyEvent.KEYCODE_BUTTON_THUMBL: return 10;
+            case KeyEvent.KEYCODE_BUTTON_THUMBR: return 11;
+            case KeyEvent.KEYCODE_DPAD_UP: return 12;
+            case KeyEvent.KEYCODE_DPAD_DOWN: return 13;
+            case KeyEvent.KEYCODE_DPAD_LEFT: return 14;
+            case KeyEvent.KEYCODE_DPAD_RIGHT: return 15;
+            case KeyEvent.KEYCODE_BUTTON_MODE: return 16;
+            default: return -1;
+        }
+    }
+
+    private float centeredAxis(MotionEvent event, int axis) {
+        InputDevice device = event == null ? null : event.getDevice();
+        if (device == null) return 0f;
+        InputDevice.MotionRange range = device.getMotionRange(axis, event.getSource());
+        float value = event.getAxisValue(axis);
+        float flat = range == null ? 0.05f : Math.max(0.03f, range.getFlat());
+        return Math.abs(value) <= flat ? 0f : Math.max(-1f, Math.min(1f, value));
+    }
+
+    private float positiveAxis(MotionEvent event, int primary, int fallback) {
+        float value = event.getAxisValue(primary);
+        if (Math.abs(value) < 0.001f && fallback >= 0) value = event.getAxisValue(fallback);
+        return Math.max(0f, Math.min(1f, value));
+    }
+
+    private void emitNativeGamepadState(boolean force) {
+        if (!hallVallaPageReady || webView == null) return;
+        long now = android.os.SystemClock.uptimeMillis();
+        if (!force && now - lastNativeGamepadEmitMs < 16L) return;
+        lastNativeGamepadEmitMs = now;
+        try {
+            findAnyNativeGamepad();
+            JSONObject payload = new JSONObject();
+            boolean connected = activeGamepadDeviceId >= 0;
+            payload.put("connected", connected);
+            payload.put("index", 9000);
+            payload.put("mapping", "standard");
+            String name = "Android Native Gamepad";
+            if (connected && inputManager != null) {
+                InputDevice device = inputManager.getInputDevice(activeGamepadDeviceId);
+                if (device != null && device.getName() != null) name = device.getName();
+            }
+            payload.put("id", name);
+            JSONArray buttons = new JSONArray();
+            for (float value : nativeGamepadButtons) buttons.put((double) value);
+            payload.put("buttons", buttons);
+            JSONArray axes = new JSONArray();
+            for (float value : nativeGamepadAxes) axes.put((double) value);
+            payload.put("axes", axes);
+            payload.put("timestamp", (double) now);
+            evaluateOnHallValla("window.__hallvallaNativeGamepadUpdate?.(" + payload.toString() + ");");
+        } catch (Exception ignored) { }
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        InputDevice device = event == null ? null : event.getDevice();
+        int index = event == null ? -1 : mapGamepadKeyCode(event.getKeyCode());
+        if (index >= 0 && isGamepadDevice(device)) {
+            activeGamepadDeviceId = device.getId();
+            nativeGamepadButtons[index] = event.getAction() == KeyEvent.ACTION_DOWN ? 1f : 0f;
+            emitNativeGamepadState(true);
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    @Override
+    public boolean dispatchGenericMotionEvent(MotionEvent event) {
+        if (event != null && event.getAction() == MotionEvent.ACTION_MOVE) {
+            InputDevice device = event.getDevice();
+            int source = event.getSource();
+            boolean joystick = (source & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK;
+            if (joystick && isGamepadDevice(device)) {
+                activeGamepadDeviceId = device.getId();
+                nativeGamepadAxes[0] = centeredAxis(event, MotionEvent.AXIS_X);
+                nativeGamepadAxes[1] = centeredAxis(event, MotionEvent.AXIS_Y);
+                float rightX = centeredAxis(event, MotionEvent.AXIS_Z);
+                float rightY = centeredAxis(event, MotionEvent.AXIS_RZ);
+                if (Math.abs(rightX) < 0.001f && Math.abs(rightY) < 0.001f) {
+                    rightX = centeredAxis(event, MotionEvent.AXIS_RX);
+                    rightY = centeredAxis(event, MotionEvent.AXIS_RY);
+                }
+                nativeGamepadAxes[2] = rightX;
+                nativeGamepadAxes[3] = rightY;
+                nativeGamepadButtons[6] = positiveAxis(event, MotionEvent.AXIS_LTRIGGER, MotionEvent.AXIS_BRAKE);
+                nativeGamepadButtons[7] = positiveAxis(event, MotionEvent.AXIS_RTRIGGER, MotionEvent.AXIS_GAS);
+                float hatX = centeredAxis(event, MotionEvent.AXIS_HAT_X);
+                float hatY = centeredAxis(event, MotionEvent.AXIS_HAT_Y);
+                nativeGamepadButtons[12] = hatY < -0.5f ? 1f : 0f;
+                nativeGamepadButtons[13] = hatY > 0.5f ? 1f : 0f;
+                nativeGamepadButtons[14] = hatX < -0.5f ? 1f : 0f;
+                nativeGamepadButtons[15] = hatX > 0.5f ? 1f : 0f;
+                emitNativeGamepadState(false);
+                return true;
+            }
+        }
+        return super.dispatchGenericMotionEvent(event);
     }
 
     private boolean isTrustedHallVallaUrl(String url) {
@@ -274,8 +500,8 @@ public class MainActivity extends Activity {
 
     private static final String NATIVE_GOOGLE_BRIDGE_SCRIPT = """
         (() => {
-          if (window.__hallvallaNativeGoogleBridgeV133Installed) return;
-          window.__hallvallaNativeGoogleBridgeV133Installed = true;
+          if (window.__hallvallaNativeGoogleBridgeV135Installed) return;
+          window.__hallvallaNativeGoogleBridgeV135Installed = true;
 
           const googleButtons = new Map([
             ['googleLoginSplashBtn', 'splash'],
@@ -399,6 +625,11 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         enterImmersiveMode();
+        if (inputManager != null) {
+            try { inputManager.registerInputDeviceListener(inputDeviceListener, null); } catch (Exception ignored) { }
+            findAnyNativeGamepad();
+            emitNativeGamepadState(true);
+        }
         if (webView != null) {
             webView.onResume();
             webView.requestFocus();
@@ -407,6 +638,9 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
+        if (inputManager != null) {
+            try { inputManager.unregisterInputDeviceListener(inputDeviceListener); } catch (Exception ignored) { }
+        }
         if (webView != null) webView.onPause();
         super.onPause();
     }

@@ -1,0 +1,105 @@
+HALLVALLA · v180 · RCA ANDROID: GEOMETRÍA, ICONOS INFERIORES Y GAMEPAD
+Fecha: 2026-09-18
+
+OBJETIVO
+=======
+Eliminar la causa sistémica que hacía que la APK Android se viera distinta de la web,
+no limitarse a recolocar Clanes / Ranking / Pase de Honor una pantalla a la vez.
+
+SÍNTOMAS OBSERVADOS EN LA APK HÍBRIDA v134
+===========================================
+- El Home se veía escalado de forma razonable, pero desaparecían los tres accesos
+  inferiores: Clanes, Ranking y Pase de Honor.
+- El indicador de mando aparecía abajo a la derecha, pero permanecía desconectado y
+  el mando físico no controlaba HallValla.
+- En pruebas anteriores, Creación de mazo, Ruleta y zonas táctiles podían verse
+  comprimidas o con el hit-test desplazado respecto a lo visible.
+
+CAUSA RAÍZ 1 · DOS DUEÑOS DE LA GEOMETRÍA
+=========================================
+La v134 instalada no era una compilación limpia del MainActivity nuevo. Se había
+ensamblado sobre el shell APK anterior y se añadió una Activity híbrida para servir
+assets locales. Por tanto, el código fuente Android que ya definía el contenedor
+16:9 centrado no era realmente el que gobernaba la ventana instalada.
+
+Al mismo tiempo, la web recibía hvfit=1 y solicitaba un viewport lógico 1920x1080.
+Resultado: Android y la web no compartían una única autoridad de geometría.
+
+REPARACIÓN v180/v135:
+- La única Activity de arranque vuelve a ser com.hallvalla.game.MainActivity.
+- MainActivity crea el mayor rectángulo nativo 16:9 que cabe en pantalla y centra
+  el WebView dentro de él. No se usa transform CSS para escalar el DOM.
+- La web en hvfit=1 usa un único espacio lógico de 1920x1080.
+- Las bandas sobrantes son negras; no se estira X e Y por separado.
+- El hit-test pertenece al mismo WebView que dibuja la interfaz.
+
+CAUSA RAÍZ 2 · EL RESPONSIVE MÓVIL SE ACTIVABA AUN CON VIEWPORT VIRTUAL
+======================================================================
+HallValla conservaba un sistema responsive heredado para navegador móvil. Tenía dos
+formas de activarse:
+
+A) JS agregaba hv-mobile-landscape por tamaño corto + puntero táctil/coarse.
+B) CSS tenía reglas como:
+     @media(max-width:900px), (pointer:coarse)
+   La coma significa OR. En un teléfono, (pointer:coarse) es verdadero aunque el
+   viewport lógico sea 1920 px. Por tanto, reglas diseñadas para pantallas pequeñas
+   podían seguir reordenando Home, Aventura, batalla, mano, overlays y controles
+   dentro de la APK virtual.
+
+Este era un problema de categoría: arreglar solo los tres iconos inferiores no era
+suficiente, porque cualquier otra pantalla cubierta por esas media queries podía
+sufrir el mismo conflicto.
+
+REPARACIÓN v180:
+- isMobileLandscapeTarget() devuelve false cuando está activo hvfit/viewport virtual.
+- Las media queries RESPONSIVE que antes usaban "..., (pointer:coarse)" dejan de usar
+  el tipo de puntero como sustituto del tamaño. El layout responsive ahora depende
+  del ancho/alto real del viewport CSS.
+- Se conservan las media queries puramente táctiles que NO cambian geometría (por
+  ejemplo touch-action y optimizaciones de hover/performance).
+- hv-virtual-app actúa como marcador explícito de la APK virtual.
+- Se mantiene un fail-safe visible para Clanes / Ranking / Pase de Honor y promos del
+  Home, pero la solución principal es que no entren dos sistemas de layout a la vez.
+
+CAUSA RAÍZ 3 · GAMEPAD API DEL WEBVIEW NO ES UNA GARANTÍA DE ANDROID
+====================================================================
+El módulo web del mando dependía de navigator.getGamepads() y gamepadconnected.
+Android WebView puede reconocer que existe la API pero no exponer el mando físico.
+Por eso el badge podía existir y seguir rojo/desconectado.
+
+REPARACIÓN v180/v135:
+- MainActivity escucha InputManager/InputDevice de Android.
+- dispatchKeyEvent() normaliza A/B/X/Y, bumpers, triggers, Start/Select, sticks,
+  D-pad y Guide a los índices estándar del Gamepad API.
+- dispatchGenericMotionEvent() normaliza sticks, hats y triggers analógicos.
+- Android envía el estado a window.__hallvallaNativeGamepadUpdate(...).
+- El módulo web prefiere el gamepad nativo cuando existe y conserva
+  navigator.getGamepads() para PC/navegador.
+
+ASSETS LOCALES SIN CREAR OTRA COPIA DEL JUEGO
+=============================================
+- Android Gradle empaqueta directamente ../../web/assets mediante sourceSets.
+- No hay un segundo árbol manual de imágenes que pueda quedar desactualizado.
+- MainActivity intercepta únicamente GET de /Hallvalla/assets/ en el host oficial.
+- Si el asset existe dentro de la APK, se sirve localmente.
+- Si falta, WebView hace fallback normal a la URL remota.
+- Firebase, Google Login, PvP, perfil, rankings, compras y Xsolla siguen online.
+
+REGLAS PARA NO REPETIR EL PROBLEMA
+==================================
+1. No volver a construir una release Android injertando DEX/Manifest/assets sobre una
+   APK vieja. La APK de prueba debe salir de Gradle usando el fuente Android actual.
+2. La geometría Android tiene un solo dueño: MainActivity 16:9 + viewport web 1920x1080.
+3. pointer:coarse sirve para interacción táctil/performance, NO para seleccionar un
+   layout de pantalla dentro de hvfit.
+4. Todo cambio de assets Android debe salir del mismo web/assets; no duplicar carpetas.
+5. El gamepad Android debe funcionar por el bridge nativo aunque Gamepad API falle.
+6. Antes de empaquetar, ejecutar:
+      python scripts/check-android-virtual-layout.py
+
+ALCANCE
+=======
+- No modifica Firebase Rules.
+- No modifica Xsolla.
+- La web normal sin hvfit conserva su responsive móvil habitual.
+- ?dev y producción comparten los mismos assets; hvfit solo pertenece a la APK.

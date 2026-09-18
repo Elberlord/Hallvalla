@@ -239,3 +239,21 @@ Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
 - Se conservan la limpieza de controles heredados de v177 y la calibración de velocidad de v176.
 - No se modifican la APK ni las reglas de Firebase.
 
+
+## v179 — Preparación del viewport Android virtual
+- Se introduce `hvfit=1` como modo exclusivo de APK para solicitar un escenario lógico 1920×1080.
+- El código fuente Android define un WebView centrado dentro del mayor rectángulo 16:9 que cabe en pantalla, evitando estirar X/Y por separado.
+- La web normal continúa sin `hvfit` y conserva su geometría habitual.
+
+## v180 / Android v135 — RCA de layout Android + assets locales + gamepad nativo
+- Se corrige la causa raíz detectada en la APK híbrida v134: esa prueba combinó un shell Android antiguo con el viewport `hvfit`, de modo que la geometría nativa nueva no era realmente la autoridad de la ventana instalada.
+- La APK correcta debe compilarse desde `android/` con Gradle y arrancar únicamente `.MainActivity`; no se permite volver a injertar DEX/Manifest/assets en una APK anterior.
+- MainActivity es el único dueño de la geometría física: WebView 16:9 centrado. La web es el único dueño de la geometría lógica: 1920×1080 cuando `hvfit=1`.
+- `hvfit` desactiva el responsive móvil heredado (`hv-mobile-landscape`). Además, las media queries de layout ya no usan `(pointer:coarse)` como alternativa al ancho de pantalla; un mando/táctil no puede volver a convertir el viewport virtual en un layout móvil diferente.
+- Clanes, Ranking y Pase de Honor conservan un fail-safe de visibilidad en `hv-virtual-app`, pero la reparación principal es impedir que coexistan dos sistemas de layout.
+- Los 681 assets de `web/assets` se empaquetan directamente mediante Android Gradle `sourceSets`; no hay una segunda copia manual. MainActivity sirve primero el asset local y hace fallback remoto si falta.
+- El gamepad Android ya no depende únicamente de `navigator.getGamepads()`: MainActivity captura botones/ejes nativos y los envía al mismo módulo web mediante `__hallvallaNativeGamepadUpdate`.
+- PC/navegador conserva Gamepad API normal.
+- Se añade `scripts/check-android-virtual-layout.py`, que valida geometría, Activity, responsive, gamepad, assets, secretos de firma y coherencia de build antes de compilar.
+- Diagnóstico completo: `docs/BUILD_20260918_180_ANDROID_ROOT_CAUSE_LAYOUT_GAMEPAD.txt`.
+- Firebase Rules y Xsolla no cambian en esta versión.
