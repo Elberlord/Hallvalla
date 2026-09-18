@@ -1,0 +1,43 @@
+HallValla v187 · REPO COMPLETO
+================================
+
+Plano lógico oficial: 1366×636
+
+CAMBIO ESTRUCTURAL
+------------------
+Antes existían dos motores de geometría para la Forja:
+1) web/js/features/forge-layout.js
+2) web/js/features/universal-layout-runtime.js
+
+Eso provocaba que al paginar, filtrar o reconstruir cartas un motor volviera a
+imponer posiciones distintas.
+
+En v187:
+- universal-layout-runtime.js es el ÚNICO dueño de X/Y/escala.
+- forge-layout.js YA NO contiene USER_LAYOUT, translate, scale, width/height ni
+  ningún segundo sistema de coordenadas.
+- forge-layout.js solo observa que la Forja se rerenderice y pide al runtime
+  universal que reaplique el layout canónico.
+- la colección usa 15 slots físicos estables entre páginas.
+- el mazo sigue teniendo 30 slots: 1–20 en currentDeckList y 21–30 en deckExtraSlots.
+
+CÓMO USAR ESTE ZIP
+------------------
+Este ZIP es el repositorio COMPLETO. No es un parche.
+
+1. Descomprime HallValla_REPO_COMPLETO_v187.
+2. En tu PC abre:
+   Documentos\GitHub\Hallvalla
+3. REEMPLAZA el contenido de esa carpeta por el contenido de
+   HallValla_REPO_COMPLETO_v187.
+4. NO copies archivos sueltos a mano.
+5. Haz commit/push normalmente desde GitHub Desktop.
+6. Espera a que GitHub Pages publique.
+7. Prueba:
+   https://elberlord.github.io/Hallvalla/
+8. Fuerza recarga con Ctrl+F5.
+
+Para seguir acomodando con el Control Universal:
+https://elberlord.github.io/Hallvalla/?dev
+
+La versión normal NO muestra ningún letrero de 1366×636.
