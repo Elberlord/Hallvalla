@@ -924,10 +924,9 @@ function openDeckBuilder(){
 function releaseDeckBuilderDom(){
   // PERF4: las miniaturas y sus listeners son reconstruibles. Mantenerlas dentro
   // de un panel oculto retiene nodos e imágenes decodificadas sin aportar UI.
-  const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList"),extraSlots=$("deckExtraSlots"),materialPanel=$("craftMaterialPanel");
+  const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList"),materialPanel=$("craftMaterialPanel");
   collectionGrid?.replaceChildren();
   deckList?.replaceChildren();
-  extraSlots?.replaceChildren();
   materialPanel?.replaceChildren();
   deckBuilderDragPayload=null;
   clearDeckBuilderDropActive();
@@ -1071,7 +1070,6 @@ function setDeckBuilderDropActive(el,active){
 function clearDeckBuilderDropActive(){
   setDeckBuilderDropActive($("deckCollectionGrid"),false);
   setDeckBuilderDropActive($("currentDeckList"),false);
-  setDeckBuilderDropActive($("deckExtraSlots"),false);
 }
 function bindDeckBuilderPersistentDropTargets(collectionGrid,...deckContainers){
   const lists=deckContainers.filter(Boolean);
@@ -1244,8 +1242,8 @@ function syncDeckBuilderUnitTabs(){
 }
 function renderDeckBuilder(){
   syncDeckBuilderUnitTabs();
-  const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList"),extraSlotsEl=$("deckExtraSlots");
-  if(!collectionGrid||!deckList||!extraSlotsEl)return;
+  const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList");
+  if(!collectionGrid||!deckList)return;
   const browseOnly=isCollectionBrowseOnly();
   const panel=$("deckBuilderPanel");
   if(panel){
@@ -1302,7 +1300,7 @@ function renderDeckBuilder(){
   const pageStart=deckBuilderCollectionPage*pageSize;
   const pageCards=cards.slice(pageStart,pageStart+pageSize);
   collectionGrid.classList.add("hv-mini-gallery","is-paged");
-  deckList.classList.add("hv-mini-deck");
+  deckList.classList.add("hv-mini-deck","is-single-30");
   collectionGrid.innerHTML=pageCards.map(card=>{
     const used=countInDraft(card.key);
     const ownedQty=Number(card.qty||0);
@@ -1326,8 +1324,7 @@ function renderDeckBuilder(){
   if(next){next.disabled=deckBuilderCollectionPage>=totalPages-1;next.onclick=()=>{deckBuilderCollectionPage=Math.min(totalPages-1,deckBuilderCollectionPage+1);renderDeckBuilder();};}
   if(browseOnly){
     deckList.innerHTML="";
-    extraSlotsEl.innerHTML="";
-    bindDeckBuilderDragAndClick(collectionGrid,deckList,extraSlotsEl);
+    bindDeckBuilderDragAndClick(collectionGrid,deckList);
     const ownedUnique=allCards.filter(card=>Number(card.qty||0)>0).length;
     if($("deckCountText"))$("deckCountText").textContent=`${ownedUnique}/${allCards.length} desbloqueadas`;
     globalThis.__HALLVALLA_APPLY_FORGE_LAYOUT__?.();
@@ -1348,9 +1345,8 @@ function renderDeckBuilder(){
       : `Espacio vacío ${slotIndex+1} del mazo`;
     return `<div class="deck-empty-slot${locked?" deck-tier-locked-slot":""}" data-deck-slot="${slotIndex+1}" aria-label="${escapeHtml(label)}"><span>${slotIndex+1}</span></div>`;
   });
-  deckList.innerHTML=slotHtml.slice(0,20).join("");
-  extraSlotsEl.innerHTML=slotHtml.slice(20,30).join("");
-  bindDeckBuilderDragAndClick(collectionGrid,deckList,extraSlotsEl);
+  deckList.innerHTML=slotHtml.slice(0,30).join("");
+  bindDeckBuilderDragAndClick(collectionGrid,deckList);
   const deckValidation=validateDeckList(currentDeckDraft,{leaderType:getSelectedLeaderType?.()||"",deckSize:requiredDeckSize});
   const validation={valid:deckValidation.valid,errors:[...deckValidation.errors]};
   if($("deckCountText"))$("deckCountText").textContent=`${drawEntries.length}/${requiredDeckSize} · Nivel ${leaderLevel} · Tier ${leaderTier}`;

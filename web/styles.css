@@ -21365,47 +21365,6 @@ html.hv-perf-lite .event-splash-spell-art img{
   white-space:nowrap !important;
   text-shadow:0 2px 6px #000 !important;
 }
-#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList.current-deck-list.hv-mini-deck{
-  position:absolute !important;
-  z-index:6 !important;
-  left:5.7% !important;
-  right:5.4% !important;
-  top:7.2% !important;
-  bottom:30.8% !important;
-  width:auto !important;
-  height:auto !important;
-  min-height:0 !important;
-  padding:0 !important;
-  margin:0 !important;
-  display:grid !important;
-  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
-  grid-template-rows:repeat(4,minmax(0,1fr)) !important;
-  grid-auto-rows:minmax(0,1fr) !important;
-  gap:2.0% 2.15% !important;
-  overflow:hidden !important;
-  align-items:center !important;
-  justify-items:center !important;
-  translate:none !important;
-  scale:1 !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-mini-card,
-#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-empty-slot{
-  position:relative !important;
-  width:84% !important;
-  height:92% !important;
-  min-width:0 !important;
-  min-height:0 !important;
-  margin:0 !important;
-  padding:0 !important;
-  overflow:visible !important;
-  border:0 !important;
-  border-radius:0 !important;
-  background:transparent !important;
-  box-shadow:none !important;
-  translate:none !important;
-  scale:1 !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-empty-slot span{display:none !important;}
 
 /* Botones inferiores: flecha izquierda = cerrar; placa central = guardar. */
 #deckBuilderPanel.hv-forge-collection-v2 #closeDeckBuilderBtn{
@@ -21524,12 +21483,6 @@ html.hv-perf-lite .event-splash-spell-art img{
   z-index:70 !important;
   isolation:isolate !important;
 }
-#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList.current-deck-list.hv-mini-deck{
-  z-index:74 !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-mini-card{
-  z-index:76 !important;
-}
 
 
 /* ========================================================================== */
@@ -21550,30 +21503,6 @@ html.hv-perf-lite .event-splash-spell-art img{
   visibility:visible !important;
   opacity:1 !important;
   pointer-events:auto !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList.current-deck-list.hv-mini-deck{
-  z-index:130 !important;
-  isolation:isolate !important;
-  visibility:visible !important;
-  opacity:1 !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-mini-card.in-deck{
-  display:block !important;
-  z-index:140 !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  filter:none !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-mini-card.in-deck .deck-mini-art{
-  display:block !important;
-  z-index:2 !important;
-  visibility:visible !important;
-  opacity:1 !important;
-}
-#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-mini-card.in-deck .deck-mini-art img{
-  display:block !important;
-  visibility:visible !important;
-  opacity:1 !important;
 }
 
 
@@ -27650,93 +27579,6 @@ html.hv-rt-experimental.hv-rt-card-targeting #rtTargetCancelBtn:not([hidden]){di
 }
 .hv-match-principals{display:none !important;}
 
-/* Slots 21–30: contenedor independiente para no alterar la cuadrícula 1–20
-   que ya fue calibrada por el usuario. */
-#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots.deck-extra-slots{
-  position:absolute !important;
-  z-index:132 !important;
-  left:5.7% !important;
-  right:5.4% !important;
-  bottom:2.8% !important;
-  height:22.8% !important;
-  min-height:0 !important;
-  padding:0 !important;
-  margin:0 !important;
-  display:grid !important;
-  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
-  grid-template-rows:repeat(2,minmax(0,1fr)) !important;
-  gap:2.0% 2.15% !important;
-  overflow:visible !important;
-  align-items:center !important;
-  justify-items:center !important;
-  pointer-events:auto !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  background:transparent !important;
-  border:0 !important;
-  box-shadow:none !important;
-}
-
-#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-mini-card,
-#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-empty-slot{
-  position:relative !important;
-  width:84% !important;
-  height:92% !important;
-  min-width:0 !important;
-  min-height:0 !important;
-  margin:0 !important;
-  padding:0 !important;
-  overflow:visible !important;
-  border:0 !important;
-  border-radius:0 !important;
-  background:transparent !important;
-  box-shadow:none !important;
-  visibility:visible !important;
-  opacity:1 !important;
-}
-
-#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-empty-slot span{
-  display:none !important;
-}
-
-#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-mini-card.in-deck{
-  display:block !important;
-  z-index:140 !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  filter:none !important;
-}
-
-#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-mini-art,
-#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-mini-art img{
-  display:block !important;
-  visibility:visible !important;
-  opacity:1 !important;
-}
-
-#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-mini-art{
-  position:absolute !important;
-  inset:0 !important;
-  width:100% !important;
-  height:100% !important;
-  overflow:visible !important;
-  border:0 !important;
-  background:transparent !important;
-  z-index:2 !important;
-}
-
-#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-mini-art img{
-  width:100% !important;
-  height:100% !important;
-  object-fit:cover !important;
-  object-position:center center !important;
-  filter:drop-shadow(0 5px 5px rgba(0,0,0,.48)) !important;
-}
-
-#deckBuilderPanel.hv-forge-collection-v2 #deckExtraSlots .deck-mini-remove{
-  z-index:12 !important;
-}
-
 /* Los espacios por encima del Tier actual siguen existiendo en el DOM para
    que ?hvdev=1 pueda calibrar las 30 posiciones. La regla de capacidad real
    se mantiene en addCardToDeck/validateDeckList. */
@@ -29039,3 +28881,105 @@ html[data-hv-universal-only="1"] body::after{
 .hv-universal-mode{min-height:34px!important;background:linear-gradient(180deg,#1e2631,#0d1118)!important;border-color:rgba(121,168,218,.45)!important;color:#d9e9ff!important;}
 .hv-universal-mode.is-active{background:linear-gradient(180deg,#30475f,#142130)!important;border-color:#71bbff!important;box-shadow:0 0 12px rgba(113,187,255,.2)!important;}
 html.hv-universal-dragging-enabled .hv-universal-selected{cursor:grabbing!important;}
+
+/* ==========================================================================
+   FORGE-V190 · MAZO ÚNICO 30 + PORTRAITS UNIFORMES
+   currentDeckList es el único contenedor físico del mazo.
+   ========================================================================== */
+#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList.current-deck-list.hv-mini-deck{
+  position:absolute !important;
+  z-index:130 !important;
+  left:5.7% !important;
+  right:5.4% !important;
+  top:7.2% !important;
+  bottom:2.8% !important;
+  width:auto !important;
+  height:auto !important;
+  min-height:0 !important;
+  padding:0 !important;
+  margin:0 !important;
+  display:grid !important;
+  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+  grid-template-rows:repeat(6,minmax(0,1fr)) !important;
+  grid-auto-rows:minmax(0,1fr) !important;
+  gap:2.0% 2.15% !important;
+  overflow:visible !important;
+  align-items:center !important;
+  justify-items:center !important;
+  isolation:isolate !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList > .deck-mini-card,
+#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList > .deck-empty-slot{
+  position:relative !important;
+  width:84% !important;
+  height:92% !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  justify-self:center !important;
+  align-self:center !important;
+  overflow:visible !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList > .deck-empty-slot span{
+  display:none !important;
+}
+
+#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-mini-card.in-deck{
+  display:block !important;
+  z-index:140 !important;
+  filter:none !important;
+}
+
+/* Portrait uniforme: mismo marco y ocupación para todas las cartas. */
+#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-mini-art,
+#deckBuilderPanel.hv-forge-collection-v2 #deckCollectionGrid .deck-mini-art{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  overflow:hidden !important;
+  border:0 !important;
+  background:transparent !important;
+}
+
+#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-mini-art img,
+#deckBuilderPanel.hv-forge-collection-v2 #deckCollectionGrid .deck-mini-art img{
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  min-width:100% !important;
+  min-height:100% !important;
+  max-width:none !important;
+  max-height:none !important;
+  object-fit:cover !important;
+  object-position:center center !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+#deckBuilderPanel.hv-forge-collection-v2 #currentDeckList .deck-mini-card.card-type-unit .deck-mini-art img,
+#deckBuilderPanel.hv-forge-collection-v2 #deckCollectionGrid .deck-mini-card.card-type-unit .deck-mini-art img{
+  object-position:center 18% !important;
+}
+
+/* Colección: las 15 celdas usan también una caja uniforme. */
+#deckBuilderPanel.hv-forge-collection-v2 #deckCollectionGrid.deck-card-grid.hv-mini-gallery.is-paged > .deck-mini-card{
+  width:84% !important;
+  height:92% !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  justify-self:center !important;
+  align-self:center !important;
+}

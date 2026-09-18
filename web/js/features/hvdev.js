@@ -793,7 +793,7 @@
 
 
 /* ============================================================
-   HallValla DEV · CONTROL UNIVERSAL LIBRE v5 · 1366×636
+   HallValla DEV · CONTROL UNIVERSAL LIBRE v7 · 1366×636
    - Solo existe con ?dev.
    - Arrastre libre y directo: seleccionar -> arrastrar.
    - No fuerza los elementos a una caja durante el movimiento.
@@ -806,8 +806,8 @@
   "use strict";
   if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return;
 
-  const STORAGE_KEY="hallvalla_universal_layout_dev_v5_after_bake_1366";
-  const PANEL_KEY="hallvalla_universal_layout_panel_v5_after_bake_1366";
+  const STORAGE_KEY="hallvalla_universal_layout_dev_v7_singledeck_1366";
+  const PANEL_KEY="hallvalla_universal_layout_panel_v7_singledeck_1366";
   const DESIGN_W=1366;
   const DESIGN_H=636;
   const MIN_GRAB=28;
@@ -840,6 +840,8 @@
   function normalizePickNode(node){
     if(!node||isDevNode(node))return null;
     if(pickMode==="exact")return node;
+    const wholeCard=node.closest?.('.deck-mini-card');
+    if(wholeCard&&!isDevNode(wholeCard))return wholeCard;
     const interactive=node.closest?.('button,a[href],input,select,textarea,[role="button"],[onclick],[tabindex]:not([tabindex="-1"]),[data-action]');
     if(interactive&&!isDevNode(interactive))return interactive;
     return node;
@@ -909,7 +911,7 @@
     return Array.from(node.classList||[]).filter(c=>c&&!/^(active|hidden|selected|open|show|is-|has-|hover|focus|disabled|loading)/i.test(c)&&!c.startsWith('hv-universal-')).slice(0,3);
   }
   function stableDataAttrs(node){
-    const priority=['data-mine-panel','data-mine-nav','data-action','data-mode','data-view','data-slot-index','data-card-id','data-unit-id','data-adventure-node','data-id','data-key','data-draft-index'];
+    const priority=['data-mine-panel','data-mine-nav','data-action','data-mode','data-view','data-slot-index','data-card-id','data-unit-id','data-adventure-node','data-id','data-key','data-draft-index','data-deck-slot','data-deck-card-key','data-beast-tab','data-beast-season-seal'];
     const attrs=[];
     for(const name of priority){const value=node.getAttribute?.(name);if(value!=null&&String(value).length<80)attrs.push([name,String(value)]);}
     if(attrs.length)return attrs.slice(0,2);
@@ -927,7 +929,10 @@
     for(const [name,value] of data)part+=`[${name}="${String(value).replace(/"/g,'\\"')}"]`;
     const classes=stableClasses(node);if(!data.length&&classes.length)part+=classes.map(c=>`.${cssEscape(c)}`).join('');
     const parent=node.parentElement;
-    if(parent){const same=Array.from(parent.children).filter(child=>child.tagName===node.tagName);if(same.length>1)part+=`:nth-of-type(${same.indexOf(node)+1})`;}
+    if(parent&&!data.length){
+      const same=Array.from(parent.children).filter(child=>child.tagName===node.tagName);
+      if(same.length>1)part+=`:nth-of-type(${same.indexOf(node)+1})`;
+    }
     return part;
   }
   function buildSelector(node){
@@ -1084,11 +1089,15 @@
   function setStatus(text){const node=$('#hvUniversalStatus');if(node)node.textContent=String(text||'');}
   function controlValue(id){return Number($(id)?.value||0);}
   function onControls(){saveState({x:controlValue('#hvUniversalX'),y:controlValue('#hvUniversalY'),sx:controlValue('#hvUniversalSX'),sy:controlValue('#hvUniversalSY'),opacity:controlValue('#hvUniversalOpacity'),z:controlValue('#hvUniversalZ')});}
+  function onUniformScale(){
+    const value=clamp(controlValue('#hvUniversalScale'),5,800);
+    saveState({sx:value,sy:value});
+  }
   function toggleFlag(flag){const s=stateFor(selectedSelector);saveState({[flag]:!s[flag]});}
   function syncPanel(){
     const panel=$('#hvUniversalLayoutTuner');if(!panel)return;const s=stateFor(selectedSelector);
     const set=(id,value)=>{const node=$(id,panel);if(node)node.value=String(value);};
-    set('#hvUniversalX',s.x);set('#hvUniversalY',s.y);set('#hvUniversalSX',s.sx);set('#hvUniversalSY',s.sy);set('#hvUniversalOpacity',s.opacity);set('#hvUniversalZ',s.z);
+    set('#hvUniversalX',s.x);set('#hvUniversalY',s.y);set('#hvUniversalSX',s.sx);set('#hvUniversalSY',s.sy);set('#hvUniversalScale',Math.round((s.sx+s.sy)/2));set('#hvUniversalOpacity',s.opacity);set('#hvUniversalZ',s.z);
     const label=$('#hvUniversalSelected',panel);if(label)label.textContent=selected?nodeLabel(selected):(selectedSelector||'Selecciona un elemento');
     const sel=$('#hvUniversalSelector',panel);if(sel)sel.value=selectedSelector;
     const bg=$('#hvUniversalBg',panel);if(bg)bg.classList.toggle('is-active',s.backgroundOff);
@@ -1102,7 +1111,7 @@
     for(const [selector,raw] of Object.entries(config.items)){const option=document.createElement('option');option.value=selector;option.textContent=raw.label||selector;select.appendChild(option);}
     if(previous&&config.items[previous])select.value=previous;
   }
-  function exportJson(){return JSON.stringify({version:4,designStage:{width:DESIGN_W,height:DESIGN_H,mode:'fixed'},units:'design-px',editor:'free-drag-v4-force-important',items:config.items},null,2);}
+  function exportJson(){return JSON.stringify({version:7,designStage:{width:DESIGN_W,height:DESIGN_H,mode:'fixed'},units:'design-px',editor:'single-deck-stable-smart-scale-v190',items:config.items},null,2);}
   function exportCss(){
     return Object.entries(config.items).map(([selector,raw])=>{const s=normalizeState(raw),rules=[`translate:${s.x}px ${s.y}px`,`scale:${s.sx/100} ${s.sy/100}`,`opacity:${s.opacity/100}`];if(s.z)rules.push(`z-index:${s.z}`);if(s.backgroundOff)rules.push('background:transparent!important');if(s.borderOff)rules.push('border:0!important');if(s.shadowOff)rules.push('box-shadow:none!important');if(s.hidden)rules.push('visibility:hidden!important','pointer-events:none!important');return `${selector}{${rules.join(';')};}`;}).join('\n');
   }
@@ -1116,7 +1125,7 @@
     if($('#hvUniversalLayoutTuner'))return;
     const panel=document.createElement('aside');panel.id='hvUniversalLayoutTuner';panel.dataset.hvDevTool='';panel.className='hv-universal-layout-tuner hidden';
     panel.innerHTML=`
-      <header id="hvUniversalDragHandle" class="hv-universal-head"><div><b>CONTROL UNIVERSAL LIBRE v5 · 1366×636</b><small>BASE FIJA v185 · nuevos cambios quedan como delta DEV</small></div><button id="hvUniversalClose" type="button">×</button></header>
+      <header id="hvUniversalDragHandle" class="hv-universal-head"><div><b>CONTROL UNIVERSAL LIBRE v7 · 1366×636</b><small>BASE v190 · MAZO ÚNICO · SELECTORES ESTABLES</small></div><button id="hvUniversalClose" type="button">×</button></header>
       <div class="hv-universal-body">
         <button id="hvUniversalPick" class="hv-universal-primary" type="button">🎯 SELECCIONAR / ARRASTRAR</button>
         <button id="hvUniversalPickMode" class="hv-universal-primary hv-universal-mode" type="button">SELECCIÓN: HITBOX</button>
@@ -1128,8 +1137,9 @@
         <div class="hv-universal-free-note">MOVER ES LIBRE: DEV fuerza posición/tamaño incluso sobre reglas !important del juego.</div>
         <label>X <input id="hvUniversalX" type="number" step="1"></label>
         <label>Y <input id="hvUniversalY" type="number" step="1"></label>
-        <label>ANCHO VISUAL % <input id="hvUniversalSX" type="number" min="5" max="800" step="1"></label>
-        <label>ALTO VISUAL % <input id="hvUniversalSY" type="number" min="5" max="800" step="1"></label>
+        <label>TAMAÑO GENERAL % <input id="hvUniversalScale" type="number" min="5" max="800" step="1" value="100"></label>
+        <label>ESCALA X % <input id="hvUniversalSX" type="number" min="5" max="800" step="1"></label>
+        <label>ESCALA Y % <input id="hvUniversalSY" type="number" min="5" max="800" step="1"></label>
         <label>OPACIDAD % <input id="hvUniversalOpacity" type="number" min="1" max="100" step="1"></label>
         <label>Z-INDEX <input id="hvUniversalZ" type="number" step="1"></label>
         <div class="hv-universal-toggles"><button id="hvUniversalBg" type="button">FONDO INVISIBLE</button><button id="hvUniversalBorder" type="button">BORDE INVISIBLE</button><button id="hvUniversalShadow" type="button">SIN SOMBRA</button><button id="hvUniversalHidden" type="button">OCULTAR</button></div>
@@ -1145,6 +1155,7 @@
     $('#hvUniversalChild',panel).addEventListener('click',()=>{const child=selected?.firstElementChild;if(child&&!isDevNode(child))selectNode(child);});
     $('#hvUniversalCenter',panel).addEventListener('click',centerSelected);
     ['#hvUniversalX','#hvUniversalY','#hvUniversalSX','#hvUniversalSY','#hvUniversalOpacity','#hvUniversalZ'].forEach(id=>$(id,panel).addEventListener('input',onControls));
+    $('#hvUniversalScale',panel).addEventListener('input',onUniformScale);
     $('#hvUniversalBg',panel).addEventListener('click',()=>toggleFlag('backgroundOff'));$('#hvUniversalBorder',panel).addEventListener('click',()=>toggleFlag('borderOff'));$('#hvUniversalShadow',panel).addEventListener('click',()=>toggleFlag('shadowOff'));$('#hvUniversalHidden',panel).addEventListener('click',()=>toggleFlag('hidden'));
     $('#hvUniversalReset',panel).addEventListener('click',resetCurrent);$('#hvUniversalResetAll',panel).addEventListener('click',()=>{if(confirm('¿Restablecer TODOS los ajustes de esta sesión DEV?'))resetAll();});
     $('#hvUniversalCopyJson',panel).addEventListener('click',()=>copyText(exportJson(),'JSON'));$('#hvUniversalDownload',panel).addEventListener('click',downloadJson);
