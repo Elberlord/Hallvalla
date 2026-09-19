@@ -361,20 +361,42 @@ function setHvDetDirectEditing(on){
   markAndApplyHvDetDirect();
   syncHvDetDirectControls();
 }
+function hvDetDirectTargetAtPoint(root,clientX,clientY){
+  if(!root)return null;
+  const direct=hvDetBuildTargets(root).map(item=>{
+    const rect=item.el?.getBoundingClientRect?.();
+    if(!rect||rect.width<=0||rect.height<=0)return null;
+    if(clientX<rect.left||clientX>rect.right||clientY<rect.top||clientY>rect.bottom)return null;
+    const style=getComputedStyle(item.el);
+    if(style.display==='none'||style.visibility==='hidden'||Number(style.opacity||1)===0)return null;
+    return {...item,rect,area:rect.width*rect.height};
+  }).filter(Boolean);
+  if(!direct.length)return null;
+  // En el DET existen capas contenedoras transparentes. Elegimos la pieza visual
+  // más pequeña bajo el puntero para que el dato concreto gane sobre su panel padre.
+  direct.sort((a,b)=>a.area-b.area);
+  return direct[0];
+}
 function wireHvDetDirectEditorRoot(root){
   if(!root||root.dataset.hvDetDirectBound==='1')return;
   root.dataset.hvDetDirectBound='1';
   root.addEventListener('pointerdown',ev=>{
-    if(!hvDetDirectEditing)return;
-    const el=ev.target.closest('[data-hv-det-edit-key]');
+    if(!hvDetDirectEditing||ev.button!==0)return;
+    let el=ev.target?.closest?.('[data-hv-det-edit-key]');
+    if(!el||!root.contains(el)){
+      const hit=hvDetDirectTargetAtPoint(root,ev.clientX,ev.clientY);
+      el=hit?.el||null;
+    }
     if(!el||!root.contains(el))return;
     ev.preventDefault();ev.stopImmediatePropagation();
     hvDetDirectSelectedKey=el.dataset.hvDetEditKey||'';
     const state=getHvDetDirectState();
     state.selected=hvDetDirectSelectedKey;saveHvDetDirectState(state);
     const v=getHvDetSelectedSetting();
-    hvDetDirectDrag={pointerId:ev.pointerId,el,key:hvDetDirectSelectedKey,startX:ev.clientX,startY:ev.clientY,baseX:v.x,baseY:v.y};
-    try{el.setPointerCapture(ev.pointerId);}catch(_){ }
+    hvDetDirectDrag={pointerId:ev.pointerId,el,key:hvDetDirectSelectedKey,startX:ev.clientX,startY:ev.clientY,baseX:v.x,baseY:v.y,capture:root};
+    // Capturamos en el modal, no en el dato. Así también se pueden arrastrar
+    // textos/capas que en producción usan pointer-events:none.
+    try{root.setPointerCapture?.(ev.pointerId);}catch(_){ }
     markAndApplyHvDetDirect();syncHvDetDirectControls();
   },true);
   root.addEventListener('pointermove',ev=>{
@@ -383,7 +405,11 @@ function wireHvDetDirectEditorRoot(root){
     const x=st.baseX+(ev.clientX-st.startX),y=st.baseY+(ev.clientY-st.startY);
     setHvDetSelectedSetting({x,y});
   },true);
-  const finish=ev=>{if(hvDetDirectDrag&&hvDetDirectDrag.pointerId===ev.pointerId)hvDetDirectDrag=null;};
+  const finish=ev=>{
+    if(!hvDetDirectDrag||hvDetDirectDrag.pointerId!==ev.pointerId)return;
+    try{hvDetDirectDrag.capture?.releasePointerCapture?.(ev.pointerId);}catch(_){ }
+    hvDetDirectDrag=null;
+  };
   root.addEventListener('pointerup',finish,true);root.addEventListener('pointercancel',finish,true);
   root.addEventListener('wheel',ev=>{
     if(!hvDetDirectEditing)return;

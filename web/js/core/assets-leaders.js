@@ -335,15 +335,16 @@ Object.assign(globalThis,{getAssetIdentityKey,getResolvedUnitAssetSet,getResolve
 -------------------------------------------------------------------------------
 */
 const LEADER_DATA={
-  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Líder cuerpo a cuerpo. Su buff de categoría mejora a guerreros y unidades con armadura pesada con una progresión acumulativa estable por tier: AT, DX, AG, GD y HP."},
-  archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Líder de media distancia: AT 3, GD 2, RG 2. Su buff de categoría mejora a las unidades de arco con la misma progresión acumulativa por tier: AT, DX, AG, GD y HP."},
-  mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Líder mágico de media distancia: AT 3, GD 1, RG 2. Su buff de categoría mejora a las unidades de Magia / Arcano con la progresión acumulativa AT, DX, AG, GD y HP. Las magias conservan su daño base salvo otros efectos independientes."},
-  axe:{name:"Caudillo del Hacha",portrait:LEADER_PORTRAITS.axe,desc:"Líder brutal. Su buff de categoría mejora a las unidades de hacha con la progresión acumulativa AT, DX, AG, GD y HP."},
+  warrior:{name:"Guerrero",portrait:LEADER_PORTRAITS.warrior,desc:"Líder cuerpo a cuerpo. Su buff de categoría mejora a guerreros y unidades con armadura pesada con una progresión acumulativa de 15 tiers: AT, DX, AG, GD y HP se repiten tres veces hasta +3 cada uno."},
+  archer:{name:"Arquero",portrait:LEADER_PORTRAITS.archer,desc:"Líder de media distancia: AT 3, GD 2, RG 2. Su buff de categoría mejora a las unidades de arco con la misma progresión acumulativa de 15 tiers: AT, DX, AG, GD y HP se repiten tres veces hasta +3 cada uno."},
+  mage:{name:"Hechicero",portrait:LEADER_PORTRAITS.mage,desc:"Líder mágico de media distancia: AT 3, GD 1, RG 2. Su buff de categoría mejora a las unidades de Magia / Arcano con la progresión acumulativa de 15 tiers: AT, DX, AG, GD y HP se repiten tres veces hasta +3 cada uno. Las magias conservan su daño base salvo otros efectos independientes."},
+  axe:{name:"Caudillo del Hacha",portrait:LEADER_PORTRAITS.axe,desc:"Líder brutal. Su buff de categoría mejora a las unidades de hacha con la progresión acumulativa de 15 tiers: AT, DX, AG, GD y HP se repiten tres veces hasta +3 cada uno."},
   cavalry:{name:"Señor de la Carga",portrait:LEADER_PORTRAITS.cavalry,desc:"Líder de choque móvil. Su buff de categoría mejora a la caballería con la progresión acumulativa AT, DX, AG, GD y HP; puede llamar refuerzos al nivel 5."},
-  assassin:{name:"Maestro de Sombras",portrait:LEADER_PORTRAITS.assassin,desc:"Líder letal. Su buff de categoría mejora a los asesinos con la progresión acumulativa AT, DX, AG, GD y HP. Su habilidad Nv.5 se conserva aparte."},
-  beastmaster:{name:"Señor de las Bestias",portrait:LEADER_PORTRAITS.beastmaster,desc:"Líder de cacería: AT 2, GD 2, RG 1. Su buff de categoría mejora a las bestias con la progresión acumulativa AT, DX, AG, GD y HP."}
+  assassin:{name:"Maestro de Sombras",portrait:LEADER_PORTRAITS.assassin,desc:"Líder letal. Su buff de categoría mejora a los asesinos con la progresión acumulativa de 15 tiers: AT, DX, AG, GD y HP se repiten tres veces hasta +3 cada uno. Su habilidad Nv.5 se conserva aparte."},
+  beastmaster:{name:"Señor de las Bestias",portrait:LEADER_PORTRAITS.beastmaster,desc:"Líder de cacería: AT 2, GD 2, RG 1. Su buff de categoría mejora a las bestias con la progresión acumulativa de 15 tiers: AT, DX, AG, GD y HP se repiten tres veces hasta +3 cada uno."}
 };
-const LEADER_LEVEL_MAX=15;
+const LEADER_LEVEL_MAX=45;
+const LEADER_BATTLE_STAT_LEVEL_MAX=15;
 const LEADER_LEVEL_TABLE={
   1:{hp:20,atk:2,buffTier:1},
   2:{hp:22,atk:2,buffTier:1},
@@ -364,17 +365,20 @@ const LEADER_LEVEL_TABLE={
 const LEADER_BASE_ATK={warrior:3,archer:3,mage:3,axe:4,cavalry:3,assassin:2,beastmaster:2};
 const LEADER_BASE_GUARD={warrior:4,archer:2,mage:1,axe:3,cavalry:3,assassin:1,beastmaster:2};
 const LEADER_BASE_RANGE={warrior:1,archer:2,mage:2,axe:1,cavalry:1,assassin:1,beastmaster:1};
-function getWarriorLeaderSelfTierBonus(level=1){return 3+getLeaderBuffTierFromLevel(level)}
+function getLeaderBattleStatLevel(level=1){return Math.min(LEADER_BATTLE_STAT_LEVEL_MAX,normalizeLeaderLevel(level))}
+function getLeaderBattleStatTier(level=1){return Number(LEADER_LEVEL_TABLE[getLeaderBattleStatLevel(level)]?.buffTier||1)}
+function getWarriorLeaderSelfTierBonus(level=1){return 3+getLeaderBattleStatTier(level)}
 function getLeaderAttack(type,level=1){const base=(LEADER_BASE_ATK[type]??3)+(type==="warrior"?getWarriorLeaderSelfTierBonus(level):0);return applyHallvallaValueHooks("leader.attack",base,{type,level})}
-function getLeaderGuard(type,level=1){const base=type==="beastmaster"?2:(type==="warrior"?Math.max(0,(LEADER_BASE_GUARD[type]??2)+getWarriorLeaderSelfTierBonus(level)):Math.max(0,(LEADER_BASE_GUARD[type]??2)+Math.floor((normalizeLeaderLevel(level)-1)/3)));return applyHallvallaValueHooks("leader.guard",base,{type,level})}
+function getLeaderGuard(type,level=1){const statLevel=getLeaderBattleStatLevel(level);const base=type==="beastmaster"?2:(type==="warrior"?Math.max(0,(LEADER_BASE_GUARD[type]??2)+getWarriorLeaderSelfTierBonus(level)):Math.max(0,(LEADER_BASE_GUARD[type]??2)+Math.floor((statLevel-1)/3)));return applyHallvallaValueHooks("leader.guard",base,{type,level})}
 function getLeaderRange(type,level=1){return applyHallvallaValueHooks("leader.range",LEADER_BASE_RANGE[type]??1,{type,level})}
-const LEADER_CUMULATIVE_TIER_BUFFS=Object.freeze({
-  1:Object.freeze({atk:1,dex:0,agi:0,guard:0,hp:0}),
-  2:Object.freeze({atk:1,dex:1,agi:0,guard:0,hp:0}),
-  3:Object.freeze({atk:1,dex:1,agi:1,guard:0,hp:0}),
-  4:Object.freeze({atk:1,dex:1,agi:1,guard:1,hp:0}),
-  5:Object.freeze({atk:1,dex:1,agi:1,guard:1,hp:1})
-});
+const LEADER_TIER_STAT_CYCLE=Object.freeze(["atk","dex","agi","guard","hp"]);
+function makeLeaderCumulativeTierBuff(tier=1){
+  const out={atk:0,dex:0,agi:0,guard:0,hp:0};
+  const safeTier=Math.max(1,Math.min(15,Math.floor(Number(tier)||1)));
+  for(let i=0;i<safeTier;i++)out[LEADER_TIER_STAT_CYCLE[i%LEADER_TIER_STAT_CYCLE.length]]+=1;
+  return Object.freeze(out);
+}
+const LEADER_CUMULATIVE_TIER_BUFFS=Object.freeze(Object.fromEntries(Array.from({length:15},(_,i)=>[i+1,makeLeaderCumulativeTierBuff(i+1)])));
 const LEADER_BUFF_TABLE=Object.freeze({
   warrior:LEADER_CUMULATIVE_TIER_BUFFS,
   archer:LEADER_CUMULATIVE_TIER_BUFFS,
@@ -415,8 +419,8 @@ const LEADER_LEVEL5_DEFAULTS={
   beastmaster:"prepare_hunt"
 };
 function normalizeLeaderLevel(level){return clamp(Math.floor(Number(level)||1),1,LEADER_LEVEL_MAX)}
-function getLeaderLevelStats(level){return LEADER_LEVEL_TABLE[normalizeLeaderLevel(level)]||LEADER_LEVEL_TABLE[1]}
-function getLeaderBuffTierFromLevel(level){return getLeaderLevelStats(level).buffTier||1}
+function getLeaderLevelStats(level){return LEADER_LEVEL_TABLE[getLeaderBattleStatLevel(level)]||LEADER_LEVEL_TABLE[1]}
+function getLeaderBuffTierFromLevel(level){return Math.max(1,Math.min(15,Math.ceil(normalizeLeaderLevel(level)/3)))}
 function getLeaderDefaultLevel5Ability(type){return LEADER_LEVEL5_DEFAULTS[type]||""}
 function normalizeLeaderLevel5Abilities(abilities={},leaderLevels={}){
   const out={...(abilities||{})};
@@ -432,7 +436,7 @@ function normalizeLeaderLevel5Abilities(abilities={},leaderLevels={}){
 function getLeaderAbilityData(key){return LEADER_LEVEL5_ABILITY_MAP[normalizeLeaderAbilityKey(key)]||null}
 function getLeaderAbilityText(key){const a=getLeaderAbilityData(key);return a?`${a.name}: ${a.short}`:"Sin habilidad Nv.5"}
 function getLeaderBattleStats(type,level,abilityKey=""){
-  const base={...getLeaderLevelStats(level)};
+  const base={...getLeaderLevelStats(level),buffTier:getLeaderBuffTierFromLevel(level)};
   base.atk=getLeaderAttack(type,level);
   return applyHallvallaValueHooks("leader.battleStats",base,{type,level,abilityKey});
 }

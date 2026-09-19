@@ -1,0 +1,36 @@
+HALLVALLA — PENDIENTES DESPUÉS DE v222
+Build: 20260919.222
+
+COMPLETADO EN v222
+- Líderes: Nv.45 / 15 tiers / 3 niveles por tier.
+- Ciclo de buff AT -> DX -> AG -> GD -> HP repetido 3 veces.
+- Tier 15: +3 a AT/DX/AG/GD/HP.
+- Capacidad de mazo desacoplada del Tier de buff; máximo 30 cartas desde Nv.15.
+- network/battle-state: retiradas dependencias activas de dueño de turno y escrituras legacy de Aventura/checkpoints.
+- Huevo de Dragón: costo 0.
+- Editor DET DEV: datos superpuestos vuelven a ser agarrables/arrastrables.
+- Huevo de Dragón: costo de despliegue cambiado de 2 a 0; las evoluciones conservan su costo.
+
+1. RENDER-BATTLE-TUTORIAL — SIGUIENTE PRIORIDAD
+   - Separar renderer de tablero/HUD de tutoriales, overlays y explicación de estados.
+   - Retirar residuos visuales/condicionales históricos sin tocar el runtime automático.
+
+2. SETTINGS-EVENTS
+   - Separar Mina, recompensas, tutoriales y bindings generales.
+
+3. DECKS-UNITS-COMBAT-RULES
+   - Separar factories, validación de deck/líderes y reglas generales compartidas.
+
+4. PVP
+   - Dividir ranking/resultados, lobby/matchmaking, BOT y sincronización.
+   - En esa auditoría retirar nombres/campos de prebatalla históricos solo después de mapear el handshake actual.
+
+5. MOTOR AUTOMÁTICO
+   - Modularizar realtime/experimental.js y retirar finalmente la nomenclatura histórica `experimental`.
+   - Migrar nombres internos *TurnKey/cycle únicamente con mapa de consumidores.
+
+6. CONTRATOS/NOMBRES HISTÓRICOS RESTANTES
+   - Revisar turnsRemaining, damagedThisTurn y *TurnKey.
+
+7. CIERRE FINAL
+   - código muerto/assets huérfanos; Aventura; PvP BOT; PvP real concurrente; gamepad; Mina/Forja/colección/tutorial; hashes/cache/Firebase.

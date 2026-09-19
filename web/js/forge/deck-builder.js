@@ -1312,7 +1312,7 @@ function renderDeckBuilder(){
   }
   const requiredDeckSize=getCurrentDeckSize();
   const leaderLevel=typeof getCurrentLeaderDeckLevel==="function"?getCurrentLeaderDeckLevel():(typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(getSelectedLeaderType?.()||"warrior"):1);
-  const leaderTier=typeof getCurrentLeaderDeckTier==="function"?getCurrentLeaderDeckTier():(typeof getLeaderBuffTierFromLevel==="function"?getLeaderBuffTierFromLevel(leaderLevel):1);
+  const leaderTier=typeof getLeaderBuffTierFromLevel==="function"?getLeaderBuffTierFromLevel(leaderLevel):Math.ceil(Math.max(1,Number(leaderLevel||1))/3);
   currentPrincipalKeys=[];
   const drawEntries=currentDeckDraft.map((card,index)=>({card,index}));
   const visualSlotCount=Math.max(30,Number(DECK_RULES?.maxDeckSize)||30);
@@ -1321,7 +1321,7 @@ function renderDeckBuilder(){
     if(card)return deckBuilderMiniCardHtml(card,{mode:"deck",index:slotIndex});
     const locked=slotIndex>=requiredDeckSize;
     const label=locked
-      ? `Espacio ${slotIndex+1} bloqueado hasta subir el Tier del líder`
+      ? `Espacio ${slotIndex+1} bloqueado por la progresión de capacidad del mazo`
       : `Espacio vacío ${slotIndex+1} del mazo`;
     return `<div class="deck-empty-slot${locked?" deck-tier-locked-slot":""}" data-deck-slot="${slotIndex+1}" aria-label="${escapeHtml(label)}"><span>${slotIndex+1}</span></div>`;
   });
@@ -1344,7 +1344,7 @@ async function saveCurrentDeck(){
   if(isCollectionBrowseOnly())return;
   const requiredDeckSize=getCurrentDeckSize();
   const leaderLevel=typeof getCurrentLeaderDeckLevel==="function"?getCurrentLeaderDeckLevel():(typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(getSelectedLeaderType?.()||"warrior"):1);
-  const leaderTier=typeof getCurrentLeaderDeckTier==="function"?getCurrentLeaderDeckTier():(typeof getLeaderBuffTierFromLevel==="function"?getLeaderBuffTierFromLevel(leaderLevel):1);
+  const leaderTier=typeof getLeaderBuffTierFromLevel==="function"?getLeaderBuffTierFromLevel(leaderLevel):Math.ceil(Math.max(1,Number(leaderLevel||1))/3);
   currentDeckDraft=sanitizeDeckDraftToCollection(currentDeckDraft);
   currentPrincipalKeys=[];
   const deckValidation=validateDeckList(currentDeckDraft,{leaderType:getSelectedLeaderType?.()||"",deckSize:requiredDeckSize});
@@ -1513,13 +1513,11 @@ document.querySelectorAll("#deckBuilderPanel [data-deck-unit-filter]").forEach(b
   });
 });
 
-const LEADER_TIER_DETAIL_LINES=Object.freeze([
-  "Tier 1 (niveles 1–3): +1 AT",
-  "Tier 2 (niveles 4–6): +1 AT / +1 DX",
-  "Tier 3 (niveles 7–8): +1 AT / +1 DX / +1 AG",
-  "Tier 4 (niveles 9–14): +1 AT / +1 DX / +1 AG / +1 GD",
-  "Tier 5 (nivel 15): +1 AT / +1 DX / +1 AG / +1 GD / +1 HP"
-]);
+const LEADER_TIER_DETAIL_LINES=Object.freeze(Array.from({length:15},(_,i)=>{
+  const tier=i+1,start=(tier-1)*3+1,end=tier*3;
+  const buff=typeof LEADER_CUMULATIVE_TIER_BUFFS!=="undefined"?LEADER_CUMULATIVE_TIER_BUFFS[tier]:null;
+  return `Tier ${tier} (niveles ${start}–${end}): ${typeof formatLeaderTierBuffStats==="function"?formatLeaderTierBuffStats(buff||{}):"progresión acumulativa"}`;
+}));
 const LEADER_DETAIL_META={
   warrior:{
     target:"Infantería pesada",
@@ -1593,7 +1591,7 @@ function openLeaderDetailModal(type){
   <section class="leader-info-section">
     <h3>Buff por tier</h3>
     <p>Objetivo del buff: <b>${escapeHtml(meta.target)}</b>.</p>
-    <p>Tier no es nivel. Cada tier agrupa varios niveles.</p>
+    <p>Cada Tier agrupa 3 niveles. AT → DX → AG → GD → HP se repite tres veces; en Tier 15 el buff completo es +3 a los cinco stats.</p>
     ${leaderTierExplanationHtml(meta)}
   </section>
   <section class="leader-info-actions">
@@ -1621,7 +1619,7 @@ function openLeaderAbilityModal(type){
   </div>
   <section class="leader-info-section">
     <h3>Se desbloquea en nivel 5</h3>
-    <p><b>Importante:</b> nivel 5 sigue siendo Tier 2. Cada tier conserva los bonus anteriores y añade el siguiente stat; la habilidad Nv.5 es un desbloqueo aparte.</p>
+    <p><b>Importante:</b> nivel 5 sigue siendo Tier 2. Cada tier conserva los bonus anteriores; cada 5 tiers se completa una vuelta AT → DX → AG → GD → HP y el ciclo empieza de nuevo. La habilidad Nv.5 es un desbloqueo aparte.</p>
     <p>${escapeHtml(meta.ability)}</p>
   </section>
   <section class="leader-info-actions">

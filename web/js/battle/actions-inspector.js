@@ -132,7 +132,7 @@ function weaponGuideData(entity){
   if(entity?.leader){
     const lt=String(entity.leaderType||"").toLowerCase();
     if(lt==="archer")return {title:"Arco de líder",short:"Arma de mando a distancia. Permite presionar desde lejos sin entrar siempre al choque cuerpo a cuerpo.",formula:"Ventaja: el líder arquero combina rango, precisión y apoyo a arqueras. Sus golpes de líder aciertan automáticamente según la regla actual de líder.",example:"Útil para proteger distancia, rematar unidades dañadas y potenciar arqueras con AT/DX/AGI."};
-    if(lt==="mage")return {title:"Báculo / foco arcano",short:"Líder de unidades mágicas y arcanas.",formula:"El buff de tier usa la misma progresión acumulativa que los demás líderes: Tier 1 +1 AT; Tier 2 añade +1 DX; Tier 3 añade +1 AG; Tier 4 añade +1 GD; Tier 5 añade +1 HP. Las magias conservan su daño base salvo otros efectos.",example:"Una unidad Magia / Arcano compatible conserva todos los bonus desbloqueados por el tier actual del Hechicero."};
+    if(lt==="mage")return {title:"Báculo / foco arcano",short:"Líder de unidades mágicas y arcanas.",formula:"El buff usa 15 tiers, 3 niveles por tier. El orden acumulativo AT → DX → AG → GD → HP se repite tres veces: Tier 5 deja +1 a los cinco stats, Tier 10 deja +2 y Tier 15 deja +3. Las magias conservan su daño base salvo otros efectos.",example:"Una unidad Magia / Arcano compatible conserva todos los bonus desbloqueados por el tier actual del Hechicero."};
     return {title:"Espada de mando",short:"Arma de líder cuerpo a cuerpo. Sirve para sostener la línea y fortalecer infantería pesada.",formula:"Ventaja: el líder guerrero pelea de cerca y mejora Vida/Guardia de unidades defensivas. Sus golpes de líder aciertan automáticamente según la regla actual de líder.",example:"Ideal para avanzar con lanceros, guardianes y unidades que quieran aguantar intercambio."};
   }
   if(key==="cavalry"||name.includes("caballería")||name.includes("caballeria"))return {title:"Espada de caballería",short:"Arma de carga. No está hecha para quedarse quieta: gana valor cuando entra con impulso.",formula:"Ventaja: aunque pertenece a la clase táctica Caballería, esta unidad ataca con espada. Si se mueve 3+ espacios y ataca cuerpo a cuerpo, desestabiliza al objetivo y le baja AGI durante ese combate.",example:"Úsala para flanquear, castigar arqueros o rematar unidades que quedaron fuera de formación. Cuidado con lanceros: son su respuesta natural."};
@@ -285,7 +285,7 @@ function getLeaderExactEffectGuideData(entity){
       affected:"Afecta a toda unidad aliada con rasgo Arco, incluso si también está montada. La Caballería Arquera de Saladino, por ejemplo, puede recibir este buff si el único líder activo es Arquero.",
       notAffected:"No afecta unidades sin rasgo Arco ni al propio líder. Ser Caballería no impide recibir el buff Arquero si la unidad realmente usa arco.",
       buff:`${formatLeaderTierBuffStats(buff)} a cada unidad de arco aliada compatible.`,
-      passive:"El buff de tier es acumulativo y siempre sigue el mismo orden: AT → DX → AG → GD → HP. No aumenta Rango. El efecto propio de la Arquera del desierto sigue teniendo su regla exacta: solo reduce MOV si hace al menos 1 daño real a Vida/HP.",
+      passive:"El buff de tier es acumulativo y sigue AT → DX → AG → GD → HP; al completar Tier 5 el ciclo comienza otra vez hasta Tier 15. Tier 15 deja +3 en los cinco stats. No aumenta Rango. El efecto propio de la Arquera del desierto sigue teniendo su regla exacta: solo reduce MOV si hace al menos 1 daño real a Vida/HP.",
       example:"En Tier 3, una Arquera compatible recibe +1 AT, +1 DX y +1 AG. Su Rango sigue siendo el de la propia carta."
     },
     mage:{
@@ -309,7 +309,7 @@ function getLeaderExactEffectGuideData(entity){
       affected:"Afecta a unidades montadas a caballo, incluidas híbridas como arqueros montados o guerreros pesados montados. El sistema conserva sus demás rasgos de combate.",
       notAffected:"No afecta unidades que no estén montadas a caballo ni al propio líder. Un arquero montado sí califica como Caballería.",
       buff:`${formatLeaderTierBuffStats(buff)} a cada caballería aliada compatible.`,
-      passive:"El buff de tier es acumulativo en AT, DX, AG, GD y HP. No aumenta MOV por tier. Solo hay un líder activo: una unidad híbrida nunca acumula simultáneamente el buff de Caballería y el de otro arquetipo.",
+      passive:"El buff de tier recorre AT, DX, AG, GD y HP tres veces hasta Tier 15; al máximo entrega +3 a los cinco stats. No aumenta MOV por tier. Solo hay un líder activo: una unidad híbrida nunca acumula simultáneamente el buff de Caballería y el de otro arquetipo.",
       example:"En Tier 4, una Caballería compatible conserva +1 AT, +1 DX y +1 AG, y además obtiene +1 GD. Sus requisitos de movimiento para cargas no cambian."
     },
     assassin:{
@@ -325,7 +325,7 @@ function getLeaderExactEffectGuideData(entity){
       affected:"Afecta a unidades aliadas marcadas como bestia: Tejón Mielero, Puercoespín, Jabalí Salvaje, Cuervo Negro, Serpiente, Búfalo, Halcón, Taipán, León, Tigre, Rinoceronte y futuras bestias.",
       notAffected:"No afecta humanos, arqueras, magias, caballería común, asesinos ni al propio líder.",
       buff:`${formatLeaderTierBuffStats(buff)} a cada bestia aliada compatible.`,
-      passive:"El buff de tier de las bestias sigue la progresión acumulativa AT, DX, AG, GD y HP; no añade MOV. Con la habilidad Nv.5 Veneno de la Manada, cualquier unidad aliada que cause daño real a HP aplica Veneno, incluso si no es bestia.",
+      passive:"El buff de tier de las bestias recorre AT, DX, AG, GD y HP tres veces hasta Tier 15; al máximo entrega +3 a los cinco stats y no añade MOV. Con la habilidad Nv.5 Veneno de la Manada, cualquier unidad aliada que cause daño real a HP aplica Veneno, incluso si no es bestia.",
       example:"Una bestia en Tier 5 conserva +1 AT, +1 DX, +1 AG y +1 GD, y además obtiene +1 HP. Veneno de la Manada sigue siendo una habilidad aparte."
     }
   }[type]||{};

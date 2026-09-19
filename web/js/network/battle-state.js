@@ -450,7 +450,9 @@ function getUnitExhaustionOutcomeText(outcome){
 let unitExhaustionFinalizeLock=false;
 async function maybeFinalizeUnitExhaustionFromPublicState(){
   if(unitExhaustionFinalizeLock||!gameId||!publicState||isBattleEnded()||publicState.mode==="tutorial")return false;
-  if(publicState.mode!=="adventure"&&Number(publicState.currentPlayer||0)!==Number(myPlayer||0))return false;
+  // En PvP online no existe dueño de turno. El runtime canónico resuelve el cierre terminal
+  // desde su checkpoint; aquí solo resolvemos modos locales/PvE para evitar doble escritor.
+  if(publicState.mode==="online")return false;
   const exhaustionState=publicState.mode==="adventure"?(networkPublicStateRaw||publicState):publicState;
   const visibleUnits=publicState.units||exhaustionState.units||[];
   const outcome=getUnitExhaustionOutcome(visibleUnits,exhaustionState);
@@ -676,16 +678,7 @@ async function normalizePublicPatchBeforeCommit(sourcePatch={},options={}){
     const erictoLife=resolveErictoLifecycle(solomonLife.units);
     const mongolAura=applyMongolExplorerAura(erictoLife.units);
     cleanPatch.units=mongolAura.units;
-    let undeadTurnLogs=[];
-    const nextOwner=Number(cleanPatch.currentPlayer||0);
-    const previousOwner=Number(publicState?.currentPlayer||0);
-    if((nextOwner===1||nextOwner===2)&&nextOwner!==previousOwner){
-      const undeadAdvance=advanceUndeadRemainsForOwner(cleanPatch.undeadRemains,cleanPatch.units,nextOwner);
-      cleanPatch.undeadRemains=undeadAdvance.remains;
-      cleanPatch.units=undeadAdvance.units;
-      undeadTurnLogs=undeadAdvance.logs||[];
-    }
-    const lifeLogs=[...(undeadCapture.logs||[]),...undeadTurnLogs,...(solomonLife.logs||[]),...(erictoLife.logs||[]),...(mongolAura.count?[`Ojos de la estepa revela ${mongolAura.count} unidad${mongolAura.count===1?"":"es"} con Sigilo.`]:[])];
+    const lifeLogs=[...(undeadCapture.logs||[]),...(solomonLife.logs||[]),...(erictoLife.logs||[]),...(mongolAura.count?[`Ojos de la estepa revela ${mongolAura.count} unidad${mongolAura.count===1?"":"es"} con Sigilo.`]:[])];
     if(lifeLogs.length)cleanPatch.log=[...lifeLogs,...(cleanPatch.log||publicState?.log||[])].slice(0,18);
   }
   delete cleanPatch._clockKillCreditOwner;
@@ -758,7 +751,6 @@ function isPvpStep6fAtomicActionMode(state=publicState){
 async function commitPvpStep6fAtomicAction(publicPatch={},privatePatch={}){
   if(pvpStep6fAtomicActionInFlight)return false;
   if(!gameId||!publicState||!privateState||!isPvpStep6fAtomicActionMode(publicState))return false;
-  if(Number(publicState.currentPlayer||0)!==Number(myPlayer||0))return false;
   pvpStep6fAtomicActionInFlight=true;
   const writeGameId=gameId;
   const writePlayer=Number(myPlayer||0);
@@ -821,7 +813,7 @@ async function commitRealtimeOnlineCheckpoint(publicPatch={},privatePatch={},kin
     undeadRemains:Array.isArray(publicPatch?.undeadRemains)?publicPatch.undeadRemains:[...(publicState.undeadRemains||[])],
     moralePressure:publicPatch?.moralePressure||publicState.moralePressure||{1:0,2:0},
     ...publicPatch,
-    realtimeExperimental:true,currentPlayer:0,turnPhase:"realtime",
+    realtimeExperimental:true,
     rtCheckpoint:{owner:writePlayer,kind:String(kind||"card"),seq:Math.max(0,Number(options?.rtClientSeq||0)),at:Date.now(),id:`${writePlayer}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`}
   };
   const normalized=(await normalizePublicPatchBeforeCommit(checkpoint,{sanitizeFirebase:true})).patch;
@@ -923,7 +915,7 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   const nextStats2={...(state.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};
   recordLocalLeaderBattleOutcome(outcome,pvpBot?"pvp_bot":(state.mode||"pvp"));
   const endedAt=Date.now();
-  const finalPatch={units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt,currentPlayer:0,stalemateNoPlay:null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)};
+  const finalPatch={units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt,stalemateNoPlay:null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)};
   const wrote=(state.mode==="online"&&typeof commitRealtimeOnlineCheckpoint==="function")
     ?await commitRealtimeOnlineCheckpoint(finalPatch,{},"terminal")
     :await updatePublic(finalPatch);
@@ -1458,8 +1450,8 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     realtimeExperimental:!!realtimeExperimental,
     principalSlots:realtimeExperimental?{1:0,2:0}:{1:playerPrincipalSlots,2:enemyInitial.principalSlots||0},
     adventurePrincipalKeys:realtimeExperimental?{1:[],2:[]}:{1:playerPrincipalPrep.principalKeys||[],2:enemyInitial.principalKeys||[]},
-    adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,maxHonor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,lastTurnStarted:realtimeExperimental?"RT":"",skipFirstTurnDraw:true,principalSlots:realtimeExperimental?0:(enemyInitial.principalSlots||0),principalKeys:realtimeExperimental?[]:(enemyInitial.principalKeys||[]),principalKey:realtimeExperimental?"":(enemyInitial.principalKey||"")},
-    createdAt:Date.now(),currentPlayer:0,turn:1,phase:"active",turnPhase:"realtime",turnKey:"RT-1",
+    adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,maxHonor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,principalSlots:realtimeExperimental?0:(enemyInitial.principalSlots||0),principalKeys:realtimeExperimental?[]:(enemyInitial.principalKeys||[]),principalKey:realtimeExperimental?"":(enemyInitial.principalKey||"")},
+    createdAt:Date.now(),phase:"active",turnKey:"RT-1",
     playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},
     playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},
     playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},
@@ -1467,7 +1459,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     erictoGraveyard:[],moralePressure:{1:0,2:0},units:startingUnits,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,
     log:[...principalLogs,`${battle.beastEvent?"Evento":(battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number)}: ${battle.title}. Rival: ${battle.enemyName}. IA táctica máxima desde el primer duelo. Recompensa: ${getBattleRewardLabel(battle)}.`].slice(0,18)
   };
-  const privatePayload={ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,maxHonor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,lastTurnStarted:realtimeExperimental?"RT":"",skipFirstTurnDraw:true,principalSlots:realtimeExperimental?0:playerPrincipalSlots,principalKeys:realtimeExperimental?[]:(playerPrincipalPrep.principalKeys||[]),principalKey:realtimeExperimental?"":(playerPrincipalPrep.principalKeys?.[0]||"")};
+  const privatePayload={ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,maxHonor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,principalSlots:realtimeExperimental?0:playerPrincipalSlots,principalKeys:realtimeExperimental?[]:(playerPrincipalPrep.principalKeys||[]),principalKey:realtimeExperimental?"":(playerPrincipalPrep.principalKeys?.[0]||"")};
 
   // VS previo: aparece después de que el duelo ya está completamente preparado,
   // pero antes de publicar/iniciar el turno real para que el reloj no consuma estos 3 segundos.
@@ -1477,7 +1469,6 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   if(HALLVALLA_LOCALHOST_TEST_MODE){
     pub.code=`LOCAL${code4()}`;
     pub.localhostVisualTest=true;
-    pub.turnStartedAt=Date.now();
     pub.log=["Modo local: prueba visual en tablero real sin Firebase.",...(pub.log||[])].slice(0,18);
     hideHallvallaPreBattleVs();
     enterLocalGame(pub,privatePayload,1);

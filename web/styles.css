@@ -16365,6 +16365,7 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 .hv-det-direct-editing #cardInspectModal:not(.hidden) [data-hv-det-edit-key]{
   cursor:move!important;
   touch-action:none!important;
+  pointer-events:auto!important;
 }
 .hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-direct-target:hover{
   outline:1px dashed rgba(255,218,116,.88)!important;

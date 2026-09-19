@@ -334,9 +334,9 @@ const DECK_RULES={
   // La capacidad REAL del mazo depende del TIER canónico del líder.
   drawDeckSize:20,
   minLeaderLevel:1,
-  maxLeaderLevel:15,
-  minLeaderTier:1,
-  maxLeaderTier:5,
+  maxLeaderLevel:45,
+  minDeckTier:1,
+  maxDeckTier:5,
   baseDeckSize:10,
   deckCardsPerTier:5,
   maxDeckSize:30
@@ -347,13 +347,13 @@ function getLeaderDeckLevel(level=1){
 }
 function getLeaderDeckTierFromLevel(level=1){
   const safeLevel=getLeaderDeckLevel(level);
-  const rawTier=typeof getLeaderBuffTierFromLevel==="function"
-    ? getLeaderBuffTierFromLevel(safeLevel)
-    : (safeLevel>=15?5:safeLevel>=9?4:safeLevel>=7?3:safeLevel>=4?2:1);
-  return Math.max(DECK_RULES.minLeaderTier,Math.min(DECK_RULES.maxLeaderTier,Math.floor(Number(rawTier)||1)));
+  // La capacidad del mazo conserva su progresión histórica y se completa en Nv.15.
+  // El Tier de BUFF del líder continúa hasta 15 y no infla el mazo por encima de 30 cartas.
+  const deckTier=safeLevel>=15?5:safeLevel>=9?4:safeLevel>=7?3:safeLevel>=4?2:1;
+  return Math.max(DECK_RULES.minDeckTier,Math.min(DECK_RULES.maxDeckTier,deckTier));
 }
 function getDeckSizeForLeaderTier(tier=1){
-  const safeTier=Math.max(DECK_RULES.minLeaderTier,Math.min(DECK_RULES.maxLeaderTier,Math.floor(Number(tier)||1)));
+  const safeTier=Math.max(DECK_RULES.minDeckTier,Math.min(DECK_RULES.maxDeckTier,Math.floor(Number(tier)||1)));
   return Math.min(DECK_RULES.maxDeckSize,DECK_RULES.baseDeckSize+((safeTier-1)*DECK_RULES.deckCardsPerTier));
 }
 function getDeckSizeForLeaderLevel(level=1){
@@ -377,9 +377,10 @@ function getCurrentPrincipalSlots(){return 0;}
 function getCurrentDeckSize(){return getDeckSizeForLeaderType();}
 function getPrincipalTierSummary(level=1){
   const safeLevel=getLeaderDeckLevel(level);
-  const tier=getLeaderDeckTierFromLevel(safeLevel);
-  const cards=getDeckSizeForLeaderTier(tier);
-  return `Nivel ${safeLevel} · Tier ${tier}: ${cards} cartas`;
+  const buffTier=typeof getLeaderBuffTierFromLevel==="function"?getLeaderBuffTierFromLevel(safeLevel):Math.ceil(safeLevel/3);
+  const deckTier=getLeaderDeckTierFromLevel(safeLevel);
+  const cards=getDeckSizeForLeaderTier(deckTier);
+  return `Nivel ${safeLevel} · Tier ${buffTier}: ${cards} cartas`;
 }
 const CRAFT_MATERIAL_COSTS={basic:800,rare:1200,epic:1200,glorious:1600,mythic:2000,legendary:2400,demigod:2800,astral:3600};
 const CRAFT_MATERIAL_GAIN=50;
@@ -437,9 +438,10 @@ function validateDeckList(cards=[],principalSlotsOrOptions=getCurrentPrincipalSl
   if(cards.length!==requiredSize){
     const safeLevel=getLeaderDeckLevel(level);
     const tier=getLeaderDeckTierFromLevel(safeLevel);
-    errors.push(`El mazo del líder Nivel ${safeLevel} (Tier ${tier}) debe tener exactamente ${requiredSize} cartas.`);
+    const buffTier=typeof getLeaderBuffTierFromLevel==="function"?getLeaderBuffTierFromLevel(safeLevel):Math.ceil(safeLevel/3);
+    errors.push(`El mazo del líder Nivel ${safeLevel} (Tier ${buffTier}) debe tener exactamente ${requiredSize} cartas.`);
   }
-  return applyHallvallaValueHooks("deck.validation",{valid:errors.length===0,errors,counts,principalSlots:0,deckSize:requiredSize,deckLevel:getLeaderDeckLevel(level),deckTier:getLeaderDeckTierFromLevel(level)},{cards,principalSlots:0,leaderType,leaderLevel:level});
+  return applyHallvallaValueHooks("deck.validation",{valid:errors.length===0,errors,counts,principalSlots:0,deckSize:requiredSize,deckLevel:getLeaderDeckLevel(level),deckTier:getLeaderDeckTierFromLevel(level),buffTier:typeof getLeaderBuffTierFromLevel==="function"?getLeaderBuffTierFromLevel(level):Math.ceil(getLeaderDeckLevel(level)/3)},{cards,principalSlots:0,leaderType,leaderLevel:level});
 }
 
 
