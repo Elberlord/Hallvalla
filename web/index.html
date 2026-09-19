@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="es" data-hv-shell="198">
+<html lang="es" data-hv-shell="201">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-shell-version" content="20260919.200">
+<meta name="hallvalla-shell-version" content="20260919.201">
 <title>HallValla</title>
 <link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.90">
 <style>
@@ -26,8 +26,9 @@
 <div id="hvSafeAreaProbe" aria-hidden="true"></div>
 <div id="hvStageDebug" aria-hidden="true"></div>
 <script>
-(()=>{
+(async()=>{
   'use strict';
+  const SHELL_BUILD='20260919.201';
   const DESIGN_W=1366,DESIGN_H=636;
   const frame=document.getElementById('hvStageFrame');
   const debug=document.getElementById('hvStageDebug');
@@ -36,6 +37,28 @@
   const debugOn=query.get('hvstageDebug')==='1'||query.get('hvdebug')==='1';
   if(debugOn)document.documentElement.dataset.hvStageDebug='1';
 
+  async function waitWorkerActivation(worker,timeoutMs=2600){
+    if(!worker||worker.state==='activated')return;
+    await new Promise(resolve=>{
+      let done=false;
+      const finish=()=>{if(done)return;done=true;clearTimeout(timer);resolve();};
+      const timer=setTimeout(finish,timeoutMs);
+      worker.addEventListener('statechange',()=>{if(worker.state==='activated'||worker.state==='redundant')finish();});
+    });
+  }
+  async function ensureCurrentServiceWorker(){
+    if(!('serviceWorker' in navigator))return;
+    try{
+      const registration=await navigator.serviceWorker.register(`service-worker.js?v=${SHELL_BUILD}`,{scope:'./',updateViaCache:'none'});
+      await registration.update().catch(()=>{});
+      await waitWorkerActivation(registration.installing||registration.waiting);
+      await navigator.serviceWorker.ready.catch(()=>null);
+    }catch(error){
+      console.warn('[HallValla] No se pudo sincronizar el Service Worker del shell:',error);
+    }
+  }
+  await ensureCurrentServiceWorker();
+
   const childUrl=new URL('hallvalla-stage.html',location.href);
   for(const [key,value] of query){
     if(key==='hvstageDebug'||key==='hvdebug')continue;
@@ -43,7 +66,7 @@
   }
   childUrl.searchParams.set('hvfit','1');
   childUrl.searchParams.set('hvstage','1');
-  childUrl.searchParams.set('hvshell','198');
+  childUrl.searchParams.set('hvshell','201');
   childUrl.hash=location.hash;
   frame.src=childUrl.href;
 

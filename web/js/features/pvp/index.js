@@ -2315,6 +2315,12 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const strong=$("matchmakingSearchingState")?.querySelector("strong");
     if(strong)strong.textContent=String(message||"BUSCANDO RIVAL...");
   }
+  function pvpMatchDiag(step,data=null){
+    try{
+      if(data==null)console.info(`[HallValla][PvP Matchmaking] ${step}`);
+      else console.info(`[HallValla][PvP Matchmaking] ${step}`,data);
+    }catch(_){ }
+  }
   function clearPvpBotFallbackTimer(){
     if(pvpBotFallbackTimer){clearTimeout(pvpBotFallbackTimer);pvpBotFallbackTimer=null;}
   }
@@ -2327,10 +2333,12 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     if(!randomMatchSearching)return;
     const elapsed=randomSearchStartedAt?Date.now()-randomSearchStartedAt:0;
     const wait=delay==null?Math.max(250,PVP_BOT_FALLBACK_MS-elapsed):Math.max(250,Number(delay)||PVP_BOT_FALLBACK_RETRY_MS);
+    pvpMatchDiag("fallback-scheduled",{waitMs:wait,searchAgeMs:elapsed,role:activeRole,code:String(activeCode||"")});
     pvpBotFallbackTimer=setTimeout(async()=>{
       pvpBotFallbackTimer=null;
       if(!randomMatchSearching)return;
-      if(activeRole!==1||!activeCode){schedulePvpBotFallback(600);return;}
+      pvpMatchDiag("fallback-fired",{role:activeRole,code:String(activeCode||""),attempt:pvpBotFallbackAttempts+1});
+      if(activeRole!==1||!activeCode){pvpMatchDiag("fallback-waiting-room-not-ready",{role:activeRole,code:String(activeCode||"")});schedulePvpBotFallback(600);return;}
       setMatchmakingSearchText("BUSCANDO RIVAL...");
       pvpBotFallbackAttempts++;
       const started=await startPvpBotFallback({force:true});
@@ -2440,11 +2448,15 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     return false;
   }
   async function startPvpBotFallback({force=false}={}){
-    if(pvpBotFallbackInFlight||!randomMatchSearching||activeRole!==1||!activeCode)return false;
-    if(busy&&!force)return false;
+    if(pvpBotFallbackInFlight||!randomMatchSearching||activeRole!==1||!activeCode){
+      pvpMatchDiag("fallback-blocked",{inFlight:pvpBotFallbackInFlight,searching:randomMatchSearching,role:activeRole,code:String(activeCode||"")});
+      return false;
+    }
+    if(busy&&!force){pvpMatchDiag("fallback-busy");return false;}
     const myUid=String(auth?.currentUser?.uid||activeOwnerUid||"");
     const waitingCode=normalizeCode(activeCode||"");
-    if(!myUid||waitingCode.length!==8)return false;
+    if(!myUid||waitingCode.length!==8){pvpMatchDiag("fallback-invalid-owner-or-code",{hasUid:!!myUid,code:waitingCode});return false;}
+    pvpMatchDiag("fallback-start",{code:waitingCode,force});
     const league=randomLeagueSnapshot||await resolveMyRandomLeague();
     const leagueKey=String(league?.key||"stone");
     const ownQueueRef=ref(db,`${RANDOM_QUEUE_PATH}/${myUid}`);
@@ -2457,8 +2469,14 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const existingOwnSnap=await withTimeout(get(ownQueueRef),`Validar cola propia antes del BOT ${waitingCode}`,5000);
       const existingOwn=existingOwnSnap.exists()?(existingOwnSnap.val()||{}):null;
       if(existingOwn&&String(existingOwn.claimedBy||"")&&String(existingOwn.claimedBy||"")!==myUid){
-        setMatchmakingSearchText("RIVAL ENCONTRADO...");
-        return false;
+        const externalClaimAge=Date.now()-Number(existingOwn.claimedAt||0);
+        if(Number.isFinite(externalClaimAge)&&externalClaimAge>8000){
+          pvpMatchDiag("clearing-stale-human-claim",{ageMs:externalClaimAge,claimedBy:String(existingOwn.claimedBy||"")});
+          await withTimeout(update(ownQueueRef,{claimedBy:"",claimedAt:0}),`Liberar claim humano obsoleto ${waitingCode}`,4000);
+        }else{
+          pvpMatchDiag("human-claim-in-progress",{ageMs:externalClaimAge,claimedBy:String(existingOwn.claimedBy||"")});
+          return false;
+        }
       }
       if(!existingOwn||String(existingOwn.uid||"")!==myUid||String(existingOwn.leagueKey||"")!==leagueKey){
         await withTimeout(set(ownQueueRef,{
@@ -2477,14 +2495,18 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         if(String(current.claimedBy||""))return;
         return Object.assign({},current,{claimedBy:myUid,claimedAt:claimAt});
       }),`Reservar fallback BOT ${waitingCode}`,6000);
-      if(!claim?.committed)return false;
+      if(!claim?.committed){pvpMatchDiag("fallback-self-claim-not-committed");return false;}
       selfClaimed=true;
+      pvpMatchDiag("fallback-self-claim-ok");
 
       const waitingPublicRef=ref(db,`games/${waitingCode}/public`);
       const waitingSnap=await withTimeout(get(waitingPublicRef),`Confirmar sala antes del BOT ${waitingCode}`,5000);
-      if(!waitingSnap.exists())return false;
+      if(!waitingSnap.exists()){pvpMatchDiag("fallback-waiting-room-missing");return false;}
       const waiting=waitingSnap.val()||{};
-      if(String(waiting?.playerSlots?.player1Uid||"")!==myUid||String(waiting?.phase||"")!=="waiting"||String(waiting?.playerSlots?.player2Uid||""))return false;
+      if(String(waiting?.playerSlots?.player1Uid||"")!==myUid||String(waiting?.phase||"")!=="waiting"||String(waiting?.playerSlots?.player2Uid||"")){
+        pvpMatchDiag("fallback-waiting-room-changed",{phase:String(waiting?.phase||""),player2:String(waiting?.playerSlots?.player2Uid||"")});
+        return false;
+      }
 
       if(typeof globalThis.hvEnsureFeature==="function")await globalThis.hvEnsureFeature("pve");
       const botMakeLeader=(typeof makeLeader==="function")?makeLeader:globalThis.makeLeader;
@@ -2563,7 +2585,10 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
 
       const finalWaitingSnap=await withTimeout(get(waitingPublicRef),`Revalidar plaza humana antes del BOT ${waitingCode}`,4000);
       const finalWaiting=finalWaitingSnap.exists()?(finalWaitingSnap.val()||{}):null;
-      if(!finalWaiting||String(finalWaiting?.playerSlots?.player1Uid||"")!==myUid||String(finalWaiting?.phase||"")!=="waiting"||String(finalWaiting?.playerSlots?.player2Uid||""))return false;
+      if(!finalWaiting||String(finalWaiting?.playerSlots?.player1Uid||"")!==myUid||String(finalWaiting?.phase||"")!=="waiting"||String(finalWaiting?.playerSlots?.player2Uid||"")){
+        pvpMatchDiag("fallback-final-room-check-failed",{phase:String(finalWaiting?.phase||""),player2:String(finalWaiting?.playerSlots?.player2Uid||"")});
+        return false;
+      }
 
       botPublicRef=ref(db,`games/${botCode}/public`);
       botPrivateRef=ref(db,`games/${botCode}/private/player1`);
@@ -2592,6 +2617,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       $("onlineLobby")?.classList.add("hidden");
       $("mainMenu")?.classList.add("hidden");
       if(typeof enterGame!=="function")throw new Error("El motor real no expuso enterGame().");
+      pvpMatchDiag("fallback-success",{room:botCode,rival:botName,league:String(league?.name||"Piedra")});
       enterGame(botCode,1);
       mark(`Rival encontrado · ${botName} · Liga ${String(league?.name||"Piedra")}.`);
       return true;
@@ -2675,6 +2701,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     renderRandomMatchmakingUi({playerShowcase:{1:buildPublicShowcase()},playerSlots:{player1Uid:String(auth?.currentUser?.uid||""),player2Uid:""}});
     randomMatchSearching=true;
     randomSearchStartedAt=Date.now();
+    pvpMatchDiag("search-start",{league:String(randomLeagueSnapshot?.name||"Piedra")});
     pvpBotFallbackAttempts=0;
     setMatchmakingSearchText("BUSCANDO RIVAL...");
     syncLocalButtons();mark(`Buscando rival de Liga ${randomLeagueSnapshot.name}...`);

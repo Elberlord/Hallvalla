@@ -19,7 +19,6 @@ on("nextAdventureStoryBtn","click",nextAdventureStoryScene);
 on("backToAdventureChoiceBtn","click",()=>openAdventureMap(pendingAdventureSpecial));
 on("continueAdventureMapIntroBtn","click",showAdventureMapOnly);
 on("skipAdventureMapIntroBtn","click",showAdventureMapOnly);
-on("reopenAdventureMapStoryBtn","click",()=>{ renderAdventureMap(); showAdventureStage("adventureMapIntroStage"); });
 on("closeAdventureMapBtn","click",()=>{$("adventurePanel").classList.add("hidden");globalThis.__HALLVALLA_RELEASE_ADVENTURE_DOM__?.();syncBattleMusic();});
 on("skipWoundedSceneBtn","click",()=>showAdventureGuardianIntro(pendingAdventureSpecial,ADVENTURE_GUARDIAN_BATTLE.id));
 on("continueWoundedSceneBtn","click",()=>showAdventureGuardianIntro(pendingAdventureSpecial,ADVENTURE_GUARDIAN_BATTLE.id));
@@ -90,7 +89,6 @@ on("deckRarityFilter","change",resetDeckBuilderCollectionPageAndRender);
 on("deckBattlePowerFilter","change",resetDeckBuilderCollectionPageAndRender);
 on("deckBattlePowerSort","change",resetDeckBuilderCollectionPageAndRender);
 on("saveDeckBtn","click",saveCurrentDeck);
-on("dustAllSurplusCornerBtn","click",disenchantAllSurplusCards);
 
 on("saveProfileNameBtn","click",saveProfileNameChange);
 on("activateProfilePromoBtn","click",activateTestPromoCode);
@@ -583,7 +581,6 @@ document.addEventListener("keydown",event=>{
 });
 on("exportAiLearningLogBtn","click",exportAiLearningLogFromSettings);
 on("resetLocalProgressBtn","click",resetLocalProgressFromSettings);
-on("showStatsTutorialBtn","click",()=>showStatsTutorial({force:true}));
 on("startBasicTutorialFromSettingsBtn","click",()=>{const p=$("settingsPanel");if(p)p.classList.add("hidden");startBasicTutorialBattle();});
 on("passBtn","click",()=>$("passPanel").classList.remove("hidden"));
 on("closePassBtn","click",()=>$("passPanel").classList.add("hidden"));
