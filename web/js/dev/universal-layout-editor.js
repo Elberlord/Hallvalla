@@ -358,7 +358,7 @@
   const TARGETS=[
     T("battle.player.hud","Jugador · HUD completo","#hudP1","JUGADOR"),
     T("battle.player.name","Jugador · Nombre","#p1HudName","JUGADOR"),
-    T("battle.player.turn","Jugador · Turno / estado","#p1Badge","JUGADOR"),
+    T("battle.player.turn","Jugador · Estado","#p1Badge","JUGADOR"),
     T("battle.player.life","Jugador · Vida","#hudP1 .player-status-life","JUGADOR"),
     T("battle.player.hand","Jugador · Mano","#hudP1 .player-status-hand","JUGADOR"),
     T("battle.player.honor","Jugador · Honor · Marco","#turnHonorHud","JUGADOR"),
@@ -376,10 +376,10 @@
     T("battle.rival.honorLabel","Rival · Honor · Palabra HONOR","#rivalHonorHud .turn-honor-label","RIVAL"),
     T("battle.rival.honorValue","Rival · Honor · Valor","#rivalHonorHudValue","RIVAL"),
 
-    T("battle.clock.turn","Reloj · Turno","#turnTimerHud","RELOJES / ESTADO"),
+    T("battle.clock.turn","Referencia · Combate","#turnTimerHud","RELOJES / ESTADO"),
     T("battle.clock.player","Reloj · Jugador","#playerClock1","RELOJES / ESTADO"),
     T("battle.clock.rival","Reloj · Rival","#playerClock2","RELOJES / ESTADO"),
-    T("battle.phase.banner","Fase · Banner","#phaseBanner","RELOJES / ESTADO"),
+    T("battle.phase.banner","Estado · Banner","#phaseBanner","RELOJES / ESTADO"),
     T("battle.hint","Mensaje / ayuda","#hint","RELOJES / ESTADO"),
 
     T("battle.tool.settings","Herramientas · Configuración","#battleMenuBtn","HERRAMIENTAS"),

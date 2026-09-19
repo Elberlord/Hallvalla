@@ -1538,7 +1538,7 @@ const LEADER_DETAIL_META={
       "Tier 5 (nivel 15): +10 AT / +10 DX"
     ],
     abilityName:"Lluvia de flechas",
-    ability:"Desde nivel 5, al final del turno rival se activa automáticamente si hay al menos una unidad enemiga a rango 3 o menos. Hace 1 daño directo a todas las unidades enemigas dentro de rango 3, ignorando Guardia y stats, y también afecta unidades con Sigilo."
+    ability:"Desde nivel 5, cada 10 s se activa automáticamente si hay al menos una unidad enemiga a rango 3 o menos. Hace 1 daño directo a todas las unidades enemigas dentro de rango 3, ignorando Guardia y stats, y también afecta unidades con Sigilo."
   },
   mage:{
     target:"Magias",
@@ -1551,7 +1551,7 @@ const LEADER_DETAIL_META={
       "Tier 5 (nivel 15): +10 daño de magias"
     ],
     abilityName:"Descarga arcana",
-    ability:"Desde nivel 5, al final del turno rival se activa automáticamente para hacer 2 de daño directo al líder enemigo, ignorando Guardia y stats de combate."
+    ability:"Desde nivel 5, cada 10 s se activa automáticamente para hacer 2 de daño directo al líder enemigo, ignorando Guardia y stats de combate."
   },
   axe:{
     target:"Unidades de hacha / berserkers",
@@ -1577,7 +1577,7 @@ const LEADER_DETAIL_META={
       "Tier 5 (nivel 15): +10 DX / +10 AGI"
     ],
     abilityName:"Llamado de la carga",
-    ability:"Desde nivel 5, al final del turno rival se activa automáticamente siempre que exista al menos una casilla libre adyacente al líder y convoca hasta 3 Caballerías Ligeras aliadas en los espacios disponibles."
+    ability:"Desde nivel 5, cada 10 s se activa automáticamente siempre que exista al menos una casilla libre adyacente al líder y convoca hasta 3 Caballerías Ligeras aliadas en los espacios disponibles."
   },
   assassin:{
     target:"Asesinos",
@@ -1603,7 +1603,7 @@ const LEADER_DETAIL_META={
       "Tier 5 (nivel 15): +10 DX / +10 AGI"
     ],
     abilityName:"Veneno de la Manada",
-    ability:"Desde nivel 5, todas las unidades aliadas causan Veneno cuando hacen daño real a HP, incluso en contrataque si atraviesan Guardia. El veneno dura 5 turnos y se duplica cada tick: 1 → 2 → 4 → 8 → 16."
+    ability:"Desde nivel 5, todas las unidades aliadas causan Veneno cuando hacen daño real a HP, incluso en contrataque si atraviesan Guardia. El veneno dura 50 s y se duplica cada tick: 1 → 2 → 4 → 8 → 16."
   }
 };
 function leaderTierExplanationHtml(meta){

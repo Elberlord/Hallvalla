@@ -241,14 +241,14 @@ function renderHud(){
     if(b){
       const ended=isBattleEnded();
       const realtime=typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental();
-      b.textContent=ended?(publicState.winner===p?"Ganó":"Fin"):(realtime?"TR":(publicState.currentPlayer===p?"Turno":"Espera"));
+      b.textContent=ended?(publicState.winner===p?"Ganó":"Fin"):(realtime?"Activo":(publicState.currentPlayer===p?"Activo":"Espera"));
       b.style.color=ended?(publicState.winner===p?"#8bffb8":"#d7c3a2"):(realtime?"#ffd166":(publicState.currentPlayer===p?"#ffd166":"#d7c3a2"));
     }
   });
   const banner=$("phaseBanner");
   if(banner){
     const realtime=typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental();
-    banner.textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(realtime?"COMBATE TR":(isMyTurn()?`TU TURNO · ${turnPhaseLabel()}`:`ESPERA · ${turnPhaseLabel()}`));
+    banner.textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(realtime?"COMBATE":(isMyTurn()?"COMBATE":"ESPERA"));
   }
   const battlefield=document.querySelector("#gameShell .battlefield");
   let moraleHud=$("moralePressureHud");
@@ -274,7 +274,7 @@ function renderHud(){
 function getUnitStatusEntries(u){
   if(!u)return [];
   const entries=[];
-  const add=(label,name,desc,kind="neutral",icon="generic",extra={})=>entries.push({label,name,desc,kind,icon,...extra});
+  const add=(label,name,desc,kind="neutral",icon="generic",extra={})=>entries.push({label,name,desc:typeof hallvallaPublicGameplayText==="function"?hallvallaPublicGameplayText(desc):desc,kind,icon,...extra});
   const n=v=>Number(v||0);
   if(u.reanimated){
     const source=(publicState?.units||[]).find(x=>x.id===u.reanimatedByErictoId&&x.key==="ericto"&&Number(x.hp||0)>0);
@@ -1325,7 +1325,7 @@ async function startBasicTutorialBattle(){
     playerStats:{1:{hp:leaderStats.hp,honor:2,maxHonor:2,deck:deck.length,hand:0},2:{hp:enemyLeaderStats.hp,honor:0,maxHonor:0,deck:0,hand:0}},
     erictoGraveyard:[],
     units,
-    log:["Tutorial TR: recoge MANÁ, convoca, usa magia y aprende a bloquear daño con tu líder."]
+    log:["Tutorial: recoge MANÁ, convoca, usa magia y aprende a bloquear daño con tu líder."]
   };
   await set(ref(db,`games/${code}/public`),pub);
   await set(getGamePrivatePlayerRef(code,1),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:2,maxHonor:2,lastTurnStarted:"RT",skipFirstTurnDraw:true});
@@ -1496,10 +1496,10 @@ function basicTutorialSpellWasPlayed(){
   return fireballGone;
 }
 const BASIC_TUTORIAL_STEPS=[
-  {id:"intro",manual:true,title:"Combate en tiempo real",body:"HallValla ahora se juega en tiempo real: no hay turnos. Tus unidades avanzan y atacan automáticamente; tu trabajo es administrar MANÁ, elegir qué convocar y cuándo usar magia, trampas y defensa del líder.",hint:"Pulsa Comenzar para practicar las cuatro acciones esenciales.",button:"Comenzar",targetResolver:()=>$("hallvallaRtStatus")||$("phaseBanner")},
+  {id:"intro",manual:true,title:"Combate",body:"Tus unidades avanzan y atacan automáticamente; tu trabajo es administrar MANÁ, elegir qué convocar y cuándo usar magia, trampas y defensa del líder.",hint:"Pulsa Comenzar para practicar las cuatro acciones esenciales.",button:"Comenzar",targetResolver:()=>$("hallvallaRtStatus")||$("phaseBanner")},
   {id:"mana",title:"Recoge el orbe de MANÁ",body:"Empiezas con 2/2 de MANÁ y recuperas 1 cada 9 segundos. El orbe aparece cada 14 segundos: al recogerlo aumenta en +1 tu capacidad máxima y también te entrega 1 MANÁ.",hint:"Toca el orbe brillante de tu lado. Con mando también puedes usar LB.",targetResolver:()=>document.querySelector('.rt-mana-orb.own')||$("hallvallaRtStatus"),done:()=>!!basicTutorialFlags.orbCollected},
   {id:"summon",title:"Convoca una unidad",body:"Abre UNIDADES y toca una carta que puedas pagar. La invocación aparece automáticamente en una casilla libre de tu zona y desde ahí se mueve y combate por sí sola.",hint:"No necesitas moverla manualmente. El coste se descuenta al convocarla.",targetResolver:()=>hallvallaRtState?.arsenalLevel==="cards"&&hallvallaRtState?.arsenalCategory==="unit"?(getBasicTutorialRtCardEl("spearman")||getBasicTutorialRtCardEl("archer")):document.querySelector('#rtArsenalPanel [data-rt-category="unit"]'),done:()=>!!getBasicTutorialSummonedUnit()},
-  {id:"auto",manual:true,title:"Movimiento y ataque automáticos",body:"Una vez invocada, la unidad busca enemigos, avanza y ataca automáticamente según su MOV y RG. En TR no seleccionas MOV ni ATTK: tú construyes la presión desde el Arsenal.",hint:"Observa cómo tu unidad abandona la zona de aparición y busca a la Guardia de práctica.",button:"Entendido",targetResolver:()=>getBasicTutorialBoardUnitEl(getBasicTutorialSummonedUnit())||$("grid")},
+  {id:"auto",manual:true,title:"Movimiento y ataque automáticos",body:"Una vez invocada, la unidad busca enemigos, avanza y ataca automáticamente según su MOV y RG. Tú construyes la presión desde el Arsenal.",hint:"Observa cómo tu unidad abandona la zona de aparición y busca a la Guardia de práctica.",button:"Entendido",targetResolver:()=>getBasicTutorialBoardUnitEl(getBasicTutorialSummonedUnit())||$("grid")},
   {id:"spell",title:"Usa una magia",body:"Las magias se lanzan desde su categoría y HallValla selecciona automáticamente un objetivo válido cercano. Fireball causa daño y Quemadura; recuerda que la Quemadura ya no desaparece sola y deja la DX de la víctima en 0.",hint:"Abre MAGIAS y lanza Fireball contra la Guardia de práctica.",targetResolver:()=>hallvallaRtState?.arsenalLevel==="cards"&&hallvallaRtState?.arsenalCategory==="spell"?(getBasicTutorialRtCardEl("fireball")||document.querySelector('#rtArsenalCards .rt-arsenal-card')):document.querySelector('#rtArsenalPanel [data-rt-category="spell"]'),done:()=>basicTutorialSpellWasPlayed()},
   {id:"shield",title:"Bloquea daño con tu líder",body:"Tu líder puede activar un escudo durante 3 segundos que reduce en 50% el daño recibido. En móvil o PC toca/clica tu propio líder; con mando usa RB. El escudo no se puede prolongar mientras ya está activo.",hint:"Activa ahora el escudo de tu líder.",targetResolver:()=>getBasicTutorialBoardUnitEl(getBasicTutorialPlayerLeader()),done:()=>!!basicTutorialFlags.leaderShielded},
   {id:"victory",manual:true,final:true,title:"Cómo ganas",body:"Ganas cuando la Vida del líder rival llega a 0. No necesitas eliminar todas sus unidades. Mantén presión con unidades baratas, recoge orbes, reserva MANÁ cuando puedas y protege tu líder cuando el golpe importante vaya a entrar.",hint:"Tutorial de combate completado. Esta recompensa solo se obtiene la primera vez.",button:"Finalizar tutorial",targetResolver:()=>getBasicTutorialBoardUnitEl(getBasicTutorialEnemyLeader())}

@@ -29,7 +29,8 @@ function getCodeTruthGlobalRuleLines7hai(entity){
 }
 function truthBlock7hai(title,items){
   const clean=(items||[]).filter(Boolean);
-  return clean.length?`${title}:\n${clean.map(x=>`• ${x}`).join("\n")}`:"";
+  const publicItems=clean.map(x=>typeof hallvallaPublicGameplayText==="function"?hallvallaPublicGameplayText(x):String(x));
+  return publicItems.length?`${title}:\n${publicItems.map(x=>`• ${x}`).join("\n")}`:"";
 }
 const CODE_TRUTH_EFFECTS_7HAI={
   cavalry:{trigger:["Debe moverse 3 o más espacios durante el ciclo táctico actual.","Luego debe declarar un ataque cuerpo a cuerpo."],does:["El objetivo recibe -3 AGI solo durante ese combate."],doesNot:["Si se movió 0, 1 o 2 espacios, no activa Carga desestabilizadora.","No causa daño extra por sí misma."],example:"La Caballería puede abrir objetivos rápidos, pero necesita carrera real antes del golpe."},
@@ -105,7 +106,7 @@ function getExactEffectGuideData(entity,effectText=""){
   if(entity?.leader)return getLeaderExactEffectGuideData(entity);
   const name=entity?.name||"Esta unidad";
   const raw=String(effectText||getUnitEffectText(entity)||entity?.text||entity?.effectText||entity?.ability||"").trim();
-  const displayRaw=raw
+  const displayRaw=(typeof hallvallaPublicGameplayText==="function"?hallvallaPublicGameplayText(raw):raw)
     .replace(/\s*Regla de lanza: (?:puede contraatacar una vez por ciclo táctico (10 s) si sobrevive|ataca primero una vez por ciclo táctico (10 s) únicamente contra una unidad enemiga de cuerpo a cuerpo con RG 1 que ataque desde una casilla adyacente|tiene RG 1 y, la primera vez por ciclo táctico que una unidad enemiga de cuerpo a cuerpo con RG 1 lo ataque desde una casilla adyacente, ataca antes que ella)\./gi,"")
     .replace(/\s*Regla de semidiós lancero: cuando es atacado dentro de su rango y no ha contraatacado durante el ciclo táctico actual, golpea primero; si derrota al atacante, cancela ese ataque\./gi,"")
     .trim();
@@ -115,7 +116,7 @@ function getExactEffectGuideData(entity,effectText=""){
   if(custom){
     if(custom.concise){
       const formula=(custom.does||[]).map(line=>`• ${line}`).join("\n");
-      return {title:`✦ Efecto: ${name}`,short:"",formula,example:"",card:entity};
+      return {title:`✦ Efecto: ${name}`,short:"",formula:typeof hallvallaPublicGameplayText==="function"?hallvallaPublicGameplayText(formula):formula,example:"",card:entity};
     }
     const formula=[
       truthBlock7hai("Reglas globales que también aplica esta unidad",globalLines),
@@ -124,7 +125,7 @@ function getExactEffectGuideData(entity,effectText=""){
       truthBlock7hai("Lo que NO hace / límites",custom.doesNot),
       displayRaw?`Texto corto original:\n• ${displayRaw}`:""
     ].filter(Boolean).join("\n\n");
-    return {title:`✦ Efecto exacto: ${name}`,short:"",formula,example:custom.example||"Usa este modal como fuente confiable de reglas.",card:entity};
+    return {title:`✦ Efecto exacto: ${name}`,short:"",formula:typeof hallvallaPublicGameplayText==="function"?hallvallaPublicGameplayText(formula):formula,example:custom.example||"Usa este modal como fuente confiable de reglas.",card:entity};
   }
   const sections=getEntityAbilitySections(entity,raw);
   const formula=[
@@ -133,7 +134,7 @@ function getExactEffectGuideData(entity,effectText=""){
     sections.length?sections.map(sec=>`${sec.title}:\n• ${sec.body}`).join("\n\n"):"",
     "Límite general:\n• Si el efecto dice daño real, debe bajar Vida/HP. Si solo baja Guardia, esa parte no entra.\n• Si el efecto depende de atacar cuerpo a cuerpo, no entra con ataques a distancia.\n• Si depende de moverse cierta cantidad, no entra si no cumplió ese movimiento durante el ciclo táctico actual."
   ].filter(Boolean).join("\n\n");
-  return {title:`✦ Efecto exacto: ${name}`,short:"",formula,example:"Esta carta no tiene una ficha manual completa todavía, pero el modal ya muestra sus reglas globales y límites generales.",card:entity};
+  return {title:`✦ Efecto exacto: ${name}`,short:"",formula:typeof hallvallaPublicGameplayText==="function"?hallvallaPublicGameplayText(formula):formula,example:"Esta carta no tiene una ficha manual completa todavía, pero el modal ya muestra sus reglas globales y límites generales.",card:entity};
 }
 
 

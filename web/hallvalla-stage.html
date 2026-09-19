@@ -22,13 +22,13 @@
 </script>
 <script>
   // v181: esta página ES el juego lógico. index.html es el shell físico.
-  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260919.216"});
+  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260919.217"});
   document.documentElement.dataset.hvDesignStage="1366x636";
 </script>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260919.216">
-<meta name="hallvalla-build" content="v8_MODULAR_20260919.216">
+<meta name="hallvalla-version" content="20260919.217">
+<meta name="hallvalla-build" content="v8_MODULAR_20260919.217">
 <meta name="hallvalla-build-name" content="Design Stage fijo 1366×636 · v192 arquitectura modular · canon v191 preservado">
 <link rel="stylesheet" href="styles.css?h=a5412c90f228"/>
 
@@ -1107,7 +1107,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       <p id="aiLearningLogStatus" class="settings-reset-status"></p>
     </div>
     <div id="rtKeyboardBindings" class="settings-controls-zone">
-      <b>Controles TR · teclado</b>
+      <b>Controles de combate · teclado</b>
       <p>Elige cualquier tecla. Los tres botones principales cambian de función según estés en categorías, cartas u objetivo.</p>
       <div class="rt-keybind-grid">
         <button type="button" data-rt-bind-action="choice1"><span>Botón 1 · Unidades / opción 1</span><strong data-rt-bind-value>X</strong></button>
@@ -1121,7 +1121,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
         <button type="button" data-rt-bind-action="left"><span>Cursor izquierda</span><strong data-rt-bind-value>←</strong></button>
         <button type="button" data-rt-bind-action="right"><span>Cursor derecha</span><strong data-rt-bind-value>→</strong></button>
       </div>
-      <button id="rtKeybindResetBtn" class="btn ghost full" type="button">Restaurar controles TR</button>
+      <button id="rtKeybindResetBtn" class="btn ghost full" type="button">Restaurar controles</button>
       <p id="rtKeybindStatus" class="settings-reset-status">Los mismos botones son contextuales: menú → opción → confirmar.</p>
     </div>
     <div class="settings-danger-zone">
@@ -1210,14 +1210,14 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       <span id="pvpStep5Start">Inicia: —</span>
     </div>
     <div class="pvp-step5-lock">ESTADO BASE SINCRONIZADO</div>
-    <p class="pvp-step5-note">Ya estás dentro del duelo. En este paso todavía no se activan cartas, Honor, fases, movimientos ni efectos.</p>
+    <p class="pvp-step5-note">Ya estás dentro del duelo. En este paso todavía no se activan cartas, MANÁ, movimientos ni efectos.</p>
     <button id="pvpStep5LeaveBtn" class="pvp-step5-leave" type="button">SALIR DEL DUELO DE PRUEBA</button>
   </div>
 </section><div class="battle-tools"><button id="battleMenuBtn" class="battle-tool-btn" type="button" aria-label="Abrir configuración de duelo">⚙️</button></div><div id="hudP1" class="player-status-hud hud-player-left" aria-label="HUD del jugador">
   <div class="player-status-card">
     <div class="player-status-head">
       <b id="p1HudName" class="player-status-name">Nuevo jugador</b>
-      <span id="p1Badge" class="player-status-turn">Turno</span>
+      <span id="p1Badge" class="player-status-turn">Activo</span>
     </div>
     <div class="player-status-row">
       <div class="player-status-mini player-status-life"><span>Vida</span><strong id="p1Life">0</strong></div>
@@ -1226,7 +1226,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     <span id="p1Honor" class="hud-hidden-value" aria-hidden="true">0</span>
   </div>
 </div>
-<div id="rtArsenalPanel" class="rt-arsenal-panel" aria-label="Selector táctico TR" hidden>
+<div id="rtArsenalPanel" class="rt-arsenal-panel" aria-label="Selector táctico" hidden>
   <div class="rt-arsenal-context"><button type="button" class="rt-arsenal-back" data-rt-back aria-label="Volver" hidden><span aria-hidden="true">↶</span><span class="rt-back-bind-host"></span></button><strong id="rtArsenalContextTitle" hidden></strong></div>
   <div class="rt-arsenal-categories" role="tablist" aria-label="Tipo de carta">
     <button type="button" class="rt-arsenal-category" data-rt-category="unit" aria-label="Unidades"><img src="assets/ui/realtime/category-units.webp" alt=""><span class="rt-category-bind-host"></span></button>
@@ -1241,7 +1241,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   <div class="player-status-card">
     <div class="player-status-head">
       <b id="p2HudName" class="player-status-name">Hechicero guardián</b>
-      <span id="p2Badge" class="player-status-turn">Espera</span>
+      <span id="p2Badge" class="player-status-turn">Activo</span>
     </div>
     <div class="player-status-row">
       <div class="player-status-mini player-status-life"><span>Vida</span><strong id="p2Life">0</strong></div>
@@ -1249,7 +1249,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     </div>
     <span id="p2Honor" class="hud-hidden-value" aria-hidden="true">0</span>
   </div>
-</div><div id="phaseBanner" class="phase-banner">ONLINE</div><div id="turnTimerHud" class="battle-clock-hud battle-clock-turn-hud" data-clock-target="turn" aria-label="Tiempo de turno"><span class="turn-timer-label">TURNO</span><strong id="turnTimerValue">03:00</strong></div><div id="playerClock1" class="battle-clock-hud duel-clock-hud duel-clock-p1" data-clock-target="p1" aria-label="Reloj del jugador 1"><span class="duel-clock-label">J1</span><strong id="playerClock1Value">15:00</strong></div><div id="playerClock2" class="battle-clock-hud duel-clock-hud duel-clock-p2" data-clock-target="p2" aria-label="Reloj del jugador 2"><span class="duel-clock-label">J2</span><strong id="playerClock2Value">15:00</strong></div><div id="phaseAnnounce" class="phase-announce" aria-live="polite"></div><div id="honorRechargeModal" class="honor-recharge-modal" aria-live="polite"></div><div id="turnHonorHud" class="turn-honor-hud" aria-live="polite"><span id="turnHonorHudText" class="turn-honor-content"><span class="turn-honor-label">HONOR</span> <strong id="turnHonorHudValue">0/0</strong></span></div><div id="rivalHonorHud" class="turn-honor-hud rival-honor-hud" aria-live="polite" aria-label="Honor del rival"><span id="rivalHonorHudText" class="turn-honor-content"><span class="turn-honor-label">HONOR</span> <strong id="rivalHonorHudValue">0/0</strong></span></div><div id="unitContextMenu" class="unit-context-menu hidden" aria-label="Menú de invocación"></div><div id="battleFxLayer" class="battle-fx-layer" aria-hidden="true"></div><div id="eventSplashOverlay" class="event-splash-overlay" aria-live="polite" aria-hidden="true"></div><div id="demigodSummonModal" class="demigod-summon-modal hidden" aria-live="polite"></div><div id="hint" class="battle-hint">Selecciona una carta o unidad.</div><div class="grid-wrap"><div id="grid" class="grid"></div></div><div id="log" class="event-history-dock" aria-label="Historial visual de eventos de combate" aria-hidden="true"></div><div id="handDrawer" class="hand-drawer"><div class="hand-top"><b>Spellbook</b><span id="handInfo"></span></div><div id="handRow" class="hand-row"></div></div></div></div>
+</div><div id="phaseBanner" class="phase-banner">ONLINE</div><div id="turnTimerHud" class="battle-clock-hud battle-clock-turn-hud" data-clock-target="turn" aria-label="Referencia interna de combate"><span class="turn-timer-label">COMBATE</span><strong id="turnTimerValue">03:00</strong></div><div id="playerClock1" class="battle-clock-hud duel-clock-hud duel-clock-p1" data-clock-target="p1" aria-label="Reloj del jugador 1"><span class="duel-clock-label">J1</span><strong id="playerClock1Value">15:00</strong></div><div id="playerClock2" class="battle-clock-hud duel-clock-hud duel-clock-p2" data-clock-target="p2" aria-label="Reloj del jugador 2"><span class="duel-clock-label">J2</span><strong id="playerClock2Value">15:00</strong></div><div id="phaseAnnounce" class="phase-announce" aria-live="polite"></div><div id="honorRechargeModal" class="honor-recharge-modal" aria-live="polite"></div><div id="turnHonorHud" class="turn-honor-hud" aria-live="polite"><span id="turnHonorHudText" class="turn-honor-content"><span class="turn-honor-label">HONOR</span> <strong id="turnHonorHudValue">0/0</strong></span></div><div id="rivalHonorHud" class="turn-honor-hud rival-honor-hud" aria-live="polite" aria-label="Honor del rival"><span id="rivalHonorHudText" class="turn-honor-content"><span class="turn-honor-label">HONOR</span> <strong id="rivalHonorHudValue">0/0</strong></span></div><div id="unitContextMenu" class="unit-context-menu hidden" aria-label="Menú de invocación"></div><div id="battleFxLayer" class="battle-fx-layer" aria-hidden="true"></div><div id="eventSplashOverlay" class="event-splash-overlay" aria-live="polite" aria-hidden="true"></div><div id="demigodSummonModal" class="demigod-summon-modal hidden" aria-live="polite"></div><div id="hint" class="battle-hint">Selecciona una carta o unidad.</div><div class="grid-wrap"><div id="grid" class="grid"></div></div><div id="log" class="event-history-dock" aria-label="Historial visual de eventos de combate" aria-hidden="true"></div><div id="handDrawer" class="hand-drawer"><div class="hand-top"><b>Spellbook</b><span id="handInfo"></span></div><div id="handRow" class="hand-row"></div></div></div></div>
 <div id="cardInspectModal" class="card-inspect-modal hidden"><div class="card-inspect-card det-v32-card"></div></div>
 <div id="battleMenuPanel" class="battle-menu-panel hidden"><div class="battle-menu-card"><h2>Configuración del duelo</h2><p class="battle-menu-note">Control rápido para móvil y PC.</p><button id="battleToggleSoundBtn" class="btn full" type="button">Audio general: activado</button><div class="battle-audio-controls" aria-label="Controles de audio del duelo"><div class="battle-audio-row"><div class="battle-audio-head"><button id="battleToggleMusicBtn" class="battle-audio-toggle" type="button">Música: ON</button><span id="battleMusicVolumeValue" class="battle-audio-value">32%</span></div><input id="battleMusicVolume" class="battle-audio-slider" type="range" min="0" max="100" step="1" value="32" aria-label="Volumen de música"></div><div class="battle-audio-row"><div class="battle-audio-head"><button id="battleToggleSfxBtn" class="battle-audio-toggle" type="button">Efectos: ON</button><span id="battleSfxVolumeValue" class="battle-audio-value">58%</span></div><input id="battleSfxVolume" class="battle-audio-slider" type="range" min="0" max="100" step="1" value="58" aria-label="Volumen de efectos"></div></div><button id="openFieldStatBadgesTunerBattleBtn" data-hv-dev-tool class="btn full" type="button">Ajustar iconos / aros / números</button><button id="openBattleVisualSizeTunerBtn" data-hv-dev-tool class="btn full" type="button">Ajustar líderes y cartas de mano</button><button id="openFieldBoardTunerBattleBtn" data-hv-dev-tool class="btn full" type="button">Ajustar cartas del campo y cuadrícula</button><button id="openBattleClockTunerBtn" data-hv-dev-tool class="btn full" type="button">Ajustar relojes del duelo</button><button id="battleResetBtn" class="btn full" type="button">Reiniciar duelo</button><button id="battleDeleteCloudBattleBtn" class="btn full" type="button">Borrar solo este duelo en Firebase</button><button id="battleLeaveBtn" class="btn full" type="button">Salir al menú</button><button id="battleCloseMenuBtn" class="btn primary full" type="button">Volver al duelo</button></div></div>
 
@@ -1266,7 +1266,7 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     <label class="battle-clock-tuner-control">
       <span>Reloj</span>
       <select id="battleClockTargetSelect" class="battle-clock-select">
-        <option value="turn">Turno</option>
+        <option value="turn">Referencia</option>
         <option value="p1">Jugador 1</option>
         <option value="p2">Jugador 2</option>
       </select>
@@ -1447,6 +1447,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=4b7e1c647539"></script>
+<script type="module" src="js/bootstrap-loader.js?h=3b86c9740394"></script>
 </body>
 </html>

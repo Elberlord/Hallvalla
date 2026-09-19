@@ -315,7 +315,7 @@ function hvGamepadConnect(gp){
     hvGamepadState.pointerEventAt=0;
     const kind=hvGamepadState.mapping==="standard"?"estándar":"compatible";
     const badge=hvGamepadBadge();
-    badge.title=`${hvGamepadState.id} · ${kind} · TR: X Unidades · A Magias/Confirmar · Y Trampas · LT/RT páginas · B volver`;
+    badge.title=`${hvGamepadState.id} · ${kind} · X Unidades · A Magias/Confirmar · Y Trampas · LT/RT páginas · B volver`;
     hvGamepadShowBadge("",{disconnected:false});
     console.info(`[HallValla][GAMEPAD] conectado: ${hvGamepadState.id} · mapping=${hvGamepadState.mapping||"generic"}`);
   }

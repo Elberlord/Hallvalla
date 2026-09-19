@@ -1416,8 +1416,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       statusFxEvent:entryEffects.statusFxEvent||null,
       floatFxEvent:entryEffects.floatFxEvent||null,
       log:[
-        `PvP TR: duelo continuo habilitado sobre el motor canónico de HallValla.`,
-        `Sin turnos: MANÁ continuo, arsenal completo y movimiento/ataque autónomos. Firebase sincroniza acciones nuevas del jugador, no cada tick automático.`,
+        `PvP: duelo iniciado.`,
+        `MANÁ continuo, arsenal completo y movimiento/ataque autónomos.`,
         ...(entryEffects.logs||[])
       ].slice(0,18)
     };
@@ -1451,7 +1451,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
               if(freshSnap.exists()){
                 const fresh=freshSnap.val()||{};
                 if(isRealEnginePrebattle6e(fresh)){
-                  await withTimeout(update(publicRef,{phase:"active",realtimeExperimental:true,currentPlayer:0,turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:serverTimestamp(),engineStartedAt:Date.now(),prebattleCompletedAt:serverTimestamp()}),`Activar combate TR de matchmaking ${code}`,5000);
+                  await withTimeout(update(publicRef,{phase:"active",realtimeExperimental:true,currentPlayer:0,turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:serverTimestamp(),engineStartedAt:Date.now(),prebattleCompletedAt:serverTimestamp()}),`Activar combate de matchmaking ${code}`,5000);
                 }
               }
             }

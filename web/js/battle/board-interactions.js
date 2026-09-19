@@ -252,7 +252,7 @@ async function handleBoardDragEnd(ev){
         return;
       }
       clearSelection();
-      setHint("Casilla inválida para invocación: en TR usa una casilla libre de tu mitad del campo.");
+      setHint("Casilla inválida para invocación: usa una casilla libre de tu mitad del campo.");
     }
   }catch(err){
     console.warn("[HallValla] Error en arrastre táctico:",err);
@@ -562,8 +562,8 @@ function renderUnitContextMenu(){
   }).join("")}</div>`;
   if(menu.__hvContextMarkup!==markup){menu.innerHTML=markup;menu.__hvContextMarkup=markup;}
 
-  // El menú ya no orbita la unidad. Se ancla al HUD de TURNO para dejar el
-  // tablero completamente libre de controles flotantes.
+  // El menú ya no orbita la unidad. Se ancla al punto de referencia histórico
+  // del HUD para dejar el tablero completamente libre de controles flotantes.
   const clock=$("turnTimerHud");
   if(clock){
     const r=clock.getBoundingClientRect();
@@ -725,7 +725,7 @@ function chooseAcolyteResurrectionChoice(caster,units=publicState?.units||[],gra
   return new Promise(resolve=>{
     const overlay=document.createElement("div");overlay.style.cssText="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.84);display:flex;align-items:center;justify-content:center;padding:18px";
     const panel=document.createElement("div");panel.style.cssText="width:min(820px,96vw);max-height:88vh;overflow:auto;background:#0b100d;border:2px solid #789d6d;border-radius:18px;padding:20px;color:#eef7eb";
-    panel.innerHTML=`<h2 style="margin:0 0 6px">Resurrección</h2><p style="margin:0 0 16px;color:#c9dcc3">Elige un aliado destruido y una casilla libre adyacente. Volverá con la mitad de su Vida, sin debuffs y podrá actuar este turno.</p><div data-corpses style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px"></div><h3>Casilla de retorno</h3><div data-cells style="display:flex;flex-wrap:wrap;gap:8px"></div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px"><button data-cancel type="button">Cancelar</button><button data-confirm type="button" disabled>Resucitar</button></div>`;
+    panel.innerHTML=`<h2 style="margin:0 0 6px">Resurrección</h2><p style="margin:0 0 16px;color:#c9dcc3">Elige un aliado destruido y una casilla libre adyacente. Volverá con la mitad de su Vida, sin debuffs y podrá actuar inmediatamente.</p><div data-corpses style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px"></div><h3>Casilla de retorno</h3><div data-cells style="display:flex;flex-wrap:wrap;gap:8px"></div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px"><button data-cancel type="button">Cancelar</button><button data-confirm type="button" disabled>Resucitar</button></div>`;
     overlay.appendChild(panel);document.body.appendChild(overlay);let corpse=null,cell=null;const confirm=panel.querySelector('[data-confirm]');const sync=()=>confirm.disabled=!(corpse&&cell);const finish=v=>{overlay.remove();resolve(v);};
     corpses.forEach(rec=>{const b=document.createElement("button");b.type="button";const max=Math.max(1,Number(rec.snapshot?.maxHp||rec.snapshot?.hp||1));b.innerHTML=`<b>${escapeHtml(rec.name||"Unidad caída")}</b><br><small>Vida de retorno: ${Math.ceil(max/2)}/${max} · PB ${Number(rec.battlePower)||"—"}</small>`;b.style.cssText="padding:12px;text-align:left;border-radius:10px;border:1px solid #617a5a;background:#142016;color:#f3fff1";b.onclick=()=>{panel.querySelectorAll('[data-corpses] button').forEach(x=>x.style.outline='none');b.style.outline='3px solid #8fc681';corpse=rec;sync();};panel.querySelector('[data-corpses]').appendChild(b);});
     cells.forEach(c=>{const b=document.createElement("button");b.type="button";b.textContent=`${c.x+1}, ${c.y+1}`;b.onclick=()=>{panel.querySelectorAll('[data-cells] button').forEach(x=>x.style.outline='none');b.style.outline='3px solid #8fc681';cell=c;sync();};panel.querySelector('[data-cells]').appendChild(b);});
@@ -957,7 +957,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     out=out.map(it=>it.id===target.id?{...it,tempMovBuff:(it.tempMovBuff||0)+2}:it.id===liveCaster.id?{...it,acted:true,subotaiUsedTurn:true}:it);
     log=`${liveCaster.name} activa Marcha de Mil Horizontes: ${target.name} gana +2 Movimiento durante este ciclo táctico.`;
   }else{
-    return{success:false,reason:"Este efecto es pasivo o se activa automáticamente durante el combate TR."};
+    return{success:false,reason:"Este efecto es pasivo o se activa automáticamente durante el combate."};
   }
   return{success:true,units:out,log,battleFxEvent,stealthAreaDamageEvent};
 }
@@ -966,7 +966,7 @@ async function activateUnitEffect(u,choice=null){
   if(!u||u.owner!==myPlayer||!isUnitActionWindow(u))return setHint(unitActionPhaseHint("EFFECT"));
   if(u.acted)return setHint(`${u.name} ya usó su acción durante este ciclo táctico.`);
   const mode=getUnitEffectMode(u);
-  if(mode==="passive")return setHint("Este efecto es pasivo o se activa automáticamente durante el combate TR.");
+  if(mode==="passive")return setHint("Este efecto es pasivo o se activa automáticamente durante el combate.");
   invalidateImmediateMoveUndo("effect");
   let units=[...(publicState.units||[])];
   if(u.key==="acolyte_healer"){

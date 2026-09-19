@@ -103,6 +103,68 @@ const FIELD_BOARD_INITIAL=readFieldBoardPreferences();
 let ROWS=FIELD_BOARD_INITIAL.rows,COLS=FIELD_BOARD_INITIAL.cols;
 const $=id=>document.getElementById(id);
 
+/* v217 · Presentación pública del combate ---------------------------------
+   El runtime conserva nombres históricos (TR, turnKey, turnPhase, RTC) por
+   compatibilidad interna. La interfaz de producción no expone esa jerga: para
+   el jugador HallValla simplemente es combate continuo. */
+function hallvallaPublicGameplayText(value){
+  let text=String(value??"");
+  text=text
+    .replace(/\bTR EXPERIMENTAL\s*:\s*/gi,"")
+    .replace(/\bPvP TR\s*:\s*/gi,"PvP: ")
+    .replace(/\bCOMBATE TR\b/gi,"COMBATE")
+    .replace(/\bTR\s*·\s*/g,"")
+    .replace(/\s*\(TR automático\)/gi,"")
+    .replace(/\s*\(TR\)/gi,"")
+    .replace(/\bTR automático\b/gi,"automático")
+    .replace(/\bcoste TR\b/gi,"coste")
+    .replace(/\bcosto TR\b/gi,"costo")
+    .replace(/\ben TR\b/gi,"")
+    .replace(/\bmodo TR\b/gi,"")
+    .replace(/\btiempo real\b/gi,"combate")
+    .replace(/\bLa primera vez por ciclo táctico(?:\s*\(10 s\))?/g,"La primera vez cada 10 s")
+    .replace(/\bla primera vez por ciclo táctico(?:\s*\(10 s\))?/g,"la primera vez cada 10 s")
+    .replace(/\bprimera vez por ciclo táctico(?:\s*\(10 s\))?/gi,"primera vez cada 10 s")
+    .replace(/\buna vez por ciclo táctico(?:\s*\(10 s\))?/gi,"una vez cada 10 s")
+    .replace(/\bcada ciclo táctico de 10 s\b/gi,"cada 10 s")
+    .replace(/\bal abrir cada ciclo táctico de 10 s\b/gi,"cada 10 s")
+    .replace(/\bal cerrar cada ciclo táctico\b/gi,"cada 10 s")
+    .replace(/\bAl final de cada ciclo táctico propio de ([^,.;]+)/g,"Cada 10 s para $1")
+    .replace(/\bal final de cada ciclo táctico propio de ([^,.;]+)/gi,"cada 10 s para $1")
+    .replace(/\bal final de cada ciclo táctico\b/gi,"cada 10 s")
+    .replace(/\bdurante el ciclo táctico actual\s*\(hasta 10 s\)/gi,"durante hasta 10 s")
+    .replace(/\bdurante el ciclo táctico actual\b/gi,"temporalmente")
+    .replace(/\bhasta el final del ciclo táctico actual\b/gi,"temporalmente")
+    .replace(/\bhasta el inicio del siguiente ciclo táctico\b/gi,"temporalmente")
+    .replace(/\bhasta el final del siguiente ciclo táctico\b/gi,"temporalmente")
+    .replace(/\bhasta el siguiente ciclo táctico\b/gi,"temporalmente")
+    .replace(/\bdurante ese ciclo táctico\b/gi,"durante esos 10 s")
+    .replace(/\bdurante el ciclo táctico\b/gi,"durante ese intervalo de 10 s")
+    .replace(/\bdel ciclo táctico actual\b/gi,"temporal")
+    .replace(/\ben el ciclo táctico actual\b/gi,"ahora")
+    .replace(/\bpor ciclo táctico\b/gi,"cada 10 s")
+    .replace(/\bciclos tácticos\b/gi,"intervalos de 10 s")
+    .replace(/\bciclo táctico\b/gi,"intervalo de 10 s")
+    .replace(/\bal final del turno rival\b/gi,"cada 10 s")
+    .replace(/\bal inicio de su turno\b/gi,"cada 10 s")
+    .replace(/\bal inicio del próximo turno del dueño\b/gi,"en la próxima actualización")
+    .replace(/\bhasta su próximo turno\b/gi,"temporalmente")
+    .replace(/\bdurante su próximo turno\b/gi,"temporalmente")
+    .replace(/\bdurante el turno afectado\b/gi,"mientras dure el efecto")
+    .replace(/\bdurante el resto de este turno\b/gi,"mientras dure el efecto")
+    .replace(/\beste turno\b/gi,"temporalmente")
+    .replace(/\bturno actual\b/gi,"momento actual");
+  text=text.replace(/\bdurante (\d+) turnos?\b/gi,(_,n)=>`durante ${Math.max(1,Number(n)||1)*10} s`)
+    .replace(/\b(\d+) turnos? más\b/gi,(_,n)=>`${Math.max(1,Number(n)||1)*10} s más`)
+    .replace(/\bturnos\b/gi,"periodos de efecto")
+    .replace(/\bturno\b/gi,"periodo de efecto")
+    .replace(/\s{2,}/g," ")
+    .replace(/\s+([.,;:])/g,"$1")
+    .trim();
+  return text;
+}
+globalThis.hallvallaPublicGameplayText=hallvallaPublicGameplayText;
+
 /* E40 · Registro canónico de extensiones -----------------------------------
    Los subsistemas opcionales registran hooks explícitos en el núcleo en vez
    de reemplazar funciones ya definidas (monkey-patching). */

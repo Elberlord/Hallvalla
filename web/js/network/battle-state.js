@@ -356,7 +356,7 @@ function getStealthUnitsForSharedVisibility(units=publicState?.units||[]){
   return (Array.isArray(units)?units:[]).filter(u=>u&&!u.leader&&isStealthedUnit(u));
 }
 function sanitizeSharedStealthText(text,units=publicState?.units||[]){
-  let out=String(text??"");
+  let out=typeof hallvallaPublicGameplayText==="function"?hallvallaPublicGameplayText(text):String(text??"");
   for(const hiddenUnit of getStealthUnitsForSharedVisibility(units)){
     const name=String(hiddenUnit.name||"").trim();
     if(!name||!out.includes(name))continue;
@@ -365,7 +365,7 @@ function sanitizeSharedStealthText(text,units=publicState?.units||[]){
     }
     out=out.split(name).join("Presencia oculta");
   }
-  return out;
+  return typeof hallvallaPublicGameplayText==="function"?hallvallaPublicGameplayText(out):out;
 }
 function sanitizeSharedStealthFxEvent(event,units=publicState?.units||[]){
   if(!event||typeof event!=="object"||Array.isArray(event))return event;
@@ -1423,7 +1423,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const entryEffects=applyStartingPrincipalEntryEffects(startingUnits);
   startingUnits=entryEffects.units;
   const principalLogs=[];
-  if(realtimeExperimental)principalLogs.push("TR: la batalla inicia directamente en tiempo real; las cartas del mazo se gestionan desde el arsenal.");
+  if(realtimeExperimental)principalLogs.push("La batalla inicia directamente; las cartas del mazo se gestionan desde el arsenal.");
   if(playerPrincipalUnits.length)principalLogs.push(`Tus Personajes Principales son ${playerPrincipalUnits.map(u=>u.name).join(", ")}: comienzan convocados sin pagar Honor.`);
   if(enemyPrincipalUnits.length)principalLogs.push(`Personajes Principales enemigos: ${enemyPrincipalUnits.map(u=>u.name).join(", ")}, ya convocados al iniciar.`);
   const enemyUnitMasteryRank=typeof getAdventureEnemyUnitMasteryRank==="function"?getAdventureEnemyUnitMasteryRank(battle):(battle.beastEvent?UNIT_MASTERY_MAX_RANK:1);

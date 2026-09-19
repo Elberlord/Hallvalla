@@ -1,27 +1,34 @@
-# HallValla v212 - Cierre de auditoría PvE
+# HallValla v217 — runtime privado / interfaz limpia
 
-Base: v211 aprobada manualmente.
+Base funcional: v216.
 
-Este build elimina el antiguo motor PvE por turnos, que quedó inalcanzable desde que TR es canónico, y deja PvE dividido únicamente en campaña adaptativa, doctrina de mazo y diario experto.
+Esta actualización continúa la auditoría arquitectónica sin cambiar gameplay. El combate continuo ya es el único modelo canónico y la interfaz de producción deja de exponer términos de implementación como `TR`, `realtime`, `RTC`, `turnKey`, `turnPhase` o "ciclo táctico".
 
-Cambios clave:
-- eliminado `features/pve/index.js` monolítico;
-- -251 KB / -4,755 líneas dentro de `features/pve`;
-- eliminado `adventureEnemyTurn`, AI Combat Engine y AI Tempo Engine antiguos;
-- eliminados timers/locks y callers exclusivos de esa ruta;
-- eliminado preload PvE innecesario al crear BOT PvP;
-- reglas Firebase, layout y motor TR sin cambios;
-- build `20260919.216`, cache `hallvalla-runtime-v216`.
-- v214: calibradores DEV retirados de `system/settings-events.js` y separados por responsabilidad bajo `web/js/dev/`.
+## Cambios v217
+- capa común `hallvallaPublicGameplayText()` para convertir texto técnico heredado en lenguaje de juego antes de mostrarlo;
+- HUD y tutorial usan `COMBATE` / `Activo`;
+- Configuración usa `Controles de combate`;
+- arsenal, gamepad, PvP y logs visibles dejan de anunciar el nombre del runtime;
+- DET/guías exactas presentan recurrencias con lenguaje legible (por ejemplo, cada 10 s);
+- el diario nuevo de IA deja de imprimir una etiqueta de modo técnico por duelo;
+- `turnKey`, `turnPhase="realtime"`, `currentPlayer:0` y `*TurnKey` se preservan internamente por compatibilidad;
+- se incluye `/docs/TURNKEY_TURNPHASE_TR_CANONICO.txt` como documentación técnica solicitada.
 
-Documentación:
-- `docs/AUDITORIA_PROFUNDA_FRONTEND_v212.md`
-- `docs/FRONTEND_ARCHITECTURE_v212.md`
-- `docs/FRONTEND_MODULE_INVENTORY_v212.md`
-- `docs/FRONTEND_HOTSPOTS_v212.md`
-- `docs/MAINTENANCE_RULES_v212.md`
-- `docs/SMOKE_TEST_v212.md`
+## Se conserva de v216
+- ataque global 2 s más rápido;
+- movimiento global 3 s más rápido;
+- motor antiguo de turnos eliminado;
+- PvE refactorizado;
+- PvP directo y ranking/recompensas actuales;
+- calibradores exclusivamente en `?dev`.
 
-- v215: datos estáticos de Aventura 1–20 extraídos de `game/decks-units-combat-rules.js` a `adventure/campaign-data.js`; sin cambio de gameplay.
+## Firebase
+No hay cambios en `backend/firebase/database.rules.json`; no es necesario volver a publicar reglas por esta versión.
 
-- v216: eliminado el orquestador legacy por turnos alcanzable solo fuera de TR; ataque global 2 s más rápido y movimiento global 3 s más rápido.
+## Documentación v217
+- `docs/AUDITORIA_RUNTIME_PRIVADO_v217.md`
+- `docs/FRONTEND_ARCHITECTURE_v217.md`
+- `docs/FRONTEND_MODULE_INVENTORY_v217.md`
+- `docs/MAINTENANCE_RULES_v217.md`
+- `docs/SMOKE_TEST_v217.md`
+- `docs/TURNKEY_TURNPHASE_TR_CANONICO.txt`

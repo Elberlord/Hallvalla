@@ -92,7 +92,7 @@ function buildAdaptiveExpertBattleText(pub,{runKey,snapshot,humanSummary,aiSumma
   const lines=[
     "================================================================================",
     `[${at.toLocaleString("es-ES")}] ${battle?.enemyName||battleId||"Duelo de Aventura"} · ${resultLabel}`,
-    `Run: ${runKey||"sin-id"} · Modo: tiempo real · Líder IA: ${String(pub?.playerLeaders?.[2]||battle?.enemyLeaderType||"desconocido")}`,
+    `Run: ${runKey||"sin-id"} · Líder IA: ${String(pub?.playerLeaders?.[2]||battle?.enemyLeaderType||"desconocido")}`,
     "",
     "[MAZO HUMANO OBSERVADO]",
     `Cartas: ${adaptiveExpertFormatCounts(snapshot?.cardCounts||{},20)}`,

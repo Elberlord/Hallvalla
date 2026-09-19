@@ -804,7 +804,7 @@ function chooseErictoReanimationChoice(ericto,units=publicState?.units||[],grave
     overlay.style.cssText="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.84);display:flex;align-items:center;justify-content:center;padding:18px";
     const panel=document.createElement("div");
     panel.style.cssText="width:min(820px,96vw);max-height:88vh;overflow:auto;background:#0b0710;border:2px solid #7d45a8;border-radius:18px;padding:20px;color:#f0e6f7;box-shadow:0 0 48px #000";
-    panel.innerHTML=`<h2 style="margin:0 0 6px">Necromancia de Farsalia</h2><p style="margin:0 0 16px;color:#c9b8d7">Elige un cadáver y la celda adyacente donde regresará. La unidad reanimada entra en el ciclo TR actual y queda sujeta a sus cooldowns normales de movimiento y ataque.</p><div class="ericto-corpse-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px"></div><h3 style="margin:18px 0 8px">Celda de reanimación</h3><div class="ericto-cell-list" style="display:flex;flex-wrap:wrap;gap:8px"></div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px"><button type="button" data-cancel style="padding:10px 16px;border-radius:9px;border:1px solid #777;background:#18151b;color:#eee">Cancelar</button><button type="button" data-confirm disabled style="padding:10px 16px;border-radius:9px;border:1px solid #b88be0;background:#4b2268;color:#fff;font-weight:800">Reanimar</button></div>`;
+    panel.innerHTML=`<h2 style="margin:0 0 6px">Necromancia de Farsalia</h2><p style="margin:0 0 16px;color:#c9b8d7">Elige un cadáver y la celda adyacente donde regresará. La unidad reanimada regresa inmediatamente y queda sujeta a sus tiempos normales de movimiento y ataque.</p><div class="ericto-corpse-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px"></div><h3 style="margin:18px 0 8px">Celda de reanimación</h3><div class="ericto-cell-list" style="display:flex;flex-wrap:wrap;gap:8px"></div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px"><button type="button" data-cancel style="padding:10px 16px;border-radius:9px;border:1px solid #777;background:#18151b;color:#eee">Cancelar</button><button type="button" data-confirm disabled style="padding:10px 16px;border-radius:9px;border:1px solid #b88be0;background:#4b2268;color:#fff;font-weight:800">Reanimar</button></div>`;
     overlay.appendChild(panel);document.body.appendChild(overlay);
     let chosenCorpse=null,chosenCell=null;
     const confirm=panel.querySelector('[data-confirm]');
@@ -2003,8 +2003,8 @@ function applyBleedToUnit(target,sourceName=""){
 }
 function getBleedTurnsText(u){
   const timed=Math.max(0,Number(u?.bleedTurnsRemaining||0));
-  if(timed>0)return ` durante ${timed} ciclo${timed===1?"":"s"} táctico${timed===1?"":"s"}`;
-  return u?.leader?" durante 2 ciclos tácticos":" hasta que sea curada o destruida";
+  if(timed>0)return ` durante ${timed*10} s`;
+  return u?.leader?" durante 20 s":" hasta que sea curada o destruida";
 }
 function hasBlessedArmorAbility(u){
   return !!u&&!!u.leader&&u.leaderType==="warrior"&&u.leaderAbility==="blessed_armor";

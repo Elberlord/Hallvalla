@@ -1,0 +1,108 @@
+HALLVALLA — TURNKEY / TURNPHASE EN EL RUNTIME CANÓNICO
+Documento técnico interno de compatibilidad
+Base revisada: v217
+
+IMPORTANTE — VISIBILIDAD
+`turnKey`, `turnPhase`, `RTC`, `TR`, `realtime` y la idea de "ciclo táctico" son vocabulario técnico interno.
+No deben mostrarse al jugador en HUD, tutoriales, textos de cartas, mensajes de combate ni logs visibles de producción.
+HallValla tiene un único estilo de combate y, para el jugador, simplemente es el combate normal.
+Estos nombres pueden aparecer en código, consola DEV y documentación técnica.
+
+1. `turnPhase`
+
+En el runtime actual, `turnPhase` NO representa Draw Phase, Main Phase, Action Phase, End Phase ni ninguna fase de un sistema por turnos.
+
+Su valor canónico es:
+
+    turnPhase: "realtime"
+
+Su función es actuar como sentinel de compatibilidad para que estructuras compartidas o estados antiguos reconozcan que la batalla usa el runtime continuo actual.
+
+Por tanto:
+- no decide quién juega;
+- no habilita ni bloquea acciones por turno;
+- no avanza fases;
+- no controla temporizadores de turno;
+- no debe volver a aceptar draw/main/action/last/end en batallas nuevas.
+
+En producción, la presentación asociada muestra simplemente "COMBATE".
+
+2. `turnKey`
+
+`turnKey` conserva un nombre histórico. Ya NO significa "clave del turno de un jugador".
+
+Ahora identifica una ventana interna periódica del motor continuo. El runtime puede generar claves del estilo:
+
+    RTC-1
+    RTC-2
+    RTC-3
+
+El jugador no necesita conocer estas claves ni la existencia de esa ventana interna.
+
+3. Usos actuales de `turnKey`
+
+A) Expiración de estados temporales
+Campos heredados como:
+
+    noMoveTurnKey
+    noAttackTurnKey
+    noDefTurnKey
+    noCounterTurnKey
+    noHealTurnKey
+    noReductionTurnKey
+    silencedTurnKey
+    fearTurnKey
+
+pueden comparar su valor con `publicState.turnKey` para determinar si un efecto temporal sigue vigente.
+
+B) Efectos de una sola activación por ventana
+Se usa para impedir múltiples activaciones indebidas dentro de la misma ventana interna, por ejemplo:
+
+    retreatStrapUsedTurnKey
+    withdrawalStirrupsUsedTurnKey
+    executionerMantleUsedTurnKey
+    skirmisherCloakUsedTurnKey
+    lightBardingUsedTurnKey
+    tannedHideHarnessUsedTurnKey
+    erictoUsedTurnKey
+
+C) Limpieza de estadísticas temporales
+Permite saber cuándo corresponde limpiar o renovar buffs/debuffs temporales sin introducir alternancia de jugadores.
+
+D) Identificación y deduplicación
+Participa en IDs de eventos, FX, maestría, invocaciones y otras claves para evitar procesar dos veces el mismo evento lógico.
+
+E) Compatibilidad
+Muchos campos persistentes terminan en `TurnKey`. Renombrarlos todos de golpe podría romper estados guardados, JSON, sincronización o código compartido. Por eso el nombre histórico se conserva mientras tenga consumidores reales.
+
+4. `currentPlayer`
+
+En el runtime continuo el valor canónico es:
+
+    currentPlayer: 0
+
+No existe un jugador "en turno". Las acciones dependen de MANÁ, cooldowns, estado de unidad, alcance, objetivo, bloqueos y temporizadores propios.
+
+5. Regla permanente de mantenimiento
+
+NO usar `turnKey` para alternar jugadores.
+NO usar `turnPhase` para restaurar fases.
+NO exponer `TR`, `RTC`, `turnKey`, `turnPhase` o "ciclo táctico" en la interfaz de producción.
+
+Si en el futuro se renombran internamente, opciones más claras serían:
+
+    tacticalCycleKey
+    combatWindowKey
+    runtimeMode
+
+pero únicamente mediante una migración controlada que preserve compatibilidad con los campos `*TurnKey` existentes.
+
+6. Resumen
+
+`turnPhase = "realtime"`
+    Sentinel interno de compatibilidad. No representa fases.
+
+`turnKey = "RTC-N"`
+    Identificador interno periódico usado para expiración, activaciones únicas, limpieza y deduplicación.
+
+Ambos permanecen por utilidad técnica y compatibilidad. Ninguno debe formar parte del lenguaje que ve el jugador.

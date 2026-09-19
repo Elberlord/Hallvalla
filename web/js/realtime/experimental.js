@@ -413,7 +413,7 @@ function hallvallaRtUpdateUi(){
       const honor=Math.max(0,Number(privateState?.honor||0));
       const max=Math.max(0,Number(privateState?.maxHonor||HALLVALLA_RT_CFG.initialMana));
       const remaining=(privateState?.hand||[]).length;
-      node.textContent=`TR · MANÁ ${honor}/${max} · Arsenal ${remaining} · recarga 1/${HALLVALLA_RT_CFG.resourceEveryMs/1000}s · orbe +1 capacidad/${HALLVALLA_RT_CFG.manaOrbEveryMs/1000}s`;
+      node.textContent=`MANÁ ${honor}/${max} · Arsenal ${remaining} · recarga 1/${HALLVALLA_RT_CFG.resourceEveryMs/1000}s · orbe +1 capacidad/${HALLVALLA_RT_CFG.manaOrbEveryMs/1000}s`;
     }
   }
   if(active)hallvallaRtRenderManaOrbs();
@@ -783,7 +783,7 @@ function hallvallaRtCastUnitCore({owner,card,aiState=null,preferredCell=null,sou
     publicPatch={...publicPatch,[`playerStats/${ownerNum}`]:{...(publicState?.playerStats?.[ownerNum]||{}),honor:nextMana,maxHonor:Math.max(HALLVALLA_RT_CFG.initialMana,Number(privateState?.maxHonor||HALLVALLA_RT_CFG.initialMana)),deck:(privateState?.deck||[]).length,hand:nextHand.length},log:[`J${ownerNum} invoca ${liveCard.name} por ${paidCostText}.`,...extraLogs,...(publicState?.log||[])].filter(Boolean).slice(0,18)};
   }else{
     const nextAi={...(aiState||{}),hand:nextHand,honor:nextMana,maxHonor:Math.max(HALLVALLA_RT_CFG.initialMana,Number(aiState?.maxHonor||HALLVALLA_RT_CFG.initialMana))};
-    publicPatch={...publicPatch,adventureAiState:nextAi,[`playerStats/${ownerNum}`]:{...(publicState?.playerStats?.[ownerNum]||{}),honor:nextMana,maxHonor:nextAi.maxHonor,deck:(nextAi.deck||[]).length,hand:nextHand.length},log:[`J${ownerNum} invoca ${liveCard.name} por ${cost} ${getResourceLabel(ownerNum)} (TR).`,...extraLogs,...(publicState?.log||[])].filter(Boolean).slice(0,18)};
+    publicPatch={...publicPatch,adventureAiState:nextAi,[`playerStats/${ownerNum}`]:{...(publicState?.playerStats?.[ownerNum]||{}),honor:nextMana,maxHonor:nextAi.maxHonor,deck:(nextAi.deck||[]).length,hand:nextHand.length},log:[`J${ownerNum} invoca ${liveCard.name} por ${cost} ${getResourceLabel(ownerNum)}.`,...extraLogs,...(publicState?.log||[])].filter(Boolean).slice(0,18)};
   }
 
   if(isPlayer)hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"commit",cell,cost,manaBefore:mana,manaAfter:nextMana,handBefore:hand.length,handAfter:nextHand.length};
@@ -1628,7 +1628,7 @@ async function hallvallaRtAutoAcolyte(caster,now){
   const serviceGain=Math.max(0,Math.floor(Number(result.serviceGain||1))),beforePoints=typeof getUnitServicePoints==="function"?getUnitServicePoints(caster):0,afterPoints=beforePoints+serviceGain;
   if(serviceGain>0&&typeof applyUnitServicePointsToUnits==="function")result.units=applyUnitServicePointsToUnits(result.units,caster,{key:getUnitMasteryKey(caster),name:caster.name,beforePoints,afterPoints,gain:serviceGain,unlockedPurification:beforePoints<50&&afterPoints>=50,unlockedResurrection:beforePoints<100&&afterPoints>=100});
   hallvallaRtState.supportAt.set(caster.id,now);
-  await hallvallaRtSpendOwnerMana(caster.owner,result.honorCost||0,{units:result.units,erictoGraveyard:result.erictoGraveyard||grave,battleFxEvent:result.battleFxEvent||null,statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,log:[`${result.log} (TR automático)`,...(publicState?.log||[])].slice(0,18)});
+  await hallvallaRtSpendOwnerMana(caster.owner,result.honorCost||0,{units:result.units,erictoGraveyard:result.erictoGraveyard||grave,battleFxEvent:result.battleFxEvent||null,statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,log:[`${result.log}`,...(publicState?.log||[])].slice(0,18)});
   if(serviceGain>0&&Number(caster.owner)===Number(myPlayer)&&typeof registerLocalUnitServicePoint==="function")registerLocalUnitServicePoint(caster,serviceGain);
   return true;
 }
@@ -1639,7 +1639,7 @@ async function hallvallaRtAutoEricto(caster,now){
   const choice=typeof getBestErictoReanimationChoice==="function"?getBestErictoReanimationChoice(live,units,grave):null;if(!choice)return false;
   const result=applyUnitEffectState(live,choice,units);if(!result?.success)return false;
   hallvallaRtState.supportAt.set(caster.id,now);
-  await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||grave,battleFxEvent:result.battleFxEvent||null,statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,log:[`${result.log} (TR automático)`,...(publicState?.log||[])].slice(0,18)});
+  await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||grave,battleFxEvent:result.battleFxEvent||null,statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,log:[`${result.log}`,...(publicState?.log||[])].slice(0,18)});
   const revived=(result.units||[]).filter(u=>u?.reanimated&&u.reanimatedByErictoId===caster.id).sort((a,b)=>Number(b.rtSummonedAt||0)-Number(a.rtSummonedAt||0))[0];if(revived)hallvallaRtRememberSummon(caster.owner,revived);
   return true;
 }
@@ -1652,7 +1652,7 @@ async function hallvallaRtAutoGenericEffect(caster,now){
   const choice=mode==="self"?live:(typeof chooseSmartEffectTarget==="function"?chooseSmartEffectTarget(live,units):null);if(!choice)return false;
   const result=applyUnitEffectState(live,choice,units);if(!result?.success)return false;
   hallvallaRtState.supportAt.set(`fx:${caster.id}`,now);
-  await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],battleFxEvent:result.battleFxEvent||null,statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,stealthAreaDamageEvent:result.stealthAreaDamageEvent||null,stealthDetectionEvent:result.stealthDetectionEvent||null,log:[`${result.log} (TR automático)`,...(publicState?.log||[])].slice(0,18)});
+  await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||publicState?.erictoGraveyard||[],battleFxEvent:result.battleFxEvent||null,statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,stealthAreaDamageEvent:result.stealthAreaDamageEvent||null,stealthDetectionEvent:result.stealthDetectionEvent||null,log:[`${result.log}`,...(publicState?.log||[])].slice(0,18)});
   const beforeIds=new Set(units.map(u=>u.id));for(const u of (result.units||[])){if(!beforeIds.has(u.id)&&u.owner===caster.owner)hallvallaRtRememberSummon(caster.owner,u);}
   return true;
 }
@@ -1897,7 +1897,7 @@ function hallvallaRtSyncPreparedBattle(){
     hallvallaRtPrimePreparedState();
     hallvallaRtState.timer=battleSetInterval(()=>{void hallvallaRtLoop();},HALLVALLA_RT_CFG.loopMs,"realtime-experimental-loop");
     hallvallaRtState.motionTimer=battleSetInterval(()=>{void hallvallaRtMotionLoop();},HALLVALLA_RT_CFG.motionLoopMs||HALLVALLA_RT_CFG.loopMs,"realtime-experimental-motion-loop");
-    setHint("TR: 2 MANÁ inicial · recarga 1 cada 9 s · orbe +1 capacidad cada 14 s · LB recoge · RB escudo 3 s.");
+    setHint("2 MANÁ inicial · recarga 1 cada 9 s · orbe +1 capacidad cada 14 s · LB recoge · RB escudo 3 s.");
     void hallvallaRtLoop();
     void hallvallaRtMotionLoop();
   }else{

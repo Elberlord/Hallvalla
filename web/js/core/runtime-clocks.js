@@ -290,7 +290,7 @@ async function ensureFirebaseAuthReady(surface="online"){
 function getTurnPhase(){return "realtime"}
 function isHandPlayPhase(){return false}
 function isActionPhase(){return false}
-function turnPhaseLabel(){return "COMBATE TR"}
+function turnPhaseLabel(){return "COMBATE"}
 function shouldAutoOpenHand(){return false}
 function isOnlineOpponentHandReview(){return false}
 function isMobileBattleViewport(){return typeof window!=="undefined"&&window.matchMedia&&window.matchMedia("(max-width:980px), (pointer:coarse)").matches}
