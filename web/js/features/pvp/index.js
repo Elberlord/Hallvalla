@@ -325,6 +325,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   const RANDOM_QUEUE_STALE_MS=120000;
   let randomMatchSearching=false;
   let randomMatchTimer=null;
+  let randomSearchStartedAt=0;
   let randomOwnCreatedAt=0;
   let randomQueueDisconnect=null;
   let randomLeagueSnapshot=null;
@@ -538,10 +539,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const safe=showcase&&typeof showcase==="object"?showcase:{};
     const leaderType=String(safe.leaderType||"").trim();
     const leaderId=side==="opponent"?"matchmakingOpponentLeader":"matchmakingPlayerLeader";
+    const avatarId=side==="opponent"?"matchmakingOpponentAvatar":"matchmakingPlayerAvatar";
     const leader=$(leaderId);
+    const avatar=$(avatarId);
     let leaderSrc="";
     try{leaderSrc=String(LEADER_PORTRAITS?.[leaderType]||"");}catch(_){ }
     applyShowcaseImage(leader,[leaderSrc]);
+    applyShowcaseImage(avatar,[leaderSrc]);
     const principalKeys=normalizeFirebaseArray(safe.principalKeys).map(v=>String(v||"").trim()).filter(Boolean).slice(0,3);
     for(let i=0;i<3;i++){
       const img=$(side==="opponent"?`matchmakingOpponentPrincipal${i+1}`:`matchmakingPlayerPrincipal${i+1}`);
@@ -559,8 +563,12 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const otherUid=String(room?.playerSlots?.[`player${otherRole}Uid`]||"");
     const found=!!otherUid;
     renderShowcaseSide("opponent",found?opponentShowcase:null);
-    hide("matchmakingSearchingState",found);
-    hide("matchmakingVsArt",!found);
+    const searchState=$("matchmakingSearchingState");
+    if(searchState){
+      searchState.classList.toggle("is-rival-found",found);
+      searchState.classList.remove("hidden");
+    }
+    hide("matchmakingVsArt",true);
   }
   function scheduleRandomAutoReady(room,code){
     if(onlineFlowMode!=="random"||String(room?.entryMode||"")!=="random")return;
@@ -994,7 +1002,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     try{localStorage.setItem(recentKey,JSON.stringify([...recent,picked.id].slice(-5)));}catch(_){ }
     return picked;
   }
-  function getPvpBotPublicName(profile){return `${String(profile?.name||"Guerrero")} · BOT`;}
+  function getPvpBotPublicName(profile){return String(profile?.name||"Guerrero");}
   function getPvpBotUid(profile,leagueKey){return `BOT_PVP_${String(leagueKey||"stone").toUpperCase()}_${String(profile?.id||"bot").toUpperCase()}`.replace(/[^A-Z0-9_:-]/g,"_");}
   function auditPvpBotDefinitions(){
     const errors=[];
@@ -2330,6 +2338,10 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     renderRules({settings:buildDefaultRules(),phase:"waiting"}); syncLocalButtons();
   }
 
+  function setMatchmakingSearchText(message="BUSCANDO RIVAL..."){
+    const strong=$("matchmakingSearchingState")?.querySelector("strong");
+    if(strong)strong.textContent=String(message||"BUSCANDO RIVAL...");
+  }
   function clearPvpBotFallbackTimer(){
     if(pvpBotFallbackTimer){clearTimeout(pvpBotFallbackTimer);pvpBotFallbackTimer=null;}
   }
@@ -2337,21 +2349,26 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     if(randomMatchTimer){clearInterval(randomMatchTimer);randomMatchTimer=null;}
     clearPvpBotFallbackTimer();
   }
-  function schedulePvpBotFallback(delay=PVP_BOT_FALLBACK_MS){
+  function schedulePvpBotFallback(delay=null){
     clearPvpBotFallbackTimer();
-    if(!randomMatchSearching||activeRole!==1||!activeCode)return;
-    const code=String(activeCode);
+    if(!randomMatchSearching)return;
+    const elapsed=randomSearchStartedAt?Date.now()-randomSearchStartedAt:0;
+    const wait=delay==null?Math.max(250,PVP_BOT_FALLBACK_MS-elapsed):Math.max(250,Number(delay)||PVP_BOT_FALLBACK_RETRY_MS);
     pvpBotFallbackTimer=setTimeout(async()=>{
       pvpBotFallbackTimer=null;
-      if(!randomMatchSearching||activeRole!==1||String(activeCode)!==code)return;
+      if(!randomMatchSearching)return;
+      if(activeRole!==1||!activeCode){schedulePvpBotFallback(600);return;}
+      setMatchmakingSearchText("BUSCANDO RIVAL...");
       pvpBotFallbackAttempts++;
       const started=await startPvpBotFallback({force:true});
       if(started)return;
-      if(randomMatchSearching&&activeRole===1&&String(activeCode)===code&&pvpBotFallbackAttempts<PVP_BOT_FALLBACK_MAX_ATTEMPTS){
-        setText("pvpRoomMessage","Preparando rival BOT · intento "+String(pvpBotFallbackAttempts+1)+"/"+String(PVP_BOT_FALLBACK_MAX_ATTEMPTS)+"...");
+      if(randomMatchSearching&&pvpBotFallbackAttempts<PVP_BOT_FALLBACK_MAX_ATTEMPTS){
+        setMatchmakingSearchText("BUSCANDO RIVAL...");
         schedulePvpBotFallback(PVP_BOT_FALLBACK_RETRY_MS);
+      }else if(randomMatchSearching){
+        setMatchmakingSearchText("NO SE ENCONTRÓ RIVAL · REINTENTA");
       }
-    },Math.max(250,Number(delay)||PVP_BOT_FALLBACK_MS));
+    },wait);
   }
   async function removeOwnRandomQueue(){
     const myUid=String(auth?.currentUser?.uid||activeOwnerUid||"");
@@ -2362,8 +2379,10 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }
   async function stopRandomMatchSearch({removeQueueEntry=true}={}){
     randomMatchSearching=false;
+    randomSearchStartedAt=0;
     randomOwnCreatedAt=0;
     pvpBotFallbackAttempts=0;
+    setMatchmakingSearchText();
     clearRandomMatchTimer();
     if(removeQueueEntry)await removeOwnRandomQueue();
     randomLeagueSnapshot=null;
@@ -2443,7 +2462,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     await releaseRandomCandidate(ownerUid,myUid);
     if(randomMatchSearching&&!activeCode){
       const created=await createMinimalPublicRoom();
-      if(created)await publishOwnRandomQueue();
+      if(created){await publishOwnRandomQueue();schedulePvpBotFallback();}
     }
     return false;
   }
@@ -2451,69 +2470,67 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     if(pvpBotFallbackInFlight||!randomMatchSearching||activeRole!==1||!activeCode)return false;
     if(busy&&!force)return false;
     const myUid=String(auth?.currentUser?.uid||activeOwnerUid||"");
-    const code=normalizeCode(activeCode||"");
-    if(!myUid||code.length!==8)return false;
+    const waitingCode=normalizeCode(activeCode||"");
+    if(!myUid||waitingCode.length!==8)return false;
     const league=randomLeagueSnapshot||await resolveMyRandomLeague();
     const leagueKey=String(league?.key||"stone");
     const ownQueueRef=ref(db,`${RANDOM_QUEUE_PATH}/${myUid}`);
     pvpBotFallbackInFlight=true;
     let selfClaimed=false;
-    let botTransitionStarted=false;
+    let botCode="";
+    let botPublicRef=null;
+    let botPrivateRef=null;
     try{
-      const existingOwnSnap=await withTimeout(get(ownQueueRef),`Validar cola propia antes del BOT ${code}`,5000);
+      const existingOwnSnap=await withTimeout(get(ownQueueRef),`Validar cola propia antes del BOT ${waitingCode}`,5000);
       const existingOwn=existingOwnSnap.exists()?(existingOwnSnap.val()||{}):null;
       if(existingOwn&&String(existingOwn.claimedBy||"")&&String(existingOwn.claimedBy||"")!==myUid){
-        setText("pvpRoomMessage","Rival humano detectado · confirmando emparejamiento...");
+        setMatchmakingSearchText("RIVAL ENCONTRADO...");
         return false;
       }
       if(!existingOwn||String(existingOwn.uid||"")!==myUid||String(existingOwn.leagueKey||"")!==leagueKey){
-        const repairedCreatedAt=randomOwnCreatedAt||Date.now()-PVP_BOT_FALLBACK_MS;
         await withTimeout(set(ownQueueRef,{
-          uid:myUid,
-          code,
-          createdAt:repairedCreatedAt,
-          name:getProfileNameSafe(1),
-          level:getProfileLevelSafe(),
-          leagueKey,
-          leagueName:String(league?.name||"Piedra"),
-          pvpPoints:Number(league?.points||0),
-          claimedBy:"",
-          claimedAt:0
-        }),`Reparar cola propia antes del BOT ${code}`,5000);
+          uid:myUid,code:waitingCode,createdAt:randomOwnCreatedAt||Date.now(),
+          name:getProfileNameSafe(1),level:getProfileLevelSafe(),leagueKey,
+          leagueName:String(league?.name||"Piedra"),pvpPoints:Number(league?.points||0),claimedBy:"",claimedAt:0
+        }),`Reparar cola propia antes del BOT ${waitingCode}`,5000);
       }else if(String(existingOwn.claimedBy||"")===myUid&&Date.now()-Number(existingOwn.claimedAt||0)>8000){
-        await withTimeout(update(ownQueueRef,{claimedBy:"",claimedAt:0}),`Liberar claim BOT obsoleto ${code}`,4000);
+        await withTimeout(update(ownQueueRef,{claimedBy:"",claimedAt:0}),`Liberar claim BOT obsoleto ${waitingCode}`,4000);
       }
 
-      // Bloquea nuestra propia entrada antes de crear el BOT. Si otro humano ya
-      // la reclamó, el BOT no entra y se conserva la prioridad del jugador real.
       const claimAt=Date.now();
       const claim=await withTimeout(runTransaction(ownQueueRef,current=>{
         if(!current||String(current.uid||"")!==myUid)return;
         if(String(current.leagueKey||"")!==leagueKey)return;
         if(String(current.claimedBy||""))return;
         return Object.assign({},current,{claimedBy:myUid,claimedAt:claimAt});
-      }),`Reservar fallback BOT ${code}`,6000);
+      }),`Reservar fallback BOT ${waitingCode}`,6000);
       if(!claim?.committed)return false;
       selfClaimed=true;
 
-      const publicRef=ref(db,`games/${code}/public`);
-      const waitingSnap=await withTimeout(get(publicRef),`Confirmar sala antes del BOT ${code}`,5000);
+      const waitingPublicRef=ref(db,`games/${waitingCode}/public`);
+      const waitingSnap=await withTimeout(get(waitingPublicRef),`Confirmar sala antes del BOT ${waitingCode}`,5000);
       if(!waitingSnap.exists())return false;
       const waiting=waitingSnap.val()||{};
       if(String(waiting?.playerSlots?.player1Uid||"")!==myUid||String(waiting?.phase||"")!=="waiting"||String(waiting?.playerSlots?.player2Uid||""))return false;
 
       if(typeof globalThis.hvEnsureFeature==="function")await globalThis.hvEnsureFeature("pve");
-      const botAiTurn=(typeof adventureEnemyTurn==="function")?adventureEnemyTurn:globalThis.adventureEnemyTurn;
       const botMakeLeader=(typeof makeLeader==="function")?makeLeader:globalThis.makeLeader;
-      if(typeof botAiTurn!=="function")throw new Error("La IA táctica no está disponible para el BOT PvP.");
-      if(typeof botMakeLeader!=="function")throw new Error("El motor TR de HallValla no está listo para crear el BOT PvP.");
+      if(typeof botMakeLeader!=="function")throw new Error("El motor de HallValla no está listo para crear el BOT PvP.");
 
-      const ownPrivateRef=ref(db,`games/${code}/private/player1`);
-      const ownSnap=await withTimeout(get(ownPrivateRef),`Leer mazo privado antes del BOT ${code}`,5000);
+      const waitingPrivateRef=ref(db,`games/${waitingCode}/private/player1`);
+      const ownSnap=await withTimeout(get(waitingPrivateRef),`Leer mazo privado antes del BOT ${waitingCode}`,5000);
       if(!ownSnap.exists())throw new Error("No se encontró el mazo privado del jugador.");
       const ownPayload=ownSnap.val()||{};
       if(!validateOwnPrivateSnapshot(ownPayload,myUid,1))throw new Error("El mazo privado del jugador dejó de ser válido.");
-      const humanBuilt=buildRealPrivateState6e(ownPayload,code,1);
+
+      for(let attempt=0;attempt<4;attempt++){
+        const candidate=makeCode(8);
+        const snap=await withTimeout(get(ref(db,`games/${candidate}/public`)),`Validar código BOT ${candidate}`,4000);
+        if(!snap.exists()){botCode=candidate;break;}
+      }
+      if(botCode.length!==8)throw new Error("No se pudo reservar un código para el BOT PvP.");
+
+      const humanBuilt=buildRealPrivateState6e(ownPayload,botCode,1);
       const human=humanBuilt.enginePrivate;
       const botLevel=Math.max(1,Math.min(15,Math.floor(Number(human.leaderLevel)||1)));
       const profile=selectPvpBotProfile(botLevel,leagueKey);
@@ -2522,47 +2539,34 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const botUid=getPvpBotUid(profile,leagueKey);
       const botName=getPvpBotPublicName(profile);
       const botAbility=botLevel>=5?String((typeof getLeaderDefaultLevel5Ability==="function"&&getLeaderDefaultLevel5Ability(profile.leaderType))||""):"";
-
       const allBotCards=botDeck.keys.map(key=>buildRealCard6e(key,2,profile.leaderType));
       const botArsenal=[...allBotCards].sort((a,b)=>(effectiveCardCost(a,2)-effectiveCardCost(b,2))||String(a?.name||"").localeCompare(String(b?.name||"")));
       const botDraw={deck:[],hand:botArsenal};
-      const humanPrincipalKeys=[];
       const rows=typeof ROWS!=="undefined"?Number(ROWS):7;
       const cols=typeof COLS!=="undefined"?Number(COLS):5;
       let units=[
         botMakeLeader(1,Math.floor(cols/2),rows-1,human.leaderType,human.leaderLevel,human.leaderAbility),
         botMakeLeader(2,Math.floor(cols/2),0,profile.leaderType,botLevel,botAbility)
       ];
-      let entryEffects={units,logs:[],statusFxEvent:null,floatFxEvent:null};
-      units=entryEffects.units||units;
       const p1Leader=units.find(u=>u?.owner===1&&u?.leader);
       const p2Leader=units.find(u=>u?.owner===2&&u?.leader);
-      const startingRole=Math.random()<0.5?1:2;
       const duelLimit=typeof DUEL_TIME_LIMIT_MS!=="undefined"?Number(DUEL_TIME_LIMIT_MS):600000;
       const clockVersion=typeof CLOCK_RULESET_VERSION!=="undefined"?CLOCK_RULESET_VERSION:1;
       const rarityCap=pvpBotRarityLabel(botDeck.policy.maxRarity);
-      const publicShowcase={
-        1:buildPublicShowcase(ownPayload),
-        2:{leaderType:profile.leaderType,principalKeys:[]}
-      };
+      const publicShowcase={1:buildPublicShowcase(ownPayload),2:{leaderType:profile.leaderType,principalKeys:[]}};
       const pub={
-        schema:"hallvalla-pvp-bot-v1",
-        code,boardRows:rows,boardCols:cols,mode:"adventure",entryMode:"random",
+        schema:"hallvalla-pvp-bot-v1",code:botCode,boardRows:rows,boardCols:cols,mode:"adventure",entryMode:"random",
         pvpBotMatch:true,pvpBotProfileId:profile.id,pvpBotLevel:botLevel,pvpBotMasteryRank:botLevel,pvpBotLeagueKey:leagueKey,pvpBotLeagueName:String(league?.name||"Piedra"),
         pvpBotStyle:String(profile.style||"balanced"),pvpBotRarityCap:rarityCap,pvpBotRarityCounts:botDeck.rarityCounts,
-        adventureBattleTitle:`PvP · Liga ${String(league?.name||"Piedra")}`,
-        adventureEnemyName:botName,
+        adventureBattleTitle:`PvP · Liga ${String(league?.name||"Piedra")}`,adventureEnemyName:botName,
         adventureAdaptiveCampaign:false,adventureAdaptiveLearning:false,adventureAdaptiveMage:false,
         adventureAiLevel:typeof ADVENTURE_AI_BEST_SKILL_LEVEL!=="undefined"?ADVENTURE_AI_BEST_SKILL_LEVEL:5,
         adventureAiDrawBonus:0,adventureAiHonorBonus:0,
-        adventureAiStyle:`BOT PvP · ${String(profile.style||"balanced")} · Liga ${String(league?.name||"Piedra")}`,
-        adventureEnemyUnitMasteryRank:botLevel,
-        realtimeExperimental:true,
-        adventurePrincipalKeys:{1:[],2:[]},
-        principalSlots:{1:0,2:0},
-        pvpPrincipalKeys:{1:[],2:[]},
+        adventureAiStyle:`Rival PvP · ${String(profile.style||"balanced")} · Liga ${String(league?.name||"Piedra")}`,
+        adventureEnemyUnitMasteryRank:botLevel,realtimeExperimental:true,
+        adventurePrincipalKeys:{1:[],2:[]},principalSlots:{1:0,2:0},pvpPrincipalKeys:{1:[],2:[]},
         adventureAiState:{deck:[],hand:botDraw.hand,honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),lastTurnStarted:"RT",skipFirstTurnDraw:true,principalSlots:0,principalKeys:[],principalKey:""},
-        createdAt:Date.now(),currentPlayer:0,turn:1,phase:"active",turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:Date.now(),
+        createdAt:Date.now(),currentPlayer:0,turn:1,phase:"active",turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:serverTimestamp(),
         clockRulesetVersion:clockVersion,playerClockMs:{1:duelLimit,2:duelLimit},
         playerSlots:{player1Uid:myUid,player2Uid:botUid},
         playerNames:{1:getProfileNameSafe(1),2:botName},playerLevels:{1:getProfileLevelSafe(),2:botLevel},
@@ -2573,96 +2577,70 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
           1:{hp:Number(p1Leader?.hp||0),honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),deck:0,hand:human.hand.length,hasHiddenUnits:countHiddenKeys6e([...normalizeFirebaseArray(humanBuilt.combat6c?.deckKeys),...normalizeFirebaseArray(humanBuilt.combat6c?.handKeys)])>0},
           2:{hp:Number(p2Leader?.hp||0),honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),deck:0,hand:botDraw.hand.length,hasHiddenUnits:countHiddenKeys6e(botDraw.hand.map(card=>card?.key||""))>0}
         },
-        erictoGraveyard:[],moralePressure:{1:0,2:0},units,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,
-        battleEnded:false,winner:0,loser:0,
-        log:[
-          `PvP de Liga ${String(league?.name||"Piedra")}: ${botName} cubre la plaza mientras no hay otro jugador disponible.`,
-          `${botName}: ${profile.leaderType} Nivel ${pvpBotRomanLevel(botLevel)} · maestría ${pvpBotRomanLevel(botLevel)} · ${botDeck.keys.length} cartas · techo ${rarityCap}.`,
-          `El resultado cuenta para tus puntos PvP; el BOT no ocupa puestos del ranking.`,
-          ...(entryEffects.logs||[])
-        ].slice(0,18)
+        erictoGraveyard:[],moralePressure:{1:0,2:0},units,battleEnded:false,winner:0,loser:0,
+        log:[`PvP de Liga ${String(league?.name||"Piedra")}: duelo iniciado contra ${botName}.`,`El resultado cuenta para tus puntos PvP.`].slice(0,18)
       };
-      const privatePatch={
+      const privatePayload={...ownPayload,
         combat6c:humanBuilt.combat6c,
         engine6e:{schema:"hallvalla-pvp-bot-private-v1",ready:true,preparedAt:Date.now()},
         leaderType:human.leaderType,leaderLevel:human.leaderLevel,leaderAbility:human.leaderAbility,
         deck:[],hand:human.hand,honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),lastTurnStarted:"RT",skipFirstTurnDraw:true,
-        principalSlots:0,principalKeys:[],principalKey:""
+        principalSlots:0,principalKeys:[],principalKey:"",ownerUid:myUid
       };
 
-      // Última comprobación de carrera: un jugador humano siempre tiene prioridad.
-      if(!randomMatchSearching||activeRole!==1||activeCode!==code)return false;
-      const finalWaitingSnap=await withTimeout(get(publicRef),`Revalidar plaza humana antes del BOT ${code}`,4000);
+      const finalWaitingSnap=await withTimeout(get(waitingPublicRef),`Revalidar plaza humana antes del BOT ${waitingCode}`,4000);
       const finalWaiting=finalWaitingSnap.exists()?(finalWaitingSnap.val()||{}):null;
       if(!finalWaiting||String(finalWaiting?.playerSlots?.player1Uid||"")!==myUid||String(finalWaiting?.phase||"")!=="waiting"||String(finalWaiting?.playerSlots?.player2Uid||""))return false;
 
-      // A partir de aquí ya no permitimos que otro humano tome la sala antigua.
-      botTransitionStarted=true;
+      botPublicRef=ref(db,`games/${botCode}/public`);
+      botPrivateRef=ref(db,`games/${botCode}/private/player1`);
+      setMatchmakingSearchText("BUSCANDO RIVAL...");
+      await withTimeout(set(botPublicRef,pub),`Crear duelo BOT PvP ${botCode}`,7000);
+      await withTimeout(set(botPrivateRef,privatePayload),`Preparar privado BOT PvP ${botCode}`,6000);
+      const confirm=await withTimeout(get(botPublicRef),`Confirmar duelo BOT PvP ${botCode}`,5000);
+      if(!confirm.exists()||confirm.val()?.pvpBotMatch!==true||String(confirm.val()?.playerSlots?.player2Uid||"")!==botUid)throw new Error("Firebase no confirmó el duelo contra BOT.");
+      setMatchmakingSearchText("RIVAL ENCONTRADO");
+
       clearRandomMatchTimer();
       randomMatchSearching=false;
+      pvpBotFallbackAttempts=0;
       try{await randomQueueDisconnect?.cancel?.();}catch(_){ }
       randomQueueDisconnect=null;
-      await withTimeout(remove(ownQueueRef),`Cerrar cola antes del BOT ${code}`,4000);
-      randomOwnCreatedAt=0;
+      try{await remove(ownQueueRef);}catch(_){ }
       detachRoomListener();detachOwnPrivateListener();
-      await withTimeout(remove(publicRef),`Cerrar sala de espera antes del BOT ${code}`,5000);
+      try{await remove(waitingPublicRef);}catch(_){ }
+      try{await removeOwnPrivateBranch(waitingCode,1,myUid);}catch(_){ }
 
-      renderRandomMatchmakingUi({playerShowcase:publicShowcase,playerSlots:pub.playerSlots});
-      setText("pvpRoomMessage",`${botName} encontrado · Liga ${String(league?.name||"Piedra")} · líder Nivel ${pvpBotRomanLevel(botLevel)} · maestría ${pvpBotRomanLevel(botLevel)}.`);
-      if(typeof globalThis.showHallvallaPreBattleVs==="function"){
-        await globalThis.showHallvallaPreBattleVs(pub,{key:`pvpbot:${code}`,leftOwner:1,rightOwner:2});
-      }
-
-      const networkPub={...pub,turnStartedAt:serverTimestamp()};
-      await withTimeout(set(publicRef,networkPub),`Crear duelo BOT PvP ${code}`,7000);
-      await withTimeout(update(ownPrivateRef,privatePatch),`Preparar privado humano contra BOT ${code}`,6000);
-      const confirm=await withTimeout(get(publicRef),`Confirmar duelo BOT PvP ${code}`,5000);
-      if(!confirm.exists()||confirm.val()?.pvpBotMatch!==true||String(confirm.val()?.playerSlots?.player2Uid||"")!==botUid)throw new Error("Firebase no confirmó el duelo contra BOT.");
-
+      activeCode=botCode;activeOwnerUid=myUid;activeRole=1;
       activePvpBotProfile={...profile,leagueKey,leagueName:String(league?.name||"Piedra"),botUid,rarityCap};
-      roomCache=confirm.val()||networkPub;
+      roomCache=confirm.val()||pub;
       randomLeagueSnapshot=league;
-      globalThis.hideHallvallaPreBattleVs?.();
+      renderRandomMatchmakingUi({playerShowcase:publicShowcase,playerSlots:pub.playerSlots});
       $("onlineLobby")?.classList.add("hidden");
       $("mainMenu")?.classList.add("hidden");
       if(typeof enterGame!=="function")throw new Error("El motor real no expuso enterGame().");
-      enterGame(code,1);
-      mark(`BOT PvP listo · ${botName} · Liga ${String(league?.name||"Piedra")} · ${profile.leaderType} XV · ${rarityCap}.`);
+      enterGame(botCode,1);
+      mark(`Rival encontrado · ${botName} · Liga ${String(league?.name||"Piedra")}.`);
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Fallback BOT PvP falló:`,error);
-      setText("pvpRoomMessage","Rival BOT no inició: "+String(error?.message||error)+". Reintentando...");
-      globalThis.hideHallvallaPreBattleVs?.();
-      // Si todavía estamos en la sala de espera, liberamos el auto-claim para
-      // que el matchmaking humano pueda continuar en el siguiente escaneo.
+      setMatchmakingSearchText("BUSCANDO RIVAL...");
+      setText("pvpRoomMessage","No se pudo preparar el rival. Reintentando...");
+      if(botPrivateRef){try{await remove(botPrivateRef);}catch(_){ }}
+      if(botPublicRef){try{await remove(botPublicRef);}catch(_){ }}
       if(selfClaimed&&randomMatchSearching){
         try{await runTransaction(ownQueueRef,current=>{
           if(!current||String(current.uid||"")!==myUid||String(current.claimedBy||"")!==myUid)return;
           return Object.assign({},current,{claimedBy:"",claimedAt:0});
         });}catch(_){ }
-      }else if(!randomMatchSearching){
-        try{await remove(ref(db,`games/${code}/public`));}catch(_){ }
-        try{await removeOwnPrivateBranch(code,1,myUid);}catch(_){ }
-        resetUi({resetJoin:false});
-        setOnlineFlowMode("random");
-        $("mainMenu")?.classList.add("hidden");
-        $("onlineLobby")?.classList.remove("hidden");
-        renderMatchmakingLeague(league);
       }
       mark(`No se pudo iniciar BOT PvP: ${error?.message||error}`);
       return false;
     }finally{
-      if(selfClaimed&&!botTransitionStarted&&randomMatchSearching){
-        try{await runTransaction(ownQueueRef,current=>{
-          if(!current||String(current.uid||"")!==myUid||String(current.claimedBy||"")!==myUid)return;
-          return Object.assign({},current,{claimedBy:"",claimedAt:0});
-        });}catch(_){ }
-      }
       pvpBotFallbackInFlight=false;
       syncLocalButtons();
     }
   }
-
   async function scanRandomQueue(){
     if(!randomMatchSearching||busy)return false;
     const myUid=String(auth?.currentUser?.uid||"");
@@ -2670,6 +2648,11 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     if(!randomLeagueSnapshot)randomLeagueSnapshot=await resolveMyRandomLeague();
     const myLeagueKey=String(randomLeagueSnapshot?.key||"stone");
     renderMatchmakingLeague(randomLeagueSnapshot);
+    const searchAge=randomSearchStartedAt?Date.now()-randomSearchStartedAt:0;
+    if(searchAge>=PVP_BOT_FALLBACK_MS&&activeRole===1&&activeCode){
+      setMatchmakingSearchText("BUSCANDO RIVAL...");
+      if(await startPvpBotFallback({force:true}))return true;
+    }
     let snap;
     try{snap=await get(ref(db,RANDOM_QUEUE_PATH));}catch(_){return false;}
     const all=snap.exists()?(snap.val()||{}):{};
@@ -2717,7 +2700,11 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     randomLeagueSnapshot=await resolveMyRandomLeague({force:true});
     renderMatchmakingLeague(randomLeagueSnapshot);
     renderRandomMatchmakingUi({playerShowcase:{1:buildPublicShowcase()},playerSlots:{player1Uid:String(auth?.currentUser?.uid||""),player2Uid:""}});
-    randomMatchSearching=true;syncLocalButtons();mark(`Buscando rival de Liga ${randomLeagueSnapshot.name}...`);
+    randomMatchSearching=true;
+    randomSearchStartedAt=Date.now();
+    pvpBotFallbackAttempts=0;
+    setMatchmakingSearchText("BUSCANDO RIVAL...");
+    syncLocalButtons();mark(`Buscando rival de Liga ${randomLeagueSnapshot.name}...`);
     try{
       if(await scanRandomQueue())return true;
       const created=await createMinimalPublicRoom();
@@ -2725,7 +2712,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       await publishOwnRandomQueue();
       pvpBotFallbackAttempts=0;
       schedulePvpBotFallback();
-      mark(`Buscando rival de Liga ${randomLeagueSnapshot?.name||"Piedra"}... sala preparada · BOT de respaldo en ${Math.round(PVP_BOT_FALLBACK_MS/1000)} s.`);
+      mark(`Buscando rival de Liga ${randomLeagueSnapshot?.name||"Piedra"}...`);
       randomMatchTimer=setInterval(()=>{void scanRandomQueue();},1800);
       void scanRandomQueue();
       return true;

@@ -22,15 +22,15 @@
 </script>
 <script>
   // v181: esta página ES el juego lógico. index.html es el shell físico.
-  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260919.195"});
+  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260919.198"});
   document.documentElement.dataset.hvDesignStage="1366x636";
 </script>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260919.195">
-<meta name="hallvalla-build" content="v8_MODULAR_20260919.195">
+<meta name="hallvalla-version" content="20260919.198">
+<meta name="hallvalla-build" content="v8_MODULAR_20260919.198">
 <meta name="hallvalla-build-name" content="Design Stage fijo 1366×636 · v192 arquitectura modular · canon v191 preservado">
-<link rel="stylesheet" href="styles.css?h=becd27e4d411"/>
+<link rel="stylesheet" href="styles.css?h=e5fa7b1db9ea"/>
 
 <link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.90">
 <link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.90">
@@ -580,9 +580,26 @@
       <div class="hv-match-principals hv-match-opponent-principals hidden" aria-hidden="true"></div>
     </div>
 
-    <div id="matchmakingSearchingState" class="hv-match-searching">
-      <span class="hv-match-search-spinner" aria-hidden="true"></span>
-      <strong>BUSCANDO RIVAL...</strong>
+    <div id="matchmakingSearchingState" class="hv-match-searching hv-match-avatar-search" aria-label="Buscando rival">
+      <strong class="hv-sr-only">BUSCANDO RIVAL...</strong>
+
+      <div class="hv-match-avatar-medallion hv-match-avatar-self" aria-hidden="true">
+        <span class="hv-match-avatar-glow"></span>
+        <img id="matchmakingPlayerAvatar" class="hv-match-avatar-img" alt="">
+      </div>
+
+      <div class="hv-match-search-core" aria-hidden="true">
+        <span class="hv-match-search-ring hv-ring-one"></span>
+        <span class="hv-match-search-ring hv-ring-two"></span>
+        <span class="hv-match-search-emblem">VS</span>
+      </div>
+
+      <div class="hv-match-avatar-medallion hv-match-avatar-rival" aria-hidden="true">
+        <span class="hv-match-avatar-glow"></span>
+        <img id="matchmakingOpponentAvatar" class="hv-match-avatar-img" alt="">
+        <span class="hv-match-avatar-question">?</span>
+      </div>
+
       <span id="matchmakingLeagueLabel" class="hv-match-league-label">LIGA PIEDRA · 0 PTS</span>
     </div>
     <img id="matchmakingVsArt" class="hv-match-vs hidden" data-hv-src="assets/ui/pvp_online/matchmaking_vs.webp" data-hv-asset-group="pvp-online" decoding="async" alt="VS">
@@ -1521,6 +1538,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=3671d82b4102"></script>
+<script type="module" src="js/bootstrap-loader.js?h=262c499157a2"></script>
 </body>
 </html>

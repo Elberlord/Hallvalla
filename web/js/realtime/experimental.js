@@ -389,12 +389,10 @@ globalThis.hallvallaRtSuppressHandFocus=hallvallaRtSuppressHandFocus;
 globalThis.hallvallaRtReleaseHandFocus=hallvallaRtReleaseHandFocus;
 
 function hallvallaRtEnsureStatusNode(){
-  if(hallvallaRtState.statusNode?.isConnected)return hallvallaRtState.statusNode;
-  const shell=document.querySelector("#gameShell .battle")||document.getElementById("gameShell");
-  if(!shell)return null;
-  let node=document.getElementById("hallvallaRtStatus");
-  if(!node){node=document.createElement("div");node.id="hallvallaRtStatus";node.className="hallvalla-rt-status";shell.appendChild(node);}
-  hallvallaRtState.statusNode=node;return node;
+  const existing=document.getElementById("hallvallaRtStatus");
+  if(existing)existing.remove();
+  hallvallaRtState.statusNode=null;
+  return null;
 }
 function hallvallaRtUpdateUi(){
   const active=isHallvallaRealtimeExperimental();
