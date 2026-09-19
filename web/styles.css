@@ -29011,3 +29011,5 @@ html.hv-universal-dragging-enabled .hv-universal-selected{cursor:grabbing!import
   .hv-match-avatar-rival{right:16.8% !important;}
   .hv-match-league-label{bottom:17.6% !important;padding:5px 12px !important;}
 }
+
+#profilePromoInput{-webkit-text-security:disc;}

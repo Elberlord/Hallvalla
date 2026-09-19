@@ -2461,14 +2461,14 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const leagueKey=String(league?.key||"stone");
     const ownQueueRef=ref(db,`${RANDOM_QUEUE_PATH}/${myUid}`);
     pvpBotFallbackInFlight=true;
-    let selfClaimed=false;
+    let queueClosedForFallback=false;
     let fallbackSucceeded=false;
     let botCode="";
     let botPublicRef=null;
     let botPrivateRef=null;
     try{
       const existingOwnSnap=await withTimeout(get(ownQueueRef),`Validar cola propia antes del BOT ${waitingCode}`,5000);
-      const existingOwn=existingOwnSnap.exists()?(existingOwnSnap.val()||{}):null;
+      let existingOwn=existingOwnSnap.exists()?(existingOwnSnap.val()||{}):null;
       if(existingOwn&&String(existingOwn.claimedBy||"")&&String(existingOwn.claimedBy||"")!==myUid){
         const externalClaimAge=Date.now()-Number(existingOwn.claimedAt||0);
         if(Number.isFinite(externalClaimAge)&&externalClaimAge>8000){
@@ -2487,25 +2487,22 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         }),`Reparar cola propia antes del BOT ${waitingCode}`,5000);
       }
 
-      // Si un intento anterior del mismo cliente dejó la cola auto-reservada,
-      // reutilizamos esa reserva. El antiguo flujo intentaba reservarla otra vez,
-      // la transacción devolvía undefined y el matchmaking quedaba en bucle.
-      if(existingOwn&&String(existingOwn.claimedBy||"")===myUid){
-        selfClaimed=true;
-        pvpMatchDiag("fallback-self-claim-reused",{ageMs:Math.max(0,Date.now()-Number(existingOwn.claimedAt||0))});
-      }else{
-        const claimAt=Date.now();
-        const claim=await withTimeout(runTransaction(ownQueueRef,current=>{
-          if(!current||String(current.uid||"")!==myUid)return;
-          if(String(current.leagueKey||"")!==leagueKey)return;
-          const claimedBy=String(current.claimedBy||"");
-          if(claimedBy&&claimedBy!==myUid)return;
-          return Object.assign({},current,{claimedBy:myUid,claimedAt:claimedBy===myUid?Number(current.claimedAt||claimAt):claimAt});
-        }),`Reservar fallback BOT ${waitingCode}`,6000);
-        if(!claim?.committed){pvpMatchDiag("fallback-self-claim-not-committed");return false;}
-        selfClaimed=true;
-        pvpMatchDiag("fallback-self-claim-ok");
+      // El dueño de la búsqueda NO necesita auto-reclamarse en /matchmaking/random.
+      // Esa transacción era la causa del bucle fallback-self-claim-not-committed.
+      // Cerramos temporalmente nuestra entrada de cola; así ningún nuevo humano puede
+      // reclamarla mientras preparamos el rival automático. Un humano que ya hubiera
+      // entrado se detecta de nuevo en la sala antes de activar el duelo.
+      const queueBeforeClose=await withTimeout(get(ownQueueRef),`Revalidar cola antes del fallback ${waitingCode}`,4000);
+      const queueValue=queueBeforeClose.exists()?(queueBeforeClose.val()||{}):null;
+      if(queueValue&&String(queueValue.claimedBy||"")&&String(queueValue.claimedBy||"")!==myUid){
+        pvpMatchDiag("human-claim-won-race",{claimedBy:String(queueValue.claimedBy||"")});
+        return false;
       }
+      try{await randomQueueDisconnect?.cancel?.();}catch(_){ }
+      randomQueueDisconnect=null;
+      await withTimeout(remove(ownQueueRef),`Cerrar cola para fallback ${waitingCode}`,4000);
+      queueClosedForFallback=true;
+      pvpMatchDiag("fallback-queue-closed");
 
       const waitingPublicRef=ref(db,`games/${waitingCode}/public`);
       const waitingSnap=await withTimeout(get(waitingPublicRef),`Confirmar sala antes del BOT ${waitingCode}`,5000);
@@ -2639,17 +2636,22 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       mark(`No se pudo iniciar BOT PvP: ${error?.message||error}`);
       return false;
     }finally{
-      // Cualquier salida anticipada posterior a nuestra auto-reserva debe liberarla.
-      // Así un fallo de validación no envenena los reintentos siguientes.
-      if(selfClaimed&&!fallbackSucceeded&&randomMatchSearching){
+      // Si el fallback cerró nuestra entrada de matchmaking pero no llegó a arrancar
+      // la batalla, volvemos a publicarla SOLO si la sala sigue esperando y nadie
+      // ocupó J2. Así no dejamos una búsqueda muerta ni bloqueamos a un humano real.
+      if(queueClosedForFallback&&!fallbackSucceeded&&randomMatchSearching){
         try{
-          await runTransaction(ownQueueRef,current=>{
-            if(!current||String(current.uid||"")!==myUid||String(current.claimedBy||"")!==myUid)return;
-            return Object.assign({},current,{claimedBy:"",claimedAt:0});
-          });
-          pvpMatchDiag("fallback-self-claim-released");
+          const waitingPublicRef=ref(db,`games/${waitingCode}/public`);
+          const retryRoomSnap=await get(waitingPublicRef);
+          const retryRoom=retryRoomSnap.exists()?(retryRoomSnap.val()||{}):null;
+          if(retryRoom&&String(retryRoom?.playerSlots?.player1Uid||"")===myUid&&String(retryRoom?.phase||"")==="waiting"&&!String(retryRoom?.playerSlots?.player2Uid||"")){
+            await publishOwnRandomQueue();
+            pvpMatchDiag("fallback-queue-republished");
+          }else{
+            pvpMatchDiag("fallback-queue-not-republished",{phase:String(retryRoom?.phase||""),player2:String(retryRoom?.playerSlots?.player2Uid||"")});
+          }
         }catch(error){
-          pvpMatchDiag("fallback-self-claim-release-failed",{message:String(error?.message||error)});
+          pvpMatchDiag("fallback-queue-republish-failed",{message:String(error?.message||error)});
         }
       }
       pvpBotFallbackInFlight=false;
