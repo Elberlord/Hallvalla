@@ -104,13 +104,14 @@ on("profileNameInput","keydown",e=>{if(e.key==="Enter")saveProfileNameChange();}
    7HFIELDSTAT MASTER · Control total de iconos, aros y números
    --------------------------------------------------------------------------- */
 const FIELD_STAT_BADGES_TUNER_KEY="hallvalla_field_stat_badges_master_v8_public_three_stats";
+const FIELD_STAT_CANONICAL=HALLVALLA_CANONICAL_UI.fieldStats||{};
 const FIELD_STAT_BADGE_TARGETS={
-  hpUnit:{label:"Vida · unidades", css:"hp-unit", type:"hp", defaults:{iconScale:205,iconX:-29,iconY:38,ringScale:220,ringX:0,ringY:0,ringStroke:2.6,numSize:32,numWeight:100,numScaleX:117,numScaleY:110,numX:-0.2,numY:5.2}},
-  hpLeader:{label:"Vida · líderes", css:"hp-leader", type:"hp", defaults:{iconScale:125,iconX:-4,iconY:-32,ringScale:177,ringX:0,ringY:0,ringStroke:0.9,numSize:28,numWeight:100,numScaleX:100,numScaleY:100,numX:0,numY:-2}},
-  atkUnit:{label:"Ataque · unidades", css:"atk-unit", type:"badge", defaults:{iconScale:420,iconX:-3,iconY:-1,ringScale:168,ringX:-1,ringY:-3,ringStroke:0.2,numSize:15.8,numWeight:100,numScaleX:46,numScaleY:44,numX:-2.4,numY:2.8}},
-  atkLeader:{label:"Ataque · líderes", css:"atk-leader", type:"badge", defaults:{iconScale:125,iconX:-2,iconY:-26,ringScale:76,ringX:4,ringY:-27,ringStroke:0.3,numSize:13.8,numWeight:200,numScaleX:100,numScaleY:100,numX:0,numY:0}},
-  guardUnit:{label:"Guardia · unidades", css:"guard-unit", type:"badge", defaults:{iconScale:420,iconX:-2,iconY:-2,ringScale:203,ringX:0,ringY:0,ringStroke:0.2,numSize:6,numWeight:100,numScaleX:95,numScaleY:77,numX:-4.4,numY:-2.8}},
-  guardLeader:{label:"Guardia · líderes", css:"guard-leader", type:"badge", defaults:{iconScale:140,iconX:2,iconY:-25,ringScale:82,ringX:2,ringY:-10,ringStroke:0.2,numSize:16.4,numWeight:100,numScaleX:99,numScaleY:102,numX:10.2,numY:-20}}
+  hpUnit:{label:"Vida · unidades", css:"hp-unit", type:"hp", defaults:{...FIELD_STAT_CANONICAL.hpUnit}},
+  hpLeader:{label:"Vida · líderes", css:"hp-leader", type:"hp", defaults:{...FIELD_STAT_CANONICAL.hpLeader}},
+  atkUnit:{label:"Ataque · unidades", css:"atk-unit", type:"badge", defaults:{...FIELD_STAT_CANONICAL.atkUnit}},
+  atkLeader:{label:"Ataque · líderes", css:"atk-leader", type:"badge", defaults:{...FIELD_STAT_CANONICAL.atkLeader}},
+  guardUnit:{label:"Guardia · unidades", css:"guard-unit", type:"badge", defaults:{...FIELD_STAT_CANONICAL.guardUnit}},
+  guardLeader:{label:"Guardia · líderes", css:"guard-leader", type:"badge", defaults:{...FIELD_STAT_CANONICAL.guardLeader}}
 };
 const FIELD_STAT_CONTROL_DEFS=[
   {key:"iconScale",input:"fieldBadgeIconScaleInput",output:"fieldBadgeIconScaleValue",suffix:"%",prop:"icon-scale",factor:100,min:40,max:500,step:1},
@@ -140,6 +141,7 @@ function clampFieldStatMasterValue(def,value,fallback){
 }
 function loadFieldStatBadgesTunerState(){
   const defaults=cloneFieldStatDefaults();
+  if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return defaults;
   try{
     const saved=JSON.parse(localStorage.getItem(FIELD_STAT_BADGES_TUNER_KEY)||"{}")||{};
     Object.entries(defaults).forEach(([target,vals])=>{
@@ -173,97 +175,23 @@ function applyFieldStatBadgesTunerState(save=false){
     setRootVar(`${base}-num-x`,`${vals.numX}px`);
     setRootVar(`${base}-num-y`,`${vals.numY}px`);
   });
-  syncFieldStatBadgesTunerControls();
+  globalThis.__HALLVALLA_DEV_SYNC_FIELD_STATS__?.();
   if(save)saveFieldStatBadgesTunerState();
 }
-function getCurrentFieldBadgeTarget(){
-  return $("fieldBadgeTargetSelect")?.value||"atkUnit";
-}
-function setFieldStatBadgesTunerStatus(msg=""){
-  const el=$("fieldStatBadgesTunerStatus"); if(el) el.textContent=msg;
-}
-function syncFieldStatBadgesTunerControls(){
-  const target=getCurrentFieldBadgeTarget();
-  const vals=fieldStatBadgesTunerState[target]||FIELD_STAT_BADGE_TARGETS[target]?.defaults;
-  FIELD_STAT_CONTROL_DEFS.forEach(def=>{
-    const input=$(def.input), output=$(def.output), value=vals[def.key];
-    if(input && String(input.value)!==String(value)) input.value=String(value);
-    if(output) output.textContent=`${Number(value)}${def.suffix}`;
-  });
-}
-function updateFieldStatBadgesTunerFromInput(key,value){
-  const target=getCurrentFieldBadgeTarget();
-  const def=FIELD_STAT_CONTROL_DEFS.find(d=>d.key===key); if(!def) return;
-  const cfg=FIELD_STAT_BADGE_TARGETS[target]; if(!cfg) return;
-  fieldStatBadgesTunerState[target][key]=clampFieldStatMasterValue(def,value,cfg.defaults[key]);
-  applyFieldStatBadgesTunerState(true);
-  setFieldStatBadgesTunerStatus(`Guardado: ${cfg.label}.`);
-}
-function openFieldStatBadgesTuner(){
-  $("battleVisualSizeTuner")?.classList.add("hidden");
-  $("settingsPanel")?.classList.add("hidden");
-  const tuner=$("fieldStatBadgesTuner"); if(!tuner) return;
-  tuner.classList.remove("hidden");
-  syncFieldStatBadgesTunerControls();
-  setFieldStatBadgesTunerStatus("Ajusta icono, aro y número por separado. Todo se aplica en vivo.");
-}
-function closeFieldStatBadgesTuner(){
-  $("fieldStatBadgesTuner")?.classList.add("hidden");
-  saveFieldStatBadgesTunerState();
-}
-async function copyFieldStatBadgesTunerValues(){
-  const text=Object.entries(fieldStatBadgesTunerState).map(([target,vals])=>{
-    const label=FIELD_STAT_BADGE_TARGETS[target].label;
-    return `${label} — Icono: ${vals.iconScale}% X ${vals.iconX}px Y ${vals.iconY}px | Aro: ${vals.ringScale}% X ${vals.ringX}px Y ${vals.ringY}px Línea ${vals.ringStroke}px | Número: ${vals.numSize}px Peso ${vals.numWeight} Ancho ${vals.numScaleX}% Alto ${vals.numScaleY}% X ${vals.numX}px Y ${vals.numY}px`;
-  }).join(" || ");
-  try{await navigator.clipboard.writeText(text);}catch(e){const area=document.createElement("textarea"); area.value=text; area.style.position="fixed"; area.style.opacity="0"; document.body.appendChild(area); area.select(); document.execCommand("copy"); area.remove();}
-  setFieldStatBadgesTunerStatus("Valores copiados al portapapeles.");
-}
-function resetCurrentFieldBadge(){
-  const target=getCurrentFieldBadgeTarget();
-  fieldStatBadgesTunerState[target]={...FIELD_STAT_BADGE_TARGETS[target].defaults};
-  applyFieldStatBadgesTunerState(true);
-  setFieldStatBadgesTunerStatus(`Restablecido: ${FIELD_STAT_BADGE_TARGETS[target].label}.`);
-}
-function resetFieldStatBadgesTuner(){
-  fieldStatBadgesTunerState=cloneFieldStatDefaults();
-  applyFieldStatBadgesTunerState(true);
-  setFieldStatBadgesTunerStatus("Todos los valores fueron restablecidos.");
-}
-function initFieldStatBadgesTuner(){
-  applyFieldStatBadgesTunerState(false);
-  if(!HALLVALLA_DEV_TOOLS_ENABLED)return;
-  $("fieldBadgeTargetSelect")?.addEventListener("change",()=>{syncFieldStatBadgesTunerControls(); setFieldStatBadgesTunerStatus(`Editando: ${FIELD_STAT_BADGE_TARGETS[getCurrentFieldBadgeTarget()].label}.`);});
-  FIELD_STAT_CONTROL_DEFS.forEach(def=>$(def.input)?.addEventListener("input",ev=>updateFieldStatBadgesTunerFromInput(def.key,ev.target.value)));
-  $("openFieldStatBadgesTunerBattleBtn")?.addEventListener("click",()=>{closeBattleMenu();openFieldStatBadgesTuner();});
-  $("closeFieldStatBadgesTunerBtn")?.addEventListener("click",closeFieldStatBadgesTuner);
-  $("saveFieldStatBadgesTunerBtn")?.addEventListener("click",closeFieldStatBadgesTuner);
-  $("resetCurrentFieldBadgeBtn")?.addEventListener("click",resetCurrentFieldBadge);
-  $("resetFieldStatBadgesTunerBtn")?.addEventListener("click",resetFieldStatBadgesTuner);
-  $("copyFieldStatBadgesValuesBtn")?.addEventListener("click",copyFieldStatBadgesTunerValues);
-  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("fieldStatBadgesTuner")?.classList.contains("hidden"))closeFieldStatBadgesTuner();});
-}
-initFieldStatBadgesTuner();
+applyFieldStatBadgesTunerState(false);
 
 /* ---------------------------------------------------------------------------
    7HSIZECTRL V2 · Tamaño/posición individual de líderes + tamaño de mano
    --------------------------------------------------------------------------- */
 const BATTLE_VISUAL_SIZE_TUNER_KEY="hallvalla_battle_visual_size_v4_final_values";
-const BATTLE_VISUAL_SIZE_DEFAULTS=Object.freeze({
-  playerLeaderScale:74,
-  playerLeaderX:-4,
-  playerLeaderY:43,
-  enemyLeaderScale:74,
-  enemyLeaderX:-5,
-  enemyLeaderY:-30,
-  handCardScale:56
-});
+const BATTLE_VISUAL_SIZE_DEFAULTS=Object.freeze({...HALLVALLA_CANONICAL_UI.battleVisual});
 let battleVisualSizeState=loadBattleVisualSizeState();
 function clampBattleVisualSize(value,min,max,fallback){
   const n=Number(value);
   return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
 }
 function loadBattleVisualSizeState(){
+  if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return {...BATTLE_VISUAL_SIZE_DEFAULTS};
   try{
     const saved=JSON.parse(localStorage.getItem(BATTLE_VISUAL_SIZE_TUNER_KEY)||"{}")||{};
     return {
@@ -289,75 +217,10 @@ function applyBattleVisualSizeState(save=false){
   root.style.setProperty("--battle-enemy-leader-x",`${battleVisualSizeState.enemyLeaderX}px`);
   root.style.setProperty("--battle-enemy-leader-y",`${battleVisualSizeState.enemyLeaderY}px`);
   root.style.setProperty("--battle-hand-card-scale",String(battleVisualSizeState.handCardScale/100));
-  syncBattleVisualSizeControls();
+  globalThis.__HALLVALLA_DEV_SYNC_BATTLE_VISUAL__?.();
   if(save)saveBattleVisualSizeState();
 }
-function syncBattleVisualSizeControls(){
-  const defs=[
-    ["playerLeaderScaleInput","playerLeaderScaleValue",battleVisualSizeState.playerLeaderScale,"%"],
-    ["playerLeaderXInput","playerLeaderXValue",battleVisualSizeState.playerLeaderX," px"],
-    ["playerLeaderYInput","playerLeaderYValue",battleVisualSizeState.playerLeaderY," px"],
-    ["enemyLeaderScaleInput","enemyLeaderScaleValue",battleVisualSizeState.enemyLeaderScale,"%"],
-    ["enemyLeaderXInput","enemyLeaderXValue",battleVisualSizeState.enemyLeaderX," px"],
-    ["enemyLeaderYInput","enemyLeaderYValue",battleVisualSizeState.enemyLeaderY," px"],
-    ["battleHandCardScaleInput","battleHandCardScaleValue",battleVisualSizeState.handCardScale,"%"]
-  ];
-  defs.forEach(([inputId,outputId,value,suffix])=>{
-    const input=$(inputId),output=$(outputId);
-    if(input&&String(input.value)!==String(value))input.value=String(value);
-    if(output)output.textContent=`${value}${suffix}`;
-  });
-}
-function setBattleVisualSizeStatus(message=""){
-  const status=$("battleVisualSizeTunerStatus");
-  if(status)status.textContent=message;
-}
-function openBattleVisualSizeTuner(){
-  closeBattleMenu();
-  $("fieldStatBadgesTuner")?.classList.add("hidden");
-  const panel=$("battleVisualSizeTuner");
-  if(!panel)return;
-  panel.classList.remove("hidden");
-  syncBattleVisualSizeControls();
-  setBattleVisualSizeStatus("Ajusta líderes y cartas mientras observas el campo.");
-}
-function closeBattleVisualSizeTuner(){
-  $("battleVisualSizeTuner")?.classList.add("hidden");
-  saveBattleVisualSizeState();
-}
-function resetBattleVisualSizeTuner(){
-  battleVisualSizeState={...BATTLE_VISUAL_SIZE_DEFAULTS};
-  applyBattleVisualSizeState(true);
-  setBattleVisualSizeStatus("Tamaños y posiciones restablecidos.");
-}
-async function copyBattleVisualSizeValues(){
-  const text=`Tu líder — Tamaño ${battleVisualSizeState.playerLeaderScale}%; X ${battleVisualSizeState.playerLeaderX}px; Y ${battleVisualSizeState.playerLeaderY}px || Líder rival — Tamaño ${battleVisualSizeState.enemyLeaderScale}%; X ${battleVisualSizeState.enemyLeaderX}px; Y ${battleVisualSizeState.enemyLeaderY}px || Cartas en mano — Tamaño ${battleVisualSizeState.handCardScale}%`;
-  try{await navigator.clipboard.writeText(text);}catch(e){const area=document.createElement("textarea");area.value=text;area.style.position="fixed";area.style.opacity="0";document.body.appendChild(area);area.select();document.execCommand("copy");area.remove();}
-  setBattleVisualSizeStatus("Valores copiados.");
-}
-function updateBattleVisualSizeValue(key,value,min,max,fallback,message){
-  battleVisualSizeState[key]=clampBattleVisualSize(value,min,max,fallback);
-  applyBattleVisualSizeState(true);
-  setBattleVisualSizeStatus(message);
-}
-function initBattleVisualSizeTuner(){
-  applyBattleVisualSizeState(false);
-  if(!HALLVALLA_DEV_TOOLS_ENABLED)return;
-  $("openBattleVisualSizeTunerBtn")?.addEventListener("click",openBattleVisualSizeTuner);
-  $("closeBattleVisualSizeTunerBtn")?.addEventListener("click",closeBattleVisualSizeTuner);
-  $("saveBattleVisualSizeTunerBtn")?.addEventListener("click",closeBattleVisualSizeTuner);
-  $("resetBattleVisualSizeTunerBtn")?.addEventListener("click",resetBattleVisualSizeTuner);
-  $("copyBattleVisualSizeValuesBtn")?.addEventListener("click",copyBattleVisualSizeValues);
-  $("playerLeaderScaleInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("playerLeaderScale",ev.target.value,45,180,BATTLE_VISUAL_SIZE_DEFAULTS.playerLeaderScale,"Tamaño de tu líder guardado."));
-  $("playerLeaderXInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("playerLeaderX",ev.target.value,-120,120,BATTLE_VISUAL_SIZE_DEFAULTS.playerLeaderX,"Posición horizontal de tu líder guardada."));
-  $("playerLeaderYInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("playerLeaderY",ev.target.value,-120,120,BATTLE_VISUAL_SIZE_DEFAULTS.playerLeaderY,"Posición vertical de tu líder guardada."));
-  $("enemyLeaderScaleInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("enemyLeaderScale",ev.target.value,45,180,BATTLE_VISUAL_SIZE_DEFAULTS.enemyLeaderScale,"Tamaño del líder rival guardado."));
-  $("enemyLeaderXInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("enemyLeaderX",ev.target.value,-120,120,BATTLE_VISUAL_SIZE_DEFAULTS.enemyLeaderX,"Posición horizontal del líder rival guardada."));
-  $("enemyLeaderYInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("enemyLeaderY",ev.target.value,-120,120,BATTLE_VISUAL_SIZE_DEFAULTS.enemyLeaderY,"Posición vertical del líder rival guardada."));
-  $("battleHandCardScaleInput")?.addEventListener("input",ev=>updateBattleVisualSizeValue("handCardScale",ev.target.value,35,120,BATTLE_VISUAL_SIZE_DEFAULTS.handCardScale,"Tamaño de las cartas en mano guardado."));
-  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("battleVisualSizeTuner")?.classList.contains("hidden"))closeBattleVisualSizeTuner();});
-}
-initBattleVisualSizeTuner();
+applyBattleVisualSizeState(false);
 
 /* ---------------------------------------------------------------------------
    7BOARDCTRL1 · Escala completa de cartas del campo + editor de filas/columnas
@@ -513,11 +376,11 @@ function initFieldBoardTuner(){
 }
 initFieldBoardTuner();
 
-const BATTLE_CLOCK_TUNER_DEFAULTS={
-  turn:{x:-427,y:318,scale:100},
-  p1:{x:148,y:11,scale:100},
-  p2:{x:-159,y:9,scale:100}
-};
+const BATTLE_CLOCK_TUNER_DEFAULTS=Object.freeze({
+  turn:Object.freeze({...HALLVALLA_CANONICAL_UI.battleClock.turn}),
+  p1:Object.freeze({...HALLVALLA_CANONICAL_UI.battleClock.p1}),
+  p2:Object.freeze({...HALLVALLA_CANONICAL_UI.battleClock.p2})
+});
 const BATTLE_CLOCK_TUNER_LIMITS={x:[-520,520],y:[-320,420],scale:[55,160]};
 let battleClockTunerState=loadBattleClockTunerState();
 let battleClockDragState=null;
@@ -528,6 +391,7 @@ function clampBattleClockValue(v,min,max,fallback){
   return Math.max(min,Math.min(max,Math.round(n)));
 }
 function loadBattleClockTunerState(){
+  if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return cloneBattleClockDefaults();
   try{
     const raw=localStorage.getItem(BATTLE_CLOCK_TUNER_KEY);
     if(!raw)return cloneBattleClockDefaults();
@@ -1254,74 +1118,7 @@ function closeMissionsPanel(){const p=$("missionsPanel");if(p)p.classList.add("h
 
 /* ---------- Tuner visual: posición/tamaño + JSON ---------- */
 const HV_MISSIONS_TUNER_SLOT_LABELS={tutorial:"Tutorial",home:"Home y mazo",tactics:"Tácticas",mastery1:"Invocador",mastery2:"Verdugo",mastery3:"Coleccionista",mastery4:"Arcano",mastery5:"Amo de trampas",mastery6:"Armero",claimAll:"Reclamar todo"};
-function initHvMissionsTunerOptions(){
-  const select=$("missionsTunerSlot");if(!select||select.options.length)return;
-  select.innerHTML=Object.keys(HV_MISSIONS_TUNER_SLOT_LABELS).map(key=>`<option value="${key}">${HV_MISSIONS_TUNER_SLOT_LABELS[key]}</option>`).join("");
-}
-function getHvMissionsTunerSelection(){
-  const slot=$("missionsTunerSlot")?.value||"tutorial";
-  let type=$("missionsTunerElement")?.value||"bar";
-  if(slot==="claimAll")type="button";
-  return{slot,type};
-}
-function syncHvMissionsTunerControls(){
-  initHvMissionsTunerOptions();
-  const slotSelect=$("missionsTunerSlot"),typeSelect=$("missionsTunerElement");if(!slotSelect||!typeSelect)return;
-  if(slotSelect.value==="claimAll"){typeSelect.value="button";typeSelect.disabled=true;}else typeSelect.disabled=false;
-  const{slot,type}=getHvMissionsTunerSelection();
-  const cfg=hvMissionsLayout?.[slot]?.[type];if(!cfg)return;
-  const pairs=[["missionsTunerX","missionsTunerXOut","x"],["missionsTunerY","missionsTunerYOut","y"],["missionsTunerW","missionsTunerWOut","w"],["missionsTunerH","missionsTunerHOut","h"]];
-  pairs.forEach(([id,out,key])=>{const input=$(id),output=$(out);if(input)input.value=String(Math.round(Number(cfg[key]||0)));if(output)output.textContent=`${Math.round(Number(cfg[key]||0))} px`;});
-  const fontRow=$("missionsTunerFontRow"),font=$("missionsTunerFont"),fontOut=$("missionsTunerFontOut");
-  const isNumber=type==="number";if(fontRow)fontRow.style.display=isNumber?"grid":"none";
-  if(isNumber){if(font)font.value=String(Math.round(Number(cfg.font||18)));if(fontOut)fontOut.textContent=`${Math.round(Number(cfg.font||18))} px`;}
-}
-function updateHvMissionsTunerValue(key,value){
-  const{slot,type}=getHvMissionsTunerSelection(),cfg=hvMissionsLayout?.[slot]?.[type];if(!cfg)return;
-  cfg[key]=Number(value)||0;saveHvMissionsLayout();applyHvMissionsLayout();syncHvMissionsTunerControls();
-}
-function exportHvMissionsLayoutJson(){
-  const payload={version:1,art:{width:HV_MISSIONS_ART_W,height:HV_MISSIONS_ART_H,file:"assets/ui/missions/missions_masteries_panel.webp"},layout:hvMissionsLayout};
-  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="hallvalla_misiones_layout.json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
-  const status=$("missionsTunerStatus");if(status)status.textContent="JSON exportado. Envíame ese archivo y puedo fijar tus ubicaciones finales.";
-}
-function makeHvMissionsDraggable(node,handle=node,storageKey="",clickHandler=null){
-  if(!node||!handle||node.dataset.hvDragReady==="1")return;node.dataset.hvDragReady="1";
-  let dragging=false,moved=false,startX=0,startY=0,startL=0,startT=0,pointerId=null;
-  handle.addEventListener("pointerdown",e=>{
-    if(e.button!==undefined&&e.button!==0)return;if(e.target.closest?.("button")&&e.target!==handle)return;
-    dragging=true;moved=false;pointerId=e.pointerId;startX=e.clientX;startY=e.clientY;
-    const r=node.getBoundingClientRect();startL=r.left;startT=r.top;handle.setPointerCapture?.(pointerId);e.preventDefault();
-  });
-  handle.addEventListener("pointermove",e=>{
-    if(!dragging||e.pointerId!==pointerId)return;const dx=e.clientX-startX,dy=e.clientY-startY;if(Math.abs(dx)+Math.abs(dy)>4)moved=true;
-    const maxL=Math.max(0,innerWidth-node.offsetWidth),maxT=Math.max(0,innerHeight-node.offsetHeight);
-    node.style.left=`${Math.max(0,Math.min(maxL,startL+dx))}px`;node.style.top=`${Math.max(0,Math.min(maxT,startT+dy))}px`;node.style.right="auto";node.style.bottom="auto";
-  });
-  const finish=e=>{
-    if(!dragging||e.pointerId!==pointerId)return;dragging=false;handle.releasePointerCapture?.(pointerId);
-    if(storageKey){const r=node.getBoundingClientRect();try{const all=JSON.parse(localStorage.getItem(HV_MISSIONS_TUNER_POS_KEY)||"{}");all[storageKey]={left:Math.round(r.left),top:Math.round(r.top)};localStorage.setItem(HV_MISSIONS_TUNER_POS_KEY,JSON.stringify(all));}catch(_){}}
-    if(!moved&&typeof clickHandler==="function")clickHandler();
-  };
-  handle.addEventListener("pointerup",finish);handle.addEventListener("pointercancel",()=>{dragging=false;});
-}
-function restoreHvMissionsTunerPositions(){
-  try{const all=JSON.parse(localStorage.getItem(HV_MISSIONS_TUNER_POS_KEY)||"{}");[["missionsLayoutTunerHandle","handle"],["missionsLayoutTuner","panel"]].forEach(([id,key])=>{const n=$(id),p=all[key];if(n&&p){n.style.left=`${Math.max(0,Number(p.left)||0)}px`;n.style.top=`${Math.max(0,Number(p.top)||0)}px`;n.style.right="auto";n.style.bottom="auto";}});}catch(_){ }
-}
-function initHvMissionsLayoutTuner(){
-  initHvMissionsTunerOptions();restoreHvMissionsTunerPositions();
-  const handle=$("missionsLayoutTunerHandle"),panel=$("missionsLayoutTuner"),drag=$("missionsLayoutTunerDrag");
-  makeHvMissionsDraggable(handle,handle,"handle",()=>{panel?.classList.toggle("hidden");syncHvMissionsTunerControls();});
-  makeHvMissionsDraggable(panel,drag,"panel");
-  on("missionsLayoutTunerClose","click",()=>panel?.classList.add("hidden"));
-  on("missionsTunerSlot","change",syncHvMissionsTunerControls);on("missionsTunerElement","change",syncHvMissionsTunerControls);
-  [["missionsTunerX","x"],["missionsTunerY","y"],["missionsTunerW","w"],["missionsTunerH","h"],["missionsTunerFont","font"]].forEach(([id,key])=>on(id,"input",e=>updateHvMissionsTunerValue(key,e.target.value)));
-  on("missionsTunerReset","click",()=>{hvMissionsLayout=cloneHvMissionsLayout();saveHvMissionsLayout();applyHvMissionsLayout();syncHvMissionsTunerControls();const s=$("missionsTunerStatus");if(s)s.textContent="Ubicaciones restablecidas a la propuesta inicial.";});
-  on("missionsTunerExport","click",exportHvMissionsLayoutJson);
-  syncHvMissionsTunerControls();
-}
-initHvMissionsLayoutTuner();
+
 
 
 const HALLVALLA_MINE_SECTION_TITLES=Object.freeze({

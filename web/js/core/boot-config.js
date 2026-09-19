@@ -81,13 +81,15 @@ if(!firebaseConfig?.apiKey||!firebaseConfig?.databaseURL){
 const app=initializeApp(firebaseConfig),db=getDatabase(app),auth=getAuth(app);
 const FIELD_BOARD_TUNER_KEY="hallvalla_field_board_tuner_v5_final_80_5x9";
 const BATTLE_CLOCK_TUNER_KEY="hallvalla_battle_clock_tuner_v3_restored_positions";
-const FIELD_BOARD_DEFAULTS=Object.freeze({rows:9,cols:5,cardScale:80});
+const HALLVALLA_CANONICAL_UI=globalThis.HALLVALLA_UI_CANONICAL||{};
+const FIELD_BOARD_DEFAULTS=Object.freeze({...HALLVALLA_CANONICAL_UI.fieldBoard||{rows:9,cols:5,cardScale:80}});
 const FIELD_BOARD_LIMITS=Object.freeze({rows:[4,12],cols:[3,10],cardScale:[45,150]});
 function clampFieldBoardNumber(value,min,max,fallback){
   const n=Number(value);
   return Number.isFinite(n)?Math.max(min,Math.min(max,Math.round(n))):fallback;
 }
 function readFieldBoardPreferences(){
+  if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return{...FIELD_BOARD_DEFAULTS};
   try{
     const saved=JSON.parse(localStorage.getItem(FIELD_BOARD_TUNER_KEY)||"{}")||{};
     return{
