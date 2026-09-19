@@ -1,0 +1,34 @@
+HALLVALLA — PENDIENTES DESPUÉS DE v223
+Build: 20260919.223
+
+COMPLETADO EN v223
+- Eliminado físicamente battle/render-battle-tutorial.js.
+- Renderer/HUD, estados públicos, tutorial y overlays/menú quedaron en módulos separados.
+- Eliminados stubs tutoriales muertos y dependencia visual de currentPlayer en renderer.
+- Terminología pública de estados limpiada de referencias a turnos.
+
+1. SETTINGS-EVENTS — SIGUIENTE PRIORIDAD
+   - Separar Mina, recompensas/misiones, tutoriales/configuración y bindings generales.
+   - Mantener DEV fuera de producción como quedó desde v214.
+
+2. DECKS-UNITS-COMBAT-RULES
+   - Separar factories, validación de deck/líderes y reglas generales compartidas.
+
+3. PVP
+   - Dividir ranking/resultados, lobby/matchmaking, BOT y sincronización.
+   - Retirar nombres/campos históricos de prebatalla solo después de mapear el handshake actual.
+
+4. MOTOR AUTOMÁTICO
+   - Modularizar realtime/experimental.js y retirar la nomenclatura histórica `experimental`.
+   - Migrar nombres internos *TurnKey/cycle únicamente con mapa de consumidores.
+
+5. CONTRATOS/NOMBRES HISTÓRICOS RESTANTES
+   - Revisar turnsRemaining, damagedThisTurn y *TurnKey.
+
+6. CIERRE FINAL
+   - Código muerto/assets huérfanos.
+   - Aventura completa.
+   - PvP BOT y PvP real concurrente.
+   - Gamepad Windows/Android.
+   - Mina/Forja/colección/tutorial.
+   - Hashes/cache/Firebase finales.

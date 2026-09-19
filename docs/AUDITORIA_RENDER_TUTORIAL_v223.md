@@ -26,7 +26,4 @@ No se modificaron daño, balance, movimiento, velocidad, Firebase, PvP, IA, líd
 - v223 · `20260919.223`
 
 ## Fix DEV del DET
-- El CONTROL UNIVERSAL ahora puede seleccionar por geometría los datos dinámicos del DET aunque en producción usen `pointer-events:none`.
-- Números HP/DX/MV/AT/GD/AG/RG, LEYENDA/rareza/estado, copias, costo, nivel y poder de batalla vuelven a ser seleccionables y arrastrables.
-- No se horneó ningún dato en la imagen: la plantilla v33 sigue siendo solo fondo; todos esos valores continúan siendo DOM dinámico.
-- La corrección solo existe en `?dev`; el comportamiento normal del DET no cambia.
+El selector universal usaba `document.elementFromPoint()`. Como varios datos del DET usan `pointer-events:none` fuera de edición, el navegador los omitía y seleccionaba el fondo. v223 añade hit-test geométrico DEV para esos nodos sin modificar producción.

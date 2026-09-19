@@ -846,6 +846,43 @@
     if(interactive&&!isDevNode(interactive))return interactive;
     return node;
   }
+
+  // v223 · El DET usa capas visuales con pointer-events:none en producción.
+  // document.elementFromPoint() las omite y el control universal terminaba
+  // seleccionando el fondo de la plantilla, dando la impresión de que textos
+  // como AT/DX/LEYENDA estaban pegados a la imagen. Durante selección DEV
+  // hacemos hit-test geométrico de esos nodos sin alterar su runtime normal.
+  const DET_VISUAL_PICK_GROUPS=Object.freeze([
+    {priority:600,selector:'#detCardName,#detCostValue,#detCopiesValue,#detLevelValue,#detBattlePowerValue,#detTypeValue,#detRarityValue,#detStateValue,.hv-det-stat-value'},
+    {priority:520,selector:'#detLevelBar'},
+    {priority:420,selector:'#detWeaponIcon,#detFormulaIcon,#detLoreIcon,.hv-det-cal-icon'},
+    {priority:360,selector:'#detPortraitImage,#detCostBadge'},
+    {priority:240,selector:'#detEffectsList,#detOwnEffectsList,#detPlayCardBtn'}
+  ]);
+  function rectContainsPoint(rect,x,y){return !!rect&&rect.width>1&&rect.height>1&&x>=rect.left&&x<=rect.right&&y>=rect.top&&y<=rect.bottom;}
+  function detVisualNodeAtPoint(x,y){
+    const modal=$('#cardInspectModal:not(.hidden)');
+    const card=modal?.querySelector?.('.card-inspect-card');
+    if(!modal||!card||!rectContainsPoint(card.getBoundingClientRect(),x,y))return null;
+    const hits=[];
+    for(const group of DET_VISUAL_PICK_GROUPS){
+      for(const node of $$(group.selector,modal)){
+        if(!isVisible(node)||isDevNode(node))continue;
+        const rect=node.getBoundingClientRect();
+        if(!rectContainsPoint(rect,x,y))continue;
+        hits.push({node,priority:group.priority,area:rect.width*rect.height});
+      }
+    }
+    if(!hits.length)return null;
+    hits.sort((a,b)=>b.priority-a.priority||a.area-b.area);
+    return hits[0].node;
+  }
+  function visualNodeAtPoint(x,y){
+    // El fallback DET va primero porque precisamente cubre elementos que el
+    // hit-test nativo ignora por pointer-events:none. Fuera del DET no cambia
+    // absolutamente nada del selector universal.
+    return detVisualNodeAtPoint(x,y)||document.elementFromPoint(x,y);
+  }
   function readConfig(){
     try{
       const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");
@@ -1014,7 +1051,7 @@
   }
   function onPickMove(event){
     if(!picking)return;
-    const node=normalizePickNode(document.elementFromPoint(event.clientX,event.clientY));
+    const node=normalizePickNode(visualNodeAtPoint(event.clientX,event.clientY));
     if(!node||isDevNode(node)||node===hoverTarget)return;
     hoverTarget?.classList.remove('hv-universal-hover');hoverTarget=node;hoverTarget.classList.add('hv-universal-hover');
   }
@@ -1029,7 +1066,7 @@
   function onGlobalPointerDown(event){
     if(event.button!==0||isDevNode(event.target))return;
     if(picking){
-      const node=normalizePickNode(document.elementFromPoint(event.clientX,event.clientY));
+      const node=normalizePickNode(visualNodeAtPoint(event.clientX,event.clientY));
       if(!node||isDevNode(node))return;
       event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
       hoverTarget?.classList.remove('hv-universal-hover');hoverTarget=null;setPicking(false);startElementDrag(event,node);return;

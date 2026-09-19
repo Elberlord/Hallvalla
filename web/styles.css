@@ -16795,6 +16795,26 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 }
 
 
+/* === v223 DEV · DET editable hitboxes ===
+   Solo en edición directa. Los datos siguen sin interceptar gameplay normal. */
+.hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-stat-values-layer,
+.hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-meta-layer,
+.hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-reference-utilities,
+.hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-level-battle-layer{
+  pointer-events:none!important;
+  z-index:420!important;
+}
+.hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-stat-value,
+.hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-meta-value,
+.hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-copies-value,
+.hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-cost-value,
+.hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-level-value,
+.hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-level-bar,
+.hv-det-direct-editing #cardInspectModal:not(.hidden) .hv-det-battle-power-value{
+  pointer-events:auto!important;
+  z-index:430!important;
+}
+
 /* === DET v33 · valores dinámicos de stats · 8BT === */
 #cardInspectModal .hv-det-stat-values-layer{
   position:absolute!important;

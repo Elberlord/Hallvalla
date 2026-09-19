@@ -327,8 +327,8 @@ async function setSelectedLeaderType(type){
   const nextAction=pendingAfterLeaderSelection;
   pendingAfterLeaderSelection="";
   if(nextAction==="adventure")openAdventureStory();
-  if(nextAction==="beast_event")runFirstTimeTutorialBefore(openBeastmasterEvent);
-  if(nextAction==="hallvalla_events")runFirstTimeTutorialBefore(openHallvallaEvents);
+  if(nextAction==="beast_event")openBeastmasterEvent();
+  if(nextAction==="hallvalla_events")openHallvallaEvents();
 }
 function requireLeaderSelection(force=false){
   if((force||leaderProfileLoaded)&&!getSelectedLeaderType()){
