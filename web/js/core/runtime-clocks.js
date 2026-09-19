@@ -8,7 +8,7 @@
 04_RUNTIME_STATE_PHASES
 -------------------------------------------------------------------------------
 */
-let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,selectedUnitEffectChoice=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,adventureAiTriggerTimer=null,adventureAiActionTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,demigodSummonHideTimer=null,lastDemigodSummonKey="",lastEventSplashKey="",eventSplashQueue=[],eventSplashActive=false,eventSplashTimer=null,eventSplashExitTimer=null,eventSplashHistory=[],nearDeathSoundPlayedKeys=new Set(),noPlayableAutoAdvanceTimer=null,noPlayableAutoAdvanceKey="",noPlayableAutoAdvanceLock=false,fieldAutoAdvanceTimer=null,fieldAutoAdvanceKey="",fieldAutoAdvanceLock=false,turnTimerInterval=null,turnTimerAnchorLock=false,turnTimerExpiryLock=false,turnTimerObservedKey="",turnTimerExpiredKey="",turnTimerSystemUpdate=false,duelClockExpiryLock=false,duelClockExpiredKey="";
+let uid=null,gameId=null,myPlayer=null,publicState=null,privateState=null,selectedCard=null,selectedUnitId=null,selectedUnitActionMode=null,selectedUnitEffectChoice=null,cardInspectSelection=null,unitContextSelection=null,highlights=[],highlightType="move",handOpen=true,unsubPub=null,unsubPriv=null,turnStartLock=false,selectedLeaderType="",leaderProfileLoaded=false,pendingAfterLeaderSelection="",shownBattleResultKey="",aiTurnLock=false,lastAiTurnKey="",aiWatchdogTimer=null,adventureAiTriggerTimer=null,adventureAiActionTimer=null,handManualCloseKey="",lastPhaseAnnounceKey="",phaseAnnounceTimer=null,lastBattleFxKey="",demigodSummonTimer=null,demigodSummonHideTimer=null,lastDemigodSummonKey="",lastEventSplashKey="",eventSplashQueue=[],eventSplashActive=false,eventSplashTimer=null,eventSplashExitTimer=null,eventSplashHistory=[],nearDeathSoundPlayedKeys=new Set(),noPlayableAutoAdvanceTimer=null,noPlayableAutoAdvanceKey="",noPlayableAutoAdvanceLock=false,fieldAutoAdvanceTimer=null,fieldAutoAdvanceKey="",fieldAutoAdvanceLock=false,turnTimerInterval=null,turnTimerExpiryLock=false,turnTimerObservedKey="",turnTimerExpiredKey="",turnTimerSystemUpdate=false,duelClockExpiryLock=false,duelClockExpiredKey="";
 let boardDragState=null,boardDragGhost=null,dragMoveHighlights=[],dragAttackHighlights=[],dragSummonHighlights=[],lastBoardDragEndedAt=0;
 let boardHoverCellKey="",boardSelectedCellKey="",boardSelectedCellTimer=null;
 const HALLVALLA_LOCALHOST_TEST_MODE=(typeof location!=="undefined")&&(/^(localhost|127\.0\.0\.1)$/i.test(location.hostname)||location.protocol==="file:");
@@ -203,8 +203,6 @@ const TURN_PHASE_LABELS={draw:"DRAW PHASE",main:"MAIN PHASE",actions:"ACTION PHA
 const TURN_TIME_LIMIT_MS=180*1000;
 const DUEL_TIME_LIMIT_MS=15*60*1000;
 const CLOCK_RULESET_VERSION=2;
-const CLOCK_RULESET_MIGRATION_BONUS_MS=5*60*1000;
-const TURN_TIMER_TICK_MS=200;
 // El bono de reloj por eliminación PvP fue retirado del runtime compartido durante
 // la reconstrucción clean-room. Se reintroducirá en la capa PvP validada, no aquí.
 function isTurnTimerEnabled(state=publicState){
@@ -301,38 +299,6 @@ function renderTurnTimerHud(){
     p1Hud.setAttribute("aria-label",`Reloj del jugador 1 ${formatTurnTimer(p1Remaining)}.`);
     p2Hud.setAttribute("aria-label",`Reloj del jugador 2 ${formatTurnTimer(p2Remaining)}.`);
   }
-}
-async function ensureTurnTimerAnchor(){
-  if(turnTimerAnchorLock||!gameId||!isTurnTimerEnabled())return;
-  const key=String(publicState?.turnKey||"");
-  if(!key)return;
-  const patch={};
-  if(!(Number(publicState?.turnStartedAt||0)>0))patch.turnStartedAt=getTurnStartTimestampValue();
-  if(!isPveClockMode(publicState)){
-    const rulesetVersion=Number(publicState?.clockRulesetVersion||0);
-    if(rulesetVersion<CLOCK_RULESET_VERSION){
-      [1,2].forEach(owner=>{
-        const raw=Number(publicState?.playerClockMs?.[owner]);
-        patch[`playerClockMs/${owner}`]=Number.isFinite(raw)&&raw>=0
-          ?Math.min(DUEL_TIME_LIMIT_MS,raw+CLOCK_RULESET_MIGRATION_BONUS_MS)
-          :DUEL_TIME_LIMIT_MS;
-      });
-      patch.clockRulesetVersion=CLOCK_RULESET_VERSION;
-    }else{
-      if(!(Number.isFinite(Number(publicState?.playerClockMs?.[1]))&&Number(publicState.playerClockMs[1])>=0))patch["playerClockMs/1"]=DUEL_TIME_LIMIT_MS;
-      if(!(Number.isFinite(Number(publicState?.playerClockMs?.[2]))&&Number(publicState.playerClockMs[2])>=0))patch["playerClockMs/2"]=DUEL_TIME_LIMIT_MS;
-    }
-  }
-  if(!Object.keys(patch).length)return;
-  turnTimerAnchorLock=true;
-  try{
-    if(hallvallaIsLocalTestGame()){
-      if(publicState?.turnKey===key){publicState=hallvallaApplyLocalPatch(publicState,patch);renderTurnTimerHud();}
-    }else{
-      await update(ref(db,`games/${gameId}/public`),patch);
-    }
-  }catch(e){console.warn("[HallValla] No se pudo iniciar el reloj híbrido:",e);}
-  finally{turnTimerAnchorLock=false;}
 }
 function buildDuelClockExpiredState(state,now=Date.now()){
   const loser=Number(state?.currentPlayer||0);
@@ -461,7 +427,7 @@ async function expireTurnByClock(){
 }
 function stopTurnTimerLoop(){
   if(turnTimerInterval){battleClearInterval(turnTimerInterval);turnTimerInterval=null;}
-  turnTimerObservedKey="";turnTimerExpiredKey="";duelClockExpiredKey="";turnTimerExpiryLock=false;duelClockExpiryLock=false;turnTimerAnchorLock=false;turnTimerSystemUpdate=false;
+  turnTimerObservedKey="";turnTimerExpiredKey="";duelClockExpiredKey="";turnTimerExpiryLock=false;duelClockExpiryLock=false;turnTimerSystemUpdate=false;
   renderTurnTimerHud();
 }
 function isTurnWriteBlockedByExpiredClock(){

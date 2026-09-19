@@ -26,15 +26,14 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?h=e2d82e9b8a80";
 
-const BUILD = "20260918.191";
-const CACHE_BUILD = BUILD;
-const RESOURCE_HASHES = Object.freeze({"parts/01-boot-config.js":"a0943e8bb720","parts/02-assets-leaders.js":"7bc6a4a7863d","parts/03-runtime-clocks.js":"4c58a346aaea","parts/04-fx-audio-profile.js":"4d9661363f4d","parts/05-cards-specials-lore.js":"a05fbbcadc8d","parts/05b-unit-load-profiles.js":"19c25612020e","parts/06-decks-units-combat-rules.js":"5521fe8d0b48","parts/07-network-battle-state.js":"a26e06123490","parts/08-actions-inspector.js":"0c46a175641b","parts/09-combat-turn-ai.js":"32e721009d7a","parts/10-board-interactions.js":"39893d100a5f","parts/11-render-battle-tutorial.js":"d63b4e314ba7","parts/12-profile-shop-packs.js":"771cc2c8d746","parts/12b-account-auth.js":"e3ddf342dc91","parts/12c-friends.js":"2962e102ec26","parts/13-collection-deck-forge.js":"d32e309870f9","parts/14-adventure-engine-ui.js":"e431b29beabd","parts/15-settings-tuners-events.js":"2a9bb9710ddd","parts/16-exact-guides-mobile.js":"3227beaa638d","parts/17-dragon-contracts.js":"80a9ad483e7f","parts/18-dragon-egg.js":"a3df7e88a7ba","parts/19-field-figures-3d.js":"f0e52063c31a","parts/20-gamepad-controls.js":"bb9875cef63b","parts/21-realtime-experimental.js":"3d64f4b69b1c","features/adventure.js":"bfc8244b62ef","features/battle-layout.js":"f805d683e94e","features/forge-layout.js":"4e9c3f1f59fc","features/forge.js":"784a7fbef7a2","features/hvdev.js":"07d37bd3fbb1","features/pve.js":"f81b6d7ae1af","features/pvp.js":"99625049e9c7","features/shop.js":"4fe46c5bc3f0","features/universal-layout-runtime.js":"076160d454fe"});
+const BUILD = "20260918.192";
+const RESOURCE_HASHES = Object.freeze({"core/boot-config.js":"a0943e8bb720","core/assets-leaders.js":"7bc6a4a7863d","core/runtime-clocks.js":"09d395990f92","core/fx-audio-profile.js":"4d9661363f4d","game/cards-specials-lore.js":"dd6d2307d304","game/unit-load-profiles.js":"19c25612020e","game/decks-units-combat-rules.js":"5521fe8d0b48","network/battle-state.js":"bff321c555ec","battle/actions-inspector.js":"0c46a175641b","battle/combat-turn-ai.js":"32e721009d7a","battle/board-interactions.js":"f09f19ea3f96","battle/render-battle-tutorial.js":"d63b4e314ba7","account/profile-shop-packs.js":"658de74f6d26","account/auth.js":"e3ddf342dc91","account/friends.js":"2962e102ec26","forge/deck-builder.js":"46ba99610035","adventure/engine-ui.js":"e431b29beabd","dragon/contracts.js":"80a9ad483e7f","dragon/egg.js":"a3df7e88a7ba","render/field-figures-3d.js":"f0e52063c31a","system/settings-events.js":"0897631f82c5","system/exact-guides-mobile.js":"3227beaa638d","input/gamepad-controls.js":"bb9875cef63b","realtime/experimental.js":"3d64f4b69b1c","layout/universal-runtime.js":"076160d454fe","features/pve/index.js":"543ac58bbdbf","features/pvp/index.js":"99625049e9c7","features/shop/index.js":"4fe46c5bc3f0","features/forge/index.js":"784a7fbef7a2","features/adventure/index.js":"bfc8244b62ef","layout/battle.js":"f805d683e94e","layout/forge-bridge.js":"4e9c3f1f59fc","dev/universal-layout-editor.js":"07d37bd3fbb1"});
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   console.warn(`[HallValla] Versión transitoria: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}. Se continúa para evitar bloquear el arranque durante propagación/caché.`);
 }
 globalThis.__HALLVALLA_BUILD__ = BUILD;
-globalThis.__HALLVALLA_BUILD_VERSION__ = `v8_MODULAR_${BUILD}`;
+globalThis.__HALLVALLA_BUILD_VERSION__ = `v9_ARCH_${BUILD}`;
 
 /* PERF5 · Señal de visibilidad para pausar únicamente loops CSS cosméticos. */
 function hvSyncDocumentVisibility(){
@@ -254,31 +253,31 @@ Object.assign(globalThis, {
 // Etapa 9: los módulos mixtos conservan su parte de runtime, pero sus editores/calibradores
 // solo se inicializan con ?dev. El cargador no elimina archivos para evitar regresiones.
 const CORE_PARTS = [
-  "01-boot-config.js",
-  "02-assets-leaders.js",
-  "03-runtime-clocks.js",
-  "04-fx-audio-profile.js",
-  "05-cards-specials-lore.js",
-  "05b-unit-load-profiles.js",
-  "06-decks-units-combat-rules.js",
-  "07-network-battle-state.js",
-  "08-actions-inspector.js",
-  "09-combat-turn-ai.js",
-  "10-board-interactions.js",
-  "11-render-battle-tutorial.js",
-  "12-profile-shop-packs.js",
-  "12b-account-auth.js",
-  "12c-friends.js",
-  "13-collection-deck-forge.js",
-  "14-adventure-engine-ui.js",
-  "17-dragon-contracts.js",
-  "18-dragon-egg.js",
-  "19-field-figures-3d.js",
-  "15-settings-tuners-events.js",
-  "16-exact-guides-mobile.js",
-  "20-gamepad-controls.js",
-  "21-realtime-experimental.js",
-  "features/universal-layout-runtime.js",
+  "core/boot-config.js",
+  "core/assets-leaders.js",
+  "core/runtime-clocks.js",
+  "core/fx-audio-profile.js",
+  "game/cards-specials-lore.js",
+  "game/unit-load-profiles.js",
+  "game/decks-units-combat-rules.js",
+  "network/battle-state.js",
+  "battle/actions-inspector.js",
+  "battle/combat-turn-ai.js",
+  "battle/board-interactions.js",
+  "battle/render-battle-tutorial.js",
+  "account/profile-shop-packs.js",
+  "account/auth.js",
+  "account/friends.js",
+  "forge/deck-builder.js",
+  "adventure/engine-ui.js",
+  "dragon/contracts.js",
+  "dragon/egg.js",
+  "render/field-figures-3d.js",
+  "system/settings-events.js",
+  "system/exact-guides-mobile.js",
+  "input/gamepad-controls.js",
+  "realtime/experimental.js",
+  "layout/universal-runtime.js"
 ];
 
 /* STAGE10 · Feature loading real + caché de sesión ---------------------------
@@ -286,14 +285,30 @@ const CORE_PARTS = [
    descarga una sola vez por sesión y el Service Worker lo conserva para
    visitas futuras. Una carga fallida nunca se marca como READY. */
 const FEATURE_PARTS = Object.freeze({
-  pve: ["features/pve.js"],
-  pvp: ["features/pvp.js"],
-  shop: ["features/shop.js"],
-  forge: ["features/forge.js"],
-  adventure: ["features/adventure.js"],
-  "battle-layout": ["features/battle-layout.js"],
-  "forge-layout": ["features/forge-layout.js"],
-  hvdev: ["features/hvdev.js"]
+  "pve": [
+    "features/pve/index.js"
+  ],
+  "pvp": [
+    "features/pvp/index.js"
+  ],
+  "shop": [
+    "features/shop/index.js"
+  ],
+  "forge": [
+    "features/forge/index.js"
+  ],
+  "adventure": [
+    "features/adventure/index.js"
+  ],
+  "battle-layout": [
+    "layout/battle.js"
+  ],
+  "forge-layout": [
+    "layout/forge-bridge.js"
+  ],
+  "hvdev": [
+    "dev/universal-layout-editor.js"
+  ]
 });
 const FEATURE_ALIASES = Object.freeze({
   "pvp-ranking":"pvp"
@@ -325,7 +340,7 @@ function loadClassicScript(file) {
   if(partLoadPromises.has(safe))return partLoadPromises.get(safe);
   const task=new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    const relative=safe.includes("/")?safe:`parts/${safe}`;
+    const relative=safe;
     script.src = hvVersionedResourceUrl(relative);
     script.async = false;
     script.dataset.hallvallaPart = safe;

@@ -257,3 +257,6 @@ Read `REPO_SETUP_FIRST_TIME.txt` before the first deployment.
 - Se añade `scripts/check-android-virtual-layout.py`, que valida geometría, Activity, responsive, gamepad, assets, secretos de firma y coherencia de build antes de compilar.
 - Diagnóstico completo: `docs/BUILD_20260918_180_ANDROID_ROOT_CAUSE_LAYOUT_GAMEPAD.txt`.
 - Firebase Rules y Xsolla no cambian en esta versión.
+
+## Frontend architecture (v192)
+See `docs/FRONTEND_ARCHITECTURE_v192.md`, `docs/FRONTEND_MODULE_INVENTORY_v192.md`, and `docs/AUDITORIA_PROFUNDA_FRONTEND_v192.md`.

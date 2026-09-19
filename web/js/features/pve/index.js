@@ -37,9 +37,6 @@ const ADAPTIVE_MAGE_BASE_DECK_COUNTS=Object.freeze([
   ["stabilizing_focus",1],["channeling_amulet",1],["blessing",1],["heal",1],
   ["shield_wall",1],["inspiration",1],["smoke_bomb",1],["warning_rune",1]
 ]);
-const ADAPTIVE_MAGE_CORE_MIN=Object.freeze({
-  arcane_adept:2,acolyte_healer:1,fireball:1,bolt:1,stabilizing_focus:1,channeling_amulet:1
-});
 const ADAPTIVE_MAP1_CORE_MIN=Object.freeze({
   // Tier 1 = 10 cartas. Estos mínimos conservan identidad, pero la IA puede mezclar clases.
   battle1:Object.freeze({archer:2,egyptian_line_archer:1,new_kingdom_archer:1,retreat_strap:1,skirmisher_cloak:1}),

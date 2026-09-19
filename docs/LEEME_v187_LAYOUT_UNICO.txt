@@ -6,8 +6,8 @@ Plano lógico oficial: 1366×636
 CAMBIO ESTRUCTURAL
 ------------------
 Antes existían dos motores de geometría para la Forja:
-1) web/js/features/forge-layout.js
-2) web/js/features/universal-layout-runtime.js
+1) web/js/layout/forge-bridge.js
+2) web/js/layout/universal-runtime.js
 
 Eso provocaba que al paginar, filtrar o reconstruir cartas un motor volviera a
 imponer posiciones distintas.

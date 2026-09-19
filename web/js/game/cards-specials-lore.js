@@ -2468,34 +2468,6 @@ function resolveVeilCurseAtTurnEnd(units,owner,turnKey=String(publicState?.turnK
 
 // v7EO - Identificación táctica de unidades de espada.
 // 20260909.18: la espada ya no concede Guardia base; GD queda reservada a armadura/cobertura física.
-const SWORD_UNIT_KEYS=new Set([
-  "roman_legionary",
-  "armored_man_at_arms",
-  "cavalry",
-  "mulan",
-  "wallace",
-  "richard_lionheart",
-  "saladin",
-  "yi_sun_sin",
-  "boudica",
-  "ulysses",
-  "joan_of_arc",
-  "tomoe_gozen",
-  "subotai",
-  "ragnar_lodbrok",
-  "el_cid",
-  "spartacus",
-  "beowulf",
-  "miyamoto_musashi",
-  "khalid_ibn_al_walid",
-  "gilgamesh",
-  "julius_caesar",
-  "samurai_katana",
-  "skipar_del_drakkar",
-  "geisha_encubierta",
-  "fuma_kotaro",
-  "saboteador_iga"
-]);
 function applySwordGuardRule(card){
   // 20260909.18: GD representa armadura/cobertura física. Portar espada ya no concede Guardia base.
   if(!card)return card;
@@ -2568,10 +2540,6 @@ const ARCHER_UNIT_KEYS=new Set([
 ]);
 // Regla canónica: todo arquero A PIE tiene MOV base 1.
 // Los arqueros montados conservan la movilidad de su montura.
-const FOOT_ARCHER_MOVEMENT_ONE_KEYS=new Set([
-  "archer","egyptian_line_archer","new_kingdom_archer","roman_auxiliary_sagittarius",
-  "simo_hayha","nasu_no_yoichi","arjuna"
-]);
 function applyArcherMovementRule(card){
   // 20260908.14: MOV ya no se fuerza por clase Arco. La locomoción natural + carga
   // es la única fuente canónica del movimiento base.

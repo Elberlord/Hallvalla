@@ -19,7 +19,7 @@ Comportamiento
 - El cursor es interno al juego. El navegador no permite mover físicamente el puntero del sistema operativo mediante JavaScript.
 
 Archivos funcionales modificados
-- js/parts/20-gamepad-controls.js
+- js/input/gamepad-controls.js
 - js/bootstrap-loader.js (build/hash)
 - index.html (build/hash)
 - service-worker.js (build/hash)

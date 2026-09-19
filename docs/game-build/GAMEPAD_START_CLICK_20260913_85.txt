@@ -8,7 +8,7 @@ Cambio
 - A y RT conservan sus comportamientos previos; no se eliminó ningún control existente.
 
 Archivos funcionales modificados
-- js/parts/20-gamepad-controls.js
+- js/input/gamepad-controls.js
 - js/bootstrap-loader.js (build/hash)
 - index.html (build/hash)
 - service-worker.js (build/hash)

@@ -11,4 +11,4 @@ Cambios limitados a la toma de decisiones de J2/IA en combate TR:
 - Trampas de bestias, revelado y marcas legendarias: se usan solo con objetivos/condiciones válidas.
 - Mantiene el cooldown de invocación/acción TR existente; no cambia movimiento, ataque, MANÁ, Firebase, snapshot local, Aventura ni mazos.
 
-Archivos funcionales modificados: js/parts/21-realtime-experimental.js, js/bootstrap-loader.js, index.html.
+Archivos funcionales modificados: js/realtime/experimental.js, js/bootstrap-loader.js, index.html.

@@ -13,7 +13,7 @@ Cambio aplicado
 - Home, tablero y Mano conservan su comportamiento anterior.
 
 Archivos funcionales modificados
-- js/parts/20-gamepad-controls.js
+- js/input/gamepad-controls.js
 
 Archivos de versionado/cache actualizados
 - js/bootstrap-loader.js

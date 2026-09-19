@@ -24,7 +24,7 @@ Lógica preservada
 
 Archivos modificados
 --------------------
-- js/parts/10-board-interactions.js
+- js/battle/board-interactions.js
 - styles.css
 - js/bootstrap-loader.js (cache-bust / hash del módulo)
 - index.html (build + cache-bust)

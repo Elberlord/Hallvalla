@@ -4,7 +4,7 @@ ALCANCE
 - Web únicamente. APK Android sin cambios. Firebase Rules sin cambios.
 
 1. TUTORIAL PVP
-- El preparador del tutorial carga features/pvp.js y abre la pantalla real de selección de modo mediante openCleanRoom exportado a globalThis.
+- El preparador del tutorial carga features/pvp/index.js y abre la pantalla real de selección de modo mediante openCleanRoom exportado a globalThis.
 - Fallback: hace visibles onlineLobby + onlineModeSelect.
 
 2. CRECIMIENTO DRACONICO

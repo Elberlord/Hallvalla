@@ -1482,7 +1482,6 @@ let activePackCards=[];
 let currentDeckDraft=[];
 let currentPrincipalKeys=[];
 let deckBuilderCollectionPage=0;
-const DECK_BUILDER_COLLECTION_PAGE_SIZE=14;
 let deckBuilderDragPayload=null;
 let deckBuilderDragStartedAt=0;
 

@@ -54,7 +54,6 @@ function clearBattleBoardInteractionState(){
 const IMMEDIATE_MOVE_UNDO_MS=4500;
 let immediateMoveUndoState=null;
 let immediateMoveUndoTimer=null;
-let immediateMoveUndoInFlight=false;
 function invalidateImmediateMoveUndo(_reason=""){
   immediateMoveUndoState=null;
   if(immediateMoveUndoTimer){battleClearTimeout(immediateMoveUndoTimer);immediateMoveUndoTimer=null;}

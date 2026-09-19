@@ -1188,26 +1188,6 @@ function bindDeckBuilderDragAndClick(collectionGrid,...deckContainers){
   bindDeckBuilderPersistentDropTargets(collectionGrid,...lists);
 }
 
-const DECK_SEARCH_ALIAS_GROUPS=[
-  ["hacha","axe","hachero","hachera"],
-  ["espada","sword","espadachin","espadachina"],
-  ["lanza","spear","lance","lancer","lancero","pica"],
-  ["arco","bow","archer","arquero","arquera","flecha","tirador"],
-  ["caballeria","cavalry","jinete","montado","montada"],
-  ["mago","mage","hechicero","hechicera","caster","arcano","arcana"],
-  ["bestia","beast","animal"],
-  ["asesino","asesina","assassin"],
-  ["invocacion","invocaciones","unidad","unidades","unit"],
-  ["magia","magias","hechizo","hechizos","spell"],
-  ["trampa","trampas","trap"],
-  ["equipo","equipment"],
-  ["basica","basic"],
-  ["epica","epic"],
-  ["gloriosa","glorious"],
-  ["mitica","mythic"],
-  ["legendaria","legendary"],
-  ["semidios","demigod"]
-];
 function getDeckBuilderAddLockReason(card,used=0,addLimit=0){
   if(!card)return "No se pudo identificar esta carta.";
   const ownedQty=Math.max(0,Number(card.qty||0));

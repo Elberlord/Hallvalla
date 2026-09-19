@@ -38,7 +38,7 @@ Cambios principales
    - PNG fuente incluida también.
 
 Archivos tocados
-- js/parts/15-settings-tuners-events.js
+- js/system/settings-events.js
 - styles.css
 - assets/mine/rewards/wheel_grouped_categories.png
 - assets/mine/rewards/wheel_grouped_categories.webp
