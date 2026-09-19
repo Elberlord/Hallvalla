@@ -132,7 +132,7 @@ function weaponGuideData(entity){
   if(entity?.leader){
     const lt=String(entity.leaderType||"").toLowerCase();
     if(lt==="archer")return {title:"Arco de líder",short:"Arma de mando a distancia. Permite presionar desde lejos sin entrar siempre al choque cuerpo a cuerpo.",formula:"Ventaja: el líder arquero combina rango, precisión y apoyo a arqueras. Sus golpes de líder aciertan automáticamente según la regla actual de líder.",example:"Útil para proteger distancia, rematar unidades dañadas y potenciar arqueras con AT/DX/AGI."};
-    if(lt==="mage")return {title:"Báculo / foco arcano",short:"No gana por fuerza bruta: amplifica el daño de sus magias.",formula:"Ventaja de tier: +2/+4/+6/+8/+10 al daño de las magias. El tier ya no reduce su coste. Sus efectos propios se resuelven por separado.",example:"Una magia de daño 2 pasa a daño 6 con Tier 2 (+4), manteniendo su coste original."};
+    if(lt==="mage")return {title:"Báculo / foco arcano",short:"Líder de unidades mágicas y arcanas.",formula:"El buff de tier usa la misma progresión acumulativa que los demás líderes: Tier 1 +1 AT; Tier 2 añade +1 DX; Tier 3 añade +1 AG; Tier 4 añade +1 GD; Tier 5 añade +1 HP. Las magias conservan su daño base salvo otros efectos.",example:"Una unidad Magia / Arcano compatible conserva todos los bonus desbloqueados por el tier actual del Hechicero."};
     return {title:"Espada de mando",short:"Arma de líder cuerpo a cuerpo. Sirve para sostener la línea y fortalecer infantería pesada.",formula:"Ventaja: el líder guerrero pelea de cerca y mejora Vida/Guardia de unidades defensivas. Sus golpes de líder aciertan automáticamente según la regla actual de líder.",example:"Ideal para avanzar con lanceros, guardianes y unidades que quieran aguantar intercambio."};
   }
   if(key==="cavalry"||name.includes("caballería")||name.includes("caballeria"))return {title:"Espada de caballería",short:"Arma de carga. No está hecha para quedarse quieta: gana valor cuando entra con impulso.",formula:"Ventaja: aunque pertenece a la clase táctica Caballería, esta unidad ataca con espada. Si se mueve 3+ espacios y ataca cuerpo a cuerpo, desestabiliza al objetivo y le baja AGI durante ese combate.",example:"Úsala para flanquear, castigar arqueros o rematar unidades que quedaron fuera de formación. Cuidado con lanceros: son su respuesta natural."};
@@ -276,7 +276,7 @@ function getLeaderExactEffectGuideData(entity){
       target:"Guerreros y unidades con armadura pesada",
       affected:"Afecta a unidades aliadas con rasgo Guerrero o armadura pesada. Una unidad montada pesada también califica: los rasgos de líder no son clases exclusivas.",
       notAffected:"No afecta unidades que carezcan del rasgo Guerrero/armadura pesada ni al propio líder. Una unidad híbrida puede ser, por ejemplo, Caballería y Guerrero a la vez.",
-      buff:`+${buff.guard||0} GD y +${buff.dex||0} DX a cada infantería pesada aliada. El Guerrero aumenta moral, disciplina y capacidad defensiva; el buff de tier ya no aumenta Vida.`,
+      buff:`${formatLeaderTierBuffStats(buff)} a cada infantería pesada aliada compatible.`,
       passive:`Muralla de unidades: mientras este líder tenga al menos una unidad aliada viva en el campo, los ataques de unidades enemigas no bajan la Vida del líder. La Guardia puede recibir daño, pero la Vida queda protegida contra ataques de unidades. Hechizos, trampas y efectos de líderes sí pueden dañar al líder normalmente.`,
       example:"Si el Guerrero tiene un Guardián aliado vivo y una unidad enemiga le pega al líder, ese ataque no baja la Vida del líder. Si no queda ninguna unidad aliada viva, la protección se apaga."
     },
@@ -284,49 +284,49 @@ function getLeaderExactEffectGuideData(entity){
       target:"Unidades aliadas que usan arco",
       affected:"Afecta a toda unidad aliada con rasgo Arco, incluso si también está montada. La Caballería Arquera de Saladino, por ejemplo, puede recibir este buff si el único líder activo es Arquero.",
       notAffected:"No afecta unidades sin rasgo Arco ni al propio líder. Ser Caballería no impide recibir el buff Arquero si la unidad realmente usa arco.",
-      buff:`+${buff.atk||0} AT y +${buff.dex||0} DX a cada arquera aliada. El buff de tier ya no aumenta RG ni AGI.`,
-      passive:"El bonus representa habilidad con el arco: aumenta Ataque y Destreza, no Rango. El efecto propio de la Arquera del desierto sigue teniendo su regla exacta: solo reduce MOV si hace al menos 1 daño real a Vida/HP.",
-      example:"Una Arquera con este líder puede pegar desde más lejos y conectar mejor, pero si su disparo solo rompe Guardia y no toca Vida, no aplica el -1 MOV."
+      buff:`${formatLeaderTierBuffStats(buff)} a cada unidad de arco aliada compatible.`,
+      passive:"El buff de tier es acumulativo y siempre sigue el mismo orden: AT → DX → AG → GD → HP. No aumenta Rango. El efecto propio de la Arquera del desierto sigue teniendo su regla exacta: solo reduce MOV si hace al menos 1 daño real a Vida/HP.",
+      example:"En Tier 3, una Arquera compatible recibe +1 AT, +1 DX y +1 AG. Su Rango sigue siendo el de la propia carta."
     },
     mage:{
-      target:"Magias aliadas",
-      affected:"Afecta a cartas de tipo magia/hechizo jugadas por el dueño de este líder.",
-      notAffected:"No afecta unidades normales, arqueras, bestias, caballería ni ataques básicos. Tampoco cambia el costo de invocar unidades.",
-      buff:`Las magias de daño reciben +${buff.damageBonus||0} daño. El tier del Hechicero ya no reduce costes y no aumenta curación, buffs ni escudos.`,
-      passive:"El recurso del Hechicero se muestra como MANA. El coste de las magias se mantiene en su valor normal salvo otros efectos independientes. Vínculo Arcano y las demás habilidades propias del Hechicero se conservan por separado del buff de tier.",
-      example:"Una magia de daño con costo 3 y daño 2, con Tier 2 (+4 daño), sigue costando 3 y hace 6 de daño si tiene objetivo válido."
+      target:"Unidades aliadas de Magia / Arcano",
+      affected:"Afecta a unidades aliadas con rasgo Magia / Arcano. Vínculo Arcano sigue siendo una regla separada para unidades mágicas jugadas desde la mano junto al líder.",
+      notAffected:"No aumenta directamente el daño de cartas de magia ni altera sus costes. Tampoco afecta unidades fuera del rasgo Magia / Arcano ni al propio líder.",
+      buff:`${formatLeaderTierBuffStats(buff)} a cada unidad Magia / Arcano aliada compatible.`,
+      passive:"El recurso del Hechicero se muestra como MANA. Las magias conservan su daño y coste base salvo otros efectos independientes. Vínculo Arcano y las demás habilidades propias del Hechicero se conservan por separado del buff de tier.",
+      example:"En Tier 3, una unidad Magia / Arcano compatible recibe +1 AT, +1 DX y +1 AG; el daño base de una carta de magia no cambia por este buff."
     },
     axe:{
       target:"Unidades de hacha / berserkers aliados",
       affected:"Afecta a unidades aliadas reconocidas como hacha, principalmente Berserker del norte y cartas con icono/texto/nombre de hacha o axe.",
       notAffected:"No afecta unidades sin rasgo Hacha ni al propio líder. Una unidad montada con hacha conserva ambos rasgos, aunque solo recibe el buff del líder activo.",
-      buff:`+${buff.atk||0} AT y +${buff.dex||0} DX a cada unidad de hacha aliada.`,
+      buff:`${formatLeaderTierBuffStats(buff)} a cada unidad de hacha aliada compatible.`,
       passive:"Grito de Guerra: cuando una unidad aliada rompe toda la Guardia enemiga, el equipo aliado puede recibir presión ofensiva extra según la regla de combate vigente. La habilidad Nv.5 del Caudillo añade además Victoria sangrienta.",
-      example:"Un Berserker bajo este líder se vuelve un rompearmaduras: pega más fuerte y tiene más Destreza para conectar sus ataques."
+      example:"En Tier 3, una unidad de hacha compatible recibe +1 AT, +1 DX y +1 AG; sus habilidades propias siguen resolviéndose aparte."
     },
     cavalry:{
       target:"Unidades aliadas montadas a caballo",
       affected:"Afecta a unidades montadas a caballo, incluidas híbridas como arqueros montados o guerreros pesados montados. El sistema conserva sus demás rasgos de combate.",
       notAffected:"No afecta unidades que no estén montadas a caballo ni al propio líder. Un arquero montado sí califica como Caballería.",
-      buff:`+${buff.dex||0} DX y +${buff.agi||0} AGI a cada caballería aliada.`,
-      passive:"El bonus mejora control de montura, precisión y evasión mediante Destreza y Agilidad. No aumenta MOV por tier. Solo hay un líder activo: una unidad híbrida nunca acumula simultáneamente el buff de Caballería y el de otro arquetipo.",
-      example:"Con más DX y AGI, la Caballería conecta y evade mejor, pero debe cumplir por sí misma cualquier requisito de movimiento de sus efectos de carga."
+      buff:`${formatLeaderTierBuffStats(buff)} a cada caballería aliada compatible.`,
+      passive:"El buff de tier es acumulativo en AT, DX, AG, GD y HP. No aumenta MOV por tier. Solo hay un líder activo: una unidad híbrida nunca acumula simultáneamente el buff de Caballería y el de otro arquetipo.",
+      example:"En Tier 4, una Caballería compatible conserva +1 AT, +1 DX y +1 AG, y además obtiene +1 GD. Sus requisitos de movimiento para cargas no cambian."
     },
     assassin:{
       target:"Asesinos aliados",
       affected:"Afecta a unidades aliadas reconocidas como asesinos, principalmente Asesina del desierto y cartas con nombre de asesina/asesino.",
       notAffected:"No afecta guerreros pesados, arqueras, caballería, bestias, magias ni al propio líder.",
-      buff:`+${buff.atk||0} AT y +${buff.agi||0} AGI a cada asesino aliado.`,
+      buff:`${formatLeaderTierBuffStats(buff)} a cada asesino aliado compatible.`,
       passive:"El bonus aumenta sus stats de combate. Con la habilidad Nv.5 Niebla de sangre, los asesinos aliados ignoran Guardia al atacar y gastan solo la mitad de PREC/EVA cuando el sistema les cobre ese desgaste.",
-      example:"La Asesina del desierto se vuelve más difícil de esquivar y más difícil de alcanzar. Si además está activa Niebla de sangre, su daño atraviesa Guardia."
+      example:"En Tier 3, un asesino compatible recibe +1 AT, +1 DX y +1 AG. Niebla de sangre sigue siendo una habilidad Nv.5 aparte."
     },
     beastmaster:{
       target:"Bestias aliadas",
       affected:"Afecta a unidades aliadas marcadas como bestia: Tejón Mielero, Puercoespín, Jabalí Salvaje, Cuervo Negro, Serpiente, Búfalo, Halcón, Taipán, León, Tigre, Rinoceronte y futuras bestias.",
       notAffected:"No afecta humanos, arqueras, magias, caballería común, asesinos ni al propio líder.",
-      buff:`+${buff.dex||0} DX y +${buff.agi||0} AGI a cada bestia aliada.`,
-      passive:"La mejora vuelve a las bestias más agresivas y móviles. Con la habilidad Nv.5 Veneno de la Manada, cualquier unidad aliada que cause daño real a HP aplica Veneno, incluso si no es bestia.",
-      example:"Un Jabalí o Tigre bajo este líder golpea más fuerte. Si está activa Veneno de la Manada, el daño real a HP también deja veneno."
+      buff:`${formatLeaderTierBuffStats(buff)} a cada bestia aliada compatible.`,
+      passive:"El buff de tier de las bestias sigue la progresión acumulativa AT, DX, AG, GD y HP; no añade MOV. Con la habilidad Nv.5 Veneno de la Manada, cualquier unidad aliada que cause daño real a HP aplica Veneno, incluso si no es bestia.",
+      example:"Una bestia en Tier 5 conserva +1 AT, +1 DX, +1 AG y +1 GD, y además obtiene +1 HP. Veneno de la Manada sigue siendo una habilidad aparte."
     }
   }[type]||{};
   const abilityLine=abilityData
@@ -673,16 +673,16 @@ function getUnifiedDetDisplayedStats(entity,{live=false}={}){
       };
     }
     if(entity.type==='unit'||entity.leader){
-      const masteryBonus=(!entity.leader&&typeof getUnitMasteryRank==='function'&&typeof getUnitMasteryStatBonusByRank==='function'&&!(typeof isUnitServiceProgression==='function'&&isUnitServiceProgression(entity)))
-        ? Math.max(0,Number(getUnitMasteryStatBonusByRank(getUnitMasteryRank(entity))||0))
+      const masteryDexBonus=(!entity.leader&&typeof getUnitMasteryRank==='function'&&typeof getUnitMasteryDexBonusByRank==='function'&&!(typeof isUnitServiceProgression==='function'&&isUnitServiceProgression(entity)))
+        ? Math.max(0,Number(getUnitMasteryDexBonusByRank(getUnitMasteryRank(entity))||0))
         : 0;
       return {
-        hp:Number(entity.hp??0)+masteryBonus,
-        dexterity:Number(typeof getCardDisplayDex==='function'?getCardDisplayDex(entity):(entity.dx??entity.dex??0))+masteryBonus,
+        hp:Number(entity.hp??0),
+        dexterity:Number(typeof getCardDisplayDex==='function'?getCardDisplayDex(entity):(entity.dx??entity.dex??0))+masteryDexBonus,
         movement:entity.mov??0,
-        attack:Number(entity.atk??0)+masteryBonus,
-        guard:Number(entity.guard??0)+masteryBonus,
-        agility:Number(entity.agi??0)+masteryBonus,
+        attack:Number(entity.atk??0),
+        guard:Number(entity.guard??0),
+        agility:Number(entity.agi??0),
         range:typeof getCardDisplayRange==='function'?getCardDisplayRange(entity):(entity.range??entity.rg??1),
         cost:costValue
       };

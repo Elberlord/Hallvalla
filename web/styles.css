@@ -16495,7 +16495,7 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
   border:none!important;
   border-radius:0!important;
   display:block!important;
-  background:transparent url("assets/ui/det_templates/det_base_universal_v32.webp") center/contain no-repeat!important;
+  background:transparent url("assets/ui/det_templates/det_base_universal_v33.webp") center/contain no-repeat!important;
   box-shadow:0 28px 90px rgba(0,0,0,.58)!important;
 }
 #cardInspectModal .card-inspect-card::before,
@@ -16506,7 +16506,7 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
   #cardInspectModal .card-inspect-card{width:min(98vw,1500px)!important;}
 }
 
-/* === DET v32 UNIFICADO · colección, mano y campo usan #cardInspectModal === */
+/* === DET v33 UNIFICADO · colección, mano y campo usan #cardInspectModal === */
 #cardInspectModal.unified-det-modal .card-inspect-card,
 #cardInspectModal.field-unit-detail-modal .card-inspect-card{
   width:min(96vw,1500px)!important;
@@ -16518,7 +16518,7 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
   overflow:visible!important;
   border:0!important;
   border-radius:0!important;
-  background:transparent url("assets/ui/det_templates/det_base_universal_v32.webp") center/100% 100% no-repeat!important;
+  background:transparent url("assets/ui/det_templates/det_base_universal_v33.webp") center/100% 100% no-repeat!important;
   box-shadow:0 28px 90px rgba(0,0,0,.58)!important;
 }
 /* Blindaje: si alguna clase vieja reaparece, nunca vuelve a mostrar v31. */
@@ -16528,10 +16528,10 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 /* Valores centrales que existen en TODOS los contextos del DET. */
 
 /* Posiciones iniciales: son sólo punto de partida; AJUSTAR DET permite mover cada ID. */
-#cardInspectModal #detTypeValue{left:36.2%!important;top:66.7%!important;width:18.7%!important;height:6.7%!important;}
-#cardInspectModal #detRarityValue{left:36.2%!important;top:75.6%!important;width:18.7%!important;height:6.7%!important;}
-#cardInspectModal #detStateValue{left:36.2%!important;top:84.6%!important;width:18.7%!important;height:6.7%!important;}
-#cardInspectModal #detCopiesValue{left:76.1%!important;top:40.7%!important;width:17.8%!important;height:8.8%!important;}
+#cardInspectModal #detTypeValue{left:41.65%!important;top:64.8%!important;width:13.0%!important;height:7.0%!important;}
+#cardInspectModal #detRarityValue{left:41.65%!important;top:74.0%!important;width:13.0%!important;height:7.0%!important;}
+#cardInspectModal #detStateValue{left:41.65%!important;top:83.6%!important;width:13.0%!important;height:7.0%!important;}
+#cardInspectModal #detCopiesValue{left:76.10%!important;top:41.55%!important;width:4.15%!important;height:8.4%!important;}
 
 /* El contenido dinámico sigue siendo un solo origen, pero sus subpaneles son editables por separado. */
 
@@ -16547,12 +16547,12 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 }
 
 
-/* === DET v32 CLEAN ICON CALIBRATION · 8BQ ===
+/* === DET v33 CLEAN ICON CALIBRATION · 8BQ ===
    DET limpio real: la superficie se reconstruye desde JS. Aquí solo se
    define el template, los iconos calibrables y los elementos nuevos.
    ================================================================ */
 #cardInspectModal .card-inspect-card{
-  background:transparent url("assets/ui/det_templates/det_base_universal_v32.webp") center/100% 100% no-repeat!important;
+  background:transparent url("assets/ui/det_templates/det_base_universal_v33.webp") center/100% 100% no-repeat!important;
   overflow:visible!important;
 }
 #cardInspectModal .hv-det-icon-calibration{
@@ -16635,7 +16635,7 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 .hv-det-icon-actions{grid-template-columns:1fr 1fr!important;}
 .hv-det-icon-actions [data-det-copy-icons-json]{grid-column:1/-1!important;}
 
-/* === DET v32 · portrait calibration · 8BQ === */
+/* === DET v33 · portrait calibration · 8BQ === */
 
 #cardInspectModal .hv-det-portrait-calibration{
   position:absolute!important;
@@ -16688,7 +16688,7 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 
 
 
-/* === DET v32 · badge de costo artístico · 8BQ === */
+/* === DET v33 · badge de costo artístico · 8BQ === */
 #cardInspectModal .hv-det-cost-badge-calibration{
   position:absolute!important;
   left:14.1842%!important;
@@ -16738,7 +16738,7 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 }
 
 
-/* === DET v32 · nombre calibrable · 8BR === */
+/* === DET v33 · nombre calibrable · 8BR === */
 #cardInspectModal .hv-det-name-calibration{
   position:absolute!important;
   left:58.0%!important;
@@ -16794,7 +16794,7 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 }
 
 
-/* === DET v32 · valores dinámicos de stats · 8BT === */
+/* === DET v33 · valores dinámicos de stats · 8BT === */
 #cardInspectModal .hv-det-stat-values-layer{
   position:absolute!important;
   inset:0!important;
@@ -16805,7 +16805,7 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 }
 #cardInspectModal .hv-det-stat-value{
   position:absolute!important;
-  left:48.18%!important;
+  left:42.50%!important;
   width:4.15%!important;
   height:9.7167%!important;
   display:flex!important;
@@ -16886,7 +16886,7 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 }
 
 
-/* === DET v32 · referencias arma/copias/PREC-EVA/lore · 8BU === */
+/* === DET v33 · referencias arma/copias/PREC-EVA/lore · 8BU === */
 #cardInspectModal .hv-det-reference-utilities{
   position:absolute!important;
   inset:0!important;
@@ -16966,7 +16966,7 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 }
 
 
-/* === DET v32 · nivel y poder de batalla · 8BV === */
+/* === DET v33 · nivel y poder de batalla · 8BV === */
 #cardInspectModal .hv-det-level-battle-layer{
   position:absolute!important;
   inset:0!important;
@@ -17094,7 +17094,7 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 }
 
 
-/* === DET v32 · meta y efectos activos · 8BW === */
+/* === DET v33 · meta y efectos activos · 8BW === */
 #cardInspectModal .hv-det-meta-layer{
   position:absolute!important;
   inset:0!important;
@@ -17223,7 +17223,7 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
   outline-offset:3px!important;
 }
 
-/* === DET v32 · botón JUGAR exclusivo de carta jugable en mano · 8BZ === */
+/* === DET v33 · botón JUGAR exclusivo de carta jugable en mano · 8BZ === */
 #cardInspectModal .hv-det-play-card-button{
   position:absolute!important;
   left:84.0%!important;
@@ -17270,7 +17270,7 @@ html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!
 #cardInspectModal .hv-det-play-card-button:focus-visible{outline:2px solid #f5d785!important;outline-offset:3px!important;}
 
 
-/* === DET v32 · efectos propios hasta 10 + JUGAR calibrable · 8CD === */
+/* === DET v33 · efectos propios hasta 10 + JUGAR calibrable · 8CD === */
 #cardInspectModal .hv-det-own-effects-list{
   position:absolute!important;
   left:66.6%!important;

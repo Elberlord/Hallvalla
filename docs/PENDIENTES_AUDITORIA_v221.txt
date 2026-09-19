@@ -1,0 +1,43 @@
+HALLVALLA — PENDIENTES DESPUÉS DE v221
+Build: 20260919.221
+
+COMPLETADO EN v221
+- DET v33: una sola casilla por stat; v32 eliminada.
+- COPIAS / TIPO / RAREZA / ESTADO recolocados para la nueva plantilla.
+- buff universal acumulativo de líderes: AT -> DX -> AG -> GD -> HP.
+- Maestría de unidades: solo DX aumenta (+2 por rango; XV = +28 DX).
+- Hua Lan: Golpe de Apertura, primer ataque +6 AT.
+
+1. NETWORK/BATTLE-STATE — SIGUIENTE PRIORIDAD
+   - Auditar qué campos heredados siguen escribiéndose en snapshots nuevos:
+     currentPlayer, turn, turnPhase, turnKey y campos *TurnKey derivados.
+   - Separar estado realmente necesario, claves internas de ventana y compatibilidad.
+   - Centralizar cualquier migración; no hacer renombrados carta por carta.
+   - No cambiar Firebase rules salvo cambio real del contrato autorizado.
+
+2. RENDER-BATTLE-TUTORIAL
+   - Separar renderer de tablero/HUD de tutoriales, overlays y explicación de estados.
+
+3. SETTINGS-EVENTS
+   - Todavía es uno de los módulos de producción más grandes.
+   - Separar Mina, recompensas, tutoriales y bindings generales.
+
+4. DECKS-UNITS-COMBAT-RULES
+   - Separar factories, validación de deck/líderes y reglas generales compartidas.
+
+5. PVP
+   - Dividir ranking/resultados, lobby/matchmaking, BOT y sincronización después de estabilizar dependencias exteriores.
+
+6. MOTOR AUTOMÁTICO
+   - Modularizar realtime/experimental.js y retirar finalmente la nomenclatura histórica `experimental`.
+   - La terminología técnica del runtime debe permanecer privada en código/docs/dev.
+
+7. CONTRATOS/NOMBRES HISTÓRICOS RESTANTES
+   - Revisar turnsRemaining, damagedThisTurn y *TurnKey únicamente con mapa de consumidores.
+
+8. CIERRE FINAL DE AUDITORÍA
+   - búsqueda global de código muerto y assets huérfanos;
+   - Aventura + PvP BOT + PvP real concurrente;
+   - gamepad Windows/Android;
+   - Mina/Forja/colección/tutorial;
+   - hashes/cache/build y revisión final de Firebase.

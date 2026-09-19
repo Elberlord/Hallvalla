@@ -656,7 +656,7 @@ async function resolveSharedAttackOutcome({
       delete nextAttacker.khalidChainReady;
       delete nextAttacker.mulanExecutionMoveReady;
       delete nextAttacker.mulanExecutionChoiceReady;
-      if(u.key==="mulan"){nextAttacker.mulanRepositionReady=false;nextAttacker.mulanFollowupReady=false;}
+      if(u.key==="mulan"){nextAttacker.mulanFirstAttackUsed=true;nextAttacker.mulanRepositionReady=false;nextAttacker.mulanFollowupReady=false;}
       if((a.dragonBoss||(typeof isDragonCompanionKey==="function"&&isDragonCompanionKey(a.key)))&&a.key!=="dragon_egg"){
         nextAttacker.dragonCharge=Number(a.dragonCharge||0)>=2?0:Number(a.dragonCharge||0)+1;
       }else{

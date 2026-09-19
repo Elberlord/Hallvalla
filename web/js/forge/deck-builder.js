@@ -1513,95 +1513,60 @@ document.querySelectorAll("#deckBuilderPanel [data-deck-unit-filter]").forEach(b
   });
 });
 
+const LEADER_TIER_DETAIL_LINES=Object.freeze([
+  "Tier 1 (niveles 1–3): +1 AT",
+  "Tier 2 (niveles 4–6): +1 AT / +1 DX",
+  "Tier 3 (niveles 7–8): +1 AT / +1 DX / +1 AG",
+  "Tier 4 (niveles 9–14): +1 AT / +1 DX / +1 AG / +1 GD",
+  "Tier 5 (nivel 15): +1 AT / +1 DX / +1 AG / +1 GD / +1 HP"
+]);
 const LEADER_DETAIL_META={
   warrior:{
     target:"Infantería pesada",
     stats:"AT 3 · GD 4 · RG 1",
-    tiers:[
-      "Tier 1 (niveles 1–3): +2 GD / +2 DX",
-      "Tier 2 (niveles 4–6): +4 GD / +4 DX",
-      "Tier 3 (niveles 7–8): +6 GD / +6 DX",
-      "Tier 4 (niveles 9–14): +8 GD / +8 DX",
-      "Tier 5 (nivel 15): +10 GD / +10 DX"
-    ],
+    tiers:LEADER_TIER_DETAIL_LINES,
     abilityName:"Muralla de unidades",
     ability:"Mientras quede al menos una unidad aliada viva, los ataques de unidades enemigas no bajan la Vida del líder Warrior. Hechizos, trampas y efectos de líderes rivales sí hacen daño normalmente."
   },
   archer:{
     target:"Arqueras",
     stats:"AT 3 · GD 2 · RG 2",
-    tiers:[
-      "Tier 1 (niveles 1–3): +2 AT / +2 DX",
-      "Tier 2 (niveles 4–6): +4 AT / +4 DX",
-      "Tier 3 (niveles 7–8): +6 AT / +6 DX",
-      "Tier 4 (niveles 9–14): +8 AT / +8 DX",
-      "Tier 5 (nivel 15): +10 AT / +10 DX"
-    ],
+    tiers:LEADER_TIER_DETAIL_LINES,
     abilityName:"Lluvia de flechas",
     ability:"Desde nivel 5, cada 10 s se activa automáticamente si hay al menos una unidad enemiga a rango 3 o menos. Hace 1 daño directo a todas las unidades enemigas dentro de rango 3, ignorando Guardia y stats, y también afecta unidades con Sigilo."
   },
   mage:{
-    target:"Magias",
-    stats:"AT 2 · GD 1 · RG 3",
-    tiers:[
-      "Tier 1 (niveles 1–3): +2 daño de magias",
-      "Tier 2 (niveles 4–6): +4 daño de magias",
-      "Tier 3 (niveles 7–8): +6 daño de magias",
-      "Tier 4 (niveles 9–14): +8 daño de magias",
-      "Tier 5 (nivel 15): +10 daño de magias"
-    ],
+    target:"Unidades Magia / Arcano",
+    stats:"AT 3 · GD 1 · RG 2",
+    tiers:LEADER_TIER_DETAIL_LINES,
     abilityName:"Descarga arcana",
     ability:"Desde nivel 5, cada 10 s se activa automáticamente para hacer 2 de daño directo al líder enemigo, ignorando Guardia y stats de combate."
   },
   axe:{
     target:"Unidades de hacha / berserkers",
     stats:"AT 4 · GD 3 · RG 1",
-    tiers:[
-      "Tier 1 (niveles 1–3): +2 AT / +2 DX",
-      "Tier 2 (niveles 4–6): +4 AT / +4 DX",
-      "Tier 3 (niveles 7–8): +6 AT / +6 DX",
-      "Tier 4 (niveles 9–14): +8 AT / +8 DX",
-      "Tier 5 (nivel 15): +10 AT / +10 DX"
-    ],
+    tiers:LEADER_TIER_DETAIL_LINES,
     abilityName:"Victoria sangrienta",
     ability:"Desde nivel 5, cada vez que una unidad aliada muere, las demás unidades aliadas que estén vivas y actualmente en el campo ganan +3 AT permanente. Las unidades del mazo o las que entren después no reciben acumulaciones anteriores."
   },
   cavalry:{
     target:"Caballería ligera",
     stats:"AT 3 · GD 3 · RG 1",
-    tiers:[
-      "Tier 1 (niveles 1–3): +2 DX / +2 AGI",
-      "Tier 2 (niveles 4–6): +4 DX / +4 AGI",
-      "Tier 3 (niveles 7–8): +6 DX / +6 AGI",
-      "Tier 4 (niveles 9–14): +8 DX / +8 AGI",
-      "Tier 5 (nivel 15): +10 DX / +10 AGI"
-    ],
+    tiers:LEADER_TIER_DETAIL_LINES,
     abilityName:"Llamado de la carga",
     ability:"Desde nivel 5, cada 10 s se activa automáticamente siempre que exista al menos una casilla libre adyacente al líder y convoca hasta 3 Caballerías Ligeras aliadas en los espacios disponibles."
   },
   assassin:{
     target:"Asesinos",
     stats:"AT 2 · GD 1 · RG 1",
-    tiers:[
-      "Tier 1 (niveles 1–3): +2 AT / +2 AGI",
-      "Tier 2 (niveles 4–6): +4 AT / +4 AGI",
-      "Tier 3 (niveles 7–8): +6 AT / +6 AGI",
-      "Tier 4 (niveles 9–14): +8 AT / +8 AGI",
-      "Tier 5 (nivel 15): +10 AT / +10 AGI"
-    ],
+    tiers:LEADER_TIER_DETAIL_LINES,
     abilityName:"Niebla de sangre",
     ability:"Desde nivel 5, los asesinos aliados ignoran Guardia al atacar. Además, gastan solo la mitad de PREC/EVA cuando el sistema les cobre ese desgaste, redondeado hacia arriba."
   },
   beastmaster:{
     target:"Bestias aliadas",
     stats:"AT 2 · GD 2 · RG 1",
-    tiers:[
-      "Tier 1 (niveles 1–3): +2 DX / +2 AGI",
-      "Tier 2 (niveles 4–6): +4 DX / +4 AGI",
-      "Tier 3 (niveles 7–8): +6 DX / +6 AGI",
-      "Tier 4 (niveles 9–14): +8 DX / +8 AGI",
-      "Tier 5 (nivel 15): +10 DX / +10 AGI"
-    ],
+    tiers:LEADER_TIER_DETAIL_LINES,
     abilityName:"Veneno de la Manada",
     ability:"Desde nivel 5, todas las unidades aliadas causan Veneno cuando hacen daño real a HP, incluso en contrataque si atraviesan Guardia. El veneno dura 50 s y se duplica cada tick: 1 → 2 → 4 → 8 → 16."
   }
@@ -1656,7 +1621,7 @@ function openLeaderAbilityModal(type){
   </div>
   <section class="leader-info-section">
     <h3>Se desbloquea en nivel 5</h3>
-    <p><b>Importante:</b> nivel 5 sigue siendo Tier 2. El tier define el tamaño del buff; la habilidad Nv.5 es un desbloqueo aparte.</p>
+    <p><b>Importante:</b> nivel 5 sigue siendo Tier 2. Cada tier conserva los bonus anteriores y añade el siguiente stat; la habilidad Nv.5 es un desbloqueo aparte.</p>
     <p>${escapeHtml(meta.ability)}</p>
   </section>
   <section class="leader-info-actions">

@@ -700,7 +700,7 @@ function copyHvDetIconJson(button){
   const payload=JSON.stringify({
     version:10,
     scope:'det_icons_portrait_costbadge_name_stats_reference_effects_play',
-    template:'assets/ui/det_templates/det_base_universal_v32.webp',
+    template:'assets/ui/det_templates/det_base_universal_v33.webp',
     note:'DET limpio v32: mantiene EFECTOS ACTIVOS, añade EFECTOS PROPIOS y registra JUGAR en el editor. IDs: abilities.list, ability.* y action.play.',
     icons,
     portrait,

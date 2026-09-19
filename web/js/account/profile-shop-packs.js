@@ -816,7 +816,7 @@ function unitServiceUnlockText(result){
 }
 function annotateUnitWithServiceProgress(unit){
   if(!isUnitServiceProgression(unit))return unit;
-  return {...unit,servicePoints:getUnitServicePoints(unit),masteryRank:1,masteryHpBonus:0,masteryStatBonus:0};
+  return {...unit,servicePoints:getUnitServicePoints(unit),masteryRank:1,masteryDexBonus:0};
 }
 
 const LEADER_MASTERY_MAX_RANK=15;
@@ -932,8 +932,7 @@ function getUnitMasteryRank(entity){
   }
   return getUnitMasteryRankFromKills(getUnitMasteryRecord(entity).kills);
 }
-function getUnitMasteryStatBonusByRank(rank){return Math.max(0,(Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(rank)||1))-1)*2);}
-function getUnitMasteryHpBonusByRank(rank){return getUnitMasteryStatBonusByRank(rank);}
+function getUnitMasteryDexBonusByRank(rank){return Math.max(0,(Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(rank)||1))-1)*2);}
 
 function getUnitMasteryProgressText(entity){
   if(isUnitServiceProgression(entity))return getAcolyteServiceProgressText(entity);
@@ -965,8 +964,8 @@ function registerLocalUnitMasteryKill(killer,victim){
     const afterRank=getUnitMasteryRankFromKills(afterKills);
     book[key]={name:normalizeUnitMasteryName(creditedKiller.name||before.name||key),kills:afterKills};
     savePlayerProfile({...profile,unitMastery:book});
-    const statGain=getUnitMasteryStatBonusByRank(afterRank)-getUnitMasteryStatBonusByRank(beforeRank);
-    return {key,name:book[key].name,kills:afterKills,beforeRank,afterRank,rankedUp:afterRank>beforeRank,statGain,hpGain:statGain,creditedFromReanimated:creditedKiller.id!==killer.id};
+    const dexGain=getUnitMasteryDexBonusByRank(afterRank)-getUnitMasteryDexBonusByRank(beforeRank);
+    return {key,name:book[key].name,kills:afterKills,beforeRank,afterRank,rankedUp:afterRank>beforeRank,dexGain,creditedFromReanimated:creditedKiller.id!==killer.id};
   }catch(e){console.warn("[HallValla] No se pudo registrar maestría de unidad:",e);return null;}
 }
 const VEIL_CURSE_KILL_EVENT_STORAGE_KEY="hallvalla_veil_curse_kill_event_v1";
@@ -988,7 +987,7 @@ function maybeProcessVeilCurseKillEvent(prevState,nextState){
       const result=registerLocalUnitMasteryKill(killer,victim);
       if(result?.rankedUp){
         const nextUnits=applyUnitMasteryRankUpToUnits(upgradedUnits,killer,result);
-        changed=changed||nextUnits.some((unit,index)=>Number(unit.maxHp||0)!==Number(upgradedUnits[index]?.maxHp||0));
+        changed=changed||nextUnits!==upgradedUnits;
         upgradedUnits=nextUnits;
         setHint(`Cuenta regresiva mortal: la baja de ${victim.name} cuenta para ${killer.name}.${unitMasteryRankUpText(result)}`);
       }
@@ -1018,43 +1017,27 @@ function applyUnitMasteryRankUpToUnits(units,killer,result){
       return {...u,leaderLevel:afterLevel,leaderAbility:ability,maxHp:nextMax,hp:Math.min(nextMax,Number(u.hp||0)+hpGain),atk:Number(u.atk||0)+atkGain,baseGuard:Number(u.baseGuard??u.guard??0)+guardGain,guard:Number(u.guard||0)+Math.max(0,guardGain),range:getLeaderRange(type,afterLevel)};
     });
   }
-  const statGain=Math.max(0,Number(result.statGain??result.hpGain??0));
-  if(statGain<=0)return units;
+  const dexGain=Math.max(0,Number(result.dexGain||0));
+  if(dexGain<=0)return units;
   const key=result.key||getUnitMasteryKey(killer);
   return units.map(u=>{
     if(!u||u.leader||Number(u.owner)!==Number(killer.owner)||getUnitMasteryKey(u)!==key)return u;
-    const currentMax=Number(u.maxHp||u.hp||0);
-    const nextMax=currentMax+statGain;
-    const currentBaseGuard=Number(u.baseGuard??u.guard??0);
-    const currentGuard=Number(u.guard||0);
-    const bonus=getUnitMasteryStatBonusByRank(result.afterRank);
-    return {
-      ...u,
-      maxHp:nextMax,
-      hp:Math.min(nextMax,Number(u.hp||0)+statGain),
-      atk:Number(u.atk||0)+statGain,
-      baseGuard:currentBaseGuard+statGain,
-      guard:currentGuard+statGain,
-      dex:Number(u.dex||0)+statGain,
-      agi:Number(u.agi||0)+statGain,
-      masteryRank:result.afterRank,
-      masteryHpBonus:bonus,
-      masteryStatBonus:bonus
-    };
+    const bonus=getUnitMasteryDexBonusByRank(result.afterRank);
+    return {...u,dex:Number(u.dex||0)+dexGain,masteryRank:result.afterRank,masteryDexBonus:bonus};
   });
 }
 function unitMasteryRankUpText(result){
   if(!result||!result.rankedUp)return "";
   if(result.kind==="leader")return ` Maestría de líder: ${result.name} sube a Rango ${romanUnitRank(result.afterRank)} con ${result.kills} bajas${result.leaderLevelUp?` y alcanza Nv. ${result.afterLeaderLevel}`:""}.`;
-  const gain=Math.max(0,Number(result.statGain??result.hpGain??0));
-  return ` Maestría: ${result.name} sube a Rango ${romanUnitRank(result.afterRank)} y las unidades con ese mismo nombre ganan +${gain} DX, +${gain} GD, +${gain} HP, +${gain} AT y +${gain} AG.`;
+  const gain=Math.max(0,Number(result.dexGain||0));
+  return ` Maestría: ${result.name} sube a Rango ${romanUnitRank(result.afterRank)} y las unidades con ese mismo nombre ganan +${gain} DX.`;
 }
 function annotateUnitWithMastery(unit){
   if(!unit||unit.leader)return unit;
   if(isUnitServiceProgression(unit))return annotateUnitWithServiceProgress(unit);
   const rank=getUnitMasteryRank(unit);
-  const bonus=getUnitMasteryStatBonusByRank(rank);
-  return {...unit,masteryRank:rank,masteryHpBonus:bonus,masteryStatBonus:bonus};
+  const bonus=getUnitMasteryDexBonusByRank(rank);
+  return {...unit,masteryRank:rank,masteryDexBonus:bonus};
 }
 function cleanPlayerName(name){
   return String(name||"").trim().replace(/\s+/g," ").slice(0,18);
