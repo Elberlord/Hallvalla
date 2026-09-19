@@ -2250,7 +2250,16 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       }).catch(()=>{}); }catch(_){ }
     },error=>{ if(token!==ownPrivateListenerToken) return; ownPrivateHealthy=false; console.error(error); mark(`Listener private/player${role} falló: ${error?.message||error}`); });
   }
-  async function removeOwnPrivateBranch(code,role,ownerUid){ if(!code||!ownerUid||(role!==1&&role!==2)) return; try{ const privateRef=ref(db,`games/${code}/private/player${role}`); const snapshot=await withTimeout(get(privateRef),`Leer private/player${role} antes de limpiar`,4000); if(snapshot.exists()&&String(snapshot.val()?.ownerUid||"")===String(ownerUid)) await withTimeout(remove(privateRef),`Limpiar private/player${role}`,4000); }catch(error){ console.warn(error); } }
+  async function removeOwnPrivateBranch(code,role,ownerUid){
+    if(!code||!ownerUid||(role!==1&&role!==2)) return;
+    // v213 · No hacemos un GET previo para comprobar ownerUid. Las reglas de
+    // Firebase ya impiden borrar private/playerN si auth.uid no es su dueño.
+    // El GET redundante podía quedarse esperando 4 s y bloqueaba la salida a Home.
+    try{
+      const privateRef=ref(db,`games/${code}/private/player${role}`);
+      await withTimeout(remove(privateRef),`Limpiar private/player${role}`,4000);
+    }catch(error){ console.warn(error); }
+  }
   function detachRoomListener(){ roomListenerToken++; const off=roomUnsubscribe; roomUnsubscribe=null; phaseWriteInFlight=false; if(typeof off==="function"){ try{ off(); }catch(_){ } } }
   function attachRoomListener(code){
     detachRoomListener(); const token=roomListenerToken; const roomRef=ref(db,`games/${code}/public`);
@@ -2349,13 +2358,17 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     randomQueueDisconnect=null;
   }
   async function stopRandomMatchSearch({removeQueueEntry=true}={}){
+    // Solo existe una entrada viva de cola mientras la búsqueda está activa o
+    // conserva un onDisconnect. Tras entrar al combate la cola ya fue retirada;
+    // no hacemos otra escritura Firebase innecesaria al volver a Home.
+    const hadLiveQueue=randomMatchSearching||!!randomQueueDisconnect;
     randomMatchSearching=false;
     randomSearchStartedAt=0;
     randomOwnCreatedAt=0;
     pvpBotFallbackAttempts=0;
     setMatchmakingSearchText();
     clearRandomMatchTimer();
-    if(removeQueueEntry)await removeOwnRandomQueue();
+    if(removeQueueEntry&&hadLiveQueue)await removeOwnRandomQueue();
     randomLeagueSnapshot=null;
     renderMatchmakingLeague();
     syncLocalButtons();
@@ -2946,8 +2959,27 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     await stopRandomMatchSearch();
     const code=activeCode, ownerUid=activeOwnerUid, role=activeRole; detachRoomListener(); detachOwnPrivateListener();
     try{
-      if(code&&ownerUid&&role===1){ await markAndPaint(`J1 limpiando private/player1 y cerrando sala ${code}...`); await removeOwnPrivateBranch(code,1,ownerUid); const publicRef=ref(db,`games/${code}/public`); const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de cerrar`); if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player1Uid||"")===ownerUid) await withTimeout(remove(publicRef),`Cerrar sala ${code}`); }
-      else if(code&&ownerUid&&role===2){ await markAndPaint(`J2 limpiando private/player2 y saliendo de sala ${code}...`); await removeOwnPrivateBranch(code,2,ownerUid); const publicRef=ref(db,`games/${code}/public`); const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de salir J2`); if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player2Uid||"")===ownerUid) await withTimeout(update(publicRef,{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"rematchReady/2":false,"lobbyReady/1":false,"lobbyReady/2":false,"phase":"waiting","startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,"startConfig/source":"direct_matchmaking","arenaBootstrap":null,"combatState":null,"enginePrep":null}),`Liberar J2 en ${code}`); }
+      if(code&&ownerUid&&role===1){
+        await markAndPaint(`J1 cerrando sala ${code}...`);
+        const publicRef=ref(db,`games/${code}/public`);
+        // v213 · El dueño J1 puede borrar directamente public y su rama private.
+        // Las reglas validan ownership; ambas limpiezas son independientes y se
+        // ejecutan en paralelo para no sumar dos viajes de red al botón HOME.
+        await Promise.allSettled([
+          removeOwnPrivateBranch(code,1,ownerUid),
+          withTimeout(remove(publicRef),`Cerrar sala ${code}`,4000)
+        ]);
+      }
+      else if(code&&ownerUid&&role===2){
+        await markAndPaint(`J2 saliendo de sala ${code}...`);
+        const publicRef=ref(db,`games/${code}/public`);
+        // Mismo principio para J2: Firebase verifica que solo su propio slot pueda
+        // liberarse. No necesitamos leer la sala antes de escribirla.
+        await Promise.allSettled([
+          removeOwnPrivateBranch(code,2,ownerUid),
+          withTimeout(update(publicRef,{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"rematchReady/2":false,"lobbyReady/1":false,"lobbyReady/2":false,"phase":"waiting","startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,"startConfig/source":"direct_matchmaking","arenaBootstrap":null,"combatState":null,"enginePrep":null}),`Liberar J2 en ${code}`,4000)
+        ]);
+      }
     }catch(error){ console.warn(error); }
     resetUi({resetJoin:true}); $("onlineLobby")?.classList.add("hidden"); $("gameShell")?.classList.add("hidden"); $("gameShell")?.classList.remove("pvp-step5-preview","pvp-step6a-active","pvp-step6b-active","pvp-step6d-active"); $("mainMenu")?.classList.remove("hidden"); try{ if(typeof globalThis.renderHomeProgress==="function") globalThis.renderHomeProgress(); }catch(_){ } try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
   }

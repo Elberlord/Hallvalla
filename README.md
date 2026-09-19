@@ -11,7 +11,7 @@ Cambios clave:
 - eliminados timers/locks y callers exclusivos de esa ruta;
 - eliminado preload PvE innecesario al crear BOT PvP;
 - reglas Firebase, layout y motor TR sin cambios;
-- build `20260919.212`, cache `hallvalla-runtime-v212`.
+- build `20260919.213`, cache `hallvalla-runtime-v213`.
 
 Documentación:
 - `docs/AUDITORIA_PROFUNDA_FRONTEND_v212.md`
