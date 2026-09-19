@@ -19411,21 +19411,20 @@ button.pvp-step6c-card:disabled .pvp-step6d-card-action{color:#8d8067!important;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:22px;
+  padding:18px;
   background:rgba(0,0,0,.84);
   backdrop-filter:blur(6px);
 }
 .pvp-ranking-modal.hidden{display:none!important}
 .pvp-ranking-card{
   position:relative;
-  width:min(780px,94vw);
-  max-height:min(820px,90vh);
+  width:min(760px,94vw);
+  max-height:min(570px,92vh);
   overflow:auto;
   border:2px solid #9d741d;
   border-radius:14px;
-  padding:24px 24px 28px;
-  background:
-    linear-gradient(180deg,rgba(25,21,12,.96) 0,rgba(8,8,8,.995) 18%,#050505 100%);
+  padding:20px 24px 24px;
+  background:linear-gradient(180deg,#11100d 0,#070707 24%,#030303 100%);
   box-shadow:0 22px 64px rgba(0,0,0,.86),0 0 0 1px rgba(242,202,92,.08) inset,0 0 24px rgba(196,145,31,.10);
   color:#f4df9b;
 }
@@ -19447,83 +19446,165 @@ button.pvp-step6c-card:disabled .pvp-step6d-card-action{color:#8d8067!important;
   height:36px;
   border-radius:8px;
   border:1px solid #8f691b;
-  background:#090909;
+  background:#080808;
   color:#e8c65e;
   font:900 22px/1 Georgia,serif;
   cursor:pointer;
   box-shadow:inset 0 0 0 1px rgba(255,221,123,.04);
 }
 .pvp-ranking-close:hover,.pvp-ranking-close:focus-visible{background:#151107;border-color:#d6a83b;color:#ffe28a;outline:none}
-.pvp-ranking-kicker{text-align:center;color:#8f762e;font:900 10px/1 Georgia,serif;letter-spacing:.20em}
+.pvp-ranking-kicker{text-align:center;color:#8f762e;font:900 9px/1 Georgia,serif;letter-spacing:.20em}
 .pvp-ranking-title{
-  margin:8px 0 18px;
+  margin:7px 0 16px;
   text-align:center;
   color:#e9bf4d;
-  font:900 clamp(28px,4vw,42px)/1 Georgia,serif;
+  font:900 clamp(28px,3.5vw,38px)/1 Georgia,serif;
   letter-spacing:.035em;
   text-shadow:0 2px 12px rgba(0,0,0,.9),0 0 12px rgba(213,163,44,.12);
 }
+/* Resumen propio: una sola franja limpia, sin textos invadiendo columnas. */
 .pvp-ranking-own-summary{
   display:grid;
-  grid-template-columns:116px minmax(0,1fr) 130px;
-  gap:14px;
-  align-items:center;
-  margin:0 auto 12px;
-  padding:14px 16px;
+  grid-template-columns:150px minmax(0,1fr) 126px;
+  gap:0;
+  align-items:stretch;
+  margin:0 auto 10px;
   max-width:720px;
+  min-height:88px;
   border:1px solid #6f5318;
   border-radius:10px;
-  background:#090909;
+  background:#080808;
+  overflow:hidden;
   box-shadow:inset 0 0 0 1px rgba(222,179,66,.025);
 }
+.pvp-ranking-my-position,
+.pvp-ranking-my-player,
+.pvp-ranking-my-score{min-width:0;padding:12px 14px}
 .pvp-ranking-my-position{
   display:flex;
   flex-direction:column;
-  gap:5px;
+  gap:7px;
   align-items:center;
   justify-content:center;
-  min-height:56px;
-  border-right:1px solid rgba(181,136,35,.28);
+  border-right:1px solid rgba(181,136,35,.30);
   text-align:center;
 }
-.pvp-ranking-my-position small,.pvp-ranking-my-score small{color:#8c793d;font:900 8px/1 Georgia,serif;letter-spacing:.13em}
-.pvp-ranking-my-position strong{color:#f1c84f;font:900 clamp(24px,3vw,34px)/1 Georgia,serif}
-.pvp-ranking-my-player{display:flex;flex-direction:column;min-width:0;gap:4px}
-.pvp-ranking-my-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:900 18px/1.1 Georgia,serif;color:#f5de91}
-.pvp-ranking-my-id{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 9px/1.1 Georgia,serif;color:#746a4e}
-.pvp-ranking-my-league{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px;color:#b9a36b;font:800 10px/1.15 Georgia,serif}
-.pvp-ranking-my-league b{display:inline-flex;align-items:center;min-height:22px;padding:4px 8px;border:1px solid #765718;border-radius:5px;background:#121006;color:#e8bd4c;font:900 9px/1 Georgia,serif;letter-spacing:.07em}
-.pvp-ranking-my-league span{color:#a48e54;font:700 9px/1.2 Georgia,serif}
-.pvp-ranking-my-score{display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right;border-left:1px solid rgba(181,136,35,.28);padding-left:14px}
-.pvp-ranking-my-score strong{color:#f3cb55;font:900 24px/1 Georgia,serif}
-.pvp-ranking-my-score span{max-width:120px;color:#857548;font:700 8px/1.2 Georgia,serif}
-.pvp-ranking-rules{text-align:center;margin:8px 0 14px;color:#7f7048;font:800 10px/1 Georgia,serif;letter-spacing:.035em}
+.pvp-ranking-my-position small,.pvp-ranking-my-score small{
+  color:#8c793d;
+  font:900 8px/1 "Segoe UI",Tahoma,sans-serif;
+  letter-spacing:.13em;
+}
+.pvp-ranking-my-position strong{
+  display:block;
+  width:100%;
+  color:#f1c84f;
+  font:900 30px/1 Georgia,serif;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.pvp-ranking-own-summary.is-unranked .pvp-ranking-my-position strong{
+  font:900 13px/1.05 "Segoe UI",Tahoma,sans-serif;
+  letter-spacing:.045em;
+  overflow:visible;
+  text-overflow:clip;
+}
+.pvp-ranking-my-player{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:4px;
+}
+.pvp-ranking-my-name{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font:800 18px/1.1 "Segoe UI",Tahoma,sans-serif;
+  color:#f5de91;
+}
+.pvp-ranking-my-id{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font:600 9px/1.1 "Segoe UI",Tahoma,sans-serif;
+  color:#746a4e;
+}
+.pvp-ranking-my-league{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  margin-top:2px;
+  color:#b9a36b;
+  font:700 9px/1.15 "Segoe UI",Tahoma,sans-serif;
+}
+.pvp-ranking-my-league b{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  min-height:21px;
+  padding:4px 7px;
+  border:1px solid #765718;
+  border-radius:5px;
+  background:#121006;
+  color:#e8bd4c;
+  font:800 9px/1 "Segoe UI",Tahoma,sans-serif;
+  letter-spacing:.05em;
+  white-space:nowrap;
+}
+.pvp-ranking-my-league span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#a48e54;
+  font:650 9px/1.2 "Segoe UI",Tahoma,sans-serif;
+}
+.pvp-ranking-my-score{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  justify-content:center;
+  gap:5px;
+  text-align:right;
+  border-left:1px solid rgba(181,136,35,.30);
+}
+.pvp-ranking-my-score strong{color:#f3cb55;font:900 25px/1 Georgia,serif}
+.pvp-ranking-my-score span{max-width:112px;color:#857548;font:650 8px/1.2 "Segoe UI",Tahoma,sans-serif}
+.pvp-ranking-rules{
+  text-align:center;
+  margin:7px 0 12px;
+  color:#8d7b48;
+  font:700 9px/1 "Segoe UI",Tahoma,sans-serif;
+  letter-spacing:.02em;
+}
 .pvp-ranking-table-wrapper{
   overflow:auto;
   border:1px solid #4e3b13;
   border-radius:10px;
-  background:#060606;
+  background:#050505;
 }
 .pvp-ranking-table{
   width:100%;
   border-collapse:collapse;
   table-layout:fixed;
   text-align:left;
+  font-family:"Segoe UI",Tahoma,sans-serif;
 }
-.pvp-ranking-table th,.pvp-ranking-table td{padding:11px 14px}
+.pvp-ranking-table th,.pvp-ranking-table td{padding:10px 14px}
 .pvp-ranking-table thead th{
   position:sticky;
   top:0;
   z-index:2;
   background:#11100c;
-  color:#9d8b56;
+  color:#a48f50;
   border-bottom:1px solid #5d4615;
-  font:900 10px/1 Georgia,serif;
+  font:800 9px/1 "Segoe UI",Tahoma,sans-serif;
   text-transform:uppercase;
   letter-spacing:.08em;
 }
-.pvp-ranking-table th:first-child,.pvp-ranking-table td:first-child{width:86px;text-align:center}
-.pvp-ranking-table th:last-child,.pvp-ranking-table td:last-child{width:138px;text-align:right}
+.pvp-ranking-table th:first-child,.pvp-ranking-table td:first-child{width:74px;text-align:center}
+.pvp-ranking-table th:last-child,.pvp-ranking-table td:last-child{width:130px;text-align:right}
 .pvp-ranking-row{border-bottom:1px solid #1f1b11;background:#080808;transition:background .16s ease,box-shadow .16s ease}
 .pvp-ranking-row:last-child{border-bottom:0}
 .pvp-ranking-row:hover{background:#0e0d09}
@@ -19531,32 +19612,36 @@ button.pvp-step6c-card:disabled .pvp-step6d-card-action{color:#8d8067!important;
 .pvp-ranking-row.rank-2{background:linear-gradient(90deg,rgba(118,88,21,.12),rgba(8,8,8,.96) 55%)}
 .pvp-ranking-row.rank-3{background:linear-gradient(90deg,rgba(88,66,18,.10),rgba(8,8,8,.96) 55%)}
 .pvp-ranking-row.is-me{box-shadow:inset 3px 0 #e0b33b;background:linear-gradient(90deg,rgba(185,136,29,.20),rgba(9,9,9,.98) 62%)}
-.pvp-ranking-pos{color:#c9a13c;font:900 17px/1 Georgia,serif}
+.pvp-ranking-pos{color:#c9a13c;font:900 16px/1 Georgia,serif}
 .pvp-ranking-row.rank-1 .pvp-ranking-pos{color:#ffd65a;text-shadow:0 0 10px rgba(245,197,67,.18)}
 .pvp-ranking-player{display:flex;flex-direction:column;min-width:0;gap:3px}
-.pvp-ranking-player b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e8d399;font:900 14px/1.15 Georgia,serif}
-.pvp-ranking-player small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#72684c;font:700 9px/1.15 Georgia,serif}
-.pvp-ranking-player .pvp-ranking-record{color:#a58d50;font-weight:800}
+.pvp-ranking-player b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ead79d;font:800 13px/1.15 "Segoe UI",Tahoma,sans-serif}
+.pvp-ranking-player small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#72684c;font:600 8px/1.15 "Segoe UI",Tahoma,sans-serif}
+.pvp-ranking-player .pvp-ranking-record{color:#a58d50;font-weight:750}
 .pvp-ranking-score{white-space:nowrap}
-.pvp-ranking-points{color:#efc64e;font:900 17px/1 Georgia,serif}
-.pvp-ranking-score small{margin-left:4px;color:#8c793d;font:900 9px/1 Georgia,serif;text-transform:uppercase}
-.pvp-ranking-separator td{text-align:center!important;padding:9px 12px!important;background:#050505;color:#65582f;border-top:1px solid #2d2615;border-bottom:1px solid #2d2615;font:900 8px/1 Georgia,serif;letter-spacing:.18em}
-.pvp-ranking-empty-row td{text-align:center!important;padding:28px 18px!important;color:#9a8858;font:800 12px/1.45 Georgia,serif;background:#070707}
+.pvp-ranking-points{color:#efc64e;font:900 16px/1 Georgia,serif}
+.pvp-ranking-score small{margin-left:4px;color:#8c793d;font:800 8px/1 "Segoe UI",Tahoma,sans-serif;text-transform:uppercase}
+.pvp-ranking-separator td{text-align:center!important;padding:8px 12px!important;background:#050505;color:#65582f;border-top:1px solid #2d2615;border-bottom:1px solid #2d2615;font:800 8px/1 "Segoe UI",Tahoma,sans-serif;letter-spacing:.18em}
+.pvp-ranking-empty-row td{text-align:center!important;padding:26px 18px!important;color:#9a8858;font:700 11px/1.45 "Segoe UI",Tahoma,sans-serif;background:#070707}
 
 .hv-match-league-label{display:block;margin-top:7px;color:#f3d38c;font:900 11px/1 Georgia,serif;letter-spacing:.09em;text-shadow:0 2px 6px rgba(0,0,0,.75)}
 
 @media(max-width:760px){
   .pvp-ranking-open-btn{right:3%;top:6%;min-width:112px;min-height:32px;padding:6px 10px;font-size:10px}
   #pvpRoomPanel .pvp-room-player-stats{font-size:7px!important}
-  .pvp-ranking-card{padding:22px 10px 20px}
-  .pvp-ranking-title{font-size:28px}
-  .pvp-ranking-own-summary{grid-template-columns:82px minmax(0,1fr);gap:9px;padding:10px}
-  .pvp-ranking-my-position{border-right:1px solid rgba(181,136,35,.28)}
-  .pvp-ranking-my-score{grid-column:1 / 3;flex-direction:row;justify-content:center;align-items:center;gap:8px;border-left:0;border-top:1px solid rgba(181,136,35,.22);padding:9px 0 0;text-align:center}
-  .pvp-ranking-my-score span{max-width:none}
+  .pvp-ranking-card{width:min(710px,96vw);padding:18px 12px 20px}
+  .pvp-ranking-title{font-size:27px;margin-bottom:13px}
+  .pvp-ranking-own-summary{grid-template-columns:120px minmax(0,1fr) 108px;min-height:82px}
+  .pvp-ranking-my-position,.pvp-ranking-my-player,.pvp-ranking-my-score{padding:10px}
+  .pvp-ranking-my-position strong{font-size:25px}
+  .pvp-ranking-own-summary.is-unranked .pvp-ranking-my-position strong{font-size:11px}
+  .pvp-ranking-my-name{font-size:15px}
+  .pvp-ranking-my-league{gap:5px}
+  .pvp-ranking-my-league span{font-size:8px}
+  .pvp-ranking-my-score strong{font-size:21px}
   .pvp-ranking-table th,.pvp-ranking-table td{padding:9px 8px}
-  .pvp-ranking-table th:first-child,.pvp-ranking-table td:first-child{width:54px}
-  .pvp-ranking-table th:last-child,.pvp-ranking-table td:last-child{width:90px}
+  .pvp-ranking-table th:first-child,.pvp-ranking-table td:first-child{width:56px}
+  .pvp-ranking-table th:last-child,.pvp-ranking-table td:last-child{width:88px}
   .pvp-ranking-player b{font-size:12px}
   .pvp-ranking-player small{font-size:8px}
   .pvp-ranking-points{font-size:14px}

@@ -159,7 +159,9 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
     const mine=cache.byUid.get(myUid)||makeBlank(myUid,getMyFallbackName());
     const summary=$("pvpRankingOwnSummary");
     if(summary){
-      const pos=mine.position?`#${mine.position}`:"SIN CLASIFICAR";
+      const unranked=!mine.position;
+      const pos=unranked?"SIN CLASIFICAR":`#${mine.position}`;
+      summary.classList.toggle("is-unranked",unranked);
       const league=leagueForPoints(mine.points);
       const leagueProgress=league.nextMin===null?"Liga máxima":`${Math.max(0,league.nextMin-league.points)} pts para Liga ${league.nextName}`;
       summary.innerHTML=`<div class="pvp-ranking-my-position"><small>TU POSICIÓN</small><strong>${esc(pos)}</strong></div><div class="pvp-ranking-my-player"><div class="pvp-ranking-my-name">${esc(mine.name)}</div><div class="pvp-ranking-my-id" title="${esc(myUid)}">ID PvP: ${esc(shortUid(myUid))}</div><div class="pvp-ranking-my-league" data-league="${esc(league.key)}"><b>LIGA ${esc(league.name.toUpperCase())}</b><span>${esc(statsText(mine))} · Partidas ${Number(mine.games||0)}</span></div></div><div class="pvp-ranking-my-score"><small>PUNTUACIÓN</small><strong>${Number(mine.points||0).toLocaleString("es-ES")}</strong><span>${esc(leagueProgress)}</span></div>`;

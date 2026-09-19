@@ -1,3 +1,12 @@
+## v210 — Corrección de layout del Ranking PvP
+
+- Reorganiza el resumen superior del Ranking PvP para que posición, jugador y puntuación tengan columnas estables y no se superpongan.
+- `SIN CLASIFICAR` usa un tratamiento compacto de una sola línea en lugar de heredar el tamaño gigante de una posición numérica.
+- Adapta más fielmente la referencia suministrada: tabla limpia `Pos / Jugador / Puntuación`, fondo negro, dorado y tipografía de datos más legible.
+- Mantiene ID PvP, liga, G/P/E, partidas, puntos y progreso sin modificar cálculo, Firebase, matchmaking ni resultados.
+- Build `20260919.210`, cache `hallvalla-runtime-v210`.
+- Diagnóstico: `docs/FIX_PVP_RANKING_LAYOUT_v210.md`.
+
 ## v209 — Ranking PvP negro y dorado
 
 - Rediseña exclusivamente el modal de Ranking PvP tomando como base una tabla clásica de líderes: `Pos / Jugador / Puntuación`.
