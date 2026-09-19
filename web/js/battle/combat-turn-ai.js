@@ -626,15 +626,13 @@ async function resolveSharedAttackOutcome({
   bloodBaitBonus,
   beastTraps,
   tigerFromStealthBefore,
-  mulanChoiceAttack,
-  requireLivingAttackerForMulan=false,
   turnKey,
   runInState=(fn)=>fn(),
   getDragonState=()=>publicState,
-  actionLogPrefix="",
-  mulanExecutionTextMode="player"
+  actionLogPrefix=""
 }){
   let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false,dragonCompanionText="";
+  const mulanFollowupAttack=!!(a&&a.key==="mulan"&&a.mulanFollowupReady===true);
   const declaredMelee=dist(a,d)<=1;
   const declaredRanged=isRangedAttack(a,d);
   const attackerWasStealthedBeforeAttack=attackContext.startedFromStealth;
@@ -652,7 +650,13 @@ async function resolveSharedAttackOutcome({
   let berserkerOsoText="",skiparWarLootText="";
   units=units.map(u=>{
     if(u.id===a.id){
-      const nextAttacker={...u,acted:true,khalidChainReady:false,mulanExecutionChoiceReady:false,mulanExecutionMoveReady:false,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(a,d)?true:!!u.arjunaRerollUsedTurn};
+      const nextAttacker={...u,acted:true,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(a,d)?true:!!u.arjunaRerollUsedTurn};
+      // v220: limpiar estado manual legacy. Hua Lan usa únicamente dos flags
+      // automáticos de seguimiento y Khalid no necesita un flag serializado de cadena.
+      delete nextAttacker.khalidChainReady;
+      delete nextAttacker.mulanExecutionMoveReady;
+      delete nextAttacker.mulanExecutionChoiceReady;
+      if(u.key==="mulan"){nextAttacker.mulanRepositionReady=false;nextAttacker.mulanFollowupReady=false;}
       if((a.dragonBoss||(typeof isDragonCompanionKey==="function"&&isDragonCompanionKey(a.key)))&&a.key!=="dragon_egg"){
         nextAttacker.dragonCharge=Number(a.dragonCharge||0)>=2?0:Number(a.dragonCharge||0)+1;
       }else{
@@ -829,7 +833,7 @@ async function resolveSharedAttackOutcome({
   const lionFearText=lionFearCombat.logs.length?` ${lionFearCombat.logs.join(" ")}`:"";
   const rhinoStunText=rhinoStunTriggered?` Aturdido por Embestida: ${a.name} queda aturdido hasta el final del siguiente ciclo táctico; no podrá moverse, defenderse ni atacar. Su DX/AGI quedan a la mitad y su Guardia no cambia.`:"";
   const warriorShieldText=warriorShieldBlocked?` Muralla del Warrior: mientras conserve unidades aliadas, ${d.name} no pierde Vida por ataques de unidades.`:"";
-  const mulanExecutionTriggered=hit.hit&&defenderFell&&a.key==="mulan"&&!mulanChoiceAttack&&!d.leader&&(!requireLivingAttackerForMulan||units.some(u=>u.id===a.id));
+  const mulanExecutionTriggered=hit.hit&&defenderFell&&a.key==="mulan"&&!mulanFollowupAttack&&!d.leader&&units.some(u=>u.id===a.id);
   const khalidChainTriggered=hit.hit&&defenderFell&&a.key==="khalid_ibn_al_walid"&&!d.leader&&units.some(u=>u.id===a.id);
   const exileTrap=defenderFell?runInState(()=>resolveAfterKillLegendaryTraps(a,d,units,dmgTrap.traps),{units,legendaryTraps:resolvedLegendaryTraps,beastTraps}):{units,traps:dmgTrap.traps,logs:[]};
   resolvedLegendaryTraps=exileTrap.traps||resolvedLegendaryTraps;
@@ -837,10 +841,10 @@ async function resolveSharedAttackOutcome({
   const genghisDebuffResult=runInState(()=>applyGenghisKhanKillDebuff(units,a,d,defenderFell),{units,legendaryTraps:resolvedLegendaryTraps,beastTraps});
   units=genghisDebuffResult.units;
   if(mulanExecutionTriggered&&units.some(u=>u.id===a.id)){
-    units=units.map(u=>u.id===a.id?{...u,mulanExecutionMoveReady:true,mulanExecutionChoiceReady:false}:u);
+    units=units.map(u=>u.id===a.id?{...u,mulanRepositionReady:true,mulanFollowupReady:false}:u);
   }
   if(khalidChainTriggered&&units.some(u=>u.id===a.id)){
-    units=units.map(u=>u.id===a.id?{...u,acted:false,khalidChainReady:true,khalidAttackPenalty:getKhalidAttackPenalty(u)+2}:u);
+    units=units.map(u=>u.id===a.id?{...u,acted:false,khalidAttackPenalty:getKhalidAttackPenalty(u)+2}:u);
   }
   const hanzoContractResult=resolveHanzoContractAfterAttack(units,a,d,!!mods.hanzoContract,defenderFell);
   units=hanzoContractResult.units;
@@ -940,8 +944,8 @@ async function resolveSharedAttackOutcome({
   const ulyssesTacticText=ulyssesAttackTactic.log||"";
   const bloodBaitText=(bloodBaitBonus.logs||[]).length?` ${(bloodBaitBonus.logs||[]).join(" ")}`:"";
   const genghisDebuffText=genghisDebuffResult.log||"";
-  const mulanExecutionText=mulanExecutionTriggered?(mulanExecutionTextMode==="ai"?` Ejecución táctica: ${a.name} destruyó una unidad enemiga; hará su movimiento extra y elegirá ATK o DEF.`:` Ejecución táctica: ${a.name} destruyó una unidad enemiga; puede moverse 1 casilla extra y luego debe elegir ATK o DEF para gastar su acción restante.`):"";
-  const khalidChainText=khalidChainTriggered?` Espada Invicta: ${a.name} destruyó una unidad enemiga y puede seguir atacando. Sus siguientes ataques tendrán -${getKhalidAttackPenalty(units.find(u=>u.id===a.id)||a)} AT hasta el final del ciclo táctico actual.`:"";
+  const mulanExecutionText=mulanExecutionTriggered?` Ejecución táctica: ${a.name} prepara una reposición de hasta 1 casilla y un seguimiento automático.`:"";
+  const khalidChainText=khalidChainTriggered?` Espada Invicta: ${a.name} encadena otro ataque si conserva un objetivo válido. Penalización acumulada: -${getKhalidAttackPenalty(units.find(u=>u.id===a.id)||a)} AT.`:"";
   const masteryKillText=`${unitMasteryRankUpText(masteryKillResult)}${unitMasteryRankUpText(elephantMasteryKillResult)}`;
   const equipmentRetreatResult=units.some(u=>u.id===a.id)?applyPostCombatEquipmentRetreat(units,a,d):{units,moved:false,text:""};
   units=equipmentRetreatResult.units;
@@ -983,6 +987,8 @@ async function resolveSharedAttackOutcome({
     genghisDebuffResult,
     falconRecoilResult,
     rhinoStunTriggered,
+    mulanExecutionTriggered,
+    khalidChainTriggered,
     alreadyBleeding
   };
 }

@@ -1,0 +1,51 @@
+HALLVALLA — PENDIENTES DESPUÉS DE v220
+Build: 20260919.220
+
+COMPLETADO EN v220
+- cards-specials-lore.js eliminado y dividido en catálogo / reglas / lore.
+- Hua Lan adaptada a reposición + seguimiento/defensa automáticos.
+- Khalid adaptado a cadena de ataques mediante scheduler automático.
+- flags manuales Mulan/Khalid antiguos ya no se escriben en estados nuevos.
+- helpers periódicos principales dejan de usar nombres de inicio/fin de turno.
+
+1. NETWORK/BATTLE-STATE — SIGUIENTE PRIORIDAD
+   - Auditar qué campos heredados se siguen escribiendo en snapshots nuevos:
+     currentPlayer, turn, turnPhase, turnKey y campos *TurnKey derivados.
+   - Diferenciar: estado activo necesario / clave de ventana interna / compatibilidad de lectura.
+   - Evitar renombrados carta por carta: la migración debe centralizarse aquí.
+   - Mantener lectura de snapshots anteriores solo si realmente se necesita.
+   - No cambiar Firebase rules salvo que cambie de verdad el contrato autorizado.
+
+2. RENDER-BATTLE-TUTORIAL
+   - ~99 KB; mezcla renderer, tutorial, overlays y ayudas visuales.
+   - Separar render de tablero/HUD de tutoriales y explicación de estados.
+
+3. SETTINGS-EVENTS
+   - ~240 KB, todavía el mayor módulo de lógica de producción.
+   - DEV salió en v214; falta separar Mina, recompensas, tutoriales y bindings generales.
+
+4. DECKS-UNITS-COMBAT-RULES
+   - ~151 KB después de sacar campaign-data en v215.
+   - Separar factories/validación de deck/líderes de reglas generales compartidas.
+
+5. PVP
+   - features/pvp/index.js ~160 KB.
+   - Dividir ranking/resultados, lobby/matchmaking, bot y sincronización cuando las
+     dependencias exteriores ya estén estabilizadas.
+
+6. MOTOR AUTOMÁTICO
+   - realtime/experimental.js ~134 KB.
+   - Renombrar/modularizar al final; actualmente es runtime crítico y funcional.
+   - Mantener nomenclatura técnica privada en código/docs/dev, nunca como modo visible.
+
+7. CONTRATOS/NOMBRES HISTÓRICOS RESTANTES
+   - Algunos campos como turnsRemaining, damagedThisTurn y *TurnKey siguen en snapshots.
+   - Migrarlos solo con mapa de consumidores y compatibilidad explícita; no por nombre.
+
+8. CIERRE FINAL DE AUDITORÍA
+   - búsqueda global de código muerto y assets huérfanos;
+   - inventario/dependencias final;
+   - Aventura + PvP BOT + PvP real concurrente;
+   - gamepad Windows/Android;
+   - Mina/Forja/colección/tutorial;
+   - hashes/cache/build y revisión final de Firebase.

@@ -249,7 +249,7 @@ function applyDragonFrost(unit,sourceName="Dragón de Hielo",stacks=1,state=publ
     return Math.max(0,base-penalty);
   },{id:"dragon-contract:effective-agi"});
   registerHallvallaHook("unit.effectiveMov",(base,{unit:u})=>Math.max(0,base-(Number(u?.dragonFrostTurns||0)>0?2:0)),{id:"dragon-contract:effective-mov"});
-  registerHallvallaHook("turn.clearTempStats",(next)=>{
+  registerHallvallaHook("cycle.clearTempStats",(next)=>{
     const electroFresh=!!next.electrocutionFresh;
     const frostFresh=!!next.dragonFrostFresh;
     const electro=electroFresh?Math.max(0,Number(next.electrocutionTurns||0)):Math.max(0,Number(next.electrocutionTurns||0)-1);

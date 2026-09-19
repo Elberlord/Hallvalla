@@ -1121,9 +1121,6 @@ function maxTurnGuard(u){
 }
 function effectiveGuard(u){return Math.max(0,(u?.guard||0)+(u?.tempGuardBuff||0)-getRtTrapDebuff(u,"guard")+hectorGuardAura(u)+achillesConcentrationGuard(u)+attilaEnemyAura(u).guard+solomonJinnGuardAura(u)+hoplitePhalanxGuard(u))}
 function displayEffectiveGuard(u){return Math.max(0,effectiveGuard(u)+(u?.defenseModeReady?2:0))}
-function restoreTurnGuardForOwner(units,owner){
-  return (units||[]).map(u=>u.owner===owner?{...u,guard:maxTurnGuard(u),evasionSpent:0,defenseModeReady:false,mulanExecutionMoveReady:false,mulanExecutionChoiceReady:false}:u);
-}
 function getEvasionPressure(u){return Math.max(0,Number(u?.evasionSpent||0))}
 function getBaseEvasionScore(u){return Math.max(0,effectiveDex(u)+effectiveAgi(u))}
 function getAvailableEvasionScore(u,mods={}){

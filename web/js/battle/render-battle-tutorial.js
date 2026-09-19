@@ -294,7 +294,7 @@ function getUnitStatusEntries(u){
   if(n(u.tempAtkBuff)>0)add(`+${n(u.tempAtkBuff)} AT`,`Ataque aumentado`,n(u.warCryBuffs)>0?`Ataque aumentado por Grito de Guerra (${n(u.warCryBuffs)} acumulación${n(u.warCryBuffs)===1?"":"es"}). Se limpia al inicio del próximo turno del dueño.`:`Ataque aumentado por efecto temporal.`,"buff atk-buff","buff");
   if(n(u.tempAtkDebuff)>0)add(`-${n(u.tempAtkDebuff)} AT`,`Ataque reducido`,`Ataque reducido por efecto temporal.`,"debuff atk-debuff","debuff");
   if(getHannibalAtkDebuff(u)>0)add(`-${getHannibalAtkDebuff(u)} AT`,`Trampa de Cannas`,`Ataque reducido por Hannibal Barca hasta su próximo turno.${u.hannibalAtkDebuffSource?` Origen: ${u.hannibalAtkDebuffSource}.`:""}`,"debuff atk-debuff","debuff");
-  if(getKhalidAttackPenalty(u)>0)add(`-${getKhalidAttackPenalty(u)} AT`,`Espada Invicta`,`Penalización acumulada de Khalid por ataques encadenados. Se restaura al inicio de su próximo turno.`,"debuff atk-debuff","debuff");
+  if(getKhalidAttackPenalty(u)>0)add(`-${getKhalidAttackPenalty(u)} AT`,`Espada Invicta`,`Penalización acumulada de Khalid por ataques encadenados. Se limpia en la siguiente restauración periódica de combate.`,"debuff atk-debuff","debuff");
   if(n(u.tempDexBuff)>0)add(`+${n(u.tempDexBuff)} DX`,`Destreza aumentada`,n(u.coverFireBuffs)>0?`Destreza aumentada por Fuego de cobertura (${n(u.coverFireBuffs)} acumulación${n(u.coverFireBuffs)===1?"":"es"}). Se limpia al inicio del próximo turno del dueño.`:`Destreza aumentada por efecto temporal.`,"buff dex-buff","buff");
   const igaDexForced=!!(u.saboteadorDexZeroTurnKey&&u.saboteadorDexZeroTurnKey===publicState?.turnKey);
   const legacyIgaDexHack=!!(u.saboteadorDexZeroTurnKey&&n(u.tempDexDebuff)>=90);
@@ -315,7 +315,7 @@ function getUnitStatusEntries(u){
   if(u.defenseModeReady)add(`DEF +2 GD`,`Guardia defensiva`,`Postura defensiva: +2 Guardia y mejora su defensa ante el primer ataque recibido. Se consume con ese ataque o al inicio de su próximo turno, lo que ocurra primero.`,"buff guard-buff","defense");
   /* v168: Precisión/Evasión siguen existiendo como mecánica interna, pero su
      reserva/desgaste ya no se publica como badge de estado en el campo. */
-  if(hasBleeding(u))add(`Sangrado`,`Sangrado`,`Sangrado: pierde ${u.bleedDamage||1} Vida al inicio de su turno${getBleedTurnsText(u)}${u.bleedTurnsRemaining?` (${u.bleedTurnsRemaining} turno${u.bleedTurnsRemaining===1?"":"s"} restante${u.bleedTurnsRemaining===1?"":"s"})`:""}.${u.bleedSourceName?` Origen: ${u.bleedSourceName}.`:""}`,"debuff bleed","bleed");
+  if(hasBleeding(u))add(`Sangrado`,`Sangrado`,`Sangrado: pierde ${u.bleedDamage||1} Vida al inicio de su turno${getBleedDurationText(u)}${u.bleedTurnsRemaining?` (${u.bleedTurnsRemaining} turno${u.bleedTurnsRemaining===1?"":"s"} restante${u.bleedTurnsRemaining===1?"":"s"})`:""}.${u.bleedSourceName?` Origen: ${u.bleedSourceName}.`:""}`,"debuff bleed","bleed");
   if(hasActiveBlessedArmor(u))add(`1ra muerte negada`,`Armadura bendita`,`La primera muerte del líder fue negada. Su vida quedó en 1 y no puede perder Vida durante el resto de este turno.`,"buff guard-buff","buff");
   if(u.leader&&u.leaderType==="archer"&&u.leaderAbility==="arrow_rain")add(`Auto · fin rival`,`Lluvia de flechas`,`Habilidad Nv.5 automática: al final del turno rival, si hay unidades enemigas a rango 3 o menos, inflige 1 daño directo a todas las que estén dentro de rango 3, ignorando Guardia y stats. También afecta Sigilo.`,"buff dex-buff","buff");
   if(u.leader&&u.leaderType==="mage"&&u.leaderAbility==="arcane_bolt")add(`Auto · fin rival`,`Descarga arcana`,`Habilidad Nv.5 automática: al final del turno rival inflige 2 de daño directo al líder enemigo, ignorando Guardia y stats de combate.`,"buff dex-buff","buff");
@@ -749,8 +749,8 @@ function syncBattleBoardUndeadRemains(record,remain){
     record.cell.insertBefore(marker,record.unitEl&&record.unitEl.parentElement===record.cell?record.unitEl:null);
   }
   marker.className=`undead-remains-marker ${Number(remain.owner)===1?"p1":"p2"} ${remain.frozenDelayed?"frozen":""}`;
-  marker.title=`Restos Persistentes · ${remain.name||"No Muerto"} · REANIMACIÓN: ${Math.max(0,Number(remain.turnsRemaining||0))}`;
-  marker.innerHTML=`<span class="undead-remains-icon" aria-hidden="true">${remain.frozenDelayed?"❄️":"☠️"}</span><b>${Math.max(0,Number(remain.turnsRemaining||0))}</b>`;
+  marker.title=`Restos Persistentes · ${remain.name||"No Muerto"} · REANIMACIÓN: ${Math.max(0,Number(remain.turnsRemaining||0))*10} s`;
+  marker.innerHTML=`<span class="undead-remains-icon" aria-hidden="true">${remain.frozenDelayed?"❄️":"☠️"}</span><b>${Math.max(0,Number(remain.turnsRemaining||0))*10}s</b>`;
   record.remainsKey=remainsKey;
 }
 function getBattleBoardUnitSpec(u,x,y){

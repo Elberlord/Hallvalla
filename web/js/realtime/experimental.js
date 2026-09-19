@@ -1145,7 +1145,7 @@ async function hallvallaRtAttackUnit(attacker,target){
       arjunaDharmaPoison:prep.arjunaDharmaPoison,evasionPressure:prep.evasionPressure,
       preTrap:prep.preTrap,warningRune:prep.warningRune,bloodBaitBonus:prep.bloodBaitBonus,
       beastTraps:prep.beastTraps,tigerFromStealthBefore:prep.tigerFromStealthBefore,
-      mulanChoiceAttack:prep.mulanChoiceAttack,turnKey:publicState?.turnKey||"RT"
+      turnKey:publicState?.turnKey||"RT"
     });
     units=outcome.units||prep.units;
     // En TR no existe la bandera "ya actuó": el cooldown temporal manda.
@@ -1160,6 +1160,9 @@ async function hallvallaRtAttackUnit(attacker,target){
     }
     const legendaryTraps=outcome.exileTrap?.traps||outcome.dmgTrap?.traps||prep.preTrap?.traps||publicState?.legendaryTraps||[];
     await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:prep.beastTraps||publicState?.beastTraps||[],legendaryTraps,battleFxEvent,floatFxEvent,statusFxEvent:outcome.statusFxEvent||outcome.dragonCompanionResult?.statusFxEvent||outcome.veilCurseResult?.statusFxEvent||outcome.arcaneAdeptStatusEvent||outcome.poisonStatusEvent||outcome.miyamotoCounterBleedEvent||outcome.lionFearCombat?.statusFxEvent||outcome.porcupineResult?.statusFxEvent||outcome.genghisDebuffResult?.statusFxEvent||null});
+    // Espada Invicta: una baja habilita el siguiente ataque sin esperar el cooldown normal.
+    // No se serializa un "khalidChainReady": la única memoria persistente es la penalización AT acumulada.
+    if(outcome.khalidChainTriggered===true)hallvallaRtState.attackAt.set(a.id,0);
     const log=[...(prep.preTrap?.logs||[]),...(outcome.dmgTrap?.logs||[]),...(outcome.exileTrap?.logs||[]),outcome.actionLog].filter(Boolean).join(" ");
     if(!(await finalizeBattle(units,log))&&log)await pushLog(log);
     return true;
@@ -1222,7 +1225,7 @@ async function hallvallaRtCombatRefreshTick(now){
   if(now-hallvallaRtState.lastCombatRefreshAt<HALLVALLA_RT_CFG.combatRefreshEveryMs)return false;
   hallvallaRtState.lastCombatRefreshAt=now;hallvallaRtState.combatWindow+=1;
   const turnKey=`RTC-${hallvallaRtState.combatWindow}`;
-  let units=[...(publicState?.units||[])].map(u=>u&&Number(u.hp||0)>0&&typeof clearTurnTempStatsForOwnerUnit==="function"?clearTurnTempStatsForOwnerUnit(u,turnKey):u);
+  let units=[...(publicState?.units||[])].map(u=>u&&Number(u.hp||0)>0&&typeof clearCycleTempStatsForUnit==="function"?clearCycleTempStatsForUnit(u,turnKey):u);
   let legendaryTraps=[...(publicState?.legendaryTraps||[])],undeadRemains=[...(publicState?.undeadRemains||[])],logs=[];
 
   // Sangre del Pélida: la antigua curación de inicio de turno pasa a cada ciclo TR de 10 s.
@@ -1236,8 +1239,8 @@ async function hallvallaRtCombatRefreshTick(now){
   }
 
   // Ericto paga su mantenimiento cada 10 s en lugar de End Phase.
-  if(typeof applyErictoUpkeepAtTurnEnd==="function"){
-    for(const owner of [1,2]){const er=applyErictoUpkeepAtTurnEnd(units,owner);units=er.units;logs.push(...(er.logs||[]));}
+  if(typeof applyErictoCycleUpkeep==="function"){
+    for(const owner of [1,2]){const er=applyErictoCycleUpkeep(units,owner);units=er.units;logs.push(...(er.logs||[]));}
     if(typeof resolveErictoLifecycle==="function"){const life=resolveErictoLifecycle(units);units=life.units;logs.push(...(life.logs||[]));}
   }
 
@@ -1672,9 +1675,9 @@ async function hallvallaRtStatusTick(now){
   let units=[...(publicState?.units||[])],logs=[],statusFxEvent=null,floatFxEvent=null;
   const before=[...units];
   // Sangrado: un tick por ciclo táctico de 10 s; si no tiene duración explícita, permanece hasta curación/destrucción.
-  for(const owner of [1,2]){try{const r=applyBleedingToOwnerAtTurnStart(units,owner);units=r.units;logs.push(...(r.logs||[]));statusFxEvent=statusFxEvent||r.statusFxEvent;floatFxEvent=floatFxEvent||r.floatFxEvent;}catch(_){}}
+  for(const owner of [1,2]){try{const r=applyBleedingCycleTick(units,owner);units=r.units;logs.push(...(r.logs||[]));statusFxEvent=statusFxEvent||r.statusFxEvent;floatFxEvent=floatFxEvent||r.floatFxEvent;}catch(_){}}
   // Veneno se procesa al abrir cada ciclo táctico junto con las trampas de inicio de ciclo.
-  try{const r=applyBurnAtTurnEnd(units);units=r.units;logs.push(...(r.logs||[]));statusFxEvent=statusFxEvent||r.statusFxEvent;floatFxEvent=floatFxEvent||r.floatFxEvent;}catch(_){ }
+  try{const r=applyBurnCycleTick(units);units=r.units;logs.push(...(r.logs||[]));statusFxEvent=statusFxEvent||r.statusFxEvent;floatFxEvent=floatFxEvent||r.floatFxEvent;}catch(_){ }
   const fallen=units.filter(u=>Number(u.hp||0)<=0).map(u=>u.id);if(fallen.length&&typeof applyLegendaryFatalSaves==="function")units=applyLegendaryFatalSaves(units,fallen);units=units.filter(u=>Number(u.hp||0)>0);
   if(JSON.stringify(before)===JSON.stringify(units))return false;
   await updatePublic({units,statusFxEvent:statusFxEvent||null,floatFxEvent:floatFxEvent||null,log:logs.length?[...logs,...(publicState?.log||[])].slice(0,18):(publicState?.log||[])});
@@ -1691,17 +1694,42 @@ function hallvallaRtFairUnitIds(units,{leaders=true,nonLeaders=true}={}){
   for(let i=0;i<n;i++){if(first[i])out.push(first[i].id);if(second[i])out.push(second[i].id);}
   return out;
 }
+function hallvallaRtFindAttackableTarget(unit,units=publicState?.units||[]){
+  return hallvallaRtTargetCandidates(unit,units).find(target=>hallvallaRtCanAttackNow(unit,target))||null;
+}
+function hallvallaRtFinalizeMulanExecution(units,unitId,{forceDefense=false}={}){
+  const live=(units||[]).find(u=>u.id===unitId&&Number(u.hp||0)>0);
+  if(!live)return{units,attackReady:false,defenseReady:false};
+  const attackTarget=forceDefense?null:hallvallaRtFindAttackableTarget(live,units);
+  const attackReady=!!attackTarget;
+  const out=(units||[]).map(u=>u.id===unitId?{...u,mulanRepositionReady:false,mulanFollowupReady:attackReady,defenseModeReady:attackReady?!!u.defenseModeReady:true}:u);
+  return{units:out,attackReady,defenseReady:!attackReady,target:attackTarget};
+}
+
 async function hallvallaRtAttackReadyUnits(now,maxAttacks=HALLVALLA_RT_CFG.maxAttacksPerTick){
   let attacks=0;
   const ids=hallvallaRtFairUnitIds(publicState?.units||[],{leaders:true,nonLeaders:true});
   for(const id of ids){
     if(attacks>=maxAttacks)break;
     const live=(publicState?.units||[]).find(u=>u.id===id&&Number(u.hp||0)>0);if(!live||Number(live.rtExiledUntil||0)>now||isRtTrapLocked(live,"attack",now))continue;
-    // PERF v119: el cooldown se comprueba ANTES de buscar/ordenar objetivos.
-    // Una unidad que aún no puede atacar no consume CPU en targeting 4 veces por segundo.
+    // Hua Lan debe resolver primero su reposición automática; no puede saltársela con un ataque normal.
+    if(live.key==="mulan"&&live.mulanRepositionReady===true)continue;
+    const mulanFollowup=live.key==="mulan"&&live.mulanFollowupReady===true;
+    // PERF v119: el cooldown se comprueba ANTES de buscar/ordenar objetivos, salvo
+    // el único seguimiento de Hua Lan habilitado por una baja.
     const last=Number(hallvallaRtState.attackAt.get(live.id)||0);
-    if(now-last<hallvallaRtAttackCooldown(live))continue;
-    const target=hallvallaRtChooseTarget(live,publicState?.units||[]);if(!target||!hallvallaRtCanAttackNow(live,target))continue;
+    if(!mulanFollowup&&now-last<hallvallaRtAttackCooldown(live))continue;
+    const target=mulanFollowup?hallvallaRtFindAttackableTarget(live,publicState?.units||[]):hallvallaRtChooseTarget(live,publicState?.units||[]);
+    if(!target||!hallvallaRtCanAttackNow(live,target)){
+      // Si el objetivo desapareció entre la reposición y este pulso, el seguimiento
+      // automático cae a la rama defensiva en vez de quedar pendiente indefinidamente.
+      if(mulanFollowup){
+        const current=[...(publicState?.units||[])];
+        const resolved=hallvallaRtFinalizeMulanExecution(current,live.id,{forceDefense:true});
+        await updatePublic({units:resolved.units});
+      }
+      continue;
+    }
     hallvallaRtState.attackAt.set(live.id,now);
     if(await hallvallaRtAttackUnit(live,target))attacks++;
   }
@@ -1711,36 +1739,58 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
   let units=[...(publicState?.units||[])];
   let legendaryTraps=[...(publicState?.legendaryTraps||[])];
   let beastTraps=[...(publicState?.beastTraps||[])];
-  let statusFxEvent=null,floatFxEvent=null,moves=0;
+  let statusFxEvent=null,floatFxEvent=null,moves=0,stateChanges=0;
   const logs=[];
   const ids=hallvallaRtFairUnitIds(units,{leaders:false,nonLeaders:true});
   for(const id of ids){
     if(moves>=maxMoves)break;
     const live=units.find(u=>u.id===id&&Number(u.hp||0)>0);if(!live||isRtTrapLocked(live,"move",now))continue;
+    const mulanReposition=live.key==="mulan"&&live.mulanRepositionReady===true;
     const ownLeader=hallvallaRtGetOwnerLeader(live.owner,units);
     const inSpawnRing=!!ownLeader&&dist(live,ownLeader)<=1;
     const freshSpawn=live.rtSpawnExitPending===true||Number(live.rtSummonedAt||0)>0&&inSpawnRing;
     // PERF v119: para unidades normales, ni targeting ni steering local se ejecutan
-    // hasta que el cooldown real de movimiento vence. Se preserva la salida prioritaria
-    // de una invocación recién creada.
+    // hasta que el cooldown real de movimiento vence. La reposición de Hua Lan
+    // es una reacción inmediata y, por diseño, no espera ese cooldown.
     const lastMove=Number(hallvallaRtState.moveAt.get(live.id)||0);
-    if(!freshSpawn&&now-lastMove<hallvallaRtMoveCooldown(live))continue;
+    if(!freshSpawn&&!mulanReposition&&now-lastMove<hallvallaRtMoveCooldown(live))continue;
     let step=null;
-    if(freshSpawn&&now-Number(live.rtSummonedAt||0)>=HALLVALLA_RT_CFG.spawnEgressDelayMs){
-      // Prioridad absoluta tras invocar: abandonar el anillo del líder para no bloquear
-      // la siguiente convocatoria, incluso si ya podría atacar desde la casilla de aparición.
-      step=hallvallaRtChooseSpawnExitStep(live,units);
-    }
-    if(!step){
-      const target=hallvallaRtChooseTarget(live,units);if(!target)continue;
-      // Fuera del corredor de salida, si ya puede atacar conserva su posición.
-      if(hallvallaRtCanAttackNow(live,target))continue;
-      if(now-lastMove<hallvallaRtMoveCooldown(live))continue;
-      step=hallvallaRtChooseStep(live,target,units);
+
+    if(mulanReposition){
+      // Si ya existe un blanco válido en alcance, la reposición es opcional: Hua Lan
+      // conserva la casilla y pasa directamente a su único ataque de seguimiento.
+      if(hallvallaRtFindAttackableTarget(live,units)){
+        const resolved=hallvallaRtFinalizeMulanExecution(units,live.id);
+        units=resolved.units;stateChanges++;
+        logs.push(`Ejecución táctica: ${live.name} conserva su posición y prepara un ataque adicional.`);
+        continue;
+      }
+      const target=hallvallaRtChooseTarget(live,units);
+      if(target)step=hallvallaRtChooseStep(live,target,units);
       if(!step){
-        for(const alt of hallvallaRtTargetCandidates(live,units).slice(1)){step=hallvallaRtChooseStep(live,alt,units);if(step)break;}
+        const resolved=hallvallaRtFinalizeMulanExecution(units,live.id,{forceDefense:true});
+        units=resolved.units;stateChanges++;
+        logs.push(`Ejecución táctica: ${live.name} no encuentra una reposición ofensiva y adopta Guardia defensiva.`);
+        continue;
+      }
+    }else{
+      if(freshSpawn&&now-Number(live.rtSummonedAt||0)>=HALLVALLA_RT_CFG.spawnEgressDelayMs){
+        // Prioridad absoluta tras invocar: abandonar el anillo del líder para no bloquear
+        // la siguiente convocatoria, incluso si ya podría atacar desde la casilla de aparición.
+        step=hallvallaRtChooseSpawnExitStep(live,units);
+      }
+      if(!step){
+        const target=hallvallaRtChooseTarget(live,units);if(!target)continue;
+        // Fuera del corredor de salida, si ya puede atacar conserva su posición.
+        if(hallvallaRtCanAttackNow(live,target))continue;
+        if(now-lastMove<hallvallaRtMoveCooldown(live))continue;
+        step=hallvallaRtChooseStep(live,target,units);
+        if(!step){
+          for(const alt of hallvallaRtTargetCandidates(live,units).slice(1)){step=hallvallaRtChooseStep(live,alt,units);if(step)break;}
+        }
       }
     }
+
     if(!step)continue;
     if(units.some(u=>u.id!==live.id&&Number(u.hp||0)>0&&Number(u.x)===Number(step.x)&&Number(u.y)===Number(step.y)))continue;
     const movedNow=Math.max(1,dist(live,step));
@@ -1759,9 +1809,20 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
       }
     }
     logs.push(...(trapMove.logs||[]));statusFxEvent=trapMove.statusFxEvent||statusFxEvent;floatFxEvent=trapMove.floatFxEvent||floatFxEvent;
+
+    if(mulanReposition){
+      const movedMulan=units.find(u=>u.id===live.id&&Number(u.hp||0)>0);
+      if(movedMulan){
+        const resolved=hallvallaRtFinalizeMulanExecution(units,live.id);
+        units=resolved.units;stateChanges++;
+        logs.push(resolved.attackReady
+          ?`Ejecución táctica: ${live.name} se reposiciona y prepara un ataque adicional.`
+          :`Ejecución táctica: ${live.name} se reposiciona y adopta Guardia defensiva.`);
+      }
+    }
     hallvallaRtState.moveAt.set(live.id,now);moves++;
   }
-  if(!moves)return 0;
+  if(!moves&&!stateChanges)return 0;
   try{
     const fear=applyAfricanLionFearAura(units);units=fear.units||units;logs.push(...(fear.logs||[]));statusFxEvent=fear.statusFxEvent||statusFxEvent;floatFxEvent=fear.floatFxEvent||floatFxEvent;
   }catch(_){ }
