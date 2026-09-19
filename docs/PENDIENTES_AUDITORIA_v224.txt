@@ -1,0 +1,34 @@
+HALLVALLA — PENDIENTES DESPUÉS DE v224
+Build: 20260919.224
+
+COMPLETADO EN v224
+- Mina extraída físicamente de system/settings-events.js a features/mine/runtime.js.
+- Orden de cartas de batalla consolidado por coste efectivo ascendente.
+- Badge persistente New para cartas adquiridas por primera vez en creación de mazo.
+
+1. SETTINGS-EVENTS — TERMINAR LA SEPARACIÓN
+   - Extraer tutoriales/misiones generales de cuenta.
+   - Extraer recompensas diarias/paquete bienvenida.
+   - Dejar settings-events como bindings/configuración general y navegación.
+
+2. DECKS-UNITS-COMBAT-RULES
+   - Separar factories, validación de deck/líderes y reglas generales compartidas.
+
+3. PVP
+   - Dividir ranking/resultados, lobby/matchmaking, BOT y sincronización.
+   - Retirar nombres/campos históricos de prebatalla solo después de mapear el handshake actual.
+
+4. MOTOR AUTOMÁTICO
+   - Modularizar realtime/experimental.js y retirar la nomenclatura histórica `experimental`.
+   - Migrar nombres internos *TurnKey/cycle únicamente con mapa de consumidores.
+
+5. CONTRATOS/NOMBRES HISTÓRICOS RESTANTES
+   - Revisar turnsRemaining, damagedThisTurn y *TurnKey.
+
+6. CIERRE FINAL
+   - Código muerto/assets huérfanos.
+   - Aventura completa.
+   - PvP BOT y PvP real concurrente.
+   - Gamepad Windows/Android.
+   - Mina/Forja/colección/tutorial.
+   - Hashes/cache/Firebase finales.

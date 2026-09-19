@@ -1231,12 +1231,60 @@ const BASIC_MAGIC_TRAP_PACK = [
   }
 ];
 
+const HALLVALLA_NEW_COLLECTION_CARDS_KEY="hallvalla_new_collection_cards_v1";
+const HALLVALLA_EVER_OWNED_CARDS_KEY="hallvalla_ever_owned_cards_v1";
+const HALLVALLA_EVER_OWNED_CARDS_BOOTSTRAP_KEY="hallvalla_ever_owned_cards_bootstrap_v1";
+function readHallvallaCardKeySet(storageKey){
+  try{const raw=JSON.parse(localStorage.getItem(storageKey)||"[]");return new Set((Array.isArray(raw)?raw:[]).map(v=>String(v||"").trim()).filter(Boolean));}catch(_){return new Set();}
+}
+function writeHallvallaCardKeySet(storageKey,set){
+  try{localStorage.setItem(storageKey,JSON.stringify([...set].filter(Boolean).sort()));}catch(_){ }
+}
+function getOwnedCollectionCardKeys(cards=[]){
+  return new Set((Array.isArray(cards)?cards:[]).filter(card=>Math.max(0,Number(card?.qty||0))>0).map(card=>String(card?.key||"").trim()).filter(Boolean));
+}
+function ensureHallvallaEverOwnedCardBaseline(cards=[]){
+  const ever=readHallvallaCardKeySet(HALLVALLA_EVER_OWNED_CARDS_KEY);
+  let bootstrapped=false,changed=false;
+  try{bootstrapped=localStorage.getItem(HALLVALLA_EVER_OWNED_CARDS_BOOTSTRAP_KEY)==="1";}catch(_){ }
+  for(const key of getOwnedCollectionCardKeys(cards)){if(!ever.has(key)){ever.add(key);changed=true;}}
+  if(changed||!bootstrapped)writeHallvallaCardKeySet(HALLVALLA_EVER_OWNED_CARDS_KEY,ever);
+  if(!bootstrapped){try{localStorage.setItem(HALLVALLA_EVER_OWNED_CARDS_BOOTSTRAP_KEY,"1");}catch(_){ }}
+  return ever;
+}
+function registerHallvallaNewCollectionCards(cards=[],options={}){
+  const ever=ensureHallvallaEverOwnedCardBaseline(options?.previousCards||[]);
+  const fresh=readHallvallaCardKeySet(HALLVALLA_NEW_COLLECTION_CARDS_KEY);
+  let changed=false;
+  for(const key of getOwnedCollectionCardKeys(cards)){
+    if(ever.has(key))continue;
+    ever.add(key);changed=true;
+    if(options?.suppressNew!==true)fresh.add(key);
+  }
+  if(changed)writeHallvallaCardKeySet(HALLVALLA_EVER_OWNED_CARDS_KEY,ever);
+  writeHallvallaCardKeySet(HALLVALLA_NEW_COLLECTION_CARDS_KEY,fresh);
+  return fresh;
+}
+function getNewCollectionCardKeys(){return readHallvallaCardKeySet(HALLVALLA_NEW_COLLECTION_CARDS_KEY);}
+function isCollectionCardNew(cardOrKey){
+  const key=String(typeof cardOrKey==="string"?cardOrKey:cardOrKey?.key||"").trim();
+  return !!key&&getNewCollectionCardKeys().has(key);
+}
+function markCollectionCardSeen(cardOrKey){
+  const key=String(typeof cardOrKey==="string"?cardOrKey:cardOrKey?.key||"").trim();
+  if(!key)return false;
+  const fresh=getNewCollectionCardKeys();if(!fresh.delete(key))return false;
+  writeHallvallaCardKeySet(HALLVALLA_NEW_COLLECTION_CARDS_KEY,fresh);return true;
+}
+Object.assign(globalThis,{getNewCollectionCardKeys,isCollectionCardNew,markCollectionCardSeen});
+
 function getPlayerCollection(){
   try{
     const saved = JSON.parse(localStorage.getItem("hallvalla_player_collection") || "null");
     if(saved&&typeof saved === "object"){
       saved.cards=Array.isArray(saved.cards)?saved.cards.map(hydrateCardVisualData):[];
       saved.materials=normalizeCraftMaterials(saved.materials||{});
+      ensureHallvallaEverOwnedCardBaseline(saved.cards);
       return saved;
     }
     return {cards:[],materials:getEmptyCraftMaterials()};
@@ -1244,13 +1292,16 @@ function getPlayerCollection(){
     return {cards:[],materials:getEmptyCraftMaterials()};
   }
 }
-function savePlayerCollection(collection){
+function savePlayerCollection(collection,options={}){
   // Coleccionista es acumulativa: solo suma copias nuevas; descomponer o perder cartas nunca resta progreso.
   const beforeTotal=getStoredCollectionCardTotalForMastery();
+  let previousCards=[];
+  try{const previous=JSON.parse(localStorage.getItem("hallvalla_player_collection")||"null");previousCards=Array.isArray(previous?.cards)?previous.cards:[];}catch(_){previousCards=[];}
   // Fuerza la migración una sola vez ANTES de guardar el nuevo total, evitando contar dos veces colecciones existentes.
   try{if(typeof getPlayerProfile==="function")getPlayerProfile();}catch(_){ }
   const safe={...(collection||{}),cards:Array.isArray(collection?.cards)?collection.cards:[],materials:normalizeCraftMaterials(collection?.materials||{})};
   const afterTotal=safe.cards.reduce((sum,card)=>sum+Math.max(0,Math.floor(Number(card?.qty||0))),0);
+  registerHallvallaNewCollectionCards(safe.cards,{previousCards,suppressNew:options?.suppressNewCards===true});
   localStorage.setItem("hallvalla_player_collection", JSON.stringify(safe));
   const gained=Math.max(0,afterTotal-beforeTotal);
   if(gained>0&&typeof registerAccountMasteryAction==="function")registerAccountMasteryAction("collection",gained);
@@ -1289,7 +1340,7 @@ function ensureCollectionContainsStarterTemplates(starter=[]){
       changed=true;
     }
   });
-  if(changed){savePlayerCollection(collection);renderNotificationBadge();renderHomeProgress();}
+  if(changed){savePlayerCollection(collection,{suppressNewCards:true});renderNotificationBadge();renderHomeProgress();}
   return collection;
 }
 function ensureInitialLeaderStarterCollection(leaderType=getSelectedLeaderType()||"warrior",selectedSpecial=""){

@@ -28903,3 +28903,14 @@ html.hv-universal-dragging-enabled .hv-universal-selected{cursor:grabbing!import
 }
 
 #profilePromoInput{-webkit-text-security:disc;}
+
+
+/* v224 · Cartas recién obtenidas en creación de mazo */
+#deckBuilderPanel .deck-mini-card .deck-new-badge{
+  position:absolute;z-index:12;left:-7px;top:-7px;pointer-events:none;
+  min-width:34px;padding:3px 7px;border:1px solid rgba(244,199,94,.95);border-radius:9px;
+  background:linear-gradient(180deg,rgba(133,20,14,.98),rgba(58,6,4,.98));
+  color:#fff0ad;font:900 11px/1.15 Georgia,serif;letter-spacing:.35px;text-align:center;
+  text-transform:none;box-shadow:0 2px 8px rgba(0,0,0,.72),0 0 9px rgba(224,163,48,.28);
+}
+#deckBuilderPanel .deck-mini-card.is-new-card{filter:drop-shadow(0 0 5px rgba(241,193,74,.32));}

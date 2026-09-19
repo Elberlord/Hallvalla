@@ -1008,9 +1008,12 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
     ? `<button class="deck-mini-remove" type="button" data-remove-index="${index}" aria-label="Quitar ${name}">×</button>`
     : (readOnly?"":`<button class="deck-mini-plus${addDisabled?" is-add-locked":""}" type="button" data-add-card="${escapeHtml(card.key||"")}" ${addStateAttrs} aria-label="Añadir ${name} al mazo">+</button>`);
   const principalBtn="";
+  const isNew=mode==="collection"&&typeof isCollectionCardNew==="function"&&isCollectionCardNew(card);
+  const newBadge=isNew?`<span class="deck-new-badge" aria-label="Carta nueva">New</span>`:"";
   const detailTitle=collectionLocked?`${name} · bloqueada · clic/tap para ver detalles`:`${name} · clic/tap para ver detalles`;
-  return `<div class="${cls}" ${data} data-deck-origin="${mode}" draggable="false" aria-label="${escapeHtml(detailTitle)}">
+  return `<div class="${cls}${isNew?" is-new-card":""}" ${data} data-deck-origin="${mode}" draggable="false" aria-label="${escapeHtml(detailTitle)}">
     <div class="deck-mini-art">${getDeckBuilderMiniImageHtml(card)}</div>
+    ${newBadge}
     ${actionBtn}
     ${principalBtn}
   </div>`;
@@ -1117,8 +1120,12 @@ function bindDeckBuilderDragAndClick(collectionGrid,...deckContainers){
       if(ev.target.closest(".deck-mini-plus,.deck-mini-craft,.deck-mini-dust"))return;
       if(Date.now()-deckBuilderDragStartedAt<160)return;
       const card=getDeckBuilderCollectionCard(el.dataset.deckCardKey);
-      if(card)showDeckBuilderCardDetail(card);
-      else setHint(`No se pudo abrir el detalle de ${el.dataset.deckCardKey||"esta carta"}.`);
+      if(card){
+        showDeckBuilderCardDetail(card);
+        if(typeof markCollectionCardSeen==="function"&&markCollectionCardSeen(card.key)){
+          el.classList.remove("is-new-card");el.querySelector(".deck-new-badge")?.remove();
+        }
+      }else setHint(`No se pudo abrir el detalle de ${el.dataset.deckCardKey||"esta carta"}.`);
     };
     el.addEventListener("click",openDetail);
     el.addEventListener("dragstart",ev=>{
@@ -1272,6 +1279,9 @@ function renderDeckBuilder(){
       }
       return String(a.name||"").localeCompare(String(b.name||""));
     }
+    const aNew=typeof isCollectionCardNew==="function"&&isCollectionCardNew(a)?1:0;
+    const bNew=typeof isCollectionCardNew==="function"&&isCollectionCardNew(b)?1:0;
+    if(aNew!==bNew)return bNew-aNew;
     return (a.cost||0)-(b.cost||0)||String(a.name||"").localeCompare(String(b.name||""));
   });
   const pageSize=15;

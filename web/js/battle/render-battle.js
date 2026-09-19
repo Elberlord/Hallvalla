@@ -971,7 +971,7 @@ function renderHand(){
   if(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()){drawer.classList.remove("open");if(typeof hallvallaRtRenderArsenal==="function")hallvallaRtRenderArsenal();return;}
   drawer.classList.toggle("open",handOpen);
   ensureBattleHandDelegation(row);
-  const hand=privateState?.hand||[];
+  const hand=typeof getBattleCardsSortedByCurrentCost==="function"?getBattleCardsSortedByCurrentCost(privateState?.hand||[],myPlayer||1):[...(privateState?.hand||[])];
   const playableCount=getPlayableCardsInHand().length;
   const infoText=`${getResourceLabel(myPlayer)} ${privateState?.honor||0}/${privateState?.maxHonor||0} · ${hand.length} cartas · ${playableCount} jugable${playableCount===1?"":"s"}`;
   if(info.textContent!==infoText)info.textContent=infoText;

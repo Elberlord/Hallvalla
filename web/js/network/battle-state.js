@@ -839,7 +839,23 @@ async function commitRealtimeOnlineCheckpoint(publicPatch={},privatePatch={},kin
     return true;
   }catch(error){console.error("[HallValla][TR PvP] checkpoint de acción falló",error);setHint("No se pudo sincronizar la acción PvP.");return false;}
 }
+function getBattleCardsSortedByCurrentCost(cards=[],owner=myPlayer||1){
+  const source=Array.isArray(cards)?cards:[];
+  const ownerNum=Math.max(1,Number(owner||1));
+  return [...source].sort((a,b)=>{
+    const ca=Math.max(0,Number(typeof effectiveCardCost==="function"?effectiveCardCost(a,ownerNum):a?.cost)||0);
+    const cb=Math.max(0,Number(typeof effectiveCardCost==="function"?effectiveCardCost(b,ownerNum):b?.cost)||0);
+    return (ca-cb)||String(a?.name||"").localeCompare(String(b?.name||""))||String(a?.id||"").localeCompare(String(b?.id||""));
+  });
+}
+function normalizeBattlePrivateHandOrder(patch={},owner=myPlayer||1){
+  if(!patch||!Array.isArray(patch.hand))return patch||{};
+  return {...patch,hand:getBattleCardsSortedByCurrentCost(patch.hand,owner)};
+}
+globalThis.getBattleCardsSortedByCurrentCost=getBattleCardsSortedByCurrentCost;
+
 async function commitGameplayAction({publicPatch={},privatePatch={},kind="",rtClientSeq=0,alreadyApplied=false}={}){
+  privatePatch=normalizeBattlePrivateHandOrder(privatePatch,myPlayer||1);
   
   if(globalThis.hallvallaRtShouldNetworkGameplayAction?.(kind))return commitRealtimeOnlineCheckpoint(publicPatch,privatePatch,kind,{rtClientSeq,alreadyApplied});
   if(!globalThis.hallvallaRtUseLocalBattleRuntime?.()&&isPvpStep6fAtomicActionMode(publicState))return commitPvpStep6fAtomicAction(publicPatch,privatePatch);
@@ -854,7 +870,7 @@ async function updatePrivate(patch){
   const writeLifecycleToken=getBattleLifecycleToken();
   const writeContextActive=()=>writeGameId&&gameId===writeGameId&&myPlayer===writePlayer&&isBattleLifecycleTokenActive(writeLifecycleToken);
   if(!writeContextActive())return false;
-  const cleanPatch=hallvallaSanitizeFirebaseValue(patch||{})||{};
+  const cleanPatch=hallvallaSanitizeFirebaseValue(normalizeBattlePrivateHandOrder(patch||{},myPlayer||1))||{};
   const nextPrivate=hallvallaApplyLocalPatch(privateState||{},cleanPatch);
   const hiddenUnits=countHiddenUnitReserveFromState(nextPrivate);
   const summaryPatch={[`playerStats/${myPlayer}/hasHiddenUnits`]:hiddenUnits>0};
