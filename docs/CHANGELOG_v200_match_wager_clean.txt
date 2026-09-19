@@ -1,0 +1,7 @@
+HallValla v200 MATCH+WAGER CANON CLEAN
+
+- Fondo canónico único: web/assets/ui/pvp_online/pvp_online_canon_bg.webp
+- Matchmaking y Apuestas apuntan al mismo asset aprobado
+- Se retiró markup CSS/JS obsoleto de marcos/pulsos/VS de matchmaking
+- Se eliminaron assets obsoletos: matchmaking_bg.webp, matchmaking_vs.webp, modal_online_base.webp
+- Build/cache version bump a 20260919.200 / hallvalla-runtime-v200

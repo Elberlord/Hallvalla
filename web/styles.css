@@ -23924,95 +23924,7 @@ body.hv-google-auth-required #accountPanel{display:none!important;}
 .hv-online-subtle-back:hover{filter:brightness(1.12);color:#ecd9aa;}
 
 /* Matchmaking: las ilustraciones reales se colocan dentro de los marcos ya dibujados. */
-.hv-match-team{position:absolute;inset:0;z-index:2;pointer-events:none;}
-.hv-match-leader{
-  position:absolute;
-  top:27.1%;
-  width:11.4%;
-  height:30.5%;
-  display:block;
-  object-fit:cover;
-  object-position:50% 15%;
-  opacity:1;
-  border-radius:2%;
-  filter:drop-shadow(0 8px 14px rgba(0,0,0,.32));
-}
-.hv-match-player-leader{left:11.25%;}
-.hv-match-opponent-leader{right:11.25%;}
-.hv-match-principals{
-  position:absolute;
-  bottom:11.7%;
-  width:24.9%;
-  height:14.9%;
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:7.4%;
-  align-items:stretch;
-}
-.hv-match-player-principals{left:3.55%;}
-.hv-match-opponent-principals{right:3.55%;}
-.hv-match-principal{
-  width:100%;
-  height:100%;
-  min-width:0;
-  display:block;
-  object-fit:cover;
-  object-position:50% 16%;
-  border-radius:3%;
-  filter:drop-shadow(0 6px 9px rgba(0,0,0,.32));
-}
-.hv-match-leader:not([src]),
-.hv-match-principal:not([src]),
-.hv-match-leader[src=""],
-.hv-match-principal[src=""]{visibility:hidden;}
-.hv-match-searching{
-  position:absolute;
-  z-index:5;
-  left:50%;
-  top:58%;
-  transform:translate(-50%,-50%);
-  min-width:24%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:12px;
-  padding:12px 22px;
-  border:1px solid rgba(204,165,92,.42);
-  border-radius:999px;
-  background:linear-gradient(180deg,rgba(17,14,12,.82),rgba(7,6,5,.84));
-  box-shadow:0 12px 36px rgba(0,0,0,.48),inset 0 0 18px rgba(177,126,49,.05);
-  color:#d8bd84;
-  font:900 clamp(12px,1.35vw,21px)/1 Georgia,"Times New Roman",serif;
-  letter-spacing:.08em;
-  text-shadow:0 2px 5px #000;
-  white-space:nowrap;
-}
-.hv-match-searching.hidden{display:none!important;}
-.hv-match-search-spinner{
-  width:1.05em;
-  height:1.05em;
-  border-radius:50%;
-  border:2px solid rgba(211,174,100,.25);
-  border-top-color:#cda45c;
-  animation:hvMatchSearchSpin .9s linear infinite;
-}
-@keyframes hvMatchSearchSpin{to{transform:rotate(360deg)}}
-.hv-match-vs{
-  position:absolute;
-  z-index:6;
-  left:50%;
-  top:57.2%;
-  transform:translate(-50%,-50%) scale(.86);
-  width:29%;
-  height:auto;
-  display:block;
-  filter:drop-shadow(0 14px 25px rgba(0,0,0,.58));
-  animation:hvMatchVsReveal .42s cubic-bezier(.2,.8,.22,1) both;
-  pointer-events:none;
-}
-.hv-match-vs.hidden{display:none!important;}
-@keyframes hvMatchVsReveal{from{opacity:0;transform:translate(-50%,-50%) scale(.62)}to{opacity:1;transform:translate(-50%,-50%) scale(.86)}}
-.hv-match-cancel{bottom:2.2%;}
+
 
 /* RPS aleatorio: no hay modal. El arte aprobado ocupa toda la escena. */
 .online-modal-art.hv-random-rps-shell{
@@ -24156,7 +24068,6 @@ body.hv-google-auth-required #accountPanel{display:none!important;}
 .hv-online-layout-actions button:hover{filter:brightness(1.12)}
 #hvLayoutJson{display:block;width:100%;height:118px;box-sizing:border-box;margin-top:10px;padding:8px;resize:vertical;border:1px solid rgba(205,165,91,.25);border-radius:8px;background:#090806;color:#bfa778;font:11px/1.35 Consolas,monospace}
 .hv-online-layout-status{min-height:18px;margin:8px 0 0;color:#d8c18e;font:700 10px/1.35 Arial,sans-serif}
-html.hv-layout-editing .hv-match-team{pointer-events:auto!important}
 html.hv-layout-editing [data-hv-layout-target]{pointer-events:auto!important;cursor:move!important;outline:1px dashed rgba(238,194,99,.48);outline-offset:2px;touch-action:none!important}
 html.hv-layout-editing [data-hv-layout-target].hv-layout-selected{outline:2px solid #e2b65a!important;outline-offset:3px;filter:drop-shadow(0 0 8px rgba(226,182,90,.5))!important}
 html.hv-layout-editing .hv-online-mode-btn:hover,
@@ -24200,29 +24111,6 @@ html.hv-layout-editing .hv-online-subtle-back:hover{filter:none!important}
 }
 /* === Fin Apuestas layout fijado === */
 
-/* === HallValla · Matchmaking jugador layout fijado desde calibrador (2026-08-26) ===
-   Fuente JSON aprobada:
-   leader      x:0   y:+23 scale:.92
-   principal1  x:+23 y:0   scale:.76
-   principal2  x:+16 y:0   scale:.88
-   Principal 3 y todo el lado rival quedan SIN FIJAR hasta poder probarlos.
-   Los desplazamientos design-px respetan el artboard responsive 1672x941. */
-#matchmakingPlayerLeader{
-  translate:0 min(1.3755980861vw,2.4442082891dvh);
-  scale:.92;
-  transform-origin:50% 50%;
-}
-#matchmakingPlayerPrincipal1{
-  translate:min(1.3755980861vw,2.4442082891dvh) 0;
-  scale:.76;
-  transform-origin:50% 50%;
-}
-#matchmakingPlayerPrincipal2{
-  translate:min(.9569377990vw,1.7003188098dvh) 0;
-  scale:.88;
-  transform-origin:50% 50%;
-}
-/* === Fin Matchmaking jugador layout fijado === */
 
 
 /* ========================================================================== 
@@ -29044,208 +28932,26 @@ html.hv-universal-dragging-enabled .hv-universal-selected{cursor:grabbing!import
   }
 }
 
-/* ==========================================================================
-   v198 · MATCHMAKING POR AVATARES
-   Reemplaza el pill de texto por medallones HallValla.
+
+
+
+
+
+
+/* ========================================================================== 
+   v200 · MATCHMAKING + APUESTAS · fondo canónico unificado
+   - Matchmaking y Apuestas reutilizan el mismo arte aprobado.
+   - Se retiran líderes/principales y overlays decorativos obsoletos.
+   - Solo permanecen overlays funcionales: avatar propio, avatar rival, liga y cancelar.
    ========================================================================== */
+.hv-match-searching.hidden{display:none!important;}
 .hv-match-searching.hv-match-avatar-search{
   position:absolute !important;
+  inset:0 !important;
   z-index:5 !important;
-  left:50% !important;
-  top:58% !important;
-  transform:translate(-50%,-50%) !important;
-  min-width:0 !important;
-  width:26% !important;
-  height:18.5% !important;
-  padding:0 !important;
-  border:0 !important;
-  border-radius:0 !important;
-  background:transparent !important;
-  box-shadow:none !important;
-  display:grid !important;
-  grid-template-columns:1fr .72fr 1fr !important;
-  grid-template-rows:1fr auto !important;
-  align-items:center !important;
-  justify-items:center !important;
-  gap:0 5% !important;
-  color:#d8bd84 !important;
-  white-space:normal !important;
   pointer-events:none !important;
 }
-
 .hv-match-avatar-medallion{
-  position:relative !important;
-  width:clamp(58px,6.1vw,92px) !important;
-  aspect-ratio:1/1 !important;
-  border-radius:50% !important;
-  display:grid !important;
-  place-items:center !important;
-  overflow:hidden !important;
-  background:
-    radial-gradient(circle at 50% 35%,rgba(54,44,31,.96),rgba(8,7,6,.98) 72%) !important;
-  border:2px solid rgba(211,174,100,.78) !important;
-  box-shadow:
-    inset 0 0 0 3px rgba(0,0,0,.48),
-    inset 0 0 22px rgba(214,163,65,.16),
-    0 8px 22px rgba(0,0,0,.52) !important;
-}
-
-.hv-match-avatar-self{
-  box-shadow:
-    inset 0 0 0 3px rgba(0,0,0,.48),
-    0 0 0 2px rgba(74,150,255,.16),
-    0 0 22px rgba(43,121,255,.38),
-    0 8px 22px rgba(0,0,0,.52) !important;
-}
-
-.hv-match-avatar-rival{
-  box-shadow:
-    inset 0 0 0 3px rgba(0,0,0,.48),
-    0 0 0 2px rgba(255,65,65,.13),
-    0 0 20px rgba(206,37,37,.28),
-    0 8px 22px rgba(0,0,0,.52) !important;
-}
-
-.hv-match-avatar-glow{
-  position:absolute !important;
-  inset:-16% !important;
-  border-radius:50% !important;
-  border:1px solid rgba(226,184,100,.28) !important;
-  animation:hvMatchAvatarPulse 2.2s ease-out infinite !important;
-}
-
-.hv-match-avatar-img{
-  width:100% !important;
-  height:100% !important;
-  display:block !important;
-  object-fit:cover !important;
-  object-position:50% 15% !important;
-  border-radius:50% !important;
-  filter:contrast(1.03) saturate(.96) !important;
-}
-
-.hv-match-avatar-img:not([src]),
-.hv-match-avatar-img[src=""]{
-  visibility:hidden !important;
-}
-
-.hv-match-avatar-question{
-  position:absolute !important;
-  inset:0 !important;
-  display:grid !important;
-  place-items:center !important;
-  color:#cbb88d !important;
-  font:900 clamp(32px,4vw,60px)/1 Georgia,"Times New Roman",serif !important;
-  text-shadow:0 3px 8px #000,0 0 14px rgba(190,60,60,.24) !important;
-  opacity:.88 !important;
-  animation:hvMatchQuestionFloat 2.6s ease-in-out infinite !important;
-}
-
-.hv-match-avatar-rival:has(.hv-match-avatar-img[src]:not([src=""])) .hv-match-avatar-question{
-  opacity:0 !important;
-}
-
-.hv-match-search-core{
-  position:relative !important;
-  width:clamp(42px,4.7vw,72px) !important;
-  aspect-ratio:1/1 !important;
-  display:grid !important;
-  place-items:center !important;
-}
-
-.hv-match-search-ring{
-  position:absolute !important;
-  inset:7% !important;
-  border-radius:50% !important;
-  border:1px solid rgba(218,176,92,.72) !important;
-  box-shadow:0 0 15px rgba(201,149,56,.24) !important;
-  opacity:.72 !important;
-  animation:hvMatchRunePulse 2s ease-out infinite !important;
-}
-
-.hv-match-search-ring.hv-ring-two{
-  inset:-8% !important;
-  opacity:.4 !important;
-  animation-delay:1s !important;
-}
-
-.hv-match-search-emblem{
-  position:relative !important;
-  z-index:2 !important;
-  color:#e6c985 !important;
-  font:900 clamp(13px,1.4vw,22px)/1 Georgia,"Times New Roman",serif !important;
-  letter-spacing:.08em !important;
-  text-shadow:0 2px 6px #000,0 0 10px rgba(223,173,76,.42) !important;
-}
-
-.hv-match-avatar-search .hv-match-league-label{
-  grid-column:1 / -1 !important;
-  align-self:start !important;
-  justify-self:center !important;
-  margin-top:2px !important;
-  padding:4px 10px !important;
-  border:1px solid rgba(194,150,70,.26) !important;
-  border-radius:999px !important;
-  background:rgba(7,6,5,.62) !important;
-  color:#d8bd84 !important;
-  font:800 clamp(8px,.78vw,11px)/1 Georgia,"Times New Roman",serif !important;
-  letter-spacing:.06em !important;
-  text-shadow:0 2px 4px #000 !important;
-}
-
-@keyframes hvMatchAvatarPulse{
-  0%{transform:scale(.72);opacity:0}
-  35%{opacity:.58}
-  100%{transform:scale(1.22);opacity:0}
-}
-@keyframes hvMatchRunePulse{
-  0%{transform:scale(.68);opacity:0}
-  45%{opacity:.72}
-  100%{transform:scale(1.25);opacity:0}
-}
-@keyframes hvMatchQuestionFloat{
-  0%,100%{transform:translateY(0) scale(1)}
-  50%{transform:translateY(-4px) scale(1.035)}
-}
-
-@media(max-width:760px){
-  .hv-match-searching.hv-match-avatar-search{
-    width:34% !important;
-    top:58.5% !important;
-  }
-}
-
-
-/* ==========================================================================
-   v199 · MATCHMAKING + APUESTAS · fondo canónico aprobado
-   - Matchmaking usa el arte aprobado como fondo real.
-   - Se eliminan los "palitos y bolitas" CSS; solo quedan avatares dinámicos.
-   - Apuestas reutiliza el mismo fondo aprobado.
-   ========================================================================== */
-.hv-match-team{display:none !important;}
-.hv-match-vs{display:none !important;}
-.hv-match-searching.hv-match-avatar-search{
-  position:absolute !important;
-  inset:0 !important;
-  left:auto !important;
-  top:auto !important;
-  transform:none !important;
-  width:100% !important;
-  height:100% !important;
-  padding:0 !important;
-  border:0 !important;
-  border-radius:0 !important;
-  background:transparent !important;
-  box-shadow:none !important;
-  display:block !important;
-  min-width:0 !important;
-  pointer-events:none !important;
-}
-.hv-match-searching.hv-match-avatar-search .hv-match-search-core,
-.hv-match-searching.hv-match-avatar-search .hv-match-avatar-glow{
-  display:none !important;
-}
-.hv-match-searching.hv-match-avatar-search .hv-match-avatar-medallion{
   position:absolute !important;
   top:26.4% !important;
   width:14.45% !important;
@@ -29254,22 +28960,24 @@ html.hv-universal-dragging-enabled .hv-universal-selected{cursor:grabbing!import
   overflow:hidden !important;
   display:block !important;
   background:rgba(7,10,18,.58) !important;
-  border:0 !important;
   box-shadow:0 16px 36px rgba(0,0,0,.34) !important;
 }
-.hv-match-searching.hv-match-avatar-search .hv-match-avatar-self{left:17.85% !important;}
-.hv-match-searching.hv-match-avatar-search .hv-match-avatar-rival{right:17.85% !important;}
-.hv-match-searching.hv-match-avatar-search .hv-match-avatar-img{
+.hv-match-avatar-self{left:17.85% !important;}
+.hv-match-avatar-rival{right:17.85% !important;}
+.hv-match-avatar-img{
   position:absolute !important;
   inset:0 !important;
   width:100% !important;
   height:100% !important;
+  display:block !important;
   object-fit:cover !important;
   object-position:50% 18% !important;
   border-radius:50% !important;
   filter:contrast(1.04) saturate(.98) !important;
 }
-.hv-match-searching.hv-match-avatar-search .hv-match-avatar-question{
+.hv-match-avatar-img:not([src]),
+.hv-match-avatar-img[src=""]{visibility:hidden !important;}
+.hv-match-avatar-question{
   position:absolute !important;
   inset:0 !important;
   display:grid !important;
@@ -29279,8 +28987,9 @@ html.hv-universal-dragging-enabled .hv-universal-selected{cursor:grabbing!import
   text-shadow:0 3px 10px rgba(0,0,0,.96),0 0 18px rgba(148,34,34,.24) !important;
   opacity:.92 !important;
 }
+.hv-match-avatar-rival:has(.hv-match-avatar-img[src]:not([src=""])) .hv-match-avatar-question,
 .hv-match-searching.hv-match-avatar-search.is-rival-found .hv-match-avatar-question{opacity:0 !important;}
-.hv-match-searching.hv-match-avatar-search .hv-match-league-label{
+.hv-match-league-label{
   position:absolute !important;
   left:50% !important;
   bottom:18.1% !important;
@@ -29295,9 +29004,10 @@ html.hv-universal-dragging-enabled .hv-universal-selected{cursor:grabbing!import
   letter-spacing:.08em !important;
   text-shadow:0 2px 4px rgba(0,0,0,.9) !important;
 }
+.hv-match-cancel{bottom:2.2%;}
 @media(max-width:760px){
-  .hv-match-searching.hv-match-avatar-search .hv-match-avatar-medallion{top:26.9% !important;width:16.8% !important;}
-  .hv-match-searching.hv-match-avatar-search .hv-match-avatar-self{left:16.8% !important;}
-  .hv-match-searching.hv-match-avatar-search .hv-match-avatar-rival{right:16.8% !important;}
-  .hv-match-searching.hv-match-avatar-search .hv-match-league-label{bottom:17.6% !important;padding:5px 12px !important;}
+  .hv-match-avatar-medallion{top:26.9% !important;width:16.8% !important;}
+  .hv-match-avatar-self{left:16.8% !important;}
+  .hv-match-avatar-rival{right:16.8% !important;}
+  .hv-match-league-label{bottom:17.6% !important;padding:5px 12px !important;}
 }

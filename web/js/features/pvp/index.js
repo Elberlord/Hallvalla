@@ -503,23 +503,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const seen=new Set();
     return (Array.isArray(values)?values:[values]).map(v=>String(v||"").trim()).filter(v=>v&&!seen.has(v)&&(seen.add(v),true));
   }
-  function resolveShowcaseCard(key){
-    const safe=String(key||"").trim();
-    if(!safe)return null;
-    const resolvers=["getEquipmentTemplateByKey","getStarterBasicCardByKey","getLegendaryCardByKey","getAdventureDeckCardTemplateByKey","getDragonCompanionCardTemplate"];
-    for(const name of resolvers){
-      try{const fn=globalThis[name];if(typeof fn==="function"){const found=fn(safe);if(found)return found;}}catch(_){ }
-    }
-    try{if(typeof CARD_TEMPLATES!=="undefined"){const found=(CARD_TEMPLATES||[]).find(card=>String(card?.key||"")===safe);if(found)return found;}}catch(_){ }
-    return null;
-  }
-  function showcaseImageCandidates(entity){
-    const source=entity&&typeof entity==="object"?entity:{};
-    let field=[],cards=[];
-    try{if(typeof getResolvedFieldFigureCandidates==="function")field=getResolvedFieldFigureCandidates(source)||[];}catch(_){ }
-    try{if(typeof getResolvedCardPortraitCandidates==="function")cards=getResolvedCardPortraitCandidates(source)||[];}catch(_){ }
-    return uniqueStrings([source.portrait,source.cardPortrait,source.cardImage,...cards,source.fieldFigure,source.fieldFigurePortrait,source.fieldFigureImage,...field]);
-  }
   function applyShowcaseImage(img,candidates=[]){
     if(!img)return;
     const queue=uniqueStrings(candidates);
@@ -538,20 +521,11 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function renderShowcaseSide(side,showcase){
     const safe=showcase&&typeof showcase==="object"?showcase:{};
     const leaderType=String(safe.leaderType||"").trim();
-    const leaderId=side==="opponent"?"matchmakingOpponentLeader":"matchmakingPlayerLeader";
     const avatarId=side==="opponent"?"matchmakingOpponentAvatar":"matchmakingPlayerAvatar";
-    const leader=$(leaderId);
     const avatar=$(avatarId);
     let leaderSrc="";
     try{leaderSrc=String(LEADER_PORTRAITS?.[leaderType]||"");}catch(_){ }
-    applyShowcaseImage(leader,[leaderSrc]);
     applyShowcaseImage(avatar,[leaderSrc]);
-    const principalKeys=normalizeFirebaseArray(safe.principalKeys).map(v=>String(v||"").trim()).filter(Boolean).slice(0,3);
-    for(let i=0;i<3;i++){
-      const img=$(side==="opponent"?`matchmakingOpponentPrincipal${i+1}`:`matchmakingPlayerPrincipal${i+1}`);
-      const card=resolveShowcaseCard(principalKeys[i]||"");
-      applyShowcaseImage(img,card?showcaseImageCandidates(card):[]);
-    }
   }
   function renderRandomMatchmakingUi(room={}){
     if(onlineFlowMode!=="random")return;
@@ -568,7 +542,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       searchState.classList.toggle("is-rival-found",found);
       searchState.classList.remove("hidden");
     }
-    hide("matchmakingVsArt",true);
   }
   function scheduleRandomAutoReady(room,code){
     if(onlineFlowMode!=="random"||String(room?.entryMode||"")!=="random")return;

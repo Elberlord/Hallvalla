@@ -22,13 +22,13 @@
 </script>
 <script>
   // v181: esta página ES el juego lógico. index.html es el shell físico.
-  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260919.198"});
+  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260919.200"});
   document.documentElement.dataset.hvDesignStage="1366x636";
 </script>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260919.198">
-<meta name="hallvalla-build" content="v8_MODULAR_20260919.198">
+<meta name="hallvalla-version" content="20260919.200">
+<meta name="hallvalla-build" content="v8_MODULAR_20260919.200">
 <meta name="hallvalla-build-name" content="Design Stage fijo 1366×636 · v192 arquitectura modular · canon v191 preservado">
 <link rel="stylesheet" href="styles.css?h=e5fa7b1db9ea"/>
 
@@ -568,46 +568,27 @@
   </section>
 
   <section id="onlineMatchmakingView" class="hv-matchmaking-view hidden" aria-live="polite" aria-label="Matchmaking">
-    <img class="hv-matchmaking-bg" data-hv-src="assets/ui/pvp_online/matchmaking_bg.webp" data-hv-asset-group="pvp-online" decoding="async" alt="Matchmaking">
-
-    <div class="hv-match-team hv-match-team-player" aria-label="Tu equipo">
-      <img id="matchmakingPlayerLeader" class="hv-match-leader hv-match-player-leader" alt="Tu líder">
-      <div class="hv-match-principals hv-match-player-principals hidden" aria-hidden="true"></div>
-    </div>
-
-    <div class="hv-match-team hv-match-team-opponent" aria-label="Equipo rival">
-      <img id="matchmakingOpponentLeader" class="hv-match-leader hv-match-opponent-leader" alt="Líder rival">
-      <div class="hv-match-principals hv-match-opponent-principals hidden" aria-hidden="true"></div>
-    </div>
+    <img class="hv-matchmaking-bg" data-hv-src="assets/ui/pvp_online/pvp_online_canon_bg.webp" data-hv-asset-group="pvp-online" decoding="async" alt="Matchmaking">
 
     <div id="matchmakingSearchingState" class="hv-match-searching hv-match-avatar-search" aria-label="Buscando rival">
       <strong class="hv-sr-only">BUSCANDO RIVAL...</strong>
 
       <div class="hv-match-avatar-medallion hv-match-avatar-self" aria-hidden="true">
-        <span class="hv-match-avatar-glow"></span>
         <img id="matchmakingPlayerAvatar" class="hv-match-avatar-img" alt="">
       </div>
 
-      <div class="hv-match-search-core" aria-hidden="true">
-        <span class="hv-match-search-ring hv-ring-one"></span>
-        <span class="hv-match-search-ring hv-ring-two"></span>
-        <span class="hv-match-search-emblem">VS</span>
-      </div>
-
       <div class="hv-match-avatar-medallion hv-match-avatar-rival" aria-hidden="true">
-        <span class="hv-match-avatar-glow"></span>
         <img id="matchmakingOpponentAvatar" class="hv-match-avatar-img" alt="">
         <span class="hv-match-avatar-question">?</span>
       </div>
 
       <span id="matchmakingLeagueLabel" class="hv-match-league-label">LIGA PIEDRA · 0 PTS</span>
     </div>
-    <img id="matchmakingVsArt" class="hv-match-vs hidden" data-hv-src="assets/ui/pvp_online/matchmaking_vs.webp" data-hv-asset-group="pvp-online" decoding="async" alt="VS">
     <button id="matchmakingCancelBtn" class="hv-online-subtle-back hv-match-cancel" type="button">CANCELAR</button>
   </section>
 
   <div class="online-modal-art hidden">
-    <img class="online-modal-base" data-hv-src="assets/modal/modal_online_base.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="Competir en línea">
+    <img class="online-modal-base" data-hv-src="assets/ui/pvp_online/pvp_online_canon_bg.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="Competir en línea">
 
     <button id="createBtn" class="visual-btn visual-create" type="button" aria-label="Crear partida">
       <img data-hv-src="assets/modal/btn_create_match.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="">
