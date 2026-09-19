@@ -836,7 +836,7 @@ const HALLVALLA_SYSTEM_TUTORIALS=Object.freeze({
   ]),
   pvp:Object.freeze([
     {selector:"#onlineModeSelect",fallbackSelector:"#onlineLobby",title:"Competir en línea",body:`PvP usa tu mazo guardado y tu líder actual. El sistema intenta mantener el emparejamiento dentro de tu <b>liga</b> y con niveles razonables.`},
-    {selector:"#onlineModeMatchBtn",fallbackSelector:"#onlineLobby",title:"Matchmaking",body:`Matchmaking busca rival. Si necesita completar con un BOT, ahora existen bots de <b>Nivel 1 a 15</b> con Tier, mazo y Maestría acordes al nivel.`},
+    {selector:"#onlineModeMatchBtn",fallbackSelector:"#onlineLobby",title:"Matchmaking",body:`Matchmaking busca rival de tu misma liga. Si necesita completar con un rival automático, su <b>Nivel, Maestría, arsenal e IA</b> escalan con la liga: Piedra empieza en el rango más bajo y Valhalla alcanza el máximo.`},
     {selector:"#onlineModeWagerBtn",fallbackSelector:"#onlineLobby",title:"Apuestas",body:`Apuestas permite crear o unirte mediante código cuando el modo está disponible. Revisa siempre la cantidad antes de confirmar.`},
     {selector:"#onlineModeSelect",fallbackSelector:"#onlineLobby",title:"Ligas y nivel",body:`La liga representa tu progreso competitivo; el nivel limita la potencia razonable del rival. Los BOT no deberían ser todos de nivel máximo.`}
   ]),

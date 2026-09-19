@@ -337,11 +337,11 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
      - 15 arquetipos por nivel: 3 Guerrero, 3 Arquero, 3 Caballería,
        3 Hacha y 3 Asesino.
      - Niveles 1..15 = 225 variantes reales de BOT.
-     - El BOT copia el nivel del líder humano para que un jugador nuevo no
-       reciba un rival de endgame.
-     - Nivel controla Tier/tamaño del mazo, maestría y techo de progresión.
-     - Liga conserva el techo competitivo de rareza; se usa el límite más
-       estricto entre nivel y liga.
+     - La liga PvP define el nivel competitivo del BOT; Piedra comienza en I
+       y Valhalla alcanza XV, independientemente del nivel del líder humano.
+     - Ese nivel controla Tier/tamaño del mazo, maestría y techo de progresión.
+     - La liga conserva además el techo competitivo de rareza; se usa el límite
+       más estricto entre nivel y liga.
   ------------------------------------------------------------------------- */
   const PVP_BOT_FALLBACK_MS=7000;
   const PVP_BOT_FALLBACK_RETRY_MS=2600;
@@ -360,6 +360,24 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     Object.freeze({key:"diamond",maxRarity:4,rareSlots:8}),
     Object.freeze({key:"mythic",maxRarity:5,rareSlots:10}),
     Object.freeze({key:"valhalla",maxRarity:5,rareSlots:12})
+  ]);
+  /* v204 · Escalado competitivo por liga.
+     La liga, no el nivel del jugador, determina la fuerza del BOT. Esto evita
+     que una cuenta con líder alto pero recién llegada a Piedra reciba un rival XV.
+     Dentro de algunas ligas el nivel avanza gradualmente según los puntos. */
+  const PVP_BOT_COMPETITIVE_SCALE=Object.freeze([
+    Object.freeze({key:"stone",minLevel:1,maxLevel:1,minAi:2,maxAi:3}),
+    Object.freeze({key:"wood",minLevel:1,maxLevel:2,minAi:3,maxAi:4}),
+    Object.freeze({key:"fire",minLevel:2,maxLevel:3,minAi:4,maxAi:5}),
+    Object.freeze({key:"iron",minLevel:3,maxLevel:4,minAi:5,maxAi:6}),
+    Object.freeze({key:"steel",minLevel:4,maxLevel:5,minAi:6,maxAi:8}),
+    Object.freeze({key:"silver",minLevel:5,maxLevel:6,minAi:8,maxAi:9}),
+    Object.freeze({key:"gold",minLevel:6,maxLevel:8,minAi:9,maxAi:11}),
+    Object.freeze({key:"platinum",minLevel:8,maxLevel:9,minAi:11,maxAi:12}),
+    Object.freeze({key:"obsidian",minLevel:9,maxLevel:11,minAi:12,maxAi:14}),
+    Object.freeze({key:"diamond",minLevel:11,maxLevel:13,minAi:14,maxAi:16}),
+    Object.freeze({key:"mythic",minLevel:13,maxLevel:14,minAi:17,maxAi:18}),
+    Object.freeze({key:"valhalla",minLevel:15,maxLevel:15,minAi:19,maxAi:20})
   ]);
   const PVP_BOT_RARE_PREFERENCES=Object.freeze({
     warrior:Object.freeze(["richard_lionheart","boudica","joan_of_arc","leonidas","hector_troy","julius_caesar","beowulf","alexander_magnus","achilles","gilgamesh"]),
@@ -398,6 +416,17 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   let activePvpBotProfile=null;
   let pvpBotFallbackTimer=null;
   let pvpBotFallbackAttempts=0;
+  let pvpBotRpsChoiceTimer=null;
+  let pvpBotRpsDecisionTimer=null;
+  let pvpBotBattleLaunchTimer=null;
+  let pvpBotBattleLaunchInFlight=false;
+
+  function clearPvpBotPreludeTimers(){
+    if(pvpBotRpsChoiceTimer){clearTimeout(pvpBotRpsChoiceTimer);pvpBotRpsChoiceTimer=null;}
+    if(pvpBotRpsDecisionTimer){clearTimeout(pvpBotRpsDecisionTimer);pvpBotRpsDecisionTimer=null;}
+    if(pvpBotBattleLaunchTimer){clearTimeout(pvpBotBattleLaunchTimer);pvpBotBattleLaunchTimer=null;}
+    pvpBotBattleLaunchInFlight=false;
+  }
 
   function clearRematchWait(){
     rematchWaitActive=false;
@@ -787,6 +816,25 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function pvpBotRarityLabel(rank){return ["Básica","Épica","Gloriosa","Mítica","Legendaria","Semidiós","Astral"][Math.max(0,Math.min(6,Number(rank)||0))]||"Básica";}
   function getPvpBotLeaguePolicy(leagueKey="stone"){
     return PVP_BOT_LEAGUE_POLICIES.find(item=>item.key===String(leagueKey||""))||PVP_BOT_LEAGUE_POLICIES[0];
+  }
+  function getPvpBotCompetitiveScale(leagueKey="stone"){
+    return PVP_BOT_COMPETITIVE_SCALE.find(item=>item.key===String(leagueKey||""))||PVP_BOT_COMPETITIVE_SCALE[0];
+  }
+  function getPvpBotLeagueProgress(league){
+    const min=Number(league?.min||0),next=Number(league?.nextMin);
+    const points=Number(league?.points||0);
+    if(!Number.isFinite(next)||next<=min)return 0;
+    return Math.max(0,Math.min(1,(points-min)/(next-min)));
+  }
+  function getPvpBotCompetitiveProfile(league={}){
+    const key=String(league?.key||league||"stone");
+    const scale=getPvpBotCompetitiveScale(key);
+    const progress=getPvpBotLeagueProgress(typeof league==="object"?league:{key});
+    const level=Math.max(1,Math.min(15,Math.round(scale.minLevel+(scale.maxLevel-scale.minLevel)*progress)));
+    const maxAi=typeof ADVENTURE_AI_BEST_SKILL_LEVEL!=="undefined"?Math.max(1,Number(ADVENTURE_AI_BEST_SKILL_LEVEL)||20):20;
+    const aiRaw=Math.round(scale.minAi+(scale.maxAi-scale.minAi)*progress);
+    const aiLevel=Math.max(1,Math.min(maxAi,aiRaw));
+    return {key,level,masteryRank:level,aiLevel,progress,scale};
   }
   function getPvpBotLevelPolicy(level=1){
     const lv=Math.max(1,Math.min(15,Math.floor(Number(level)||1)));
@@ -2092,6 +2140,99 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     syncLocalButtons();
   }
 
+  function pvpBotRpsChoiceForRound(room,code){
+    const choices=["rock","paper","scissors"];
+    const round=Math.max(1,Number(room?.rps?.round||1));
+    const seed=`${String(code||"")}|${String(room?.pvpBotProfileId||"bot")}|${String(room?.pvpBotLeagueKey||"stone")}|rps|${round}`;
+    return choices[Math.abs(hashText6c(seed))%choices.length]||"rock";
+  }
+  function pvpBotTurnChoice(room,code){
+    const style=String(room?.pvpBotStyle||"balanced");
+    const round=Math.max(1,Number(room?.rps?.round||1));
+    const roll=Math.abs(hashText6c(`${String(code||"")}|${String(room?.pvpBotProfileId||"bot")}|turn|${round}`))%100;
+    if(style==="pressure"||style==="mobility")return roll<68?"first":"second";
+    if(style==="defense"||style==="control")return roll<62?"second":"first";
+    return roll<50?"first":"second";
+  }
+  function schedulePvpBotRpsResponse(room,code){
+    if(room?.pvpBotMatch!==true||code!==activeCode||activeRole!==1)return;
+    const rps=Object.assign({},defaultRpsState(0),room?.rps||{});
+    const startCfg=Object.assign({},defaultStartConfig(),room?.startConfig||{});
+    if(String(room?.phase||"")==="rps"&&String(rps.phase||"")==="choosing"&&!String(rps?.choices?.[2]||rps?.choices?.["2"]||"")&&!pvpBotRpsChoiceTimer){
+      const delay=420+(Math.abs(hashText6c(`${code}|${rps.round}|bot-rps-delay`))%780);
+      pvpBotRpsChoiceTimer=setTimeout(async()=>{
+        pvpBotRpsChoiceTimer=null;
+        if(code!==activeCode||activeRole!==1)return;
+        try{
+          const publicRef=ref(db,`games/${code}/public`);
+          const snap=await get(publicRef);
+          if(!snap.exists())return;
+          const fresh=snap.val()||{};
+          const freshRps=fresh?.rps||{};
+          if(fresh?.pvpBotMatch!==true||String(fresh?.phase||"")!=="rps"||String(freshRps?.phase||"")!=="choosing"||String(freshRps?.choices?.[2]||freshRps?.choices?.["2"]||""))return;
+          const choice=pvpBotRpsChoiceForRound(fresh,code);
+          await update(publicRef,{"rps/choices/2":choice,"rps/submissions/2":true});
+        }catch(error){console.warn(`[HallValla][${STEP}] BOT RPS no pudo elegir:`,error);}
+      },delay);
+    }
+    if(String(room?.phase||"")==="rps"&&String(rps.phase||"")==="winner_choice"&&Number(rps.winnerRole||0)===2&&!startCfg.resolved&&!pvpBotRpsDecisionTimer){
+      const delay=650+(Math.abs(hashText6c(`${code}|${rps.round}|bot-turn-delay`))%700);
+      pvpBotRpsDecisionTimer=setTimeout(async()=>{
+        pvpBotRpsDecisionTimer=null;
+        if(code!==activeCode||activeRole!==1)return;
+        try{
+          const publicRef=ref(db,`games/${code}/public`);
+          const snap=await get(publicRef);
+          if(!snap.exists())return;
+          const fresh=snap.val()||{};
+          const freshRps=fresh?.rps||{};
+          if(fresh?.pvpBotMatch!==true||String(fresh?.phase||"")!=="rps"||String(freshRps?.phase||"")!=="winner_choice"||Number(freshRps?.winnerRole||0)!==2||fresh?.startConfig?.resolved===true)return;
+          const turnChoice=pvpBotTurnChoice(fresh,code);
+          const startingRole=turnChoice==="first"?2:1;
+          const secondRole=startingRole===1?2:1;
+          await update(publicRef,{
+            "phase":"configured","rps/phase":"complete","rps/winnerChoice":turnChoice,"rps/startingRole":startingRole,
+            "startConfig/winnerRole":2,"startConfig/turnChoice":turnChoice,"startConfig/startingRole":startingRole,"startConfig/secondRole":secondRole,
+            "startConfig/resolved":true,"startConfig/resolvedAt":Date.now()
+          });
+        }catch(error){console.warn(`[HallValla][${STEP}] BOT RPS no pudo decidir turno:`,error);}
+      },delay);
+    }
+  }
+  function schedulePvpBotBattleLaunch(room,code){
+    if(room?.pvpBotMatch!==true||room?.startConfig?.resolved!==true||code!==activeCode||activeRole!==1||pvpBotBattleLaunchTimer||pvpBotBattleLaunchInFlight)return;
+    pvpBotBattleLaunchTimer=setTimeout(async()=>{
+      pvpBotBattleLaunchTimer=null;
+      if(code!==activeCode||activeRole!==1)return;
+      pvpBotBattleLaunchInFlight=true;
+      try{
+        const publicRef=ref(db,`games/${code}/public`);
+        const snap=await get(publicRef);
+        if(!snap.exists())throw new Error("El duelo contra el rival dejó de existir.");
+        const fresh=snap.val()||{};
+        if(fresh?.pvpBotMatch!==true||fresh?.startConfig?.resolved!==true)return;
+        const startingRole=Math.max(1,Math.min(2,Number(fresh?.startConfig?.startingRole||1)));
+        if(String(fresh?.phase||"")!=="active"){
+          detachRoomListener();
+          await update(publicRef,{
+            "phase":"active","rps/phase":"complete","rps/startingRole":startingRole,"pvpBotRpsComplete":true,
+            "currentPlayer":0,"turn":1,"turnPhase":"realtime","turnKey":"RT-1","turnStartedAt":serverTimestamp()
+          });
+        }else detachRoomListener();
+        detachOwnPrivateListener();
+        resetRpsUi();
+        $("onlineLobby")?.classList.add("hidden");
+        $("mainMenu")?.classList.add("hidden");
+        if(typeof enterGame!=="function")throw new Error("El motor real no expuso enterGame().");
+        mark(`Piedra/Papel/Tijera resuelto · entrando al duelo contra ${String(fresh?.playerNames?.[2]||"rival")}.`);
+        enterGame(code,1);
+      }catch(error){
+        console.error(`[HallValla][${STEP}] Entrada al duelo BOT después de RPS falló:`,error);
+        await hvPopup(`No se pudo iniciar el duelo: ${error?.message||error}`,"PvP");
+      }finally{pvpBotBattleLaunchInFlight=false;}
+    },1050);
+  }
+
   async function reconcileRoomPhase(room,code){
     if(activeRole!==1||phaseWriteInFlight||code!==activeCode) return;
     const p1Uid=String(room?.playerSlots?.player1Uid||""); const p2Uid=String(room?.playerSlots?.player2Uid||"");
@@ -2104,6 +2245,14 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const startCfg=Object.assign({},defaultStartConfig(),room?.startConfig||{});
     const rps=Object.assign({},defaultRpsState(0),room?.rps||{});
     const publicRef=ref(db,`games/${code}/public`);
+
+    if(room?.pvpBotMatch===true){
+      schedulePvpBotRpsResponse(room,code);
+      if(startCfg.resolved){
+        schedulePvpBotBattleLaunch(room,code);
+        return;
+      }
+    }
 
     // Rematch online: cada jugador confirma de forma explícita con su propio rematchReady.
     // El host reinicia la misma sala solo cuando ambos pulsaron Rematch.
@@ -2301,7 +2450,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }
 
   function resetUi({resetJoin=true}={}){
-    clearRematchWait(); clearRandomAutoReady(); detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); clearRealEngineStartTimer6e(); privateCombatInitInFlight=false; turnResourceInFlight=false; cardPlayInFlight=false; enginePrepInFlight=false; pvpBotFallbackInFlight=false; activePvpBotProfile=null; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; realEngineEnteredCode=""; realEngineVsCode=""; realEngineVsPromise=null; globalThis.hideHallvallaPreBattleVs?.(); clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
+    clearRematchWait(); clearRandomAutoReady(); clearPvpBotPreludeTimers(); detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); clearRealEngineStartTimer6e(); privateCombatInitInFlight=false; turnResourceInFlight=false; cardPlayInFlight=false; enginePrepInFlight=false; pvpBotFallbackInFlight=false; activePvpBotProfile=null; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; realEngineEnteredCode=""; realEngineVsCode=""; realEngineVsPromise=null; globalThis.hideHallvallaPreBattleVs?.(); clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
     try{ document.getElementById("pvpStep6eRealBadge")?.remove(); document.getElementById("pvpStep6eShield")?.remove(); }catch(_){ }
     try{ $("gameShell")?.classList.remove("pvp-step6e-real-bridge"); }catch(_){ }
     const input=$("joinCode"); if(input){ input.readOnly=false; if(resetJoin) input.value=""; }
@@ -2532,7 +2681,10 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
 
       const humanBuilt=buildRealPrivateState6e(ownPayload,botCode,1);
       const human=humanBuilt.enginePrivate;
-      const botLevel=Math.max(1,Math.min(15,Math.floor(Number(human.leaderLevel)||1)));
+      const competitive=getPvpBotCompetitiveProfile(league);
+      const botLevel=competitive.level;
+      const botMasteryRank=competitive.masteryRank;
+      const botAiLevel=competitive.aiLevel;
       const profile=selectPvpBotProfile(botLevel,leagueKey);
       if(!PVP_BOT_ALLOWED_LEADERS.includes(profile.leaderType))throw new Error(`Líder BOT no permitido: ${profile.leaderType}.`);
       const botDeck=buildPvpBotDeck(profile,league);
@@ -2556,22 +2708,24 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const publicShowcase={1:buildPublicShowcase(ownPayload),2:{leaderType:profile.leaderType,principalKeys:[]}};
       const pub={
         schema:"hallvalla-pvp-bot-v1",code:botCode,boardRows:rows,boardCols:cols,mode:"adventure",entryMode:"random",
-        pvpBotMatch:true,pvpBotProfileId:profile.id,pvpBotLevel:botLevel,pvpBotMasteryRank:botLevel,pvpBotLeagueKey:leagueKey,pvpBotLeagueName:String(league?.name||"Piedra"),
+        pvpBotMatch:true,pvpBotProfileId:profile.id,pvpBotLevel:botLevel,pvpBotMasteryRank:botMasteryRank,pvpBotAiLevel:botAiLevel,pvpBotLeagueKey:leagueKey,pvpBotLeagueName:String(league?.name||"Piedra"),
         pvpBotStyle:String(profile.style||"balanced"),pvpBotRarityCap:rarityCap,pvpBotRarityCounts:botDeck.rarityCounts,
         adventureBattleTitle:`PvP · Liga ${String(league?.name||"Piedra")}`,adventureEnemyName:botName,
         adventureAdaptiveCampaign:false,adventureAdaptiveLearning:false,adventureAdaptiveMage:false,
-        adventureAiLevel:typeof ADVENTURE_AI_BEST_SKILL_LEVEL!=="undefined"?ADVENTURE_AI_BEST_SKILL_LEVEL:5,
+        adventureAiLevel:botAiLevel,
         adventureAiDrawBonus:0,adventureAiHonorBonus:0,
-        adventureAiStyle:`Rival PvP · ${String(profile.style||"balanced")} · Liga ${String(league?.name||"Piedra")}`,
-        adventureEnemyUnitMasteryRank:botLevel,realtimeExperimental:true,
+        adventureAiStyle:`Rival PvP · ${String(profile.style||"balanced")} · Liga ${String(league?.name||"Piedra")} · IA ${botAiLevel}`,
+        adventureEnemyUnitMasteryRank:botMasteryRank,realtimeExperimental:true,
         adventurePrincipalKeys:{1:[],2:[]},principalSlots:{1:0,2:0},pvpPrincipalKeys:{1:[],2:[]},
         adventureAiState:{deck:[],hand:botDraw.hand,honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),lastTurnStarted:"RT",skipFirstTurnDraw:true,principalSlots:0,principalKeys:[],principalKey:""},
-        createdAt:Date.now(),currentPlayer:0,turn:1,phase:"active",turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:serverTimestamp(),
+        createdAt:Date.now(),currentPlayer:0,turn:1,phase:"rps",turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:serverTimestamp(),
         clockRulesetVersion:clockVersion,playerClockMs:{1:duelLimit,2:duelLimit},
         playerSlots:{player1Uid:myUid,player2Uid:botUid},
         playerNames:{1:getProfileNameSafe(1),2:botName},playerLevels:{1:getProfileLevelSafe(),2:botLevel},
         playerShowcase:publicShowcase,playerPrepared:{1:true,2:true},lobbyReady:{1:true,2:true},
         playerLeaders:{1:human.leaderType,2:profile.leaderType},playerLeaderLevels:{1:Number(human.leaderLevel||1),2:botLevel},playerLeaderAbilities:{1:String(human.leaderAbility||""),2:botAbility},
+        rps:{phase:"choosing",round:1,notice:"Ambos jugadores están listos. Elige en secreto.",choices:{1:null,2:null},submissions:{1:false,2:false},winnerRole:0,resultKey:"",winnerChoice:"",startingRole:0},
+        startConfig:defaultStartConfig(),
         settings:buildDefaultRules(),matchSettings:{timerEnabled:false,stakeMode:"none",goldAmount:500,cardEntryFee:500,economyState:"not_required"},
         playerStats:{
           1:{hp:Number(p1Leader?.hp||0),honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),deck:0,hand:human.hand.length,hasHiddenUnits:countHiddenKeys6e([...normalizeFirebaseArray(humanBuilt.combat6c?.deckKeys),...normalizeFirebaseArray(humanBuilt.combat6c?.handKeys)])>0},
@@ -2614,18 +2768,21 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       try{await remove(waitingPublicRef);}catch(_){ }
       try{await removeOwnPrivateBranch(waitingCode,1,myUid);}catch(_){ }
 
+      clearPvpBotPreludeTimers();
       activeCode=botCode;activeOwnerUid=myUid;activeRole=1;
-      activePvpBotProfile={...profile,leagueKey,leagueName:String(league?.name||"Piedra"),botUid,rarityCap};
+      activePvpBotProfile={...profile,leagueKey,leagueName:String(league?.name||"Piedra"),botUid,rarityCap,botLevel,botMasteryRank,botAiLevel};
       roomCache=confirm.val()||pub;
       randomLeagueSnapshot=league;
       renderRandomMatchmakingUi({playerShowcase:publicShowcase,playerSlots:pub.playerSlots});
-      $("onlineLobby")?.classList.add("hidden");
+      $("onlineLobby")?.classList.remove("hidden");
       $("mainMenu")?.classList.add("hidden");
-      if(typeof enterGame!=="function")throw new Error("El motor real no expuso enterGame().");
-      pvpMatchDiag("fallback-success",{room:botCode,rival:botName,league:String(league?.name||"Piedra")});
+      $("gameShell")?.classList.add("hidden");
+      attachOwnPrivateListener(botCode,1,myUid);
+      renderRoomSnapshot(roomCache,botCode);
+      attachRoomListener(botCode);
+      pvpMatchDiag("fallback-success",{room:botCode,rival:botName,league:String(league?.name||"Piedra"),botLevel,botMasteryRank,botAiLevel});
       fallbackSucceeded=true;
-      enterGame(botCode,1);
-      mark(`Rival encontrado · ${botName} · Liga ${String(league?.name||"Piedra")}.`);
+      mark(`Rival encontrado · ${botName} · Liga ${String(league?.name||"Piedra")} · Nv. ${botLevel} · Rango ${botMasteryRank}.`);
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Fallback BOT PvP falló:`,error);
