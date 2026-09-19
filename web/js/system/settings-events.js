@@ -563,8 +563,24 @@ function exportAiLearningLogFromSettings(){
   refreshAiLearningLogStatus(ok?"Log .txt exportado. Puedes compartirlo para analizar patrones y diseñar counters.":"No se pudo exportar el log.");
   setTimeout(()=>refreshAiLearningLogStatus(),1800);
 }
-on("settingsBtn","click",()=>{$("settingsPanel").classList.remove("hidden");refreshAiLearningLogStatus();});
-on("closeSettingsBtn","click",()=>$("settingsPanel").classList.add("hidden"));
+function openHomeSettingsPanel(){
+  const panel=$("settingsPanel");
+  if(!panel)return;
+  panel.classList.remove("hidden");
+  refreshAiLearningLogStatus();
+}
+function closeHomeSettingsPanel(){
+  $("settingsPanel")?.classList.add("hidden");
+}
+on("settingsBtn","click",openHomeSettingsPanel);
+on("closeSettingsBtn","click",closeHomeSettingsPanel);
+on("closeSettingsXBtn","click",closeHomeSettingsPanel);
+$("settingsPanel")?.addEventListener("click",event=>{
+  if(event.target===$("settingsPanel"))closeHomeSettingsPanel();
+});
+document.addEventListener("keydown",event=>{
+  if(event.key==="Escape"&&!$("settingsPanel")?.classList.contains("hidden"))closeHomeSettingsPanel();
+});
 on("exportAiLearningLogBtn","click",exportAiLearningLogFromSettings);
 on("resetLocalProgressBtn","click",resetLocalProgressFromSettings);
 on("showStatsTutorialBtn","click",()=>showStatsTutorial({force:true}));

@@ -28983,3 +28983,63 @@ html.hv-universal-dragging-enabled .hv-universal-selected{cursor:grabbing!import
   justify-self:center !important;
   align-self:center !important;
 }
+
+/* ============================================================
+   v195 · HOME SETTINGS MODAL · VIEWPORT SAFE
+   ============================================================ */
+#settingsPanel.overlay-panel{
+  align-items:center !important;
+  justify-content:center !important;
+  padding:12px !important;
+  overflow:hidden !important;
+}
+#settingsPanel .hv-settings-card{
+  position:relative !important;
+  width:min(620px,calc(100vw - 24px)) !important;
+  max-width:620px !important;
+  max-height:calc(100dvh - 24px) !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  overscroll-behavior:contain !important;
+  scrollbar-gutter:stable !important;
+  box-sizing:border-box !important;
+}
+#settingsPanel .hv-settings-close-x{
+  position:sticky !important;
+  top:0 !important;
+  z-index:12 !important;
+  float:right !important;
+  display:grid !important;
+  place-items:center !important;
+  width:38px !important;
+  height:38px !important;
+  margin:-4px -4px 4px 10px !important;
+  padding:0 !important;
+  border:1px solid rgba(255,209,102,.28) !important;
+  border-radius:50% !important;
+  background:rgba(12,8,5,.94) !important;
+  color:#fff0c4 !important;
+  box-shadow:0 6px 18px rgba(0,0,0,.42) !important;
+  font:900 28px/1 system-ui !important;
+  cursor:pointer !important;
+}
+#settingsPanel #closeSettingsBtn{
+  position:sticky !important;
+  bottom:0 !important;
+  z-index:10 !important;
+  margin-top:12px !important;
+  min-height:42px !important;
+  background:rgba(17,11,6,.96) !important;
+}
+@media(max-height:680px){
+  #settingsPanel .hv-settings-card{
+    max-height:calc(100dvh - 12px) !important;
+    padding:14px !important;
+  }
+  #settingsPanel .settings-learning-zone,
+  #settingsPanel .settings-controls-zone,
+  #settingsPanel .settings-danger-zone{
+    margin:8px 0 !important;
+    padding:9px !important;
+  }
+}

@@ -342,7 +342,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
      - Liga conserva el techo competitivo de rareza; se usa el límite más
        estricto entre nivel y liga.
   ------------------------------------------------------------------------- */
-  const PVP_BOT_FALLBACK_MS=9000;
+  const PVP_BOT_FALLBACK_MS=7000;
+  const PVP_BOT_FALLBACK_RETRY_MS=2600;
+  const PVP_BOT_FALLBACK_MAX_ATTEMPTS=4;
   const PVP_BOT_ALLOWED_LEADERS=Object.freeze(["warrior","archer","cavalry","axe","assassin"]);
   const PVP_BOT_LEAGUE_POLICIES=Object.freeze([
     Object.freeze({key:"stone",maxRarity:0,rareSlots:0}),
@@ -393,6 +395,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }).flat());
   let pvpBotFallbackInFlight=false;
   let activePvpBotProfile=null;
+  let pvpBotFallbackTimer=null;
+  let pvpBotFallbackAttempts=0;
 
   function clearRematchWait(){
     rematchWaitActive=false;
@@ -2326,8 +2330,28 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     renderRules({settings:buildDefaultRules(),phase:"waiting"}); syncLocalButtons();
   }
 
+  function clearPvpBotFallbackTimer(){
+    if(pvpBotFallbackTimer){clearTimeout(pvpBotFallbackTimer);pvpBotFallbackTimer=null;}
+  }
   function clearRandomMatchTimer(){
     if(randomMatchTimer){clearInterval(randomMatchTimer);randomMatchTimer=null;}
+    clearPvpBotFallbackTimer();
+  }
+  function schedulePvpBotFallback(delay=PVP_BOT_FALLBACK_MS){
+    clearPvpBotFallbackTimer();
+    if(!randomMatchSearching||activeRole!==1||!activeCode)return;
+    const code=String(activeCode);
+    pvpBotFallbackTimer=setTimeout(async()=>{
+      pvpBotFallbackTimer=null;
+      if(!randomMatchSearching||activeRole!==1||String(activeCode)!==code)return;
+      pvpBotFallbackAttempts++;
+      const started=await startPvpBotFallback({force:true});
+      if(started)return;
+      if(randomMatchSearching&&activeRole===1&&String(activeCode)===code&&pvpBotFallbackAttempts<PVP_BOT_FALLBACK_MAX_ATTEMPTS){
+        setText("pvpRoomMessage","Preparando rival BOT · intento "+String(pvpBotFallbackAttempts+1)+"/"+String(PVP_BOT_FALLBACK_MAX_ATTEMPTS)+"...");
+        schedulePvpBotFallback(PVP_BOT_FALLBACK_RETRY_MS);
+      }
+    },Math.max(250,Number(delay)||PVP_BOT_FALLBACK_MS));
   }
   async function removeOwnRandomQueue(){
     const myUid=String(auth?.currentUser?.uid||activeOwnerUid||"");
@@ -2339,6 +2363,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   async function stopRandomMatchSearch({removeQueueEntry=true}={}){
     randomMatchSearching=false;
     randomOwnCreatedAt=0;
+    pvpBotFallbackAttempts=0;
     clearRandomMatchTimer();
     if(removeQueueEntry)await removeOwnRandomQueue();
     randomLeagueSnapshot=null;
@@ -2422,8 +2447,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }
     return false;
   }
-  async function startPvpBotFallback(){
-    if(pvpBotFallbackInFlight||!randomMatchSearching||busy||activeRole!==1||!activeCode)return false;
+  async function startPvpBotFallback({force=false}={}){
+    if(pvpBotFallbackInFlight||!randomMatchSearching||activeRole!==1||!activeCode)return false;
+    if(busy&&!force)return false;
     const myUid=String(auth?.currentUser?.uid||activeOwnerUid||"");
     const code=normalizeCode(activeCode||"");
     if(!myUid||code.length!==8)return false;
@@ -2434,6 +2460,30 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     let selfClaimed=false;
     let botTransitionStarted=false;
     try{
+      const existingOwnSnap=await withTimeout(get(ownQueueRef),`Validar cola propia antes del BOT ${code}`,5000);
+      const existingOwn=existingOwnSnap.exists()?(existingOwnSnap.val()||{}):null;
+      if(existingOwn&&String(existingOwn.claimedBy||"")&&String(existingOwn.claimedBy||"")!==myUid){
+        setText("pvpRoomMessage","Rival humano detectado · confirmando emparejamiento...");
+        return false;
+      }
+      if(!existingOwn||String(existingOwn.uid||"")!==myUid||String(existingOwn.leagueKey||"")!==leagueKey){
+        const repairedCreatedAt=randomOwnCreatedAt||Date.now()-PVP_BOT_FALLBACK_MS;
+        await withTimeout(set(ownQueueRef,{
+          uid:myUid,
+          code,
+          createdAt:repairedCreatedAt,
+          name:getProfileNameSafe(1),
+          level:getProfileLevelSafe(),
+          leagueKey,
+          leagueName:String(league?.name||"Piedra"),
+          pvpPoints:Number(league?.points||0),
+          claimedBy:"",
+          claimedAt:0
+        }),`Reparar cola propia antes del BOT ${code}`,5000);
+      }else if(String(existingOwn.claimedBy||"")===myUid&&Date.now()-Number(existingOwn.claimedAt||0)>8000){
+        await withTimeout(update(ownQueueRef,{claimedBy:"",claimedAt:0}),`Liberar claim BOT obsoleto ${code}`,4000);
+      }
+
       // Bloquea nuestra propia entrada antes de crear el BOT. Si otro humano ya
       // la reclamó, el BOT no entra y se conserva la prioridad del jugador real.
       const claimAt=Date.now();
@@ -2453,8 +2503,10 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       if(String(waiting?.playerSlots?.player1Uid||"")!==myUid||String(waiting?.phase||"")!=="waiting"||String(waiting?.playerSlots?.player2Uid||""))return false;
 
       if(typeof globalThis.hvEnsureFeature==="function")await globalThis.hvEnsureFeature("pve");
-      if(typeof adventureEnemyTurn!=="function")throw new Error("La IA táctica no está disponible para el BOT PvP.");
-      if(typeof makeLeader!=="function")throw new Error("El motor TR de HallValla no está listo para crear el BOT PvP.");
+      const botAiTurn=(typeof adventureEnemyTurn==="function")?adventureEnemyTurn:globalThis.adventureEnemyTurn;
+      const botMakeLeader=(typeof makeLeader==="function")?makeLeader:globalThis.makeLeader;
+      if(typeof botAiTurn!=="function")throw new Error("La IA táctica no está disponible para el BOT PvP.");
+      if(typeof botMakeLeader!=="function")throw new Error("El motor TR de HallValla no está listo para crear el BOT PvP.");
 
       const ownPrivateRef=ref(db,`games/${code}/private/player1`);
       const ownSnap=await withTimeout(get(ownPrivateRef),`Leer mazo privado antes del BOT ${code}`,5000);
@@ -2478,8 +2530,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const rows=typeof ROWS!=="undefined"?Number(ROWS):7;
       const cols=typeof COLS!=="undefined"?Number(COLS):5;
       let units=[
-        makeLeader(1,Math.floor(cols/2),rows-1,human.leaderType,human.leaderLevel,human.leaderAbility),
-        makeLeader(2,Math.floor(cols/2),0,profile.leaderType,botLevel,botAbility)
+        botMakeLeader(1,Math.floor(cols/2),rows-1,human.leaderType,human.leaderLevel,human.leaderAbility),
+        botMakeLeader(2,Math.floor(cols/2),0,profile.leaderType,botLevel,botAbility)
       ];
       let entryEffects={units,logs:[],statusFxEvent:null,floatFxEvent:null};
       units=entryEffects.units||units;
@@ -2579,6 +2631,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Fallback BOT PvP falló:`,error);
+      setText("pvpRoomMessage","Rival BOT no inició: "+String(error?.message||error)+". Reintentando...");
       globalThis.hideHallvallaPreBattleVs?.();
       // Si todavía estamos en la sala de espera, liberamos el auto-claim para
       // que el matchmaking humano pueda continuar en el siguiente escaneo.
@@ -2670,7 +2723,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const created=await createMinimalPublicRoom();
       if(!created)throw new Error("No se pudo preparar la sala para matchmaking.");
       await publishOwnRandomQueue();
-      mark(`Buscando rival de Liga ${randomLeagueSnapshot?.name||"Piedra"}... sala preparada.`);
+      pvpBotFallbackAttempts=0;
+      schedulePvpBotFallback();
+      mark(`Buscando rival de Liga ${randomLeagueSnapshot?.name||"Piedra"}... sala preparada · BOT de respaldo en ${Math.round(PVP_BOT_FALLBACK_MS/1000)} s.`);
       randomMatchTimer=setInterval(()=>{void scanRandomQueue();},1800);
       void scanRandomQueue();
       return true;

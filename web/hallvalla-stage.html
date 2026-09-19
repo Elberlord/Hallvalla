@@ -22,15 +22,15 @@
 </script>
 <script>
   // v181: esta página ES el juego lógico. index.html es el shell físico.
-  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260919.193"});
+  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260919.195"});
   document.documentElement.dataset.hvDesignStage="1366x636";
 </script>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260919.193">
-<meta name="hallvalla-build" content="v8_MODULAR_20260919.193">
+<meta name="hallvalla-version" content="20260919.195">
+<meta name="hallvalla-build" content="v8_MODULAR_20260919.195">
 <meta name="hallvalla-build-name" content="Design Stage fijo 1366×636 · v192 arquitectura modular · canon v191 preservado">
-<link rel="stylesheet" href="styles.css?h=b347c079dc30"/>
+<link rel="stylesheet" href="styles.css?h=becd27e4d411"/>
 
 <link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.90">
 <link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.90">
@@ -1126,8 +1126,9 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
 </div>
 
 <div id="settingsPanel" class="overlay-panel hidden">
-  <div class="modal-card">
-    <h2>Configuración</h2>
+  <div class="modal-card hv-settings-card" role="dialog" aria-modal="true" aria-labelledby="settingsPanelTitle">
+    <button id="closeSettingsXBtn" class="hv-settings-close-x" type="button" aria-label="Cerrar configuración">×</button>
+    <h2 id="settingsPanelTitle">Configuración</h2>
     <div class="settings-learning-zone">
       <b>Aprendizaje de IA</b>
       <p>La campaña guarda un diario táctico legible con lo que la IA observa del mazo humano, qué counters intentó, qué sobrevivió y qué hipótesis aprendió del duelo.</p>
@@ -1520,6 +1521,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=4d728d2aaff1"></script>
+<script type="module" src="js/bootstrap-loader.js?h=3671d82b4102"></script>
 </body>
 </html>
