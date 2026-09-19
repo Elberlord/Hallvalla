@@ -549,14 +549,14 @@ function refreshAiLearningLogStatus(message=""){
   const el=$("aiLearningLogStatus");if(!el)return;
   if(message){el.textContent=message;return;}
   try{
-    const state=typeof getAdaptiveExpertLearningLogStatus==="function"?getAdaptiveExpertLearningLogStatus():{entries:0};
+    const state=globalThis.HallVallaAdaptiveExpertLog?.getStatus?.()||{entries:0};
     if(!Number(state?.entries||0)){el.textContent="Todavía no hay duelos registrados en el diario experto.";return;}
     const last=Number(state?.lastAt||0)?new Date(Number(state.lastAt)).toLocaleString("es-ES"):"sin fecha";
     el.textContent=`${Number(state.entries||0)} duelo(s) registrados · último: ${last}`;
   }catch(_){el.textContent="El diario experto todavía no está disponible.";}
 }
 function exportAiLearningLogFromSettings(){
-  const ok=typeof exportAdaptiveExpertLearningLog==="function"&&exportAdaptiveExpertLearningLog();
+  const ok=globalThis.HallVallaAdaptiveExpertLog?.exportText?.()===true;
   refreshAiLearningLogStatus(ok?"Log .txt exportado. Puedes compartirlo para analizar patrones y diseñar counters.":"No se pudo exportar el log.");
   setTimeout(()=>refreshAiLearningLogStatus(),1800);
 }
