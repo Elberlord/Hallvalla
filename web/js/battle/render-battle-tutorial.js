@@ -240,15 +240,13 @@ function renderHud(){
     const b=$("p"+p+"Badge");
     if(b){
       const ended=isBattleEnded();
-      const realtime=typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental();
-      b.textContent=ended?(publicState.winner===p?"Ganó":"Fin"):(realtime?"Activo":(publicState.currentPlayer===p?"Activo":"Espera"));
-      b.style.color=ended?(publicState.winner===p?"#8bffb8":"#d7c3a2"):(realtime?"#ffd166":(publicState.currentPlayer===p?"#ffd166":"#d7c3a2"));
+      b.textContent=ended?(publicState.winner===p?"Ganó":"Fin"):"Activo";
+      b.style.color=ended?(publicState.winner===p?"#8bffb8":"#d7c3a2"):"#ffd166";
     }
   });
   const banner=$("phaseBanner");
   if(banner){
-    const realtime=typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental();
-    banner.textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):(realtime?"COMBATE":(isMyTurn()?"COMBATE":"ESPERA"));
+    banner.textContent=isBattleEnded()?(publicState.winner===myPlayer?"VICTORIA":"DERROTA"):"COMBATE";
   }
   const battlefield=document.querySelector("#gameShell .battlefield");
   let moraleHud=$("moralePressureHud");
@@ -528,17 +526,6 @@ function getUnitBottomFrameHtml(u){
   </div>`;
 }
 
-function isBoardUnitFullyExhausted(u){
-  if(!u||u.leader||u.owner!==myPlayer)return false;
-  if(!isMyTurn()||!isActionPhase())return false;
-  const blockedMove=!!(u.noMoveTurnKey&&u.noMoveTurnKey===publicState?.turnKey);
-  const canMove=isMulanExecutionMoveReady(u)||(!u.acted&&!u.moved&&!blockedMove);
-  const canAttack=canUnitDeclareAttack(u);
-  const blockedDef=!!(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey);
-  const canDef=isUnitActionWindow(u)&&!u.acted&&!u.defenseModeReady&&!blockedDef&&!isMulanExecutionMoveReady(u);
-  const canEffect=isUnitActionWindow(u)&&unitHasContextEffect(u)&&!u.acted&&!isMulanExecutionMoveReady(u)&&!isMulanExecutionChoiceReady(u);
-  return !(canMove||canAttack||canDef||canEffect);
-}
 function getVeilCurseCountdownHtml(u){
   if(!hasVeilCurse(u))return "";
   const count=Math.max(1,Number(u.veilCurseTurnsRemaining||1));
@@ -605,12 +592,6 @@ function ensureBattleBoardDelegation(grid){
     if(unitEl&&grid.contains(unitEl)){
       const u=getUnit(unitEl.dataset.unitId);
       if(u)beginBoardLongPressDetail(ev,u);
-      if(u&&startUnitBoardDrag(ev,u,unitEl)){
-        ev.preventDefault();
-        ev.stopPropagation();
-        try{unitEl.setPointerCapture?.(ev.pointerId);}catch(_){ }
-        return;
-      }
       ev.stopPropagation();
       return;
     }
@@ -776,13 +757,12 @@ function getBattleBoardUnitSpec(u,x,y){
   const stealthed=isStealthedUnit(u);
   const hiddenFromViewer=stealthed&&u.owner!==myPlayer;
   const ownerStealth=stealthed&&u.owner===myPlayer;
-  const exhaustedClass=isBoardUnitFullyExhausted(u)?"unit-exhausted":"";
   const visualUnitKey=hiddenFromViewer?"stealth":String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase();
   const principalClass=!hiddenFromViewer&&u.principal?"principal-unit":"";
   const rarityClass=hiddenFromViewer?"":getCardVisualClass(u);
   const stealthClass=hiddenFromViewer?"unit-stealthed":(ownerStealth?"unit-stealthed-owner":"");
-  const directSelectedClass=!hiddenFromViewer&&u.owner===myPlayer&&selectedUnitId===u.id&&!selectedCard&&!selectedUnitActionMode?"unit-direct-selected":"";
-  const className=`unit-card unit-key-${visualUnitKey} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${exhaustedClass} ${principalClass} ${stealthClass} ${directSelectedClass} ${rarityClass}`.replace(/\s+/g," ").trim();
+  const directSelectedClass=!hiddenFromViewer&&u.owner===myPlayer&&selectedUnitId===u.id&&!selectedCard?"unit-direct-selected":"";
+  const className=`unit-card unit-key-${visualUnitKey} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${principalClass} ${stealthClass} ${directSelectedClass} ${rarityClass}`.replace(/\s+/g," ").trim();
   let markup="";
   if(hiddenFromViewer){
     markup=getStealthBoardCoverHtml();
@@ -889,7 +869,6 @@ function ensureLeaderBasesLayer(){
       const base=ev.target&&ev.target.closest?ev.target.closest(".leader-base"):null;
       const u=base?getUnit(base.dataset.leaderId):null;
       if(u)beginBoardLongPressDetail(ev,u);
-      if(u&&startUnitBoardDrag(ev,u,base)){ev.preventDefault();ev.stopPropagation();return;}
       const hit=ev.target&&ev.target.closest?ev.target.closest(".leader-base,.leader-base-hitbox,.unit-status-seal"):null;
       if(hit)ev.stopPropagation();
     },true);
@@ -1016,13 +995,11 @@ function renderLeaderBases(){
   const markup=leaders.map(u=>{
     const side=u.owner===myPlayer?"south":"north";
     const key=`${u.x},${u.y}`;
-    const tacticalAttacker=isDirectTacticalUnitSelection()?getUnit(selectedUnitId):null;
-    const directTarget=!!(tacticalAttacker&&u.owner!==myPlayer&&getAttackableTargets(tacticalAttacker,publicState?.units||[]).some(t=>t.id===u.id));
-    const isMarked=highlights.includes(key)||directTarget;
-    const directSelected=u.owner===myPlayer&&selectedUnitId===u.id&&!selectedCard&&!selectedUnitActionMode;
+    const isMarked=highlights.includes(key);
+    const directSelected=u.owner===myPlayer&&selectedUnitId===u.id&&!selectedCard;
     const rtShieldActive=typeof globalThis.isHallvallaRtLeaderShieldActive==="function"&&globalThis.isHallvallaRtLeaderShieldActive(u);
     const classes=["leader-base",`leader-base-${side}`,`leader-base-${u.leaderType||"leader"}`,u.owner===1?"p1":"p2",u.owner===myPlayer?"ally":"enemy",isMarked?"leader-targetable":"",directSelected?"leader-direct-selected":"",rtShieldActive?"rt-leader-shield-active":""].filter(Boolean).join(" ");
-    return `<div class="${classes}" role="button" tabindex="0" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir acciones de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span>${getLeaderStatusBubblesHtml(u)}<span class="leader-base-stats"><span class="leader-heart-slot">${getHpHeartBadgeHtml(u,"leader")}</span><b class="atk leader-atk-badge-wrap" title="Ataque">${getAttackBadgeHtml(u,"leader")}</b><b class="gd leader-guard-badge-wrap" title="Guardia">${getGuardBadgeHtml(u,"leader")}</b></span></div>`;
+    return `<div class="${classes}" role="button" tabindex="0" data-leader-id="${escapeHtml(u.id)}" data-x="${u.x}" data-y="${u.y}" title="${escapeHtml(u.name)}" aria-label="Abrir detalles de ${escapeHtml(u.name)}"><span class="leader-base-hitbox" aria-hidden="true"></span><span class="leader-base-token"><span class="leader-base-aura"></span><span class="leader-base-portrait">${getUnitPortraitHtml(u,true)}</span><span class="leader-base-pedestal"></span></span>${getLeaderStatusBubblesHtml(u)}<span class="leader-base-stats"><span class="leader-heart-slot">${getHpHeartBadgeHtml(u,"leader")}</span><b class="atk leader-atk-badge-wrap" title="Ataque">${getAttackBadgeHtml(u,"leader")}</b><b class="gd leader-guard-badge-wrap" title="Guardia">${getGuardBadgeHtml(u,"leader")}</b></span></div>`;
   }).join("");
   if(markup!==hallvallaLeaderRenderMarkup){
     layer.querySelectorAll(".leader-base,.leader-cell-proxy").forEach(el=>el.remove());
@@ -1141,9 +1118,7 @@ function renderHand(){
   ensureBattleHandDelegation(row);
   const hand=privateState?.hand||[];
   const playableCount=getPlayableCardsInHand().length;
-  const phaseStatus=isMyTurn()?` · ${turnPhaseLabel()}`:(isOnlineOpponentHandReview()?" · TURNO RIVAL · SOLO CONSULTA":"");
-  const status=isMyTurn()?` · ${playableCount} jugable${playableCount===1?"":"s"}`:"";
-  const infoText=`${getResourceLabel(myPlayer)} ${privateState?.honor||0}/${privateState?.maxHonor||0} · ${hand.length} cartas${status}${phaseStatus}`;
+  const infoText=`${getResourceLabel(myPlayer)} ${privateState?.honor||0}/${privateState?.maxHonor||0} · ${hand.length} cartas · ${playableCount} jugable${playableCount===1?"":"s"}`;
   if(info.textContent!==infoText)info.textContent=infoText;
   const existing=new Map([...row.querySelectorAll(":scope > .hand-card[data-id]")].map(el=>[String(el.dataset.id),el]));
   const desiredIds=new Set();

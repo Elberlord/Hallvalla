@@ -654,7 +654,7 @@ function routeHannibalMountedHpDamage(before,damaged,attacker){
   next.hp=Math.max(0,riderHp+elephantHp);
   return{unit:next,component,splitText:""};
 }
-function isMyTurn(){return publicState&&publicState.currentPlayer===myPlayer}function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
+function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}
 const RESOURCE_MAX_CAP=10;
@@ -2136,7 +2136,8 @@ function resolvePreAttackLegendaryTraps(attacker,units,trapList=null){
     const tier=getUnitTrapTier(attacker);
     if(trap.trapKey==="false_crown"){
       cancel=true;
-      const ownTargets=out.filter(u=>u.owner===attacker.owner&&u.id!==attacker.id&&attackZones(attacker).includes(`${u.x},${u.y}`));
+      const trapRange=Math.max(1,Number(getUnitAttackRange(attacker)||attacker.range||1))+(attacker.key==="bengal_tiger"&&isStealthedUnit(attacker)?2:0);
+      const ownTargets=out.filter(u=>u&&u.owner===attacker.owner&&u.id!==attacker.id&&Number(u.hp||0)>0&&dist(attacker,u)<=trapRange&&(!(u.aerial||u.flight)||canUnitAttackAerialTarget(attacker,u)));
       if(tier==="basic"){
         const debuffMs=getTrapTimedDurationMs(attacker,"minor");
         out=out.map(u=>u.id===attacker.id?withRtTrapDebuff(u,"dex",2,debuffMs,trap.cardName):u);

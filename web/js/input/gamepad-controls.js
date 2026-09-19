@@ -1,7 +1,7 @@
 "use strict";
 /* HallValla 20260918.180 · Gamepad estándar (PC / Android)
    Layout principal estilo Xbox:
-   A confirmar/seleccionar/mover/atacar · B volver/cerrar universal · X DEF · Y DET
+   A confirmar/seleccionar · B volver/cerrar universal · Y DET
    View/Back mano · Menu/Start = clic izquierdo universal del cursor virtual · TR: LB recoge orbe, RB escudo del líder.
 */
 
@@ -548,29 +548,6 @@ function hvGamepadDetailsBoard(){
   if(u&&typeof showUnit==="function")showUnit(u);
   else if(typeof setHint==="function")setHint("Y / DET: coloca el cursor sobre una unidad para ver sus detalles.");
 }
-function hvGamepadDefend(){
-  let u=typeof getUnit==="function"&&selectedUnitId?getUnit(selectedUnitId):null;
-  if((!u||u.owner!==myPlayer)&&typeof getUnitAt==="function"&&hvGamepadInitBoardCursor()){
-    const at=getUnitAt(Number(hvGamepadState.boardX),Number(hvGamepadState.boardY));
-    if(at?.owner===myPlayer)u=at;
-  }
-  if(u&&typeof activateDefenseStance==="function")void activateDefenseStance(u);
-  else if(typeof setHint==="function")setHint("X / DEF: selecciona primero una unidad propia.");
-}
-function hvGamepadOwnUnits(){
-  return (publicState?.units||[]).filter(u=>u&&u.owner===myPlayer&&Number(u.hp||0)>0).sort((a,b)=>Number(b.y)-Number(a.y)||Number(a.x)-Number(b.x));
-}
-function hvGamepadCycleOwnUnit(delta){
-  const units=hvGamepadOwnUnits();
-  if(!units.length)return;
-  let idx=selectedUnitId?units.findIndex(u=>u.id===selectedUnitId):-1;
-  idx=(idx+delta+units.length)%units.length;
-  const u=units[idx];
-  hvGamepadState.mode="board";
-  hvGamepadState.boardX=Number(u.x);hvGamepadState.boardY=Number(u.y);
-  if(typeof openUnitContextMenu==="function")openUnitContextMenu(u,u.x,u.y);
-  hvGamepadSyncBoardCursor();
-}
 
 function hvGamepadCurrentHand(){return Array.isArray(privateState?.hand)?privateState.hand:[];}
 function hvGamepadSyncHandFocus(){
@@ -909,14 +886,9 @@ function hvGamepadHandleButtons(gp){
     if(!modal&&battle&&hvGamepadState.mode==="hand")hvGamepadDetailsHand();
     else if(!modal&&battle)hvGamepadDetailsBoard();
   }
-  if(pressed.X&&battle&&!modal&&hvGamepadState.mode!=="hand")hvGamepadDefend();
   if(pressed.VIEW&&battle&&!modal)hvGamepadToggleHand();
-  if(pressed.LB&&battle&&!modal){
-    if(hvGamepadState.mode==="hand")hvGamepadMoveHand(-1);else hvGamepadCycleOwnUnit(-1);
-  }
-  if(pressed.RB&&battle&&!modal){
-    if(hvGamepadState.mode==="hand")hvGamepadMoveHand(1);else hvGamepadCycleOwnUnit(1);
-  }
+  if(pressed.LB&&battle&&!modal&&hvGamepadState.mode==="hand")hvGamepadMoveHand(-1);
+  if(pressed.RB&&battle&&!modal&&hvGamepadState.mode==="hand")hvGamepadMoveHand(1);
   return true;
 }
 

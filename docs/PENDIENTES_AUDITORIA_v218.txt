@@ -1,0 +1,60 @@
+HALLVALLA — PENDIENTES DESPUÉS DE v218
+======================================
+
+1. SHELL MANUAL DE UNIDADES (prioridad siguiente)
+   - board-interactions.js todavía contiene MOV/ATK/DEF/EFFECT manuales heredados.
+   - combat-turn-ai.js conserva los wrappers manuales moveUnit()/attackUnit().
+   - render-battle-tutorial.js todavía calcula estados del viejo control manual.
+   - gamepad-controls.js conserva accesos a DEF/context menu de ese sistema.
+   - dragon/egg.js conserva hooks de combat.attackUnit / activateDefenseStance que deben mapearse antes de retirar wrappers.
+   Objetivo: comprobar consumidores reales, conservar solo resolución compartida usada por combate automático y borrar el shell manual muerto.
+
+2. HELPERS DE FASE/TURNO YA SIN PAPEL DE GAMEPLAY
+   - isMyTurn()
+   - isActionPhase()
+   - isHandPlayPhase()
+   - turnPhaseLabel()
+   - shouldAutoOpenHand()
+   - isOnlineOpponentHandReview()
+   Objetivo: retirarlos cuando desaparezcan sus últimos consumidores del shell manual/render.
+
+3. cards-specials-lore.js
+   - 224 KB / ~2,649 líneas.
+   - Mezcla datos/lore, estados temporales, efectos de equipo, bestias y habilidades.
+   - Tiene varios nombres históricos *TurnKey que hoy significan ventana/intervalo de efecto.
+   Objetivo: separar datos descriptivos de resolutores de efectos y renombrar solo con mapa completo de consumidores.
+
+4. network/battle-state.js
+   - ~93 KB / ~1,637 líneas.
+   - Todavía escribe campos de compatibilidad currentPlayer, turnPhase, turn y turnKey al crear/checkpoint de batalla.
+   Objetivo: determinar cuáles siguen siendo necesarios para snapshots/saves y dejar de escribir los que sean realmente redundantes.
+
+5. render-battle-tutorial.js
+   - ~101 KB / ~1,621 líneas.
+   - Mezcla render de batalla, DET/estados, tutorial y restos de presentación del control manual.
+   Objetivo: separar tutorial del renderer y eliminar lógica de fase una vez retirado el shell manual.
+
+6. settings-events.js
+   - ~240 KB / ~3,706 líneas.
+   - DEV ya fue extraído en v214, pero producción aún mezcla Mina, tutoriales, recompensas y bindings generales.
+   Objetivo: dividir por dominio sin tocar layout ni listeners funcionales.
+
+7. game/decks-units-combat-rules.js
+   - ~151 KB / ~2,244 líneas después de sacar los 20 mapas en v215.
+   - Aún mezcla reglas de deck, factories, líderes y resolución compartida de combate.
+   Objetivo: separar reglas puras/factories con pruebas de consumidores.
+
+8. features/pvp/index.js y realtime/experimental.js
+   - PvP ~160 KB; runtime continuo ~131 KB.
+   - Son módulos críticos ya funcionales; deben tocarse después de limpiar dependencias periféricas.
+   Objetivo: modularizar por resultados/lobby/sync y por recursos/IA/movimiento/ataque, respectivamente, sin cambiar protocolo Firebase.
+
+CIERRE DE AUDITORÍA
+-------------------
+La auditoría se considerará cerrada cuando:
+- no existan gates de turno/fase en rutas de producción;
+- no quede shell manual muerto;
+- compatibilidad legacy esté documentada y aislada;
+- los hotspots restantes tengan una responsabilidad clara;
+- Aventura, PvP BOT, tutorial, gamepad y salida a Home pasen smoke test;
+- hashes, Service Worker y Firebase permanezcan coherentes.

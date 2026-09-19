@@ -317,14 +317,6 @@ registerHallvallaHook("unit.effectiveMov",(value,{unit})=>{
   if(Number(unit?.dragonFrostTurns||0)>0&&Number.isFinite(Number(unit?.dragonFrostMovPenalty)))value+=Math.max(0,2-Number(unit.dragonFrostMovPenalty));
   return Math.max(0,value);
 },{id:"dragon-growth:frost-mov"});
-registerHallvallaHook("combat.attackUnit",async({attacker})=>{
-  if(attacker?.key==="dragon_egg"||attacker?.cannotAttack)return{handled:true,value:setHint("El Huevo de Dragón no puede atacar.")};
-  return{handled:false};
-},{id:"dragon-growth:block-egg-attack"});
-registerHallvallaHook("combat.activateDefenseStance",async({unit})=>{
-  if(unit?.key==="dragon_egg"||unit?.cannotDefend)return{handled:true,value:setHint("El Huevo de Dragón no puede usar DEF.")};
-  return{handled:false};
-},{id:"dragon-growth:block-egg-defense"});
 
 function getActiveLivingDragonUnit(state){
   const owner=getLocalDragonOwner();

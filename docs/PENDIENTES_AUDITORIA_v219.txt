@@ -1,0 +1,47 @@
+HALLVALLA — PENDIENTES DESPUÉS DE v219
+Build: 20260919.219
+
+1. CARDS-SPECIALS-LORE — SIGUIENTE PRIORIDAD
+   - Separar lore/datos declarativos de resolutores reales de habilidades.
+   - Auditar campos históricos *TurnKey y nombres que ya no representan turnos.
+   - Resolver específicamente la semántica automática de Hua Lan/Mulan y Khalid,
+     cuyos campos de cadena/ejecución sobrevivieron al shell manual porque son estado
+     de habilidad, no controles de UI.
+   - No cambiar balance sin identificar primero el comportamiento canónico esperado.
+
+2. NETWORK/BATTLE-STATE
+   - Revisar qué campos legacy siguen escribiéndose en snapshots nuevos:
+     currentPlayer, turn, turnPhase, turnKey y derivados.
+   - Mantener solo compatibilidad de lectura que sea realmente necesaria.
+   - No cambiar el contrato Firebase durante una limpieza local sin necesidad.
+
+3. RENDER-BATTLE-TUTORIAL
+   - Todavía ronda los 99 KB y mezcla renderer, tutorial, overlays y estado visual.
+   - Separar render de tablero/HUD de tutoriales y ayudas.
+   - El shell MOV/ATK/DEF/EFFECT ya no debe volver a introducirse.
+
+4. SETTINGS-EVENTS
+   - Sigue siendo el mayor módulo de producción (~240 KB).
+   - DEV ya salió en v214; falta separar Mina, recompensas, tutoriales y bindings generales.
+
+5. DECKS-UNITS-COMBAT-RULES
+   - ~151 KB después de sacar campaign-data en v215.
+   - Separar factories/validación de deck/líderes de las reglas puras compartidas.
+
+6. PVP
+   - `features/pvp/index.js` sigue siendo grande (~160 KB).
+   - Dividir ranking/resultados, lobby/matchmaking, bot y sync solo cuando las
+     dependencias legacy exteriores estén cerradas.
+
+7. MOTOR AUTOMÁTICO
+   - `realtime/experimental.js` sigue en ~130 KB.
+   - Renombrar/modularizar al final; es runtime crítico y actualmente funcional.
+   - La terminología técnica permanece privada en código/docs/dev, no en la UI normal.
+
+8. CIERRE FINAL DE AUDITORÍA
+   - búsqueda global de código muerto;
+   - inventario final de módulos y dependencias;
+   - Aventura + PvP BOT + PvP real concurrente;
+   - gamepad Windows/Android;
+   - Mine/Forja/colección/tutorial;
+   - hashes, cache y reglas Firebase finales.

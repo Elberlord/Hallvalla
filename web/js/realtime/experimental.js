@@ -723,7 +723,7 @@ async function hallvallaRtPlayAutoCard(card){
   const auto=hallvallaRtAutoCardTarget(card,myPlayer);if(!auto){setHint(`No hay objetivo automático válido para ${card.name}.`);return false;}
   const lockToken=hallvallaRtAcquirePlayLock(card.name||"carta");if(!lockToken)return false;
   const before=(privateState?.hand||[]).some(c=>c.id===card.id);
-  selectedCard=card;selectedUnitId=null;selectedUnitActionMode=null;highlights=[];highlightType="";
+  selectedCard=card;selectedUnitId=null;highlights=[];highlightType="";
   let consumed=false;
   try{
     await playCardOn(auto.x,auto.y,auto.target||null);
@@ -1039,6 +1039,7 @@ function hallvallaRtTargetCandidates(unit,units=publicState?.units||[]){
 }
 function hallvallaRtChooseTarget(unit,units=publicState?.units||[]){return hallvallaRtTargetCandidates(unit,units)[0]||null;}
 function hallvallaRtCanAttackNow(unit,target){
+  if(unit?.cannotAttack)return false;
   if(Number(unit?.rtExiledUntil||0)>hallvallaRtNow()||isRtTrapLocked(unit,"attack",hallvallaRtNow()))return false;
   if(!hallvallaRtValidEnemy(unit,target))return false;
   try{
@@ -1878,7 +1879,7 @@ function hallvallaRtPrimePreparedState(){
   hallvallaRtState.attackAt.clear();
   hallvallaRtState.supportAt.clear();
   hallvallaRtState.lastSummonedByOwner={1:null,2:null};hallvallaRtState.summonHistory={1:[],2:[]};
-  handOpen=false;handManualCloseKey="";selectedUnitActionMode=null;selectedUnitId=null;
+  handOpen=false;handManualCloseKey="";selectedUnitId=null;
   try{stopTurnTimerLoop();}catch(_){ }
 }
 function hallvallaRtSyncPreparedBattle(){

@@ -955,8 +955,8 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   clearBattleTransientUiState();
   selectedCard=null;
   selectedUnitId=null;
-  selectedUnitActionMode=null;
-  selectedUnitEffectChoice=null;
+  
+  
   cardInspectSelection=null;
   unitContextSelection=null;
   hideUnitContextMenu();

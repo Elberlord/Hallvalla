@@ -1,5 +1,5 @@
 "use strict";
-/* HallValla 7BOARDCTRL8AK · Movimiento, ataque, turnos e IA */
+/* HallValla 7BOARDCTRL8AK · Resolución compartida de combate e IA */
 
 function getCardPaymentCommitState(card,paidCost=null){
   const currentHand=Array.isArray(privateState?.hand)?privateState.hand:[];
@@ -13,7 +13,6 @@ function getCardPaymentCommitState(card,paidCost=null){
   return{hand,honor,maxHonor,exactCost};
 }
 async function commitCardPlay(card,publicPatch={},paidCost=null,actionLog=""){
-  if(typeof invalidateImmediateMoveUndo==="function")invalidateImmediateMoveUndo("card_play");
   const payment=getCardPaymentCommitState(card,paidCost);
   if(!payment)return false;
   const nextStats={
@@ -94,68 +93,6 @@ function resolveBeastCellTraps(moving,units,traps){
 }
 
 let hallvallaMoveActionInFlight=false;
-async function moveUnit(u,x,y){
-  if(hallvallaMoveActionInFlight)return setHint("MOV: espera a que termine el movimiento actual.");
-  if(typeof invalidateImmediateMoveUndo==="function")invalidateImmediateMoveUndo("new_move");
-  if(isBattleEnded())return setHint("La batalla ya terminó.");
-  const live=getLiveUnitRef(u);
-  if(!live)return setHint("La unidad ya no está disponible en el campo.");
-  u=live;
-  if(u?.leader)return setHint("Los líderes están anclados en su Base y no pueden moverse.");
-  if(!isUnitMoveWindow(u))return setHint(unitActionPhaseHint("MOV"));
-  const mulanExecMove=isMulanExecutionMoveReady(u);
-  if(!mulanExecMove&&u.acted)return setHint(`${u.name} ya usó su acción durante el ciclo táctico actual.`);
-  if(!mulanExecMove&&u.moved)return setHint(`${u.name} ya se movió durante el ciclo táctico actual.`);
-  const movePath=getUnitMovementPath(u,x,y,publicState?.units||[],mulanExecMove?1:effectiveMov(u));
-  if(!movePath)return setHint("Movimiento inválido: el destino supera el MOV disponible o está ocupado.");
-  if(!mulanExecMove&&((u.noMoveTurnKey&&u.noMoveTurnKey===publicState.turnKey)||isRtTrapLocked(u,"move")))return setHint(`${u.name} no puede moverse ahora.`);
-  hallvallaMoveActionInFlight=true;
-  try{
-  const moveStartUnits=JSON.parse(JSON.stringify(publicState.units||[]));
-  const moveUndoLogBefore=[...(publicState?.log||[])];
-  const movedNow=isAerialMovementUnit(u)?dist(u,{x,y}):movementPathDistance(movePath);
-  const straightMoveNow=isAerialMovementUnit(u)?(isStraightLineDelta(x-u.x,y-u.y)?movedNow:0):(isMovementPathStraight(movePath)?movedNow:0);
-  const moveDir=movementPathLastDirection(movePath,u,{x,y});
-  let trapMove=resolveMovementLegendaryTraps(u,{x,y},moveStartUnits);
-  let units=trapMove.cancel?trapMove.units:trapMove.units.map(it=>it.id===u.id?{...it,x,y,moved:true,movedSpaces:(it.movedSpaces||0)+movedNow,lastMoveStraightDistance:straightMoveNow,lastMoveDistance:movedNow,lastMoveDx:moveDir.dx,lastMoveDy:moveDir.dy,lastMoveTurnKey:publicState?.turnKey||""}:it);
-  if(mulanExecMove&&!trapMove.cancel&&units.some(it=>it.id===u.id&&it.hp>0)){
-    units=units.map(it=>it.id===u.id?{...it,mulanExecutionMoveReady:false,mulanExecutionChoiceReady:true,acted:false}:it);
-  }
-  let beastTrapResult={units,traps:[...(publicState.beastTraps||[])],logs:[]};
-  if(!trapMove.cancel&&units.some(it=>it.id===u.id&&it.hp>0)){
-    beastTrapResult=resolveBeastCellTraps(units.find(it=>it.id===u.id),units,publicState.beastTraps||[]);
-    units=beastTrapResult.units;
-  }
-  const lionFearMove=applyAfricanLionFearAura(units);
-  units=lionFearMove.units;
-  const moved=units.find(it=>it.id===u.id);
-  const hannibalTriggers=units.filter(h=>h.key==="hannibal_barca"&&h.owner!==moved?.owner&&h.hp>0&&!h.hannibalUsedTurn);
-  let extra="";
-  if(moved&&!moved.leader){
-    for(const h of hannibalTriggers){
-      if(adjacentEnemies(moved,units).filter(a=>a.owner===h.owner).length>=2){
-        const nextKey=nextTurnKeyForOwner(moved.owner);
-        units=units.map(it=>it.id===moved.id?{...it,hannibalAtkDebuff:Math.max(5,Number(it.hannibalAtkDebuff||0),5),hannibalAtkDebuffTurnKey:nextKey,hannibalAtkDebuffSource:h.name||"Hannibal Barca",hannibalMovDebuff:Math.max(1,Number(it.hannibalMovDebuff||0),1),hannibalMovDebuffTurnKey:nextKey,hannibalMovDebuffSource:h.name||"Hannibal Barca"}:it.id===h.id?{...it,hannibalUsedTurn:true}:it);
-        extra=` Trampa de Cannas: ${moved.name} pierde -5 AT y -1 MOV hasta el final del siguiente ciclo táctico.`;
-        break;
-      }
-    }
-  }
-  const movementBloodVictory=applyBloodVictoryForDeaths(moveStartUnits,units);
-  units=movementBloodVictory.units;
-  const committed=await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:beastTrapResult.traps,legendaryTraps:trapMove.traps,statusFxEvent:lionFearMove.statusFxEvent||null,floatFxEvent:lionFearMove.floatFxEvent||null});
-  if(!committed)return setHint("MOV: no se pudo confirmar el movimiento; inténtalo de nuevo.");
-  const mulanExtraText=mulanExecMove&&!trapMove.cancel&&units.some(it=>it.id===u.id)?` ${u.name} completa el movimiento de ejecución y ahora debe elegir ATK o DEF para gastar su acción restante.`:"";
-  const bloodVictoryText=movementBloodVictory.logs.length?` ${movementBloodVictory.logs.join(" ")}`:"";
-  await pushLog(trapMove.cancel?[...trapMove.logs,`${u.name} no completa el movimiento.${extra}${mulanExtraText}${bloodVictoryText}`,...lionFearMove.logs].join(" "):[`${u.name} se mueve a ${x+1},${y+1}.${extra}${mulanExtraText}${bloodVictoryText}`,...trapMove.logs,...beastTrapResult.logs,...lionFearMove.logs].join(" "));
-  const plainUndoSafe=!mulanExecMove&&!trapMove.cancel&&!extra&&!trapMove.logs.length&&!beastTrapResult.logs.length&&!lionFearMove.logs.length&&!movementBloodVictory.logs.length;
-  if(plainUndoSafe&&typeof registerImmediateMoveUndo==="function")registerImmediateMoveUndo({unitId:u.id,unitName:u.name,beforeUnits:moveStartUnits,beforeLog:moveUndoLogBefore,turnKey:publicState?.turnKey||"",from:{x:u.x,y:u.y},to:{x,y}});
-  clearSelection();
-  return true;
-  }finally{
-    hallvallaMoveActionInFlight=false;
-  }
-}
 function getBattleDamage(attacker,mods={}){const base=Math.max(0,effectiveAtk(attacker)+(mods.attackerAtk||0)-(mods.damageReduction||0));return Math.max(0,Math.round(base*getEquipmentDamageMultiplier(attacker)))}
 function isWarriorLeaderSweepAttacker(unit){
   return !!(unit&&unit.leader&&unit.leaderType==="warrior"&&Number(unit.hp||0)>0);
@@ -552,21 +489,6 @@ function inspectSharedAttackTargetBasics(attacker,defender,{runInState=(fn)=>fn(
   if(!attacker||!defender||attacker.owner===defender.owner)return{ok:false,code:"invalid_target"};
   if(!inState(()=>canUnitAttackTarget(attacker,defender)))return{ok:false,code:"blocked_target"};
   return{ok:true};
-}
-function inspectSharedAttackActionEligibility(attacker,defender,{turnKey="",runInState=(fn)=>fn(),stateSnapshot=null,distanceFn=dist}={}){
-  const inState=(fn)=>runInState(fn,stateSnapshot);
-  const mulanChoiceAttack=inState(()=>isMulanExecutionChoiceReady(attacker));
-  const khalidChainAttack=inState(()=>isKhalidChainAttackReady(attacker));
-  if(attacker.acted&&!mulanChoiceAttack&&!khalidChainAttack)return{ok:false,code:"already_acted",mulanChoiceAttack,khalidChainAttack};
-  if((attacker.noAttackTurnKey&&attacker.noAttackTurnKey===turnKey)||isRtTrapLocked(attacker,"attack"))return{ok:false,code:"attack_locked",mulanChoiceAttack,khalidChainAttack};
-  const baseRange=inState(()=>getUnitAttackRange(attacker));
-  const rg=baseRange+(attacker.key==="bengal_tiger"&&inState(()=>isStealthedUnit(attacker))?2:0);
-  const distance=distanceFn(attacker,defender);
-  const assassinFinalBlow=inState(()=>isAssassinFinalBlowEligible(attacker,defender));
-  if(distance>rg&&!assassinFinalBlow)return{ok:false,code:"out_of_range",mulanChoiceAttack,khalidChainAttack,rg,distance,assassinFinalBlow};
-  if(inState(()=>isStealthedUnit(defender)))return{ok:false,code:"stealthed_target",mulanChoiceAttack,khalidChainAttack,rg,distance,assassinFinalBlow};
-  if((defender.aerial||defender.flight)&&!inState(()=>canUnitAttackAerialTarget(attacker,defender)))return{ok:false,code:"aerial_target",mulanChoiceAttack,khalidChainAttack,rg,distance,assassinFinalBlow};
-  return{ok:true,mulanChoiceAttack,khalidChainAttack,rg,distance,assassinFinalBlow};
 }
 function resolveSharedAttackPreparation({
   a,
@@ -1063,163 +985,6 @@ async function resolveSharedAttackOutcome({
     rhinoStunTriggered,
     alreadyBleeding
   };
-}
-async function attackUnit(a,d){
-  const hookOverride=await resolveHallvallaAsyncOverride("combat.attackUnit",{attacker:a,defender:d});
-  if(hookOverride.handled)return hookOverride.value;
-  if(isPvpStep6fLimitedMode()&&!isPvpStep6gAttackMode())return setHint("Paso 6F: los ataques todavía están bloqueados. Primero validamos la invocación real sincronizada.");
-  if(isBattleEnded())return setHint("La batalla ya terminó.");
-  let liveUnits=[...(publicState?.units||[])];
-  a=getLiveUnitRef(a,liveUnits);
-  d=getLiveUnitRef(d,liveUnits);
-
-  const targetCheck=inspectSharedAttackTargetBasics(a,d);
-  if(!targetCheck.ok){
-    if(targetCheck.code==="blocked_target")return setHint("Geisha Encubierta no puede atacar líderes.");
-    return setHint("Elige una unidad rival válida.");
-  }
-  if(!isMyTurn()||!isActionPhase()||a.owner!==myPlayer)return setHint(unitActionPhaseHint("ATTK"));
-
-  const declaration=inspectSharedAttackActionEligibility(a,d,{turnKey:publicState?.turnKey||""});
-  if(!declaration.ok){
-    if(declaration.code==="already_acted")return setHint(`${a.name} ya atacó o defendió durante el ciclo táctico actual.`);
-    if(declaration.code==="attack_locked")return setHint(`${a.name} no puede atacar durante el ciclo táctico actual.`);
-    if(declaration.code==="out_of_range")return setHint(`Objetivo fuera de rango. ${a.name} tiene RG ${declaration.rg} y ${d.name} está a ${declaration.distance}.`);
-    if(declaration.code==="stealthed_target")return setHint("No puedes atacar una unidad con Sigilo mientras no sea revelada.");
-    if(declaration.code==="aerial_target")return setHint("Las unidades terrestres cuerpo a cuerpo no pueden atacar objetivos en vuelo. Usa Arqueros, ataques a distancia, una unidad aérea o Antiaéreo.");
-    return setHint("No se puede declarar ese ataque.");
-  }
-  const mulanChoiceAttack=declaration.mulanChoiceAttack;
-  if(typeof invalidateImmediateMoveUndo==="function")invalidateImmediateMoveUndo("attack");
-
-  const prep=resolveSharedAttackPreparation({
-    a,d,units:liveUnits,liveUnits,
-    legendaryTraps:null,
-    beastTraps:publicState?.beastTraps||[]
-  });
-  a=prep.a||a;
-  d=prep.d||d;
-
-  if(prep.terminal==="pretrap_cancel"){
-    const cancelSpend=prep.cancelSpend;
-    await updatePublic({units:cancelSpend.units.map(u=>u.id===a.id?{...u,acted:true,khalidChainReady:false}:u),legendaryTraps:prep.preTrap.traps});
-    await pushLog(`${prep.preTrap.logs.join(" ")}${actionStatSpendText(a.name,cancelSpend.spent,cancelSpend.remaining)}`);
-    clearSelection();return;
-  }
-  if(prep.terminal==="buffalo_attacker_fell"){
-    const units=prep.units;
-    const log=`${d.name} activa Instinto de Cornada: inflige 2 daño antes del ataque y ${a.name} cae. El ataque se cancela.${prep.bloodVictoryResult.logs.length?` ${prep.bloodVictoryResult.logs.join(" ")}`:""}`;
-    await updatePublic({units,_clockKillCreditMode:"opposite-owner",legendaryTraps:prep.preTrap.traps});
-    if(!(await finalizeBattle(units,log)))await pushLog(log);
-    clearSelection();return;
-  }
-  if(prep.terminal==="lance_attacker_fell"){
-    const units=prep.units;
-    const fsLog=`${a.name} declara ataque contra ${d.name}.${prep.firstStrikeText} El atacante cae antes de completar el golpe.${prep.bloodVictoryResult.logs.length?` ${prep.bloodVictoryResult.logs.join(" ")}`:""}`;
-    await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:prep.beastTraps,legendaryTraps:prep.preTrap.traps});
-    if(!(await finalizeBattle(units,fsLog)))await pushLog([...prep.preTrap.logs,fsLog].filter(Boolean).join(" "));
-    clearSelection();
-    return;
-  }
-
-  let units=prep.units;
-  a=prep.a;
-  d=prep.d;
-  const {
-    attackContext,mods,hit,firstStrikeText,rerollText,arjunaDharmaPoison,evasionPressure,
-    preTrap,warningRune,bloodBaitBonus,tigerFromStealthBefore
-  }=prep;
-  const beastTrapsAfterBloodBait=prep.beastTraps;
-  const attackOutcome=await resolveSharedAttackOutcome({
-    a,
-    d,
-    units,
-    liveUnits,
-    attackContext,
-    mods,
-    hit,
-    firstStrikeText,
-    rerollText,
-    arjunaDharmaPoison,
-    evasionPressure,
-    preTrap,
-    warningRune,
-    bloodBaitBonus,
-    beastTraps:beastTrapsAfterBloodBait,
-    tigerFromStealthBefore,
-    mulanChoiceAttack,
-    turnKey:publicState?.turnKey
-  });
-  units=attackOutcome.units;
-  const {
-    actionLog,
-    dmgTrap,
-    exileTrap,
-    guardLoss,
-    hpLoss,
-    dragonCompanionResult,
-    solomonIfritResult,
-    elephantChargeResult,
-    veilCurseResult,
-    arcaneAdeptStatusEvent,
-    poisonStatusEvent,
-    miyamotoCounterBleedEvent,
-    lionFearCombat,
-    porcupineResult,
-    genghisDebuffResult,
-    falconRecoilResult,
-    rhinoStunTriggered,
-    alreadyBleeding
-  }=attackOutcome;
-  const attackerUnitNow=units.find(u=>u.id===a.id)||a;
-  const defenderUnitNow=units.find(u=>u.id===d.id)||d;
-  const fireAreaImpactSound=hit.hit&&String(a.dragonElement||"").toLowerCase()==="fire"&&Number(a.dragonCharge||0)>=2?"fire_area_damage":"";
-  const battleFxEvent=makeBattleFxEvent("attack",attackerUnitNow,defenderUnitNow,{stealthAttack:attackContext.startedFromStealth,hit:!!hit.hit,impactSound:fireAreaImpactSound||undefined});
-  const defenderStillAlive=units.some(u=>u.id===d.id);
-  const defenseFxEvent=hit.hit&&guardLoss>0&&defenderStillAlive
-    ? {
-        ...makeDefenseFxEvent(hpLoss>0?"guard_break":"guard_block", defenderUnitNow),
-        combatResult:hpLoss>0?"guard_broken_through":"guard_blocked",
-        guardLoss:Number(guardLoss||0),
-        hpLoss:Number(hpLoss||0)
-      }
-    : null;
-  const dodgeFxEvent=!hit.hit&&defenderStillAlive
-    ? {
-        ...makeDodgeFxEvent(defenderUnitNow),
-        combatResult:"dodge",
-        evasionSpent:Number(evasionPressure?.spent||0),
-        evasionRemaining:Number(evasionPressure?.remaining||0)
-      }
-    : null;
-  const statusFxEvent=dragonCompanionResult.statusFxEvent||veilCurseResult.statusFxEvent||arcaneAdeptStatusEvent||poisonStatusEvent||miyamotoCounterBleedEvent||lionFearCombat.statusFxEvent||porcupineResult.statusFxEvent||genghisDebuffResult.statusFxEvent||(rhinoStunTriggered?makeStatusFxEvent("stun", units.find(u=>u.id===a.id)||a, 1):(hit.hit&&hpLoss>0&&a.key==="scout"&&defenderStillAlive
-    ? makeStatusFxEvent(alreadyBleeding?"bleed_refresh":"bleed_apply", defenderUnitNow, 1)
-    : null));
-  const floatFxEvent=dragonCompanionResult.floatFxEvent||lionFearCombat.floatFxEvent||porcupineResult.floatFxEvent||genghisDebuffResult.floatFxEvent||falconRecoilResult.floatFxEvent||(hit.hit&&defenderStillAlive
-    ? (hpLoss>0
-        ? makeFloatFxEvent("damage", defenderUnitNow, hpLoss)
-        : (guardLoss>0 ? makeFloatFxEvent("debuff", defenderUnitNow, guardLoss,{iconText:"🛡"}) : null))
-    : (!hit.hit&&defenderStillAlive
-        ? makeFloatFxEvent("dodge", defenderUnitNow, 0,{iconText:"💨",labelText:"ESQ"})
-        : null));
-  const stealthAreaDamageEvent=dragonCompanionResult.stealthAreaDamageEvent||solomonIfritResult.stealthAreaDamageEvent||elephantChargeResult.stealthAreaDamageEvent||null;
-  const fireAttackSource=a.key==="solomon_ifrit"||String(a.dragonElement||"").toLowerCase()==="fire";
-  const undeadIncineratedIds=fireAttackSource?(publicState?.units||[]).filter(before=>isUndeadUnit(before)&&Number(before.owner)!==Number(a.owner)&&!(units||[]).some(after=>after.id===before.id&&Number(after.hp||0)>0)).map(before=>before.id):[];
-  let combatUndeadRemains=[...(publicState?.undeadRemains||[])];
-  const remainsInteractionLogs=[];
-  const applyRemainsElementCell=(cx,cy,element)=>{const result=applyElementToUndeadRemains(combatUndeadRemains,cx,cy,element);combatUndeadRemains=result.remains;if(result.logs.length)remainsInteractionLogs.push(...result.logs);};
-  if(a.key==="solomon_ifrit"){
-    applyRemainsElementCell(d.x,d.y,"fire");
-    for(let ry=-1;ry<=1;ry++)for(let rx=-1;rx<=1;rx++)if(rx||ry){const cx=Number(d.x)+rx,cy=Number(d.y)+ry;if(cx>=0&&cx<COLS&&cy>=0&&cy<ROWS)applyRemainsElementCell(cx,cy,"fire");}
-  }else if(["fire","ice"].includes(String(a.dragonElement||"").toLowerCase())){
-    const dragonElement=String(a.dragonElement).toLowerCase();
-    if(Number(a.dragonCharge||0)>=2&&typeof dragonCellsCentered3x3==="function")for(const cell of dragonCellsCentered3x3(d).filter(dragonInBounds))applyRemainsElementCell(cell.x,cell.y,dragonElement);
-    else applyRemainsElementCell(d.x,d.y,dragonElement);
-  }
-  await updatePublic({units,undeadRemains:combatUndeadRemains,_undeadIncineratedIds:undeadIncineratedIds,_clockKillCreditMode:"opposite-owner",beastTraps:beastTrapsAfterBloodBait,legendaryTraps:exileTrap.traps||dmgTrap.traps||preTrap.traps,battleFxEvent,defenseFxEvent,dodgeFxEvent,statusFxEvent,floatFxEvent,...(stealthAreaDamageEvent?{stealthAreaDamageEvent}:{})});
-  const fullActionLog=[...preTrap.logs,...dmgTrap.logs,...(exileTrap.logs||[]),actionLog,...remainsInteractionLogs].filter(Boolean).join(" ");
-  if(!(await finalizeBattle(units,fullActionLog)))await pushLog(fullActionLog);
-  clearSelection();
 }
 
 /* v216 · eliminado el orquestador legacy de cierre y avance de fases.
