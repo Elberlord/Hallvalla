@@ -1215,6 +1215,10 @@ function ensureHallVallaModal(){
   modal=document.createElement("div");
   modal.id="hvModal";
   modal.className="hv-modal hidden";
+  modal.setAttribute("role","dialog");
+  modal.setAttribute("aria-modal","true");
+  modal.setAttribute("aria-hidden","true");
+  modal.setAttribute("aria-labelledby","hvModalTitle");
   modal.innerHTML=`<div class="hv-modal-card"><h2 id="hvModalTitle">Información</h2><p id="hvModalMessage"></p><div id="hvModalActions" class="hv-modal-actions"></div></div>`;
   document.body.appendChild(modal);
   return modal;
@@ -1232,17 +1236,24 @@ function hvDialog(message,{title="Información",confirmText="Aceptar",cancelText
         cancel.type="button";
         cancel.className="btn ghost";
         cancel.textContent=cancelText;
-        cancel.addEventListener("click",()=>{modal.classList.add("hidden");resolve(false);},{once:true});
+        cancel.addEventListener("click",()=>{modal.classList.add("hidden");modal.setAttribute("aria-hidden","true");resolve(false);},{once:true});
         actions.appendChild(cancel);
       }
       const ok=document.createElement("button");
       ok.type="button";
       ok.className=danger?"btn danger":"btn primary";
       ok.textContent=confirmText;
-      ok.addEventListener("click",()=>{modal.classList.add("hidden");resolve(true);},{once:true});
+      ok.addEventListener("click",()=>{modal.classList.add("hidden");modal.setAttribute("aria-hidden","true");resolve(true);},{once:true});
       actions.appendChild(ok);
     }
+    modal.setAttribute("aria-hidden","false");
     modal.classList.remove("hidden");
+    // El mando puede confirmar inmediatamente con A. El foco también ayuda a
+    // teclado/accesibilidad, pero no cambia la interacción de mouse/touch.
+    requestAnimationFrame(()=>{
+      const preferred=actions?.querySelector("button.primary,button:not([disabled])");
+      try{preferred?.focus({preventScroll:true});}catch(_){try{preferred?.focus();}catch(__){ }}
+    });
   });
 }
 function hvAlert(message,title="Información"){return hvDialog(message,{title,confirmText:"Aceptar"});}

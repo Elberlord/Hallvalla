@@ -220,35 +220,86 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
     };
   }
 
+  async function ensureRankedTerminalSource(state,gameCode){
+    // v206 · En PvP contra BOT el combate TR se simula localmente. El snapshot local
+    // NO llega a Firebase por sí solo, pero /pvpResults exige que la sala pública ya
+    // esté marcada como finalizada. Persistimos únicamente el cierre autoritativo
+    // antes de registrar puntos; así la liga, G/P/E y la victoria quedan verificables.
+    if(!(String(state?.mode||"")==="adventure"&&state?.pvpBotMatch===true))return true;
+    const code=String(gameCode||"").trim();
+    if(!code)return false;
+    const winner=Number(state?.winner||0),loser=Number(state?.loser||0),endedAt=Number(state?.endedAt||0);
+    if(!endedAt||![0,1,2].includes(winner)||![0,1,2].includes(loser))return false;
+    const publicRef=ref(db,`games/${code}/public`);
+    let lastError=null;
+    for(let attempt=1;attempt<=3;attempt++){
+      try{
+        const before=await get(publicRef);
+        if(!before.exists())throw new Error("La sala PvP BOT ya no existe antes de registrar el resultado.");
+        const current=before.val()||{};
+        const alreadyFinal=current?.phase==="ended"&&current?.battleEnded===true&&Number(current?.winner||0)===winner&&Number(current?.loser||0)===loser&&Number(current?.endedAt||0)===endedAt;
+        if(!alreadyFinal){
+          await update(publicRef,{phase:"ended",battleEnded:true,winner,loser,endedAt,currentPlayer:0,turnPhase:"realtime"});
+        }
+        const confirmed=await get(publicRef);
+        const finalState=confirmed.exists()?(confirmed.val()||{}):{};
+        if(finalState?.phase==="ended"&&finalState?.battleEnded===true&&Number(finalState?.winner||0)===winner&&Number(finalState?.loser||0)===loser&&Number(finalState?.endedAt||0)===endedAt)return true;
+        throw new Error("Firebase no confirmó el cierre autoritativo del PvP BOT.");
+      }catch(error){
+        lastError=error;
+        if(attempt<3)await new Promise(resolve=>setTimeout(resolve,180*attempt));
+      }
+    }
+    console.error("[HallValla][PvP Ranking] No se pudo confirmar el cierre del PvP BOT:",lastError);
+    return false;
+  }
+
+  let latestResultCommitPromise=null;
   async function recordBattleResult(state,gameCode){
-    try{
-      const rankedMode=String(state?.mode||"")==="online"||(String(state?.mode||"")==="adventure"&&state?.pvpBotMatch===true);
-      if(!state||!rankedMode||state.phase!=="ended"||state.battleEnded!==true)return false;
-      const payload=buildResultPayload(state,gameCode);
-      if(!payload)return false;
-      const mine=getMyUid();
-      if(mine!==payload.player1Uid&&mine!==payload.player2Uid)return false;
-      const resultRef=ref(db,`pvpResults/${payload.gameCode}`);
-      const tx=await runTransaction(resultRef,current=>current?undefined:payload,{applyLocally:false});
-      if(tx?.committed){
-        rankingCache.loadedAt=0;
-        console.info(`[HallValla][PvP Ranking] Resultado ${payload.gameCode} registrado.`,payload);
-      }else{
+    const task=(async()=>{
+      try{
+        const rankedMode=String(state?.mode||"")==="online"||(String(state?.mode||"")==="adventure"&&state?.pvpBotMatch===true);
+        if(!state||!rankedMode||state.phase!=="ended"||state.battleEnded!==true)return false;
+        const payload=buildResultPayload(state,gameCode);
+        if(!payload)return false;
+        const mine=getMyUid();
+        if(mine!==payload.player1Uid&&mine!==payload.player2Uid)return false;
+        if(!(await ensureRankedTerminalSource(state,payload.gameCode)))return false;
+        const resultRef=ref(db,`pvpResults/${payload.gameCode}`);
+        const tx=await runTransaction(resultRef,current=>current?undefined:payload,{applyLocally:false});
+        if(tx?.committed){
+          rankingCache.loadedAt=0;
+          console.info(`[HallValla][PvP Ranking] Resultado ${payload.gameCode} registrado.`,payload);
+          return true;
+        }
         // Otro cliente pudo registrarlo primero; eso es correcto y evita duplicados.
         const existing=tx?.snapshot?.val?.();
-        if(existing)console.info(`[HallValla][PvP Ranking] Resultado ${payload.gameCode} ya estaba registrado.`);
+        if(existing){
+          rankingCache.loadedAt=0;
+          console.info(`[HallValla][PvP Ranking] Resultado ${payload.gameCode} ya estaba registrado.`);
+          return true;
+        }
+        return false;
+      }catch(error){
+        console.error("[HallValla][PvP Ranking] No se pudo registrar el resultado:",error);
+        return false;
       }
-      return true;
-    }catch(error){
-      console.error("[HallValla][PvP Ranking] No se pudo registrar el resultado:",error);
-      return false;
+    })();
+    latestResultCommitPromise=task;
+    try{return await task;}finally{if(latestResultCommitPromise===task)latestResultCommitPromise=null;}
+  }
+  async function flushBattleResult(state,gameCode){
+    if(latestResultCommitPromise){
+      try{await latestResultCommitPromise;}catch(_){ }
     }
+    return recordBattleResult(state,gameCode);
   }
 
   globalThis.hvPvpRankingRefreshLobby=refreshLobby;
   globalThis.hvPvpRankingOpen=openRanking;
   globalThis.hvPvpRankingClose=closeRanking;
   globalThis.hvPvpRankingRecordResult=recordBattleResult;
+  globalThis.hvPvpRankingFlushResult=flushBattleResult;
   globalThis.hvPvpRankingLoad=loadRanking;
   globalThis.hvPvpLeagueForPoints=leagueForPoints;
   globalThis.HALLVALLA_PVP_LEAGUES=PVP_LEAGUES;
@@ -1206,7 +1257,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Jugar carta falló:`,error);
-      await hvPopup(`JUGAR CARTA FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 6E");
+      await hvPopup(`JUGAR CARTA FALLÓ: ${error?.message||error}`,"PvP");
       return false;
     }finally{
       cardPlayInFlight=false; busy=false; syncLocalButtons();
@@ -1528,7 +1579,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       return true;
     }catch(error){
       console.error(`[HallValla][${STEP}] Avance de fase falló:`,error);
-      await hvPopup(`AVANCE DE FASE FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 6E");
+      await hvPopup(`AVANCE DE FASE FALLÓ: ${error?.message||error}`,"PvP");
       return false;
     }finally{
       busy=false;
@@ -2965,7 +3016,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         }
       }
       throw lastError||new Error("No se pudo crear una sala tras 4 intentos.");
-    }catch(error){ console.error(error); const message=`CREAR SALA FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 6E"); return false; }
+    }catch(error){ console.error(error); const message=`CREAR SALA FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP"); return false; }
     finally{ busy=false; syncLocalButtons(); try{ const roomSnap=activeCode?await get(ref(db,`games/${activeCode}/public`)):null; if(roomSnap?.exists()) renderRoomSnapshot(roomSnap.val()||{},activeCode); }catch(_){ } }
   }
 
@@ -2987,7 +3038,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const confirmSnap=await withTimeout(get(publicRef),`Confirmar J2 en ${code}`); const confirmed=confirmSnap.val()||{};
       if(String(confirmed?.playerSlots?.player2Uid||"")!==joinUid) throw new Error("Firebase no confirmó este UID como Jugador 2."); if(!(confirmed?.playerPrepared?.[2]===true||confirmed?.playerPrepared?.["2"]===true)) throw new Error("Firebase no confirmó playerPrepared/2.");
       activeCode=code; activeOwnerUid=joinUid; activeRole=2; await markAndPaint(`7/8 · conectando listener EXCLUSIVO a private/player2...`); attachOwnPrivateListener(code,2,joinUid); renderRoomSnapshot(confirmed,code); attachRoomListener(code); await markAndPaint(`8/8 · J2 CORRECTO · privado preparado. Ambos pueden usar LISTO.`); return true;
-    }catch(error){ console.error(error); if(privateWritten||joinUid) await removeOwnPrivateBranch(code,2,joinUid); if(claimedNow&&joinUid){ try{ await withTimeout(update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"lobbyReady/2":false}),`Rollback J2 ${code}`,4000);}catch(_){ } } const message=`UNIRSE FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 6E"); return false; }
+    }catch(error){ console.error(error); if(privateWritten||joinUid) await removeOwnPrivateBranch(code,2,joinUid); if(claimedNow&&joinUid){ try{ await withTimeout(update(ref(db,`games/${code}/public`),{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"lobbyReady/2":false}),`Rollback J2 ${code}`,4000);}catch(_){ } } const message=`UNIRSE FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP"); return false; }
     finally{ busy=false; syncLocalButtons(); try{ const roomSnap=activeCode?await get(ref(db,`games/${activeCode}/public`)):null; if(roomSnap?.exists()) renderRoomSnapshot(roomSnap.val()||{},activeCode); }catch(_){ } }
   }
 
@@ -3003,7 +3054,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       if(!p1Uid||!p2Uid) throw new Error("LISTO se habilita cuando ambos jugadores están presentes."); if(!p1Prepared||!p2Prepared) throw new Error("LISTO se habilita cuando ambos estados privados están preparados."); if(!ownPrivateHealthy) throw new Error(`Tu private/player${role} no está confirmado.`);
       const slotUid=role===2?p2Uid:p1Uid; if(slotUid!==ownerUid) throw new Error(`Este cliente ya no ocupa el slot J${role}.`);
       const current=getReadyFlag(room,role), next=!current; await markAndPaint(`LISTO · J${role} → ${next?"LISTO":"NO LISTO"}...`); await withTimeout(set(ref(db,`games/${code}/public/lobbyReady/${role}`),next),`Actualizar LISTO J${role} en ${code}`); mark(`J${role} ${next?"está LISTO":"ya no está listo"}.`); return true;
-    }catch(error){ console.error(error); const message=`LISTO FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP reconstrucción · Paso 6E"); return false; }
+    }catch(error){ console.error(error); const message=`LISTO FALLÓ: ${error?.message||error}`; mark(message); await hvPopup(message,"PvP"); return false; }
     finally{ busy=false; syncLocalButtons(); try{ const snapshot=activeCode?await get(ref(db,`games/${activeCode}/public`)):null; if(snapshot?.exists()) renderRoomSnapshot(snapshot.val()||{},activeCode); }catch(_){ } }
   }
 
@@ -3031,7 +3082,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       }),`Actualizar reglas del host en ${activeCode}`);
       mark(`Reglas actualizadas: ${getRulesSummary(rules)}. LISTO se reinició para ambos.`);
       return true;
-    }catch(error){ console.error(error); await hvPopup(`REGLAS FALLARON: ${error?.message||error}`,"PvP reconstrucción · Paso 6E"); return false; }
+    }catch(error){ console.error(error); await hvPopup(`REGLAS FALLARON: ${error?.message||error}`,"PvP"); return false; }
     finally{ busy=false; syncLocalButtons(); try{ const snapshot=activeCode?await get(ref(db,`games/${activeCode}/public`)):null; if(snapshot?.exists()) renderRoomSnapshot(snapshot.val()||{},activeCode); }catch(_){ } }
   }
   function cycleTimer(){ const rules=getRules(roomCache||{}); void updateHostRules({timerEnabled:!rules.timerEnabled}); }
@@ -3044,11 +3095,22 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     busy=true;
     try{
       syncLocalButtons(); const publicRef=ref(db,`games/${activeCode}/public`); const snap=await withTimeout(get(publicRef),`Leer estado RPS en ${activeCode}`); if(!snap.exists()) throw new Error("La sala ya no existe."); const room=snap.val()||{}; const rps=room?.rps||{};
-      if(String(room?.phase||"")!=="rps"||String(rps.phase||"")!=="choosing") throw new Error("Piedra/Papel/Tijera no está esperando una elección ahora mismo.");
-      const current=String(rps?.choices?.[activeRole]||rps?.choices?.[String(activeRole)]||""); if(current) throw new Error("Tu elección ya fue enviada. Espera al rival.");
+      const current=String(rps?.choices?.[activeRole]||rps?.choices?.[String(activeRole)]||"");
+      const rpsPhase=String(rps.phase||"");
+      const roomPhase=String(room?.phase||"");
+      // v206 · No existe ningún modal técnico de RPS. Si una entrada física se
+      // repite después de confirmar la elección, simplemente no genera otra acción.
+      if(current)return true;
+      if(roomPhase==="rps"&&(rpsPhase==="winner_choice"||rpsPhase==="complete"))return true;
+      if(room?.startConfig?.resolved===true||roomPhase==="configured"||roomPhase==="active")return true;
+      if(roomPhase!=="rps"||rpsPhase!=="choosing")return false;
       await withTimeout(update(publicRef,{[`rps/choices/${activeRole}`]:choice,[`rps/submissions/${activeRole}`]:true}),`Enviar elección RPS J${activeRole} en ${activeCode}`);
       mark(`J${activeRole} eligió en secreto.`); return true;
-    }catch(error){ console.error(error); await hvPopup(`PIEDRA/PAPEL/TIJERA FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 6E"); return false; }
+    }catch(error){
+      console.warn("[HallValla][PvP RPS] No se pudo confirmar la elección; el jugador puede intentarlo otra vez.",error);
+      mark("No se pudo confirmar la elección. Intenta nuevamente.");
+      return false;
+    }
     finally{ busy=false; syncLocalButtons(); }
   }
 
@@ -3063,7 +3125,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const otherRole=winnerRole===1?2:1; const startingRole=turnChoice==="first"?winnerRole:otherRole; const secondRole=startingRole===1?2:1;
       await withTimeout(update(publicRef,{"phase":"configured","rps/phase":"complete","rps/winnerChoice":turnChoice,"rps/startingRole":startingRole,"startConfig/winnerRole":winnerRole,"startConfig/turnChoice":turnChoice,"startConfig/startingRole":startingRole,"startConfig/secondRole":secondRole,"startConfig/resolved":true,"startConfig/resolvedAt":Date.now()}),`Guardar elección de turno en ${activeCode}`);
       mark(`${getPlayerName(room,winnerRole)} eligió jugar ${turnChoice==="first"?"primero":"segundo"}.`); return true;
-    }catch(error){ console.error(error); await hvPopup(`ELECCIÓN DE TURNO FALLÓ: ${error?.message||error}`,"PvP reconstrucción · Paso 6E"); return false; }
+    }catch(error){ console.error(error); await hvPopup(`ELECCIÓN DE TURNO FALLÓ: ${error?.message||error}`,"PvP"); return false; }
     finally{ busy=false; syncLocalButtons(); }
   }
 
@@ -3121,6 +3183,15 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
 
   async function leaveBattleResultToHome(){
     clearRematchWait();
+    // v206 · Nunca borramos la sala que sirve de prueba al ranking antes de que
+    // /pvpResults haya quedado confirmado. Esto es especialmente importante con BOT.
+    try{
+      const code=normalizeCode(activeCode||((typeof gameId!=="undefined"&&gameId)||""));
+      const state=(typeof publicState!=="undefined"&&publicState)?publicState:null;
+      if(code&&state?.phase==="ended"&&state?.battleEnded===true&&typeof globalThis.hvPvpRankingFlushResult==="function"){
+        await globalThis.hvPvpRankingFlushResult(state,code);
+      }
+    }catch(error){console.warn("[HallValla][PvP Ranking] No se pudo reconfirmar el resultado antes de salir:",error);}
     if(typeof resetBattleState==="function")resetBattleState();
     return leaveRoom();
   }

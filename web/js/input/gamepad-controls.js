@@ -404,6 +404,7 @@ function hvGamepadVisibleModal(){
     ".pvp-ranking-modal:not(.hidden)",".honor-recharge-modal:not(.hidden)",
     ".event-splash-overlay:not(.hidden)",".demigod-summon-modal:not(.hidden)",
     ".card-inspect-modal:not(.hidden)",".battle-menu-panel:not(.hidden)",
+    "#hvModal:not(.hidden)",
     ".battle-outcome-splash.show.awaiting-action",
     ".mobile-rotate-overlay:not(.hidden)",".modal:not(.hidden)"
   ];
@@ -762,6 +763,10 @@ function hvGamepadCloseTopUi(){
   }
   if(modal?.id==="battleMenuPanel"&&typeof closeBattleMenu==="function"){
     closeBattleMenu();hvGamepadClearUiFocus();return true;
+  }
+  if(modal?.id==="battleOutcomeSplash"){
+    const home=modal.querySelector('[data-battle-outcome-action="home"]');
+    if(home&&hvGamepadIsVisible(home)){try{home.click();hvGamepadClearUiFocus();return true;}catch(_){ }}
   }
   if(modal){
     const close=hvGamepadFindCloseControl(modal);

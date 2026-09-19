@@ -500,9 +500,11 @@ function getBattleOutcomeSplashElement(){
   overlay=document.createElement("div");
   overlay.id="battleOutcomeSplash";
   overlay.className="battle-outcome-splash";
+  overlay.setAttribute("role","dialog");
+  overlay.setAttribute("aria-modal","true");
   overlay.setAttribute("aria-live","assertive");
   overlay.setAttribute("aria-atomic","true");
-  overlay.innerHTML='<img class="battle-outcome-splash-art" alt=""><div class="battle-outcome-draw-text" aria-hidden="true">EMPATE</div><div class="battle-outcome-rewards" aria-hidden="true"></div><div class="battle-outcome-actions" aria-hidden="true"><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="map">Ir al mapa</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="retry">Volver a intentarlo</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="rematch">Rematch</button><button class="battle-outcome-action ghost" type="button" data-battle-outcome-action="home">Ir a Home</button></div>';
+  overlay.innerHTML='<img class="battle-outcome-splash-art" alt=""><div class="battle-outcome-draw-text" aria-hidden="true">EMPATE</div><div class="battle-outcome-rewards" aria-hidden="true"></div><div class="battle-outcome-actions" aria-hidden="true"><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="map">Ir al mapa</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="retry">Volver a intentarlo</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="rematch">Rematch</button><button class="battle-outcome-action ghost" type="button" data-battle-outcome-action="home">SALIR A HOME</button></div>';
   const actions=overlay.querySelector(".battle-outcome-actions");
   if(actions){
     actions.addEventListener("click",ev=>{
@@ -578,11 +580,17 @@ function renderPvpBattleOutcomeRewards(reward){
   if(!panel)return;
   panel.innerHTML="";
   panel.setAttribute("aria-hidden","true");
-  if(!reward?.awarded)return;
   const rows=[];
-  rows.push(`<div class="battle-outcome-reward-item"><span class="battle-outcome-reward-label">EXP PvP</span><strong class="battle-outcome-reward-value">+${Math.max(0,Number(reward.xp||0))}</strong></div>`);
-  if(Number(reward.levelUps||0)>0)rows.push(`<div class="battle-outcome-reward-item"><span class="battle-outcome-reward-label">Nivel</span><strong class="battle-outcome-reward-value">+${Number(reward.levelUps||0)}</strong></div>`);
-  panel.innerHTML=`<div class="battle-outcome-reward-title">Recompensa PvP</div><div class="battle-outcome-reward-list">${rows.join("")}</div>`;
+  if(reward?.awarded){
+    rows.push(`<div class="battle-outcome-reward-item"><span class="battle-outcome-reward-label">EXP PvP</span><strong class="battle-outcome-reward-value">+${Math.max(0,Number(reward.xp||0))}</strong></div>`);
+    if(Number(reward.levelUps||0)>0)rows.push(`<div class="battle-outcome-reward-item"><span class="battle-outcome-reward-label">Nivel</span><strong class="battle-outcome-reward-value">+${Number(reward.levelUps||0)}</strong></div>`);
+  }
+  if(Number.isFinite(Number(reward?.rankingDelta))){
+    const delta=Number(reward.rankingDelta||0);
+    rows.push(`<div class="battle-outcome-reward-item"><span class="battle-outcome-reward-label">Ranking PvP</span><strong class="battle-outcome-reward-value">${delta>0?"+":""}${delta}</strong></div>`);
+  }
+  if(!rows.length)return;
+  panel.innerHTML=`<div class="battle-outcome-reward-title">Resultado PvP</div><div class="battle-outcome-reward-list">${rows.join("")}</div>`;
   panel.setAttribute("aria-hidden","false");
 }
 function hideBattleOutcomeSplash(immediate=false){
@@ -638,12 +646,17 @@ function showBattleOutcomeSplash(result,{adventure=false,online=false,botPvp=fal
     const mapBtn=actions.querySelector('[data-battle-outcome-action="map"]');
     const retryBtn=actions.querySelector('[data-battle-outcome-action="retry"]');
     const rematchBtn=actions.querySelector('[data-battle-outcome-action="rematch"]');
+    const homeBtn=actions.querySelector('[data-battle-outcome-action="home"]');
     if(mapBtn)mapBtn.hidden=!adventure||result!=="victory";
     if(retryBtn)retryBtn.hidden=!adventure||result==="victory";
     if(rematchBtn)rematchBtn.hidden=!online||botPvp;
+    if(homeBtn){homeBtn.hidden=false;homeBtn.disabled=false;homeBtn.textContent=online?"SALIR A HOME":"Ir a Home";}
     if(adventure)renderBattleOutcomeRewards(result,adventure);
     actions.setAttribute("aria-hidden","false");
     overlay.classList.add("awaiting-action");
+    // En PvP contra BOT el único control necesario para no quedar atrapado es Home.
+    // Lo enfocamos al terminar para que A/Enter funcionen incluso sin mover cursor.
+    if(online&&botPvp&&homeBtn)requestAnimationFrame(()=>{try{homeBtn.focus({preventScroll:true});}catch(_){try{homeBtn.focus();}catch(__){ }}});
   }
   overlay.classList.add("show");
   if(!adventure&&!online){
@@ -999,8 +1012,9 @@ function maybeShowBattleResult(){
     const adventure=publicState.mode==="adventure"&&!botPvp;
     const online=publicState.mode==="online"||botPvp;
     const pvpXpReward=online&&typeof awardLocalPvpXpOnce==="function"?awardLocalPvpXpOnce(publicState,gameId):null;
+    const rankingDelta=online?(draw?0:(win?3:-2)):null;
     showBattleOutcomeSplash(draw?"draw":(win?"victory":"defeat"),{adventure,online,botPvp});
-    if(online)renderPvpBattleOutcomeRewards(pvpXpReward);
+    if(online)renderPvpBattleOutcomeRewards({...((pvpXpReward&&typeof pvpXpReward==="object")?pvpXpReward:{}),rankingDelta});
     if(online&&typeof globalThis.hvPvpRankingRecordResult==="function"){
       void globalThis.hvPvpRankingRecordResult(publicState,gameId);
     }

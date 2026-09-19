@@ -1,3 +1,24 @@
+## v206 — Ranking PvP BOT + resultado limpio RPS
+
+- Se corrige la causa del PvP BOT sin puntos: el combate TR contra IA se resolvía localmente y `/pvpResults` intentaba registrarse antes de que Firebase tuviera `phase=ended`, `battleEnded=true`, ganador y `endedAt`.
+- Al finalizar contra BOT se persiste primero un cierre autoritativo mínimo en `games/{code}/public`, se confirma por lectura y solo después se registra el resultado inmutable del ranking.
+- Antes de `SALIR A HOME` se vuelve a confirmar el resultado y se espera su escritura; la sala ya no puede borrarse antes de que queden guardados G/P/E y los puntos PvP.
+- Victoria = `+3`, derrota = `-2`, empate = `0`; los BOT continúan excluidos como filas del ranking público.
+- La pantalla final PvP muestra tanto `EXP PvP` como `Ranking PvP` para que ambos progresos sean visibles.
+- Se elimina la invocación del modal técnico de Piedra/Papel/Tijera. Las pulsaciones físicas duplicadas no generan popup, mensaje de reconstrucción ni basura visual.
+- Los demás errores PvP que sí requieren aviso ya no exponen el título interno «PvP reconstrucción · Paso 6E».
+- Build `20260919.206`, cache `hallvalla-runtime-v206` y hashes de Bootstrap/Service Worker regenerados.
+- Diagnóstico: `docs/FIX_PVP_RANKING_BOT_RESULT_CLEAN_RPS_v206.md`.
+
+## v205 — Resultado PvP, gamepad y coherencia de caché
+
+- RPS ahora es idempotente: una pulsación/clic repetido después de enviar la elección se ignora y ya no abre el falso error «Tu elección ya fue enviada».
+- El modal genérico `#hvModal` se declara como diálogo real y queda integrado al control universal de gamepad; A confirma el botón enfocado.
+- El resultado canónico de batalla siempre ofrece `SALIR A HOME` en PvP contra BOT; recibe foco automáticamente y B también puede regresar a Home.
+- El resultado de batalla queda por encima de overlays heredados para impedir pantallas sin salida.
+- Se corrige la integridad de caché: build `20260919.205`, cache `hallvalla-runtime-v205` y tablas de hashes de Bootstrap/Service Worker regeneradas desde los bytes finales.
+- Diagnóstico completo: `docs/FIX_PVP_RESULT_GAMEPAD_CACHE_v205.md`.
+
 # HallValla — private source / public game distribution
 
 Repository layout prepared for HallValla private-source/public-game distribution.
