@@ -82,7 +82,6 @@ on("openMissionsFromNotificationsBtn","click",()=>{closeNotifications();openMiss
 on("openDeckBuilderFromNotificationsBtn","click",()=>{closeNotifications();openDeckBuilder();});
 on("closeDeckBuilderBtn","click",closeDeckBuilder);
 function resetDeckBuilderCollectionPageAndRender(){deckBuilderCollectionPage=0;renderDeckBuilder();}
-on("deckSearchInput","input",resetDeckBuilderCollectionPageAndRender);
 on("deckTypeFilter","change",resetDeckBuilderCollectionPageAndRender);
 on("deckOwnershipFilter","change",resetDeckBuilderCollectionPageAndRender);
 on("deckRarityFilter","change",resetDeckBuilderCollectionPageAndRender);

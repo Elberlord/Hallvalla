@@ -2462,6 +2462,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const ownQueueRef=ref(db,`${RANDOM_QUEUE_PATH}/${myUid}`);
     pvpBotFallbackInFlight=true;
     let selfClaimed=false;
+    let fallbackSucceeded=false;
     let botCode="";
     let botPublicRef=null;
     let botPrivateRef=null;
@@ -2484,20 +2485,27 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
           name:getProfileNameSafe(1),level:getProfileLevelSafe(),leagueKey,
           leagueName:String(league?.name||"Piedra"),pvpPoints:Number(league?.points||0),claimedBy:"",claimedAt:0
         }),`Reparar cola propia antes del BOT ${waitingCode}`,5000);
-      }else if(String(existingOwn.claimedBy||"")===myUid&&Date.now()-Number(existingOwn.claimedAt||0)>8000){
-        await withTimeout(update(ownQueueRef,{claimedBy:"",claimedAt:0}),`Liberar claim BOT obsoleto ${waitingCode}`,4000);
       }
 
-      const claimAt=Date.now();
-      const claim=await withTimeout(runTransaction(ownQueueRef,current=>{
-        if(!current||String(current.uid||"")!==myUid)return;
-        if(String(current.leagueKey||"")!==leagueKey)return;
-        if(String(current.claimedBy||""))return;
-        return Object.assign({},current,{claimedBy:myUid,claimedAt:claimAt});
-      }),`Reservar fallback BOT ${waitingCode}`,6000);
-      if(!claim?.committed){pvpMatchDiag("fallback-self-claim-not-committed");return false;}
-      selfClaimed=true;
-      pvpMatchDiag("fallback-self-claim-ok");
+      // Si un intento anterior del mismo cliente dejó la cola auto-reservada,
+      // reutilizamos esa reserva. El antiguo flujo intentaba reservarla otra vez,
+      // la transacción devolvía undefined y el matchmaking quedaba en bucle.
+      if(existingOwn&&String(existingOwn.claimedBy||"")===myUid){
+        selfClaimed=true;
+        pvpMatchDiag("fallback-self-claim-reused",{ageMs:Math.max(0,Date.now()-Number(existingOwn.claimedAt||0))});
+      }else{
+        const claimAt=Date.now();
+        const claim=await withTimeout(runTransaction(ownQueueRef,current=>{
+          if(!current||String(current.uid||"")!==myUid)return;
+          if(String(current.leagueKey||"")!==leagueKey)return;
+          const claimedBy=String(current.claimedBy||"");
+          if(claimedBy&&claimedBy!==myUid)return;
+          return Object.assign({},current,{claimedBy:myUid,claimedAt:claimedBy===myUid?Number(current.claimedAt||claimAt):claimAt});
+        }),`Reservar fallback BOT ${waitingCode}`,6000);
+        if(!claim?.committed){pvpMatchDiag("fallback-self-claim-not-committed");return false;}
+        selfClaimed=true;
+        pvpMatchDiag("fallback-self-claim-ok");
+      }
 
       const waitingPublicRef=ref(db,`games/${waitingCode}/public`);
       const waitingSnap=await withTimeout(get(waitingPublicRef),`Confirmar sala antes del BOT ${waitingCode}`,5000);
@@ -2618,6 +2626,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       $("mainMenu")?.classList.add("hidden");
       if(typeof enterGame!=="function")throw new Error("El motor real no expuso enterGame().");
       pvpMatchDiag("fallback-success",{room:botCode,rival:botName,league:String(league?.name||"Piedra")});
+      fallbackSucceeded=true;
       enterGame(botCode,1);
       mark(`Rival encontrado · ${botName} · Liga ${String(league?.name||"Piedra")}.`);
       return true;
@@ -2627,15 +2636,22 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       setText("pvpRoomMessage","No se pudo preparar el rival. Reintentando...");
       if(botPrivateRef){try{await remove(botPrivateRef);}catch(_){ }}
       if(botPublicRef){try{await remove(botPublicRef);}catch(_){ }}
-      if(selfClaimed&&randomMatchSearching){
-        try{await runTransaction(ownQueueRef,current=>{
-          if(!current||String(current.uid||"")!==myUid||String(current.claimedBy||"")!==myUid)return;
-          return Object.assign({},current,{claimedBy:"",claimedAt:0});
-        });}catch(_){ }
-      }
       mark(`No se pudo iniciar BOT PvP: ${error?.message||error}`);
       return false;
     }finally{
+      // Cualquier salida anticipada posterior a nuestra auto-reserva debe liberarla.
+      // Así un fallo de validación no envenena los reintentos siguientes.
+      if(selfClaimed&&!fallbackSucceeded&&randomMatchSearching){
+        try{
+          await runTransaction(ownQueueRef,current=>{
+            if(!current||String(current.uid||"")!==myUid||String(current.claimedBy||"")!==myUid)return;
+            return Object.assign({},current,{claimedBy:"",claimedAt:0});
+          });
+          pvpMatchDiag("fallback-self-claim-released");
+        }catch(error){
+          pvpMatchDiag("fallback-self-claim-release-failed",{message:String(error?.message||error)});
+        }
+      }
       pvpBotFallbackInFlight=false;
       syncLocalButtons();
     }
