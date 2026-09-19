@@ -1,6 +1,6 @@
 # HallValla v205 — PvP result / gamepad / cache integrity
 
-- RPS submission is idempotent: repeated A/click while the same choice is already in Firebase is ignored instead of showing a reconstruction error.
+- Duplicate pre-duel input is handled idempotently instead of showing a reconstruction error.
 - `#hvModal` is now a real `role=dialog` / `aria-modal=true` modal and is explicitly recognized by the universal gamepad layer. A confirms the focused action.
 - Battle result is a top-level modal with an explicit `SALIR A HOME` action. In PvP BOT it receives focus automatically; B also exits through Home.
 - Canonical battle-result UI is placed above legacy overlays.

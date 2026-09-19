@@ -22,15 +22,15 @@
 </script>
 <script>
   // v181: esta página ES el juego lógico. index.html es el shell físico.
-  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260919.206"});
+  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260919.207"});
   document.documentElement.dataset.hvDesignStage="1366x636";
 </script>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260919.206">
-<meta name="hallvalla-build" content="v8_MODULAR_20260919.206">
+<meta name="hallvalla-version" content="20260919.207">
+<meta name="hallvalla-build" content="v8_MODULAR_20260919.207">
 <meta name="hallvalla-build-name" content="Design Stage fijo 1366×636 · v192 arquitectura modular · canon v191 preservado">
-<link rel="stylesheet" href="styles.css?h=13bde35a13df"/>
+<link rel="stylesheet" href="styles.css?h=531ed7a4a678"/>
 
 <link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.90">
 <link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.90">
@@ -642,44 +642,6 @@
         <button id="pvpLeaveBtn" class="pvp-room-hitbox pvp-room-leave-btn" type="button"><span class="hv-sr-only">Salir de la sala</span></button>
       </div>
       <div id="pvpRoomMessage" class="pvp-room-message hv-sr-only">Esperando rival...</div>
-    </section>
-    <section id="pvpRpsOverlay" class="pvp-rps-overlay hidden" aria-live="polite" aria-label="Piedra Papel Tijera">
-      <div id="pvpRpsStageChoose" class="pvp-rps-stage">
-        <div class="pvp-rps-copy">
-          <h3 class="pvp-rps-title">Piedra · Papel · Tijera</h3>
-          <p id="pvpRpsSubtitle" class="pvp-rps-subtitle">Ambos jugadores están listos. Elige en secreto.</p>
-        </div>
-        <div class="pvp-rps-choices">
-          <button id="pvpRpsRockBtn" class="pvp-rps-choice" type="button" data-rps-choice="rock" aria-label="Piedra">
-            <img data-hv-src="assets/ui/pvp_rps/rps_rock.webp" data-hv-asset-group="pvp-rps" decoding="async" alt="Piedra">
-            <span>PIEDRA</span>
-          </button>
-          <button id="pvpRpsPaperBtn" class="pvp-rps-choice" type="button" data-rps-choice="paper" aria-label="Papel">
-            <img data-hv-src="assets/ui/pvp_rps/rps_paper.webp" data-hv-asset-group="pvp-rps" decoding="async" alt="Papel">
-            <span>PAPEL</span>
-          </button>
-          <button id="pvpRpsScissorsBtn" class="pvp-rps-choice" type="button" data-rps-choice="scissors" aria-label="Tijera">
-            <img data-hv-src="assets/ui/pvp_rps/rps_scissors.webp" data-hv-asset-group="pvp-rps" decoding="async" alt="Tijera">
-            <span>TIJERA</span>
-          </button>
-        </div>
-        <div id="pvpRpsChooseStatus" class="pvp-rps-status">Esperando elección.</div>
-      </div>
-      <div id="pvpRpsStageResult" class="pvp-rps-stage hidden">
-        <img id="pvpRpsResultArt" class="pvp-rps-result-art" data-hv-src="assets/ui/pvp_rps/result_rock_wins.webp" data-hv-asset-group="pvp-rps-result" decoding="async" alt="Resultado piedra papel tijera">
-        <div class="pvp-rps-result-copy">
-          <div id="pvpRpsResultHeadline" class="pvp-rps-result-headline">RESULTADO</div>
-          <div id="pvpRpsResultSubline" class="pvp-rps-result-subline">Esperando resolución...</div>
-        </div>
-        <div id="pvpRpsDecisionPanel" class="pvp-rps-decision hidden">
-          <div class="pvp-rps-decision-head">Elige tu turno</div>
-          <div class="pvp-rps-turn-actions">
-            <button id="pvpRpsChooseFirstBtn" class="pvp-rps-turn-btn" type="button">PRIMERO</button>
-            <button id="pvpRpsChooseSecondBtn" class="pvp-rps-turn-btn" type="button">SEGUNDO</button>
-          </div>
-        </div>
-        <div id="pvpRpsWaitingPanel" class="pvp-rps-waiting hidden">Esperando la decisión del ganador...</div>
-      </div>
     </section>
   </div>
 </div>
@@ -1519,6 +1481,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=6b9e9da87616"></script>
+<script type="module" src="js/bootstrap-loader.js?h=000feb01b4e1"></script>
 </body>
 </html>

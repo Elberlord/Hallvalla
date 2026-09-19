@@ -317,7 +317,7 @@ HALLVALLA · PVP REBUILD CLEAN ROOM · PASO 6I · DUELO COMPLETO
 -------------------------------------------------------------------------------
 Base estable conservada:
 - Paso 6H validado: motor real, perspectiva correcta, INVOCAR/MOV/DEF/ATTK, pasivos, Fireball, Quemadura y Splash Events.
-- Lobby, reglas, LISTO, Piedra/Papel/Tijera y orden de turno permanecen intactos.
+- Lobby, reglas, LISTO y sincronización privada permanecen intactos; matchmaking entra directo al duelo.
 
 Objetivo de este paso:
 - abrir el duelo completo sobre el mismo motor real usado por PvE;
@@ -467,14 +467,10 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   let activePvpBotProfile=null;
   let pvpBotFallbackTimer=null;
   let pvpBotFallbackAttempts=0;
-  let pvpBotRpsChoiceTimer=null;
-  let pvpBotRpsDecisionTimer=null;
   let pvpBotBattleLaunchTimer=null;
   let pvpBotBattleLaunchInFlight=false;
 
   function clearPvpBotPreludeTimers(){
-    if(pvpBotRpsChoiceTimer){clearTimeout(pvpBotRpsChoiceTimer);pvpBotRpsChoiceTimer=null;}
-    if(pvpBotRpsDecisionTimer){clearTimeout(pvpBotRpsDecisionTimer);pvpBotRpsDecisionTimer=null;}
     if(pvpBotBattleLaunchTimer){clearTimeout(pvpBotBattleLaunchTimer);pvpBotBattleLaunchTimer=null;}
     pvpBotBattleLaunchInFlight=false;
   }
@@ -565,9 +561,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     if(selector)selector.classList.toggle("hidden",!isSelect);
     if(matchmaking)matchmaking.classList.toggle("hidden",!isRandom);
     if(art){
-      const rpsActive=art.classList.contains("pvp-rps-active");
-      art.classList.toggle("hidden",!(isWager||(isRandom&&rpsActive)));
-      art.classList.toggle("hv-random-rps-shell",isRandom&&rpsActive);
+      art.classList.toggle("hidden",!isWager);
+      art.classList.remove("pvp-room-active");
     }
   }
   function showOnlineModeSelect(){
@@ -645,9 +640,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         const stillReady=getPreparedFlag(fresh,1)&&getPreparedFlag(fresh,2)&&!!String(fresh?.playerSlots?.player1Uid||"")&&!!String(fresh?.playerSlots?.player2Uid||"");
         if(!stillReady||getReadyFlag(fresh,role)||fresh?.startConfig?.resolved===true)return;
         await set(ref(db,`games/${code}/public/lobbyReady/${role}`),true);
-        mark(`Matchmaking · J${role} listo automáticamente después de la presentación VS.`);
+        mark(`Matchmaking · J${role} listo automáticamente para entrada directa al duelo.`);
       }catch(error){console.warn(`[HallValla][${STEP}] Auto-LISTO de matchmaking falló:`,error);}
-    },2300);
+    },180);
   }
 
   function syncLocalButtons(){
@@ -1325,8 +1320,15 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }finally{ turnResourceInFlight=false; }
   }
 
-  function defaultRpsState(round=0){ return {phase:"idle",round,notice:"",choices:{1:null,2:null},submissions:{1:false,2:false},winnerRole:0,resultKey:"",winnerChoice:"",startingRole:0}; }
-  function defaultStartConfig(){ return {winnerRole:0,turnChoice:"",startingRole:0,secondRole:0,resolved:false,resolvedAt:0}; }
+  function defaultStartConfig(){ return {startingRole:0,secondRole:0,resolved:false,resolvedAt:0,source:"direct_matchmaking"}; }
+  function resolveDirectStartConfig(room,code){
+    const p1Uid=String(room?.playerSlots?.player1Uid||"");
+    const p2Uid=String(room?.playerSlots?.player2Uid||"");
+    if(!p1Uid||!p2Uid)return defaultStartConfig();
+    const seed=`${String(code||room?.code||"")}|${p1Uid}|${p2Uid}|direct-start`;
+    const startingRole=(Math.abs(hashText6c(seed))%2)+1;
+    return {startingRole,secondRole:startingRole===1?2:1,resolved:true,resolvedAt:Date.now(),source:"direct_matchmaking"};
+  }
   function buildDefaultRules(){ return {timerEnabled:false, stakeMode:"none", goldAmount:500, cardEntryFee:500}; }
   function getRules(room){ return Object.assign({},buildDefaultRules(),room?.settings||{}); }
   function getRulesSummary(rules){
@@ -1352,8 +1354,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       turn:1,
       turnPhase:"prebattle",
       combatEnabled:false,
-      winnerRole:Number(startCfg.winnerRole||0),
-      winnerTurnChoice:String(startCfg.turnChoice||""),
       players:{
         1:{uid:p1Uid,name:getPlayerName(room,1),prepared:getPreparedFlag(room,1),ready:getReadyFlag(room,1)},
         2:{uid:p2Uid,name:getPlayerName(room,2),prepared:getPreparedFlag(room,2),ready:getReadyFlag(room,2)}
@@ -1394,14 +1394,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     if(String(room?.phase||"")!=="arena_ready"||!validateArenaBootstrap(room)) return false;
     const arena=room.arenaBootstrap;
     const firstEntry=arenaEnteredCode!==String(arena.matchCode||activeCode||"");
-    // El antiguo gate/modal de inicio deja de mostrarse. Mientras se prepara el
-    // motor real se conserva el desenlace de Piedra/Papel/Tijera; el siguiente
-    // visual que toma la pantalla completa es el VS animado.
+    // No existe ritual intermedio: el siguiente visual a pantalla completa
+    // es el VS animado y después comienza el duelo.
     hide("pvpStep5ArenaGate",true);
     const shell=$("gameShell");
     if(shell){shell.classList.add("hidden");shell.classList.remove("pvp-step5-preview");}
     arenaEnteredCode=String(arena.matchCode||activeCode||"");
-    if(firstEntry) mark(`PASO 5 · orden resuelto para ${arenaEnteredCode}; preparando VS previo al combate.`);
+    if(firstEntry) mark(`PASO 5 · rival confirmado para ${arenaEnteredCode}; preparando VS previo al combate.`);
     return true;
   }
 
@@ -1411,7 +1410,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     if(!startCfg.resolved) return;
     if(String(room?.phase||"")==="arena_ready"&&validateArenaBootstrap(room)){ clearArenaLaunchTimer(); return; }
     clearArenaLaunchTimer();
-    const revealUntil=Math.max(Date.now(),Number(startCfg.resolvedAt||Date.now())+2400);
+    const revealUntil=Math.max(Date.now(),Number(startCfg.resolvedAt||Date.now())+120);
     arenaLaunchTimer=setTimeout(async()=>{
       arenaLaunchTimer=null;
       if(activeRole!==1||code!==activeCode||phaseWriteInFlight) return;
@@ -1480,7 +1479,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const phase=String(combat.turnPhase||"turn_start");
     const myTurn=myRole===active;
     clearArenaLaunchTimer();
-    setRpsVisualActive(false);
     $("onlineLobby")?.classList.add("hidden");
     $("mainMenu")?.classList.add("hidden");
     globalThis.hvHydrateAssetGroup?.("battle");
@@ -1845,7 +1843,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
             }
             return true;
           }
-          setRpsVisualActive(false);hide("pvpStep5ArenaGate",true);hide("pvpStep6aCombatGate",true);
+          hide("pvpStep5ArenaGate",true);hide("pvpStep6aCombatGate",true);
           $("onlineLobby")?.classList.add("hidden");$("mainMenu")?.classList.add("hidden");
           const shell=$("gameShell");
           if(shell){shell.classList.add("hidden");shell.classList.remove("pvp-step5-preview","pvp-step6a-active","pvp-step6b-active","pvp-step6d-active");}
@@ -1895,7 +1893,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       clearArenaLaunchTimer();clearCombatLaunchTimer();clearRealEngineStartTimer6e();
       detachRoomListener();detachOwnPrivateListener();
       globalThis.hideHallvallaPreBattleVs?.();
-      setRpsVisualActive(false);resetRpsUi();hide("pvpStep5ArenaGate",true);hide("pvpStep6aCombatGate",true);
+      hide("pvpStep5ArenaGate",true);hide("pvpStep6aCombatGate",true);
       const shell=$("gameShell");
       if(shell){
         shell.classList.remove("hidden","pvp-step5-preview","pvp-step6a-active","pvp-step6b-active","pvp-step6d-active");
@@ -1994,8 +1992,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     if(panel) panel.classList.toggle("hidden",!visible||randomFlow);
     if(art){
       art.classList.toggle("pvp-room-active",!!visible&&!randomFlow);
-      const rpsActive=art.classList.contains("pvp-rps-active");
-      art.classList.toggle("hidden",!(onlineFlowMode==="wager"||(randomFlow&&rpsActive)));
+      art.classList.toggle("hidden",onlineFlowMode!=="wager");
     }
   }
   function setPresence(id,state){ const n=$(id); if(!n) return; n.classList.toggle("connected",state==="connected"); n.classList.toggle("waiting",state!=="connected"); }
@@ -2020,111 +2017,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }catch(_){ }
   }
 
-  function compareRps(choice1,choice2){
-    if(!choice1||!choice2||choice1===choice2) return {tie:true};
-    const beats={rock:"scissors",paper:"rock",scissors:"paper"};
-    if(beats[choice1]===choice2) return {tie:false,winnerRole:1,resultKey:choice1};
-    return {tie:false,winnerRole:2,resultKey:choice2};
-  }
-  function resultCopy(resultKey){
-    if(resultKey==="rock") return {headline:"PIEDRA VENCE",sub:"La piedra quiebra la tijera.",img:"assets/ui/pvp_rps/result_rock_wins.webp"};
-    if(resultKey==="paper") return {headline:"PAPEL VENCE",sub:"El pergamino envuelve la piedra.",img:"assets/ui/pvp_rps/result_paper_wins.webp"};
-    return {headline:"TIJERA VENCE",sub:"La tijera corta el pergamino.",img:"assets/ui/pvp_rps/result_scissors_wins.webp"};
-  }
-  function setRpsVisualActive(active){
-    const art=document.querySelector("#onlineLobby .online-modal-art");
-    const randomFlow=onlineFlowMode==="random";
-    if(art){
-      art.classList.toggle("pvp-rps-active",!!active);
-      art.classList.toggle("hv-random-rps-shell",randomFlow&&!!active);
-      art.classList.toggle("hidden",!(onlineFlowMode==="wager"||(randomFlow&&!!active)));
-    }
-    if(randomFlow){
-      const matchmaking=$("onlineMatchmakingView");
-      if(matchmaking)matchmaking.classList.toggle("hidden",!!active);
-      const selector=$("onlineModeSelect");
-      if(selector)selector.classList.add("hidden");
-    }
-  }
-  function resetRpsUi(){
-    setRpsVisualActive(false);
-    hide("pvpRpsOverlay",true); hide("pvpRpsStageChoose",true); hide("pvpRpsStageResult",true); hide("pvpRpsDecisionPanel",true); hide("pvpRpsWaitingPanel",true);
-    setText("pvpRpsSubtitle","Ambos jugadores están listos. Elige en secreto."); setText("pvpRpsChooseStatus","Esperando elección.");
-    for(const id of ["pvpRpsRockBtn","pvpRpsPaperBtn","pvpRpsScissorsBtn"]){ const btn=$(id); if(btn){ btn.disabled=false; btn.classList.remove("is-selected"); } }
-    for(const id of ["pvpRpsChooseFirstBtn","pvpRpsChooseSecondBtn"]){ const btn=$(id); if(btn) btn.disabled=false; }
-  }
-
-  function renderRpsUi(room){
-    const bothPresent=!!String(room?.playerSlots?.player1Uid||"") && !!String(room?.playerSlots?.player2Uid||"");
-    const bothPrepared=getPreparedFlag(room,1)&&getPreparedFlag(room,2)&&bothPresent;
-    const bothReady=bothPrepared&&getReadyFlag(room,1)&&getReadyFlag(room,2);
-    const phase=String(room?.phase||"waiting");
-    const rps=room?.rps||defaultRpsState(0);
-    const startCfg=Object.assign({},defaultStartConfig(),room?.startConfig||{});
-    if(!bothReady && !startCfg.resolved){ resetRpsUi(); return; }
-    if(phase!=="rps" && !startCfg.resolved){ resetRpsUi(); return; }
-    globalThis.hvHydrateAssetGroup?.("pvp-rps");
-
-    const myRole=Number(activeRole||0), otherRole=myRole===1?2:1;
-    if(startCfg.resolved){
-      setRpsVisualActive(true);
-      hide("pvpRpsOverlay",false); hide("pvpRpsStageChoose",true); hide("pvpRpsStageResult",false);
-      const meta=resultCopy(String(rps.resultKey||"rock"));
-      const art=$("pvpRpsResultArt"); if(art){ art.src=meta.img; art.alt=meta.headline; }
-      hide("pvpRpsDecisionPanel",true); hide("pvpRpsWaitingPanel",false);
-      const waiting=$("pvpRpsWaitingPanel");
-      if(myRole===Number(startCfg.startingRole||0)){
-        setText("pvpRpsResultHeadline","JUEGAS PRIMERO");
-        setText("pvpRpsResultSubline",meta.sub);
-        if(waiting) waiting.textContent="Tu turno será el primero cuando comience la batalla.";
-      }else{
-        setText("pvpRpsResultHeadline","JUEGAS SEGUNDO");
-        setText("pvpRpsResultSubline",meta.sub);
-        if(waiting) waiting.textContent="Tu turno será el segundo cuando comience la batalla.";
-      }
-      return;
-    }
-
-    if(String(rps.phase||"idle")==="choosing"){
-      setRpsVisualActive(true);
-      hide("pvpRpsOverlay",false); hide("pvpRpsStageChoose",false); hide("pvpRpsStageResult",true);
-      const myChoice=String(rps?.choices?.[myRole]||rps?.choices?.[String(myRole)]||"");
-      const otherChoice=String(rps?.choices?.[otherRole]||rps?.choices?.[String(otherRole)]||"");
-      const ownSubmitted=!!myChoice; const otherSubmitted=!!otherChoice;
-      const subtitle=String(rps.notice||"") || "Ambos jugadores están listos. Elige en secreto.";
-      setText("pvpRpsSubtitle",subtitle);
-      setText("pvpRpsChooseStatus", ownSubmitted ? (otherSubmitted?"Resolviendo...":"Tu elección está fija. Esperando rival...") : "Haz clic sobre tu elección.");
-      const map={rock:"pvpRpsRockBtn",paper:"pvpRpsPaperBtn",scissors:"pvpRpsScissorsBtn"};
-      for(const [choice,id] of Object.entries(map)){
-        const btn=$(id); if(!btn) continue;
-        btn.disabled=ownSubmitted||busy;
-        btn.classList.toggle("is-selected", myChoice===choice);
-      }
-      return;
-    }
-
-    if(String(rps.phase||"")==="winner_choice"){
-      setRpsVisualActive(true);
-      hide("pvpRpsOverlay",false); hide("pvpRpsStageChoose",true); hide("pvpRpsStageResult",false);
-      const meta=resultCopy(String(rps.resultKey||"rock"));
-      const art=$("pvpRpsResultArt"); if(art){ art.src=meta.img; art.alt=meta.headline; }
-      const winnerRole=Number(rps.winnerRole||0);
-      if(activeRole===winnerRole){
-        setText("pvpRpsResultHeadline","ELIGE TU TURNO");
-        setText("pvpRpsResultSubline",`${meta.sub} Decide si quieres jugar primero o segundo.`);
-        hide("pvpRpsDecisionPanel",false); hide("pvpRpsWaitingPanel",true);
-      }else{
-        setText("pvpRpsResultHeadline","ESPERA");
-        setText("pvpRpsResultSubline",meta.sub);
-        hide("pvpRpsDecisionPanel",true); hide("pvpRpsWaitingPanel",false);
-        const waiting=$("pvpRpsWaitingPanel"); if(waiting) waiting.textContent="Espera a que el ganador decida si jugará primero o segundo.";
-      }
-      return;
-    }
-
-    resetRpsUi();
-  }
-
   function renderRoomSnapshot(room,code=activeCode){
     room=room&&typeof room==="object"?room:{}; roomCache=room;
     const roomPhase=String(room?.phase||"");
@@ -2142,9 +2034,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       renderRandomMatchmakingUi(room);
       if(bothPrepared&&room?.startConfig?.resolved!==true)scheduleRandomAutoReady(room,String(code||activeCode||""));
     }
-    // PERF3: cuando ambos mazos privados ya están preparados, RPS es el siguiente
-    // paso predecible. Cuando ambos marcan LISTO, el combate ya es inminente.
-    if(bothPrepared)globalThis.hvPrefetchAssetGroup?.("pvp-rps");
+    // Cuando ambos mazos privados están preparados, el siguiente paso es el duelo.
     if(bothReady){
       globalThis.hvPrefetchAssetGroup?.("battle");
       try{
@@ -2162,7 +2052,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     setPresence("pvpRoomPlayer1Presence",p1Uid?"connected":"waiting"); setPresence("pvpRoomPlayer2Presence",p2Uid?"connected":"waiting");
     setReadyCheck(1,p1Ready); setReadyCheck(2,p2Ready);
     renderRules(room);
-    renderRpsUi(room);
     const combatActive=renderStep6aCombat(room);
     const arenaReady=combatActive?false:renderStep5ArenaPreview(room);
 
@@ -2180,76 +2069,15 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }else if(!bothPrepared){
       setText("pvpRoomMessage","Paso 4: preparando el mazo privado de ambos jugadores...");
     }else if(startCfg.resolved){
-      setText("pvpRoomMessage",combatActive?`PASO 6D correcto: cartas jugables + mano/Honor privados + fases ACTIVE; ${getPlayerName(room,startCfg.startingRole)} es el jugador activo.`:(arenaReady?`Paso 5 confirmado: arena conectada. Preparando ambos clientes para el motor real de HallValla...`:`Mostrando desenlace y preparando entrada sincronizada al duelo...`));
-    }else if(String(room?.phase||"")==="rps"){
-      setText("pvpRoomMessage","Ambos están LISTOS. Resolviendo Piedra/Papel/Tijera...");
+      setText("pvpRoomMessage",combatActive?`Duelo activo: ${getPlayerName(room,startCfg.startingRole)} recibió la prioridad inicial.`:(arenaReady?`Arena conectada. Preparando ambos clientes para el duelo...`:`Rival confirmado. Entrando directamente al duelo...`));
     }else if(bothReady){
-      setText("pvpRoomMessage","Ambos están LISTOS. Preparando Piedra/Papel/Tijera...");
+      setText("pvpRoomMessage","Ambos están listos. Entrando directamente al duelo...");
     }else{
       setText("pvpRoomMessage","Paso 4.5: privados preparados. El host puede definir reglas antes de marcar LISTO.");
     }
     syncLocalButtons();
   }
 
-  function pvpBotRpsChoiceForRound(room,code){
-    const choices=["rock","paper","scissors"];
-    const round=Math.max(1,Number(room?.rps?.round||1));
-    const seed=`${String(code||"")}|${String(room?.pvpBotProfileId||"bot")}|${String(room?.pvpBotLeagueKey||"stone")}|rps|${round}`;
-    return choices[Math.abs(hashText6c(seed))%choices.length]||"rock";
-  }
-  function pvpBotTurnChoice(room,code){
-    const style=String(room?.pvpBotStyle||"balanced");
-    const round=Math.max(1,Number(room?.rps?.round||1));
-    const roll=Math.abs(hashText6c(`${String(code||"")}|${String(room?.pvpBotProfileId||"bot")}|turn|${round}`))%100;
-    if(style==="pressure"||style==="mobility")return roll<68?"first":"second";
-    if(style==="defense"||style==="control")return roll<62?"second":"first";
-    return roll<50?"first":"second";
-  }
-  function schedulePvpBotRpsResponse(room,code){
-    if(room?.pvpBotMatch!==true||code!==activeCode||activeRole!==1)return;
-    const rps=Object.assign({},defaultRpsState(0),room?.rps||{});
-    const startCfg=Object.assign({},defaultStartConfig(),room?.startConfig||{});
-    if(String(room?.phase||"")==="rps"&&String(rps.phase||"")==="choosing"&&!String(rps?.choices?.[2]||rps?.choices?.["2"]||"")&&!pvpBotRpsChoiceTimer){
-      const delay=420+(Math.abs(hashText6c(`${code}|${rps.round}|bot-rps-delay`))%780);
-      pvpBotRpsChoiceTimer=setTimeout(async()=>{
-        pvpBotRpsChoiceTimer=null;
-        if(code!==activeCode||activeRole!==1)return;
-        try{
-          const publicRef=ref(db,`games/${code}/public`);
-          const snap=await get(publicRef);
-          if(!snap.exists())return;
-          const fresh=snap.val()||{};
-          const freshRps=fresh?.rps||{};
-          if(fresh?.pvpBotMatch!==true||String(fresh?.phase||"")!=="rps"||String(freshRps?.phase||"")!=="choosing"||String(freshRps?.choices?.[2]||freshRps?.choices?.["2"]||""))return;
-          const choice=pvpBotRpsChoiceForRound(fresh,code);
-          await update(publicRef,{"rps/choices/2":choice,"rps/submissions/2":true});
-        }catch(error){console.warn(`[HallValla][${STEP}] BOT RPS no pudo elegir:`,error);}
-      },delay);
-    }
-    if(String(room?.phase||"")==="rps"&&String(rps.phase||"")==="winner_choice"&&Number(rps.winnerRole||0)===2&&!startCfg.resolved&&!pvpBotRpsDecisionTimer){
-      const delay=650+(Math.abs(hashText6c(`${code}|${rps.round}|bot-turn-delay`))%700);
-      pvpBotRpsDecisionTimer=setTimeout(async()=>{
-        pvpBotRpsDecisionTimer=null;
-        if(code!==activeCode||activeRole!==1)return;
-        try{
-          const publicRef=ref(db,`games/${code}/public`);
-          const snap=await get(publicRef);
-          if(!snap.exists())return;
-          const fresh=snap.val()||{};
-          const freshRps=fresh?.rps||{};
-          if(fresh?.pvpBotMatch!==true||String(fresh?.phase||"")!=="rps"||String(freshRps?.phase||"")!=="winner_choice"||Number(freshRps?.winnerRole||0)!==2||fresh?.startConfig?.resolved===true)return;
-          const turnChoice=pvpBotTurnChoice(fresh,code);
-          const startingRole=turnChoice==="first"?2:1;
-          const secondRole=startingRole===1?2:1;
-          await update(publicRef,{
-            "phase":"configured","rps/phase":"complete","rps/winnerChoice":turnChoice,"rps/startingRole":startingRole,
-            "startConfig/winnerRole":2,"startConfig/turnChoice":turnChoice,"startConfig/startingRole":startingRole,"startConfig/secondRole":secondRole,
-            "startConfig/resolved":true,"startConfig/resolvedAt":Date.now()
-          });
-        }catch(error){console.warn(`[HallValla][${STEP}] BOT RPS no pudo decidir turno:`,error);}
-      },delay);
-    }
-  }
   function schedulePvpBotBattleLaunch(room,code){
     if(room?.pvpBotMatch!==true||room?.startConfig?.resolved!==true||code!==activeCode||activeRole!==1||pvpBotBattleLaunchTimer||pvpBotBattleLaunchInFlight)return;
     pvpBotBattleLaunchTimer=setTimeout(async()=>{
@@ -2262,51 +2090,45 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         if(!snap.exists())throw new Error("El duelo contra el rival dejó de existir.");
         const fresh=snap.val()||{};
         if(fresh?.pvpBotMatch!==true||fresh?.startConfig?.resolved!==true)return;
-        const startingRole=Math.max(1,Math.min(2,Number(fresh?.startConfig?.startingRole||1)));
         if(String(fresh?.phase||"")!=="active"){
           detachRoomListener();
           await update(publicRef,{
-            "phase":"active","rps/phase":"complete","rps/startingRole":startingRole,"pvpBotRpsComplete":true,
+            "phase":"active",
             "currentPlayer":0,"turn":1,"turnPhase":"realtime","turnKey":"RT-1","turnStartedAt":serverTimestamp()
           });
         }else detachRoomListener();
         detachOwnPrivateListener();
-        resetRpsUi();
         $("onlineLobby")?.classList.add("hidden");
         $("mainMenu")?.classList.add("hidden");
         if(typeof enterGame!=="function")throw new Error("El motor real no expuso enterGame().");
-        mark(`Piedra/Papel/Tijera resuelto · entrando al duelo contra ${String(fresh?.playerNames?.[2]||"rival")}.`);
+        mark(`Rival confirmado · entrando directamente al duelo contra ${String(fresh?.playerNames?.[2]||"rival")}.`);
         enterGame(code,1);
       }catch(error){
-        console.error(`[HallValla][${STEP}] Entrada al duelo BOT después de RPS falló:`,error);
+        console.error(`[HallValla][${STEP}] Entrada directa al duelo BOT falló:`,error);
         await hvPopup(`No se pudo iniciar el duelo: ${error?.message||error}`,"PvP");
       }finally{pvpBotBattleLaunchInFlight=false;}
-    },1050);
+    },250);
   }
 
   async function reconcileRoomPhase(room,code){
     if(activeRole!==1||phaseWriteInFlight||code!==activeCode) return;
-    const p1Uid=String(room?.playerSlots?.player1Uid||""); const p2Uid=String(room?.playerSlots?.player2Uid||"");
+    const p1Uid=String(room?.playerSlots?.player1Uid||"");
+    const p2Uid=String(room?.playerSlots?.player2Uid||"");
     if(!p1Uid) return;
     const bothPresent=!!p2Uid;
-    const p1Ready=getReadyFlag(room,1), p2Ready=getReadyFlag(room,2);
-    const p1Prepared=getPreparedFlag(room,1), p2Prepared=getPreparedFlag(room,2);
+    const p1Ready=getReadyFlag(room,1),p2Ready=getReadyFlag(room,2);
+    const p1Prepared=getPreparedFlag(room,1),p2Prepared=getPreparedFlag(room,2);
     const bothPrepared=bothPresent&&p1Prepared&&p2Prepared;
     const bothReady=bothPrepared&&p1Ready&&p2Ready;
     const startCfg=Object.assign({},defaultStartConfig(),room?.startConfig||{});
-    const rps=Object.assign({},defaultRpsState(0),room?.rps||{});
     const publicRef=ref(db,`games/${code}/public`);
 
-    if(room?.pvpBotMatch===true){
-      schedulePvpBotRpsResponse(room,code);
-      if(startCfg.resolved){
-        schedulePvpBotBattleLaunch(room,code);
-        return;
-      }
+    if(room?.pvpBotMatch===true&&startCfg.resolved){
+      schedulePvpBotBattleLaunch(room,code);
+      return;
     }
 
-    // Rematch online: cada jugador confirma de forma explícita con su propio rematchReady.
-    // El host reinicia la misma sala solo cuando ambos pulsaron Rematch.
+    // Rematch online: ambos aceptan y el duelo vuelve a arrancar directamente.
     if(String(room?.phase||"")==="ended"&&String(room?.mode||"")==="online"){
       const bothRematchReady=bothPresent&&getRematchReadyFlag(room,1)&&getRematchReadyFlag(room,2);
       if(!bothRematchReady)return;
@@ -2334,14 +2156,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
             goldAmount:Number(match.goldAmount||500),
             cardEntryFee:Number(match.cardEntryFee||500)
           },
-          rps:defaultRpsState(0),
           startConfig:defaultStartConfig(),
           arenaBootstrap:null,
           combatState:null,
           enginePrep:null
         };
         await withTimeout(set(publicRef,rematchRoom),`Preparar rematch en ${code}`,6000);
-        mark(`REMATCH · ambos jugadores aceptaron. Reiniciando Piedra/Papel/Tijera en ${code}.`);
+        mark(`REMATCH · ambos jugadores aceptaron. Reiniciando duelo directo en ${code}.`);
       }catch(error){
         console.error(error);
         mark(`REMATCH falló: ${error?.message||error}`);
@@ -2352,116 +2173,54 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     if(!bothPresent && (p1Ready||startCfg.resolved||room?.arenaBootstrap||room?.combatState)){
       clearArenaLaunchTimer();
       phaseWriteInFlight=true;
-      try{ await withTimeout(update(publicRef,{
-        "lobbyReady/1":false,"lobbyReady/2":false,"phase":"waiting",
-        "rps/phase":"idle","rps/notice":"","rps/choices/1":null,"rps/choices/2":null,
-        "rps/submissions/1":false,"rps/submissions/2":false,"rps/winnerRole":0,"rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,
-        "startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,
-        "arenaBootstrap":null,"combatState":null,"enginePrep":null
-      }),`Reiniciar arranque tras salida del rival en ${code}`); }
-      catch(error){ console.error(error); }
-      finally{ phaseWriteInFlight=false; }
+      try{
+        await withTimeout(update(publicRef,{
+          "lobbyReady/1":false,"lobbyReady/2":false,"phase":"waiting",
+          "startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,"startConfig/source":"direct_matchmaking",
+          "arenaBootstrap":null,"combatState":null,"enginePrep":null
+        }),`Reiniciar arranque tras salida del rival en ${code}`);
+      }catch(error){console.error(error);}
+      finally{phaseWriteInFlight=false;}
       return;
     }
 
     if(startCfg.resolved){
-      if(String(room?.phase||"")==="battle_active"&&validateCanonicalCombatState(room)) return;
-      if(String(room?.phase||"")==="arena_ready"&&validateArenaBootstrap(room)) scheduleCanonicalCombatStart(room,code);
+      if(String(room?.phase||"")==="battle_active"&&validateCanonicalCombatState(room))return;
+      if(String(room?.phase||"")==="arena_ready"&&validateArenaBootstrap(room))scheduleCanonicalCombatStart(room,code);
       else scheduleArenaBootstrap(room,code);
       return;
     }
 
     if(!bothReady){
-      const needsReset=String(room?.phase||"waiting")!=="waiting" || String(rps.phase||"idle")!=="idle" || Number(rps.winnerRole||0)!==0 || Number(rps.startingRole||0)!==0;
-      if(needsReset){
+      if(String(room?.phase||"waiting")!=="waiting"){
         phaseWriteInFlight=true;
         try{
           await withTimeout(update(publicRef,{
             "phase":"waiting",
-            "rps/phase":"idle","rps/notice":"","rps/choices/1":null,"rps/choices/2":null,
-            "rps/submissions/1":false,"rps/submissions/2":false,"rps/winnerRole":0,
-            "rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,
-            "startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,
-            "startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,
+            "startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,"startConfig/source":"direct_matchmaking",
             "arenaBootstrap":null,"combatState":null,"enginePrep":null
           }),`Restablecer state waiting en ${code}`);
-        }catch(error){ console.error(error); }
-        finally{ phaseWriteInFlight=false; }
+        }catch(error){console.error(error);}
+        finally{phaseWriteInFlight=false;}
       }
       return;
     }
 
-    if(String(rps.phase||"idle")==="idle"){
-      phaseWriteInFlight=true;
-      try{
-        await withTimeout(update(publicRef,{
-          "phase":"rps",
-          "rps/phase":"choosing",
-          "rps/round":Math.max(1,Number(rps.round||0)+1),
-          "rps/notice":"Ambos están listos. Elige en secreto.",
-          "rps/choices/1":null,"rps/choices/2":null,
-          "rps/submissions/1":false,"rps/submissions/2":false,
-          "rps/winnerRole":0,"rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0
-        }),`Iniciar Piedra/Papel/Tijera en ${code}`);
-      }catch(error){ console.error(error); }
-      finally{ phaseWriteInFlight=false; }
-      return;
-    }
-
-    if(String(rps.phase||"")==="choosing"){
-      const c1=String(rps?.choices?.[1]||rps?.choices?.["1"]||""); const c2=String(rps?.choices?.[2]||rps?.choices?.["2"]||"");
-      if(c1&&c2){
-        const outcome=compareRps(c1,c2);
-        phaseWriteInFlight=true;
-        try{
-          if(outcome.tie){
-            await withTimeout(update(publicRef,{
-              "phase":"rps",
-              "rps/phase":"choosing",
-              "rps/round":Math.max(1,Number(rps.round||0)+1),
-              "rps/notice":"Empate. Elijan de nuevo.",
-              "rps/choices/1":null,"rps/choices/2":null,
-              "rps/submissions/1":false,"rps/submissions/2":false,
-              "rps/winnerRole":0,"rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0
-            }),`Reiniciar RPS por empate en ${code}`);
-          }else{
-            await withTimeout(update(publicRef,{
-              "phase":"rps",
-              "rps/phase":"winner_choice",
-              "rps/notice":"",
-              "rps/winnerRole":outcome.winnerRole,
-              "rps/resultKey":outcome.resultKey
-            }),`Resolver RPS en ${code}`);
-          }
-        }catch(error){ console.error(error); }
-        finally{ phaseWriteInFlight=false; }
-      }
-    }
+    const direct=resolveDirectStartConfig(room,code);
+    phaseWriteInFlight=true;
+    try{
+      await withTimeout(update(publicRef,{
+        "phase":"configured",
+        "startConfig/startingRole":direct.startingRole,
+        "startConfig/secondRole":direct.secondRole,
+        "startConfig/resolved":true,
+        "startConfig/resolvedAt":direct.resolvedAt,
+        "startConfig/source":"direct_matchmaking"
+      }),`Configurar entrada directa al duelo ${code}`);
+      mark(`Rival confirmado · duelo directo configurado en ${code}.`);
+    }catch(error){console.error(error);}
+    finally{phaseWriteInFlight=false;}
   }
-
-  function detachOwnPrivateListener(){ ownPrivateListenerToken++; const off=ownPrivateUnsubscribe; ownPrivateUnsubscribe=null; ownPrivateState=null; ownPrivateHealthy=false; if(typeof off==="function"){ try{ off(); }catch(_){ } } }
-  function attachOwnPrivateListener(code,role,ownerUid){
-    detachOwnPrivateListener(); const token=ownPrivateListenerToken; const privateRef=ref(db,`games/${code}/private/player${role}`);
-    ownPrivateUnsubscribe=onValue(privateRef,snapshot=>{
-      if(token!==ownPrivateListenerToken||code!==activeCode||Number(role)!==Number(activeRole)) return;
-      if(!snapshot.exists()){ ownPrivateState=null; ownPrivateHealthy=false; mark(`private/player${role} dejó de existir; LISTO bloqueado.`); }
-      else{
-        ownPrivateState=snapshot.val()||null;
-        ownPrivateHealthy=validateOwnPrivateSnapshot(ownPrivateState,ownerUid,role);
-        const battlePrivate=ownPrivateState?.combat6c;
-        if(ownPrivateHealthy&&validatePrivateCombat6c(battlePrivate,code,role)) mark(`PASO 6D · private/player${role} · mano ${normalizeFirebaseArray(battlePrivate.handKeys).length} · Honor ${Number(battlePrivate.honor||0)}/${Number(battlePrivate.maxHonor||0)}.`);
-        else mark(ownPrivateHealthy?`PASO 4 · private/player${role} confirmado · mazo propio preparado.`:`private/player${role} inválido; LISTO bloqueado.`);
-      }
-      try{ if(activeCode) void get(ref(db,`games/${activeCode}/public`)).then(roomSnap=>{
-        if(!roomSnap?.exists()||code!==activeCode)return;
-        const fresh=roomSnap.val()||{};
-        if(isRealEnginePayload6e(fresh))void launchRealEngine6e(code,fresh);
-        else renderRoomSnapshot(fresh,activeCode);
-      }).catch(()=>{}); }catch(_){ }
-    },error=>{ if(token!==ownPrivateListenerToken) return; ownPrivateHealthy=false; console.error(error); mark(`Listener private/player${role} falló: ${error?.message||error}`); });
-  }
-  async function removeOwnPrivateBranch(code,role,ownerUid){ if(!code||!ownerUid||(role!==1&&role!==2)) return; try{ const privateRef=ref(db,`games/${code}/private/player${role}`); const snapshot=await withTimeout(get(privateRef),`Leer private/player${role} antes de limpiar`,4000); if(snapshot.exists()&&String(snapshot.val()?.ownerUid||"")===String(ownerUid)) await withTimeout(remove(privateRef),`Limpiar private/player${role}`,4000); }catch(error){ console.warn(error); } }
-  function detachRoomListener(){ roomListenerToken++; const off=roomUnsubscribe; roomUnsubscribe=null; phaseWriteInFlight=false; if(typeof off==="function"){ try{ off(); }catch(_){ } } }
   function attachRoomListener(code){
     detachRoomListener(); const token=roomListenerToken; const roomRef=ref(db,`games/${code}/public`);
     roomUnsubscribe=onValue(roomRef,snapshot=>{
@@ -2474,7 +2233,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
           return;
         }
         if(activeRole===2&&activeCode&&activeOwnerUid) void removeOwnPrivateBranch(activeCode,2,activeOwnerUid);
-        setText("pvpRoomMessage","La sala ya no existe. El anfitrión pudo haber salido."); setText("pvpRoomPlayer2Name","Sala cerrada"); setPresence("pvpRoomPlayer2Presence","waiting"); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
+        setText("pvpRoomMessage","La sala ya no existe. El anfitrión pudo haber salido."); setText("pvpRoomPlayer2Name","Sala cerrada"); setPresence("pvpRoomPlayer2Presence","waiting"); setReadyCheck(1,false); setReadyCheck(2,false);
         const readyBtn=$("pvpReadyBtn"); if(readyBtn){ readyBtn.disabled=true; readyBtn.classList.remove("is-ready"); }
         return;
       }
@@ -2501,7 +2260,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }
 
   function resetUi({resetJoin=true}={}){
-    clearRematchWait(); clearRandomAutoReady(); clearPvpBotPreludeTimers(); detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); clearRealEngineStartTimer6e(); privateCombatInitInFlight=false; turnResourceInFlight=false; cardPlayInFlight=false; enginePrepInFlight=false; pvpBotFallbackInFlight=false; activePvpBotProfile=null; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; realEngineEnteredCode=""; realEngineVsCode=""; realEngineVsPromise=null; globalThis.hideHallvallaPreBattleVs?.(); clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false); resetRpsUi();
+    clearRematchWait(); clearRandomAutoReady(); clearPvpBotPreludeTimers(); detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); clearRealEngineStartTimer6e(); privateCombatInitInFlight=false; turnResourceInFlight=false; cardPlayInFlight=false; enginePrepInFlight=false; pvpBotFallbackInFlight=false; activePvpBotProfile=null; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; realEngineEnteredCode=""; realEngineVsCode=""; realEngineVsPromise=null; globalThis.hideHallvallaPreBattleVs?.(); clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false);
     try{ document.getElementById("pvpStep6eRealBadge")?.remove(); document.getElementById("pvpStep6eShield")?.remove(); }catch(_){ }
     try{ $("gameShell")?.classList.remove("pvp-step6e-real-bridge"); }catch(_){ }
     const input=$("joinCode"); if(input){ input.readOnly=false; if(resetJoin) input.value=""; }
@@ -2769,14 +2528,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         adventureEnemyUnitMasteryRank:botMasteryRank,realtimeExperimental:true,
         adventurePrincipalKeys:{1:[],2:[]},principalSlots:{1:0,2:0},pvpPrincipalKeys:{1:[],2:[]},
         adventureAiState:{deck:[],hand:botDraw.hand,honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),lastTurnStarted:"RT",skipFirstTurnDraw:true,principalSlots:0,principalKeys:[],principalKey:""},
-        createdAt:Date.now(),currentPlayer:0,turn:1,phase:"rps",turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:serverTimestamp(),
+        createdAt:Date.now(),currentPlayer:0,turn:1,phase:"active",turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:serverTimestamp(),
         clockRulesetVersion:clockVersion,playerClockMs:{1:duelLimit,2:duelLimit},
         playerSlots:{player1Uid:myUid,player2Uid:botUid},
         playerNames:{1:getProfileNameSafe(1),2:botName},playerLevels:{1:getProfileLevelSafe(),2:botLevel},
         playerShowcase:publicShowcase,playerPrepared:{1:true,2:true},lobbyReady:{1:true,2:true},
         playerLeaders:{1:human.leaderType,2:profile.leaderType},playerLeaderLevels:{1:Number(human.leaderLevel||1),2:botLevel},playerLeaderAbilities:{1:String(human.leaderAbility||""),2:botAbility},
-        rps:{phase:"choosing",round:1,notice:"Ambos jugadores están listos. Elige en secreto.",choices:{1:null,2:null},submissions:{1:false,2:false},winnerRole:0,resultKey:"",winnerChoice:"",startingRole:0},
-        startConfig:defaultStartConfig(),
+        startConfig:(()=>{const startingRole=(Math.abs(hashText6c(`${botCode}|${myUid}|${botUid}|direct-start`))%2)+1;return {startingRole,secondRole:startingRole===1?2:1,resolved:true,resolvedAt:Date.now(),source:"direct_matchmaking"};})(),
         settings:buildDefaultRules(),matchSettings:{timerEnabled:false,stakeMode:"none",goldAmount:500,cardEntryFee:500,economyState:"not_required"},
         playerStats:{
           1:{hp:Number(p1Leader?.hp||0),honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),deck:0,hand:human.hand.length,hasHiddenUnits:countHiddenKeys6e([...normalizeFirebaseArray(humanBuilt.combat6c?.deckKeys),...normalizeFirebaseArray(humanBuilt.combat6c?.handKeys)])>0},
@@ -2996,7 +2754,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       for(let attempt=1;attempt<=4;attempt++){
         const code=makeCode(8); activeCode=code; await markAndPaint(`3/7 · intento ${attempt}: creando sala pública ${code}...`);
         const publicRef=ref(db,`games/${code}/public`);
-        const room={ schema:"hallvalla-pvp-rebuild-step6f-real-unit-summon", code, createdAt:Date.now(), phase:"waiting", entryMode:onlineFlowMode==="random"?"random":"wager", playerSlots:{player1Uid:ownerUid,player2Uid:null}, playerNames:{1:profileName,2:"Esperando rival"}, playerLevels:{1:profileLevel,2:0}, playerShowcase:{1:buildPublicShowcase(privatePayload),2:{leaderType:"",principalKeys:[]}}, playerPrepared:{1:false,2:false}, lobbyReady:{1:false,2:false}, settings:buildDefaultRules(), rps:defaultRpsState(0), startConfig:defaultStartConfig(), arenaBootstrap:null, combatState:null, enginePrep:null };
+        const room={ schema:"hallvalla-pvp-rebuild-step6f-real-unit-summon", code, createdAt:Date.now(), phase:"waiting", entryMode:onlineFlowMode==="random"?"random":"wager", playerSlots:{player1Uid:ownerUid,player2Uid:null}, playerNames:{1:profileName,2:"Esperando rival"}, playerLevels:{1:profileLevel,2:0}, playerShowcase:{1:buildPublicShowcase(privatePayload),2:{leaderType:"",principalKeys:[]}}, playerPrepared:{1:false,2:false}, lobbyReady:{1:false,2:false}, settings:buildDefaultRules(), startConfig:defaultStartConfig(), arenaBootstrap:null, combatState:null, enginePrep:null };
         try{
           await withTimeout(set(publicRef,room),`Crear sala ${code}`);
           const publicSnap=await withTimeout(get(publicRef),`Confirmar sala ${code}`);
@@ -3074,10 +2832,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         "lobbyReady/1":false,
         "lobbyReady/2":false,
         "phase":"waiting",
-        "rps/phase":"idle","rps/notice":"","rps/choices/1":null,"rps/choices/2":null,
-        "rps/submissions/1":false,"rps/submissions/2":false,"rps/winnerRole":0,"rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,
-        "startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,
-        "startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,
+        "startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,"startConfig/source":"direct_matchmaking",
         "arenaBootstrap":null,"combatState":null,"enginePrep":null
       }),`Actualizar reglas del host en ${activeCode}`);
       mark(`Reglas actualizadas: ${getRulesSummary(rules)}. LISTO se reinició para ambos.`);
@@ -3088,46 +2843,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function cycleTimer(){ const rules=getRules(roomCache||{}); void updateHostRules({timerEnabled:!rules.timerEnabled}); }
   function cycleStakeMode(){ const rules=getRules(roomCache||{}); const order=["none","gold","card"]; const current=String(rules.stakeMode||"none"); const next=order[(order.indexOf(current)+1+order.length)%order.length]||"none"; void updateHostRules({stakeMode:next}); }
   function cycleStakeAmount(){ const rules=getRules(roomCache||{}); const current=Number(rules.goldAmount||500); const idx=GOLD_OPTIONS.indexOf(current); const next=GOLD_OPTIONS[(idx+1+GOLD_OPTIONS.length)%GOLD_OPTIONS.length]||500; void updateHostRules({stakeMode:"gold",goldAmount:next}); }
-
-  async function submitRpsChoice(choice){
-    if(busy||!activeCode||!(activeRole===1||activeRole===2)) return false;
-    const valid=["rock","paper","scissors"]; if(!valid.includes(choice)) return false;
-    busy=true;
-    try{
-      syncLocalButtons(); const publicRef=ref(db,`games/${activeCode}/public`); const snap=await withTimeout(get(publicRef),`Leer estado RPS en ${activeCode}`); if(!snap.exists()) throw new Error("La sala ya no existe."); const room=snap.val()||{}; const rps=room?.rps||{};
-      const current=String(rps?.choices?.[activeRole]||rps?.choices?.[String(activeRole)]||"");
-      const rpsPhase=String(rps.phase||"");
-      const roomPhase=String(room?.phase||"");
-      // v206 · No existe ningún modal técnico de RPS. Si una entrada física se
-      // repite después de confirmar la elección, simplemente no genera otra acción.
-      if(current)return true;
-      if(roomPhase==="rps"&&(rpsPhase==="winner_choice"||rpsPhase==="complete"))return true;
-      if(room?.startConfig?.resolved===true||roomPhase==="configured"||roomPhase==="active")return true;
-      if(roomPhase!=="rps"||rpsPhase!=="choosing")return false;
-      await withTimeout(update(publicRef,{[`rps/choices/${activeRole}`]:choice,[`rps/submissions/${activeRole}`]:true}),`Enviar elección RPS J${activeRole} en ${activeCode}`);
-      mark(`J${activeRole} eligió en secreto.`); return true;
-    }catch(error){
-      console.warn("[HallValla][PvP RPS] No se pudo confirmar la elección; el jugador puede intentarlo otra vez.",error);
-      mark("No se pudo confirmar la elección. Intenta nuevamente.");
-      return false;
-    }
-    finally{ busy=false; syncLocalButtons(); }
-  }
-
-  async function chooseTurnOrder(turnChoice){
-    if(busy||!activeCode||!(activeRole===1||activeRole===2)) return false;
-    if(turnChoice!=="first"&&turnChoice!=="second") return false;
-    busy=true;
-    try{
-      syncLocalButtons(); const publicRef=ref(db,`games/${activeCode}/public`); const snap=await withTimeout(get(publicRef),`Leer ganador del RPS en ${activeCode}`); if(!snap.exists()) throw new Error("La sala ya no existe."); const room=snap.val()||{}; const rps=room?.rps||{}; const winnerRole=Number(rps.winnerRole||0);
-      if(String(room?.phase||"")!=="rps" || String(rps.phase||"")!=="winner_choice") throw new Error("Aún no existe un ganador listo para decidir el turno.");
-      if(activeRole!==winnerRole) throw new Error("Solo el ganador puede decidir si juega primero o segundo.");
-      const otherRole=winnerRole===1?2:1; const startingRole=turnChoice==="first"?winnerRole:otherRole; const secondRole=startingRole===1?2:1;
-      await withTimeout(update(publicRef,{"phase":"configured","rps/phase":"complete","rps/winnerChoice":turnChoice,"rps/startingRole":startingRole,"startConfig/winnerRole":winnerRole,"startConfig/turnChoice":turnChoice,"startConfig/startingRole":startingRole,"startConfig/secondRole":secondRole,"startConfig/resolved":true,"startConfig/resolvedAt":Date.now()}),`Guardar elección de turno en ${activeCode}`);
-      mark(`${getPlayerName(room,winnerRole)} eligió jugar ${turnChoice==="first"?"primero":"segundo"}.`); return true;
-    }catch(error){ console.error(error); await hvPopup(`ELECCIÓN DE TURNO FALLÓ: ${error?.message||error}`,"PvP"); return false; }
-    finally{ busy=false; syncLocalButtons(); }
-  }
 
   async function copyCode(){ const code=normalizeCode(activeCode||$("pvpRoomCode")?.textContent||""); if(!code) return false; try{ await navigator.clipboard.writeText(code); mark(`Código ${code} copiado.`); return true; }catch(_){ const input=$("joinCode"); if(input){ input.value=code; try{ input.focus(); input.select(); }catch(__){ } } mark(`Código de sala: ${code}`); return false; } }
 
@@ -3202,7 +2917,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const code=activeCode, ownerUid=activeOwnerUid, role=activeRole; detachRoomListener(); detachOwnPrivateListener();
     try{
       if(code&&ownerUid&&role===1){ await markAndPaint(`J1 limpiando private/player1 y cerrando sala ${code}...`); await removeOwnPrivateBranch(code,1,ownerUid); const publicRef=ref(db,`games/${code}/public`); const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de cerrar`); if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player1Uid||"")===ownerUid) await withTimeout(remove(publicRef),`Cerrar sala ${code}`); }
-      else if(code&&ownerUid&&role===2){ await markAndPaint(`J2 limpiando private/player2 y saliendo de sala ${code}...`); await removeOwnPrivateBranch(code,2,ownerUid); const publicRef=ref(db,`games/${code}/public`); const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de salir J2`); if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player2Uid||"")===ownerUid) await withTimeout(update(publicRef,{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"rematchReady/2":false,"lobbyReady/1":false,"lobbyReady/2":false,"phase":"waiting","rps/phase":"idle","rps/notice":"","rps/choices/1":null,"rps/choices/2":null,"rps/submissions/1":false,"rps/submissions/2":false,"rps/winnerRole":0,"rps/resultKey":"","rps/winnerChoice":"","rps/startingRole":0,"startConfig/winnerRole":0,"startConfig/turnChoice":"","startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,"arenaBootstrap":null,"combatState":null,"enginePrep":null}),`Liberar J2 en ${code}`); }
+      else if(code&&ownerUid&&role===2){ await markAndPaint(`J2 limpiando private/player2 y saliendo de sala ${code}...`); await removeOwnPrivateBranch(code,2,ownerUid); const publicRef=ref(db,`games/${code}/public`); const snapshot=await withTimeout(get(publicRef),`Leer sala ${code} antes de salir J2`); if(snapshot.exists()&&String(snapshot.val()?.playerSlots?.player2Uid||"")===ownerUid) await withTimeout(update(publicRef,{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"rematchReady/2":false,"lobbyReady/1":false,"lobbyReady/2":false,"phase":"waiting","startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,"startConfig/source":"direct_matchmaking","arenaBootstrap":null,"combatState":null,"enginePrep":null}),`Liberar J2 en ${code}`); }
     }catch(error){ console.warn(error); }
     resetUi({resetJoin:true}); $("onlineLobby")?.classList.add("hidden"); $("gameShell")?.classList.add("hidden"); $("gameShell")?.classList.remove("pvp-step5-preview","pvp-step6a-active","pvp-step6b-active","pvp-step6d-active"); $("mainMenu")?.classList.remove("hidden"); try{ if(typeof globalThis.renderHomeProgress==="function") globalThis.renderHomeProgress(); }catch(_){ } try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
   }
@@ -3217,8 +2932,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   globalThis.pvpRebuildStep6eReady=toggleReady;
   globalThis.pvpRebuildStep6eLeave=leaveRoom;
   globalThis.pvpRebuildStep6eCopyCode=copyCode;
-  globalThis.pvpRebuildStep6eRpsChoice=submitRpsChoice;
-  globalThis.pvpRebuildStep6eChooseTurn=chooseTurnOrder;
   globalThis.pvpRebuildStep6fOpen=openCleanRoom;
   globalThis.openCleanRoom=openCleanRoom;
   globalThis.pvpRebuildStep6fCreate=createMinimalPublicRoom;
@@ -3226,16 +2939,12 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   globalThis.pvpRebuildStep6fReady=toggleReady;
   globalThis.pvpRebuildStep6fLeave=leaveRoom;
   globalThis.pvpRebuildStep6fCopyCode=copyCode;
-  globalThis.pvpRebuildStep6fRpsChoice=submitRpsChoice;
-  globalThis.pvpRebuildStep6fChooseTurn=chooseTurnOrder;
   globalThis.pvpRebuildStep6dOpen=openCleanRoom;
   globalThis.pvpRebuildStep6dCreate=createMinimalPublicRoom;
   globalThis.pvpRebuildStep6dJoin=joinExistingRoom;
   globalThis.pvpRebuildStep6dReady=toggleReady;
   globalThis.pvpRebuildStep6dLeave=leaveRoom;
   globalThis.pvpRebuildStep6dCopyCode=copyCode;
-  globalThis.pvpRebuildStep6dRpsChoice=submitRpsChoice;
-  globalThis.pvpRebuildStep6dChooseTurn=chooseTurnOrder;
   globalThis.pvpRebuildStep6dAdvancePhase=advanceCanonicalPhase;
   globalThis.pvpRebuildStep6dPlayCard=playCardFromHand6d;
   globalThis.pvpRebuildStep6cOpen=openCleanRoom;
@@ -3244,8 +2953,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   globalThis.pvpRebuildStep6cReady=toggleReady;
   globalThis.pvpRebuildStep6cLeave=leaveRoom;
   globalThis.pvpRebuildStep6cCopyCode=copyCode;
-  globalThis.pvpRebuildStep6cRpsChoice=submitRpsChoice;
-  globalThis.pvpRebuildStep6cChooseTurn=chooseTurnOrder;
   globalThis.pvpRebuildStep6cAdvancePhase=advanceCanonicalPhase;
   globalThis.pvpRebuildStep6bOpen=openCleanRoom;
   globalThis.pvpRebuildStep6bCreate=createMinimalPublicRoom;
@@ -3253,8 +2960,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   globalThis.pvpRebuildStep6bReady=toggleReady;
   globalThis.pvpRebuildStep6bLeave=leaveRoom;
   globalThis.pvpRebuildStep6bCopyCode=copyCode;
-  globalThis.pvpRebuildStep6bRpsChoice=submitRpsChoice;
-  globalThis.pvpRebuildStep6bChooseTurn=chooseTurnOrder;
   globalThis.pvpRebuildStep6bAdvancePhase=advanceCanonicalPhase;
   globalThis.pvpRebuildStep6aOpen=openCleanRoom;
   globalThis.pvpRebuildStep6aCreate=createMinimalPublicRoom;
@@ -3262,8 +2967,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   globalThis.pvpRebuildStep6aReady=toggleReady;
   globalThis.pvpRebuildStep6aLeave=leaveRoom;
   globalThis.pvpRebuildStep6aCopyCode=copyCode;
-  globalThis.pvpRebuildStep6aRpsChoice=submitRpsChoice;
-  globalThis.pvpRebuildStep6aChooseTurn=chooseTurnOrder;
   globalThis.pvpRebuildStep5Open=openCleanRoom;
   globalThis.pvpRebuildStep5Create=createMinimalPublicRoom;
   globalThis.pvpRebuildStep5Join=joinExistingRoom;
@@ -3273,8 +2976,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   globalThis.pvpRebuildStep5Timer=cycleTimer;
   globalThis.pvpRebuildStep5StakeMode=cycleStakeMode;
   globalThis.pvpRebuildStep5StakeAmount=cycleStakeAmount;
-  globalThis.pvpRebuildStep5RpsChoice=submitRpsChoice;
-  globalThis.pvpRebuildStep5ChooseTurn=chooseTurnOrder;
   globalThis.__HALLVALLA_PVP_STEP6F_LIMITED__=function(){
     try{return !!publicState&&publicState.mode==="online"&&publicState.pvpStep6fMode==="unit_summon_only"&&publicState.phase==="active"&&publicState.pvpFullDuelEnabled!==true;}catch(_){return false;}
   };
@@ -3294,8 +2995,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   globalThis.pvpRebuildStep45Timer=cycleTimer;
   globalThis.pvpRebuildStep45StakeMode=cycleStakeMode;
   globalThis.pvpRebuildStep45StakeAmount=cycleStakeAmount;
-  globalThis.pvpRebuildStep45RpsChoice=submitRpsChoice;
-  globalThis.pvpRebuildStep45ChooseTurn=chooseTurnOrder;
   globalThis.__HALLVALLA_PVP_REBUILD_STEP__="6I-FULL-DUEL-UNLOCK";
 
   on("onlineBtn","click",openCleanRoom);
@@ -3312,11 +3011,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   on("pvpTimerToggleBtn","click",cycleTimer);
   on("pvpStakeModeBtn","click",cycleStakeMode);
   on("pvpStakeAmountBtn","click",cycleStakeAmount);
-  on("pvpRpsRockBtn","click",()=>{ void submitRpsChoice("rock"); });
-  on("pvpRpsPaperBtn","click",()=>{ void submitRpsChoice("paper"); });
-  on("pvpRpsScissorsBtn","click",()=>{ void submitRpsChoice("scissors"); });
-  on("pvpRpsChooseFirstBtn","click",()=>{ void chooseTurnOrder("first"); });
-  on("pvpRpsChooseSecondBtn","click",()=>{ void chooseTurnOrder("second"); });
   on("pvpStep5LeaveBtn","click",leaveRoom);
   on("pvpStep6aLeaveBtn","click",leaveRoom);
   on("pvpStep6bAdvanceBtn","click",()=>{ void advanceCanonicalPhase(); });

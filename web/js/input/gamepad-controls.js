@@ -400,7 +400,7 @@ function hvGamepadVisibleModal(){
     "[role='dialog']:not(.hidden)","[aria-modal='true']:not(.hidden)",
     ".overlay-panel:not(.hidden)",".daily-reward-overlay:not(.hidden)",
     ".leader-select-overlay:not(.hidden)",".leader-info-modal:not(.hidden)",
-    ".pvp-room-panel:not(.hidden)",".pvp-rps-overlay:not(.hidden)",
+    ".pvp-room-panel:not(.hidden)",
     ".pvp-ranking-modal:not(.hidden)",".honor-recharge-modal:not(.hidden)",
     ".event-splash-overlay:not(.hidden)",".demigod-summon-modal:not(.hidden)",
     ".card-inspect-modal:not(.hidden)",".battle-menu-panel:not(.hidden)",
