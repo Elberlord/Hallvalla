@@ -1,3 +1,12 @@
+## v208 — Restauración de listeners PvP
+
+- Corrige el `ReferenceError: detachRoomListener is not defined` que impedía abrir PvP en v207.
+- La limpieza del antiguo flujo previo eliminó accidentalmente cuatro funciones de infraestructura general: `detachRoomListener`, `detachOwnPrivateListener`, `attachOwnPrivateListener` y `removeOwnPrivateBranch`.
+- Se restauran únicamente esas funciones de sincronización Firebase; el PvP continúa entrando directo al duelo y no se reintroduce ningún minijuego previo.
+- No requiere un nuevo cambio de reglas Firebase respecto a las reglas v207 sin la fase eliminada.
+- Build `20260919.208`, cache `hallvalla-runtime-v208`.
+- Diagnóstico: `docs/FIX_PVP_LISTENER_RESTORE_v208.md`.
+
 ## v207 — PvP directo al duelo
 
 - Matchmaking entra al duelo en cuanto existe rival y ambos estados privados están preparados; ya no existe una fase interactiva entre encontrar rival y arrancar combate.

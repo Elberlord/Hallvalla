@@ -2221,6 +2221,32 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }catch(error){console.error(error);}
     finally{phaseWriteInFlight=false;}
   }
+  // v208 · infraestructura PvP restaurada.
+  // Estas funciones NO pertenecen al antiguo minijuego previo: administran
+  // los listeners Firebase y la rama privada de cada jugador durante TODO el PvP.
+  function detachOwnPrivateListener(){ ownPrivateListenerToken++; const off=ownPrivateUnsubscribe; ownPrivateUnsubscribe=null; ownPrivateState=null; ownPrivateHealthy=false; if(typeof off==="function"){ try{ off(); }catch(_){ } } }
+  function attachOwnPrivateListener(code,role,ownerUid){
+    detachOwnPrivateListener(); const token=ownPrivateListenerToken; const privateRef=ref(db,`games/${code}/private/player${role}`);
+    ownPrivateUnsubscribe=onValue(privateRef,snapshot=>{
+      if(token!==ownPrivateListenerToken||code!==activeCode||Number(role)!==Number(activeRole)) return;
+      if(!snapshot.exists()){ ownPrivateState=null; ownPrivateHealthy=false; mark(`private/player${role} dejó de existir; LISTO bloqueado.`); }
+      else{
+        ownPrivateState=snapshot.val()||null;
+        ownPrivateHealthy=validateOwnPrivateSnapshot(ownPrivateState,ownerUid,role);
+        const battlePrivate=ownPrivateState?.combat6c;
+        if(ownPrivateHealthy&&validatePrivateCombat6c(battlePrivate,code,role)) mark(`PASO 6D · private/player${role} · mano ${normalizeFirebaseArray(battlePrivate.handKeys).length} · Honor ${Number(battlePrivate.honor||0)}/${Number(battlePrivate.maxHonor||0)}.`);
+        else mark(ownPrivateHealthy?`PASO 4 · private/player${role} confirmado · mazo propio preparado.`:`private/player${role} inválido; LISTO bloqueado.`);
+      }
+      try{ if(activeCode) void get(ref(db,`games/${activeCode}/public`)).then(roomSnap=>{
+        if(!roomSnap?.exists()||code!==activeCode)return;
+        const fresh=roomSnap.val()||{};
+        if(isRealEnginePayload6e(fresh))void launchRealEngine6e(code,fresh);
+        else renderRoomSnapshot(fresh,activeCode);
+      }).catch(()=>{}); }catch(_){ }
+    },error=>{ if(token!==ownPrivateListenerToken) return; ownPrivateHealthy=false; console.error(error); mark(`Listener private/player${role} falló: ${error?.message||error}`); });
+  }
+  async function removeOwnPrivateBranch(code,role,ownerUid){ if(!code||!ownerUid||(role!==1&&role!==2)) return; try{ const privateRef=ref(db,`games/${code}/private/player${role}`); const snapshot=await withTimeout(get(privateRef),`Leer private/player${role} antes de limpiar`,4000); if(snapshot.exists()&&String(snapshot.val()?.ownerUid||"")===String(ownerUid)) await withTimeout(remove(privateRef),`Limpiar private/player${role}`,4000); }catch(error){ console.warn(error); } }
+  function detachRoomListener(){ roomListenerToken++; const off=roomUnsubscribe; roomUnsubscribe=null; phaseWriteInFlight=false; if(typeof off==="function"){ try{ off(); }catch(_){ } } }
   function attachRoomListener(code){
     detachRoomListener(); const token=roomListenerToken; const roomRef=ref(db,`games/${code}/public`);
     roomUnsubscribe=onValue(roomRef,snapshot=>{
