@@ -11,7 +11,7 @@ Cambios clave:
 - eliminados timers/locks y callers exclusivos de esa ruta;
 - eliminado preload PvE innecesario al crear BOT PvP;
 - reglas Firebase, layout y motor TR sin cambios;
-- build `20260919.214`, cache `hallvalla-runtime-v214`.
+- build `20260919.215`, cache `hallvalla-runtime-v215`.
 - v214: calibradores DEV retirados de `system/settings-events.js` y separados por responsabilidad bajo `web/js/dev/`.
 
 Documentación:
@@ -21,3 +21,5 @@ Documentación:
 - `docs/FRONTEND_HOTSPOTS_v212.md`
 - `docs/MAINTENANCE_RULES_v212.md`
 - `docs/SMOKE_TEST_v212.md`
+
+- v215: datos estáticos de Aventura 1–20 extraídos de `game/decks-units-combat-rules.js` a `adventure/campaign-data.js`; sin cambio de gameplay.
