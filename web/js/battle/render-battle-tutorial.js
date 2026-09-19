@@ -133,9 +133,7 @@ function render(reason="direct"){
   // Se conserva la proyección heredada de bonus de líder para no mezclar Stage 7 con reglas de gameplay.
   if(Array.isArray(publicState.units))publicState={...publicState,units:syncLeaderHpBonuses(publicState.units)};
   syncHandAutoClose();
-  scheduleAutoAdvanceIfNoPlayableHand();
-  scheduleAutoAdvanceIfFieldActionsExhausted();
-  hallvallaRecordRenderDomain("hud",()=>{renderHud();renderTurnTimerHud();renderTurnHonorHud();renderRivalHonorHud();});
+  hallvallaRecordRenderDomain("hud",()=>{renderHud();renderTurnHonorHud();renderRivalHonorHud();});
   hallvallaRecordRenderDomain("board",renderBoard);
   hallvallaRecordRenderDomain("context",renderUnitContextMenu);
   hallvallaRecordRenderDomain("hand",renderHand);
@@ -143,7 +141,6 @@ function render(reason="direct"){
   hallvallaRecordRenderDomain("chrome",renderBattleChrome);
   if(publicState.mode==="tutorial")hallvallaRecordRenderDomain("tutorial",renderBasicTutorialCoach);
   if(publicState.mode==="adventure"&&publicState.currentPlayer!==myPlayer&&publicState.aiActionText)setHint(publicState.aiActionText);
-  maybeShowPhaseAnnouncement();
   maybeShowHonorRecharge();
   maybeShowBattleResult();
   const ms=Math.max(0,hallvallaRenderNow()-started);
@@ -1319,9 +1316,7 @@ async function startBasicTutorialBattle(){
     phase:"active",
     turnPhase:"realtime",
     turnKey:"RT-1",
-    turnStartedAt:serverTimestamp(),
-    clockRulesetVersion:CLOCK_RULESET_VERSION,
-    playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},
+
     playerSlots:{player1Uid:uid,player2Uid:"TUTORIAL_DUMMY"},
     playerNames:{1:getLocalProfileName(),2:"Instructor de práctica"},
     playerLeaders:{1:leaderType,2:enemyLeaderType},
@@ -1536,7 +1531,6 @@ function advanceBasicTutorialManualStep(){
   basicTutorialProgressStep=Math.max(basicTutorialProgressStep,basicTutorialCoachStep);
   storeBasicTutorialStep();
   renderBasicTutorialCoach(true);
-  if(step.id==="turn-start")void maybeStartTurn();
 }
 function completeBasicTutorial(){
   if(basicTutorialFlags.completionHandled)return;

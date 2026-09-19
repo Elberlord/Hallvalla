@@ -10,19 +10,20 @@ const HALLVALLA_WEIGHT_PENALTY_THRESHOLDS=Object.freeze({
   penalty2Max:1.40
 });
 
-/* v176 · Ventana temporal compacta aprobada.
-   Ataque y movimiento conservan cálculos independientes por AGI/carga/MOV,
-   pero el ritmo total se compacta para que los ataques ocurran entre ~10–16 s
-   y los desplazamientos entre ~10–18 s. La marcha sigue siendo menos frecuente
-   que el ataque de la misma unidad mediante una separación mínima de 1 s. */
-const HALLVALLA_SPEED_MODEL_VERSION="20260918.176";
+/* v216 · Ritmo TR canónico.
+   Conserva exactamente las diferencias relativas del modelo v176 por AGI/carga/MOV,
+   pero todas las unidades atacan 2 s antes y vuelven a moverse 3 s antes.
+   Ventanas resultantes: ataque ~8–14 s; movimiento ~7–15 s. */
+const HALLVALLA_SPEED_MODEL_VERSION="20260919.216";
 const HALLVALLA_SPEED_TIMING=Object.freeze({
   attackBaseMs:13000,
   attackMinMs:10000,
   attackMaxMs:16000,
+  attackSpeedupMs:2000,
   moveBaseMs:22000,
   moveMinMs:10000,
   moveMaxMs:18000,
+  moveSpeedupMs:3000,
   moveAttackGapMs:1000
 });
 function hallvallaClamp(value,min,max){return Math.max(min,Math.min(max,Number(value)||0));}
@@ -44,7 +45,8 @@ function getHallvallaUnitAttackCooldownMs(unit){
   const agilityFactor=hallvallaClamp(1-(agi-5)*0.055,0.72,1.28);
   const loadFactor=1+Math.min(0.16,burden*0.08)+Math.min(0.14,weaponKg*0.012)+Math.min(0.08,(armorKg+shieldKg)*0.003);
   const raw=HALLVALLA_SPEED_TIMING.attackBaseMs*agilityFactor*loadFactor;
-  return Math.round(hallvallaClamp(raw,HALLVALLA_SPEED_TIMING.attackMinMs,HALLVALLA_SPEED_TIMING.attackMaxMs));
+  const legacyWindow=hallvallaClamp(raw,HALLVALLA_SPEED_TIMING.attackMinMs,HALLVALLA_SPEED_TIMING.attackMaxMs);
+  return Math.max(1000,Math.round(legacyWindow-HALLVALLA_SPEED_TIMING.attackSpeedupMs));
 }
 function getHallvallaUnitMoveCooldownMs(unit){
   const mov=Math.max(0,Math.min(5,Number(typeof effectiveMov==="function"?effectiveMov(unit):unit?.mov)||0));
@@ -61,8 +63,12 @@ function getHallvallaUnitMoveCooldownMs(unit){
   const raw=locomotionBase*agilityFactor*loadFactor;
   // Regla v176: desplazarse nunca puede ocurrir con mayor frecuencia que atacar.
   // Se conserva al menos 1 s de separación para que el avance del campo sea legible.
-  const attackFloor=getHallvallaUnitAttackCooldownMs(unit)+HALLVALLA_SPEED_TIMING.moveAttackGapMs;
-  return Math.round(hallvallaClamp(Math.max(raw,attackFloor),HALLVALLA_SPEED_TIMING.moveMinMs,HALLVALLA_SPEED_TIMING.moveMaxMs));
+  // Calculamos primero la ventana v176 para mantener las diferencias relativas entre unidades;
+  // después aplicamos el aumento global de velocidad de movimiento solicitado en v216.
+  const legacyAttackWindow=getHallvallaUnitAttackCooldownMs(unit)+HALLVALLA_SPEED_TIMING.attackSpeedupMs;
+  const legacyAttackFloor=legacyAttackWindow+HALLVALLA_SPEED_TIMING.moveAttackGapMs;
+  const legacyWindow=hallvallaClamp(Math.max(raw,legacyAttackFloor),HALLVALLA_SPEED_TIMING.moveMinMs,HALLVALLA_SPEED_TIMING.moveMaxMs);
+  return Math.max(1000,Math.round(legacyWindow-HALLVALLA_SPEED_TIMING.moveSpeedupMs));
 }
 function getHallvallaUnitSpeedProfile(unit){
   const attackCooldownMs=getHallvallaUnitAttackCooldownMs(unit);

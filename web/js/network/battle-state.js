@@ -698,7 +698,7 @@ async function normalizePublicPatchBeforeCommit(sourcePatch={},options={}){
   return{patch:cleanPatch,beforeUnits};
 }
 async function updatePublic(patch){
-  if(!globalThis.hallvallaRtUseLocalBattleRuntime?.()&&isTurnWriteBlockedByExpiredClock())return false;
+  
   const writeGameId=gameId;
   const writeLifecycleToken=getBattleLifecycleToken();
   const writeContextActive=()=>writeGameId&&gameId===writeGameId&&isBattleLifecycleTokenActive(writeLifecycleToken);
@@ -735,7 +735,7 @@ async function updatePublic(patch){
       if(typeof registerAccountMasterySummonsFromUnitDiff==="function")registerAccountMasterySummonsFromUnitDiff(beforeUnits,accountMasteryKillAfter);
       if(typeof registerAccountMasteryKillsFromUnitDiff==="function")registerAccountMasteryKillsFromUnitDiff(beforeUnits,accountMasteryKillAfter,sourcePatch);
     }
-    render();syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowBattleResult();void maybeFinalizeUnitExhaustionFromPublicState();maybeStartTurn();return true;
+    render();syncBattleMusic();maybePlayBattleFx(prevPublic,publicState);maybeProcessVeilCurseKillEvent(prevPublic,publicState);maybeShowBattleResult();void maybeFinalizeUnitExhaustionFromPublicState();return true;
   }
   if(isStage8PrivateStealthMode(publicState)&&Object.keys(privateStealthPatch).length){
     const rootPatch={};
@@ -848,7 +848,7 @@ async function commitRealtimeOnlineCheckpoint(publicPatch={},privatePatch={},kin
   }catch(error){console.error("[HallValla][TR PvP] checkpoint de acción falló",error);setHint("No se pudo sincronizar la acción PvP.");return false;}
 }
 async function commitGameplayAction({publicPatch={},privatePatch={},kind="",rtClientSeq=0,alreadyApplied=false}={}){
-  if(!globalThis.hallvallaRtUseLocalBattleRuntime?.()&&isTurnWriteBlockedByExpiredClock())return false;
+  
   if(globalThis.hallvallaRtShouldNetworkGameplayAction?.(kind))return commitRealtimeOnlineCheckpoint(publicPatch,privatePatch,kind,{rtClientSeq,alreadyApplied});
   if(!globalThis.hallvallaRtUseLocalBattleRuntime?.()&&isPvpStep6fAtomicActionMode(publicState))return commitPvpStep6fAtomicAction(publicPatch,privatePatch);
   if(Object.keys(publicPatch||{}).length&&!(await updatePublic(publicPatch)))return false;
@@ -856,7 +856,7 @@ async function commitGameplayAction({publicPatch={},privatePatch={},kind="",rtCl
   return true;
 }
 async function updatePrivate(patch){
-  if(!globalThis.hallvallaRtUseLocalBattleRuntime?.()&&isTurnWriteBlockedByExpiredClock())return false;
+  
   const writeGameId=gameId;
   const writePlayer=myPlayer;
   const writeLifecycleToken=getBattleLifecycleToken();
@@ -879,7 +879,7 @@ async function updatePrivate(patch){
   }
   if(hallvallaIsLocalTestGame()){
     applyLocalProjection();
-    render();void maybeFinalizeUnitExhaustionFromPublicState();maybeStartTurn();
+    render();void maybeFinalizeUnitExhaustionFromPublicState();
     return true;
   }
   applyLocalProjection();
@@ -923,7 +923,7 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   const nextStats2={...(state.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};
   recordLocalLeaderBattleOutcome(outcome,pvpBot?"pvp_bot":(state.mode||"pvp"));
   const endedAt=Date.now();
-  const finalPatch={units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt,currentPlayer:0,turnPhase:"realtime",stalemateNoPlay:null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)};
+  const finalPatch={units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt,currentPlayer:0,stalemateNoPlay:null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)};
   const wrote=(state.mode==="online"&&typeof commitRealtimeOnlineCheckpoint==="function")
     ?await commitRealtimeOnlineCheckpoint(finalPatch,{},"terminal")
     :await updatePublic(finalPatch);
@@ -952,9 +952,6 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   unsubPriv=null;
   if(typeof clearBattleBoardInteractionState==="function")clearBattleBoardInteractionState();
   unitExhaustionFinalizeLock=false;
-  resetNoPlayableAutoAdvanceState();
-  resetFieldAutoAdvanceState();
-  stopTurnTimerLoop();
   clearBattleTransientUiState();
   selectedCard=null;
   selectedUnitId=null;
@@ -1462,8 +1459,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     principalSlots:realtimeExperimental?{1:0,2:0}:{1:playerPrincipalSlots,2:enemyInitial.principalSlots||0},
     adventurePrincipalKeys:realtimeExperimental?{1:[],2:[]}:{1:playerPrincipalPrep.principalKeys||[],2:enemyInitial.principalKeys||[]},
     adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,maxHonor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,lastTurnStarted:realtimeExperimental?"RT":"",skipFirstTurnDraw:true,principalSlots:realtimeExperimental?0:(enemyInitial.principalSlots||0),principalKeys:realtimeExperimental?[]:(enemyInitial.principalKeys||[]),principalKey:realtimeExperimental?"":(enemyInitial.principalKey||"")},
-    createdAt:Date.now(),currentPlayer:realtimeExperimental?0:1,turn:1,phase:"active",turnPhase:realtimeExperimental?"realtime":"draw",turnKey:realtimeExperimental?"RT-1":"1-1",turnStartedAt:serverTimestamp(),
-    clockRulesetVersion:CLOCK_RULESET_VERSION,playerClockMs:{1:DUEL_TIME_LIMIT_MS,2:DUEL_TIME_LIMIT_MS},
+    createdAt:Date.now(),currentPlayer:0,turn:1,phase:"active",turnPhase:"realtime",turnKey:"RT-1",
     playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},
     playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},
     playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},
@@ -1541,8 +1537,6 @@ function enterLocalGame(pub,priv,player=1){
   lastDemigodSummonKey="";
   lastFirebaseListenerErrorKey="";
   nearDeathSoundPlayedKeys=new Set();
-  resetNoPlayableAutoAdvanceState();
-  resetFieldAutoAdvanceState();
   clearBattleFxLayer();
   hideDemigodSummonPresentation();
   $("onlineLobby")?.classList.add("hidden");
@@ -1554,11 +1548,10 @@ function enterLocalGame(pub,priv,player=1){
   stopMusic(true);
   if(unsubPub){try{unsubPub();}catch(_){ }unsubPub=null}
   if(unsubPriv){try{unsubPriv();}catch(_){ }unsubPriv=null}
-  stopTurnTimerLoop();
   render();
   globalThis.hallvallaRtSyncPreparedBattle?.();
   setHint("Modo local de prueba: tablero real sin Firebase. Ajusta Rareza CTRL aquí mismo.");
-  maybeStartTurn();
+  
 }
 function enterGame(code,player){
   networkPublicStateRaw=null;
@@ -1576,8 +1569,6 @@ function enterGame(code,player){
   lastDemigodSummonKey="";
   lastFirebaseListenerErrorKey="";
   nearDeathSoundPlayedKeys=new Set();
-  resetNoPlayableAutoAdvanceState();
-  resetFieldAutoAdvanceState();
   clearBattleFxLayer();
   hideDemigodSummonPresentation();
   $("onlineLobby")?.classList.add("hidden");
@@ -1588,7 +1579,6 @@ function enterGame(code,player){
   stopMusic(true);
   if(unsubPub)unsubPub();
   if(unsubPriv)unsubPriv();
-  stopTurnTimerLoop();
   const lifecycleToken=getBattleLifecycleToken();
   unsubPub=battleOwnDisposable(onValue(ref(db,`games/${code}/public`),snap=>{
     if(!isBattleLifecycleTokenActive(lifecycleToken))return;
@@ -1615,7 +1605,7 @@ function enterGame(code,player){
     void maybeFinalizeUnitExhaustionFromPublicState();
     void maybeResolveStage8StealthAreaDamage();
     void maybeResolveStage8StealthDetectionAndAura();
-    maybeStartTurn();
+    
     });
   },e=>handleBattleListenerError("public:onValue",e)),"firebase","battle-public");
   unsubPriv=battleOwnDisposable(onValue(getGamePrivatePlayerRef(code,player),snap=>{
@@ -1641,72 +1631,7 @@ function enterGame(code,player){
     maybeShowBattleResult();
     void maybeResolveStage8StealthAreaDamage();
     void maybeResolveStage8StealthDetectionAndAura();
-    maybeStartTurn();
+    
     });
   },e=>handleBattleListenerError("private:onValue",e)),"firebase","battle-private");
-}
-async function maybeStartTurn(){
-  if(typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested())return;
-  if(!publicState||!privateState||!isMyTurn()||isBattleEnded())return;
-  if(publicState.mode==="tutorial"&&publicState.tutorialBasic&&typeof isBasicTutorialInitialDrawBlocked==="function"&&isBasicTutorialInitialDrawBlocked())return;
-  if(privateState.lastTurnStarted===publicState.turnKey)return;
-  if(turnStartLock)return;
-  turnStartLock=true;
-  try{
-    const firstTurnNoDraw=privateState.skipFirstTurnDraw===true;
-    const baseDrawCount=firstTurnNoDraw?0:2;
-    const merlinDrawBonus=getMerlinDrawBonus(myPlayer,publicState.units||[]);
-    const handBeforeDraw=(privateState.hand||[]).length;
-    const deckBeforeDraw=(privateState.deck||[]).length;
-    const drawn=drawCards(privateState.deck||[],privateState.hand||[],baseDrawCount+merlinDrawBonus);
-    const actualDrawCount=Math.max(0,drawn.hand.length-handBeforeDraw);
-    const actualMerlinDraw=Math.min(merlinDrawBonus,Math.max(0,deckBeforeDraw-baseDrawCount));
-    const rawHonorGain=(publicState.turn||1)>3?2:1;
-    const recharge=getResourceRecharge(privateState.maxHonor||0,rawHonorGain);
-    const honorGain=recharge.gain;
-    const maxHonor=recharge.maxHonor;
-    const honor=recharge.honor;
-    const turnPrivatePatch={deck:drawn.deck,hand:drawn.hand,honor,maxHonor,lastTurnStarted:publicState.turnKey,skipFirstTurnDraw:false};
-    const atomicOnlineTurnStart=isPvpStep6fAtomicActionMode(publicState);
-    // PvP online: private draw/Honor + public turn state must land in one Firebase multipath update.
-    // Keeping them separate can mark lastTurnStarted privately while public stays in Draw, stranding J2.
-    if(!atomicOnlineTurnStart&&!(await updatePrivate(turnPrivatePatch)))return;
-    let units=restoreTurnGuardForOwner(publicState.units||[],myPlayer).map(u=>u.owner===myPlayer?clearTurnTempStatsForOwnerUnit(u,publicState.turnKey):u);units=units.map(u=>u.owner===myPlayer&&u.key==="achilles"?{...u,hp:Math.min(effectiveMaxHp(u),u.hp+1)}:u);
-    const heroicEdgeStart=applyHeroicEdgeStartHealing(units,myPlayer);
-    units=heroicEdgeStart.units;
-    const startTurnBeforeEffects=[...units];
-    const startTrap=resolveStartTurnLegendaryTraps(units,myPlayer,publicState.turnKey);
-    units=startTrap.units;
-    const bleedStart=applyBleedingToOwnerAtTurnStart(units,myPlayer);
-    units=bleedStart.units;
-    const startBloodVictory=applyBloodVictoryForDeaths(startTurnBeforeEffects,units);
-    units=startBloodVictory.units;
-    const lionFearStart=applyAfricanLionFearAura(units);
-    units=lionFearStart.units;
-    const merlinDrawLogs=actualMerlinDraw>0?[`Visión de los Tiempos: Merlín permite a J${myPlayer} robar 1 carta adicional de su mazo.`]:[];
-    const startLogs=[...merlinDrawLogs,...(heroicEdgeStart.logs||[]),...(startTrap.logs||[]),...(bleedStart.logs||[]),...(startBloodVictory.logs||[]),...(lionFearStart.logs||[])];
-    if(startLogs.length&&await finalizeBattle(units,startLogs.join(" ")))return;
-    const playerStatsUpdate={hp:units.find(u=>u.owner===myPlayer&&u.leader)?.hp||0,honor,maxHonor,deck:drawn.deck.length,hand:drawn.hand.length};
-    if(actualDrawCount>0){tryPlaySound("draw_card",.50);battleSetTimeout(()=>tryPlaySound("mana_charge",.42),120,"turn-mana-charge");}else tryPlaySound("mana_charge",.42);
-    const resourceLabel=getResourceLabel(myPlayer);
-    const honorCapText=maxHonor>=RESOURCE_MAX_CAP?" (tope 10)":""; 
-    const merlinDrawText=actualMerlinDraw>0?" Visión de los Tiempos añade 1 carta adicional.":(merlinDrawBonus>0?" Visión de los Tiempos se activa, pero el mazo no tiene una carta adicional disponible.":"");
-    const logText=firstTurnNoDraw
-      ?`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}${honorCapText}, recarga a ${honor}. Mano antes del efecto: ${handBeforeDraw} cartas.${merlinDrawText} Mano actual: ${drawn.hand.length}. Pasa a Main Phase.`
-      :`J${myPlayer} Draw Phase: ${resourceLabel} máximo +${honorGain}${honorCapText}, recarga a ${honor} y roba ${actualDrawCount} carta${actualDrawCount===1?"":"s"}.${merlinDrawText} Pasa a Main Phase.`;
-    const turnPublicPatch={
-      units,
-      _clockKillCreditMode:"opposite-owner",
-      legendaryTraps:startTrap.traps||getActiveLegendaryTraps(),
-      turnPhase:"main",
-      [`playerStats/${myPlayer}`]:playerStatsUpdate,
-      statusFxEvent:lionFearStart.statusFxEvent||bleedStart.statusFxEvent||startTrap.statusFxEvent||null,
-      floatFxEvent:lionFearStart.floatFxEvent||bleedStart.floatFxEvent||startTrap.floatFxEvent||null,
-      honorRechargeEvent:{key:`${publicState.turnKey}-${myPlayer}-${honorGain}-${maxHonor}`,owner:myPlayer,gain:honorGain,honor,maxHonor,resourceLabel:getResourceLabel(myPlayer,{caps:true}),turnKey:publicState.turnKey,at:Date.now()},
-      log:[logText,...startLogs,...(publicState.log||[])].slice(0,18)
-    };
-    if(atomicOnlineTurnStart){
-      if(!(await commitPvpStep6fAtomicAction(turnPublicPatch,turnPrivatePatch)))return;
-    }else if(!(await updatePublic(turnPublicPatch)))return;
-  }finally{turnStartLock=false}
 }

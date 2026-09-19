@@ -22,13 +22,13 @@
 </script>
 <script>
   // v181: esta página ES el juego lógico. index.html es el shell físico.
-  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260919.215"});
+  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260919.216"});
   document.documentElement.dataset.hvDesignStage="1366x636";
 </script>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260919.215">
-<meta name="hallvalla-build" content="v8_MODULAR_20260919.215">
+<meta name="hallvalla-version" content="20260919.216">
+<meta name="hallvalla-build" content="v8_MODULAR_20260919.216">
 <meta name="hallvalla-build-name" content="Design Stage fijo 1366×636 · v192 arquitectura modular · canon v191 preservado">
 <link rel="stylesheet" href="styles.css?h=a5412c90f228"/>
 
@@ -1212,51 +1212,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
     <div class="pvp-step5-lock">ESTADO BASE SINCRONIZADO</div>
     <p class="pvp-step5-note">Ya estás dentro del duelo. En este paso todavía no se activan cartas, Honor, fases, movimientos ni efectos.</p>
     <button id="pvpStep5LeaveBtn" class="pvp-step5-leave" type="button">SALIR DEL DUELO DE PRUEBA</button>
-  </div>
-</section><section id="pvpStep6aCombatGate" class="pvp-step6a-combat-gate hidden" aria-live="polite" aria-label="Fases y cambio de turno del duelo PvP">
-  <div class="pvp-step6a-card">
-    <div class="pvp-step6a-kicker">VS ONLINE · PASO 6D</div>
-    <h2>PRIMERAS CARTAS JUGABLES</h2>
-    <p id="pvpStep6aStatus" class="pvp-step6a-status">Esperando el estado oficial del duelo...</p>
-    <div class="pvp-step6a-turn-row">
-      <span>TURNO</span><strong id="pvpStep6aTurn">1</strong>
-    </div>
-    <div id="pvpStep6aLocalState" class="pvp-step6a-local-state">ESPERA</div>
-    <div class="pvp-step6a-versus">
-      <article><span>JUGADOR 1</span><strong id="pvpStep6aPlayer1">Jugador 1</strong><em id="pvpStep6aPlayer1State">—</em></article>
-      <b>VS</b>
-      <article><span>JUGADOR 2</span><strong id="pvpStep6aPlayer2">Jugador 2</strong><em id="pvpStep6aPlayer2State">—</em></article>
-    </div>
-    <div class="pvp-step6a-state-strip">
-      <span id="pvpStep6aPhase">Fase: Inicio de turno</span>
-      <span id="pvpStep6aTimer">Timer: OFF</span>
-      <span id="pvpStep6aStake">Apuesta: Gratis</span>
-    </div>
-    <div class="pvp-step6a-lock">FUENTE OFICIAL · FIREBASE</div>
-    <p class="pvp-step6a-note">En 6D la mano y el Honor siguen siendo privados, pero ya puedes jugar una carta durante Main Phase o Action Phase. El coste se descuenta del Honor de forma sincronizada y la carta jugada se revela a ambos jugadores. Sus efectos, posición en tablero, movimiento y ataques siguen bloqueados hasta los siguientes bloques.</p>
-    <section class="pvp-step6c-resource-panel" aria-label="Mano y Honor privados">
-      <div class="pvp-step6c-resource-head">
-        <span>HONOR PROPIO <strong id="pvpStep6cOwnHonor">0/0</strong></span>
-        <span>MANO <strong id="pvpStep6cOwnHandCount">0</strong></span>
-        <span>MAZO <strong id="pvpStep6cOwnDeckCount">0</strong></span>
-      </div>
-      <div class="pvp-step6c-private-label">MANO PRIVADA · SOLO TÚ VES ESTAS CARTAS</div>
-      <div id="pvpStep6cHand" class="pvp-step6c-hand"><div class="pvp-step6c-hand-wait">Preparando mano privada...</div></div>
-      <div id="pvpStep6dPlayHint" class="pvp-step6d-play-hint">Las cartas se habilitan en Main Phase y Action Phase.</div>
-    </section>
-    <section class="pvp-step6d-played-panel" aria-label="Cartas jugadas y reveladas">
-      <div class="pvp-step6d-played-title">CARTAS JUGADAS · VISIBLES PARA AMBOS</div>
-      <div class="pvp-step6d-played-grid">
-        <article><span id="pvpStep6dPlayed1Label">JUGADOR 1</span><div id="pvpStep6dPlayed1" class="pvp-step6d-played-list"><em>Ninguna carta jugada.</em></div></article>
-        <article><span id="pvpStep6dPlayed2Label">JUGADOR 2</span><div id="pvpStep6dPlayed2" class="pvp-step6d-played-list"><em>Ninguna carta jugada.</em></div></article>
-      </div>
-      <div class="pvp-step6d-played-note">En 6D jugar una carta confirma coste + salida de la mano + revelación pública. Todavía no se resuelven sus efectos.</div>
-    </section>
-    <div class="pvp-step6b-controls">
-      <button id="pvpStep6bAdvanceBtn" class="pvp-step6b-advance" type="button" disabled>SIGUIENTE FASE</button>
-      <div id="pvpStep6bHint" class="pvp-step6b-hint">Esperando al jugador activo.</div>
-    </div>
-    <button id="pvpStep6aLeaveBtn" class="pvp-step6a-leave" type="button">SALIR DEL DUELO DE PRUEBA</button>
   </div>
 </section><div class="battle-tools"><button id="battleMenuBtn" class="battle-tool-btn" type="button" aria-label="Abrir configuración de duelo">⚙️</button></div><div id="hudP1" class="player-status-hud hud-player-left" aria-label="HUD del jugador">
   <div class="player-status-card">

@@ -54,8 +54,7 @@ async function commitCardPlay(card,publicPatch={},paidCost=null,actionLog=""){
     else if(masteryCardType==="spell"||card?.spell)registerAccountMasteryAction("spells",1,`${masteryEventBase}:spell`);
   }
   pulseTurnHonorHud();
-  if(!(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()))scheduleAutoAdvanceIfHandEmptyAfterPlay(payment.hand,payment.honor);
-  else if(typeof hallvallaRtReleaseHandFocus==="function")hallvallaRtReleaseHandFocus();
+  if(typeof hallvallaRtReleaseHandFocus==="function")hallvallaRtReleaseHandFocus();
   return true;
 }
 
@@ -1222,72 +1221,6 @@ async function attackUnit(a,d){
   if(!(await finalizeBattle(units,fullActionLog)))await pushLog(fullActionLog);
   clearSelection();
 }
-async function finishTurn(){
-  if(typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested())return setHint("TR canónico: no existen turnos ni End Phase.");
-  if(isBattleEnded())return setHint("La batalla ya terminó.");
-  if(!isMyTurn())return setHint("No es tu turno.");
-  if(isTurnTimerEnabled()&&getDuelClockRemainingMs(Number(publicState?.currentPlayer||0))<=0){await expireDuelByClock();return;}
-  if(isTurnTimerEnabled()&&getTurnTimerRemainingMs()<=0){await expireTurnByClock();return;}
-  const endTurnBeforeBurn=[...(publicState.units||[])];
-  const burnEnd=applyBurnAtTurnEnd(endTurnBeforeBurn);
-  const burnBloodVictory=applyBloodVictoryForDeaths(endTurnBeforeBurn,burnEnd.units);
-  burnEnd.units=burnBloodVictory.units;
-  if(burnBloodVictory.logs.length)burnEnd.logs.push(...burnBloodVictory.logs);
-  if(burnEnd.logs.length&&await finalizeBattle(burnEnd.units,burnEnd.logs.join(" ")))return;
-  const veilEnd=resolveVeilCurseAtTurnEnd(burnEnd.units,myPlayer,publicState?.turnKey||"");
-  if(veilEnd.logs.length&&await finalizeBattle(veilEnd.units,[...(burnEnd.logs||[]),...(veilEnd.logs||[])].join(" ")))return;
-  const erictoUpkeep=applyErictoUpkeepAtTurnEnd(veilEnd.units,myPlayer);
-  const erictoLife=resolveErictoLifecycle(erictoUpkeep.units);
-  const endLogs=[...(burnEnd.logs||[]),...(veilEnd.logs||[]),...(erictoUpkeep.logs||[]),...(erictoLife.logs||[])];
-  if((erictoUpkeep.logs.length||erictoLife.logs.length)&&await finalizeBattle(erictoLife.units,endLogs.join(" ")))return;
-  const tutorialMode=publicState?.mode==="tutorial";const next=tutorialMode?1:(myPlayer===1?2:1),turn=tutorialMode?(publicState.turn||1)+1:(next===1?(publicState.turn||1)+1:(publicState.turn||1));
-  const leaderEndEffect=!tutorialMode&&next!==myPlayer?resolveAutomaticLeaderEffectAfterRivalTurn(erictoLife.units,next,{legendaryTraps:getActiveLegendaryTraps(),beastTraps:publicState.beastTraps||[]}):{units:erictoLife.units,logs:[],triggered:false,battleFxEvent:null};
-  if(leaderEndEffect.logs.length)endLogs.push(...leaderEndEffect.logs);
-  if(leaderEndEffect.triggered){
-    if(getBattleOutcome(leaderEndEffect.units).ended&&leaderEndEffect.battleFxEvent)await updatePublic({battleFxEvent:leaderEndEffect.battleFxEvent});
-    if(await finalizeBattle(leaderEndEffect.units,endLogs.join(" ")))return;
-  }
-  let refreshedUnits=restoreTurnGuardForOwner(leaderEndEffect.units,next);
-  const moraleUpdate=advanceMoralePressureAfterTurn(publicState,myPlayer,refreshedUnits);
-  if(moraleUpdate.logs.length)endLogs.push(...moraleUpdate.logs);
-  handOpen=false;
-  handManualCloseKey="";
-  await updatePublic({...getDuelClockHandoffPatch(publicState),units:refreshedUnits,moralePressure:moraleUpdate.moralePressure,_clockKillCreditMode:"opposite-owner",_clockKillIgnoreIds:erictoUpkeep.noClockKillIds,beastTraps:publicState.beastTraps||[],legendaryTraps:getActiveLegendaryTraps(),currentPlayer:next,turn,turnPhase:"draw",turnKey:`${turn}-${next}`,turnStartedAt:getTurnStartTimestampValue(),statusFxEvent:veilEnd.statusFxEvent||burnEnd.statusFxEvent||null,floatFxEvent:veilEnd.floatFxEvent||burnEnd.floatFxEvent||null,...(leaderEndEffect.battleFxEvent?{battleFxEvent:leaderEndEffect.battleFxEvent}:{}),...(veilEnd.killEvent?{veilCurseKillEvent:veilEnd.killEvent}:{}),log:[tutorialMode?`Tutorial: termina el turno de práctica. ${endLogs.join(" ")} Nuevo turno para J1.`:`J${myPlayer} End Phase: termina turno. ${endLogs.join(" ")} Ahora juega J${next}.`,...(publicState.log||[])].slice(0,18)});
-  clearSelection();
-}
-async function advanceTurnPhase(){
-  if(typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested())return setHint("TR canónico: no existen fases de turno.");
-  if(isBattleEnded())return setHint("La batalla ya terminó.");
-  if(!isMyTurn())return setHint("No es tu turno.");
-  if(typeof invalidateImmediateMoveUndo==="function")invalidateImmediateMoveUndo("phase_change");
-  const phase=getTurnPhase();
-  if(publicState?.mode==="tutorial"&&publicState?.tutorialBasic&&typeof getBasicTutorialPhaseGate==="function"){
-    const tutorialGate=getBasicTutorialPhaseGate(phase);
-    if(tutorialGate&&tutorialGate.allowed===false)return setHint(tutorialGate.message||"Sigue el Tutorial básico.");
-  }
-  if(phase==="draw")return setHint(`Draw Phase se resuelve automáticamente: roba cartas y recarga ${getResourceLabel(myPlayer)}.`);
-  if(phase==="main"){
-    handOpen=false;handManualCloseKey="";clearSelection();
-    const readyUnits=normalizeFreshSummonsForActionPhase(publicState.units||[],myPlayer,publicState.turnKey||"");
-    await updatePublic({units:readyUnits,turnPhase:"actions",log:[`J${myPlayer} pasa a Action Phase: acciones de unidades en campo. Las invocaciones recién invocadas quedan listas para MOV/DEF/ATTK/EFFECT.`,...(publicState.log||[])].slice(0,18)});
-    return;
-  }
-  if(phase==="actions"){
-    handOpen=false;handManualCloseKey="";clearSelection();
-    const playableCards=getPlayableCardsInHand().length;
-    if(playableCards<=0){
-      await updatePublic({turnPhase:"end",log:[`J${myPlayer} no tiene cartas jugables después de Action Phase. MOV ya solo pertenece a Action Phase, así que se salta Last Phase y termina turno.`,...(publicState.log||[])].slice(0,18)});
-      await finishTurn();
-      return;
-    }
-    await updatePublic({turnPhase:"last",log:[`J${myPlayer} pasa a Last Phase: aún tiene cartas jugables.`,...(publicState.log||[])].slice(0,18)});
-    return;
-  }
-  if(phase==="last"){
-    handOpen=false;clearSelection();
-    await updatePublic({turnPhase:"end",log:[`J${myPlayer} entra en End Phase.`,...(publicState.log||[])].slice(0,18)});
-    await finishTurn();
-    return;
-  }
-  if(phase==="end")return finishTurn();
-}
+
+/* v216 · eliminado el orquestador legacy de cierre y avance de fases.
+   Este módulo conserva únicamente resolución compartida de movimiento/ataque/efectos usada por TR. */

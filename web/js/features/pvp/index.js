@@ -328,7 +328,7 @@ Objetivo de este paso:
 - abrir el duelo completo sobre el mismo motor real usado por PvE;
 - retirar los bloqueos temporales de cartas y EFFECT de los pasos de prueba;
 - permitir unidades, magias, equipos, trampas, pasivos, estados y efectos activos;
-- mantener manos privadas, Honor, fases, perspectiva local y sincronización Firebase;
+- mantener arsenal privado, Maná, perspectiva local y sincronización Firebase;
 - permitir llegar a la condición normal de victoria/derrota del motor real.
 
 La inyección de Fireball del Paso 6H se retira: la mano inicial vuelve a salir del mazo guardado normal.
@@ -344,12 +344,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   const FIREBASE_TIMEOUT_MS=10000;
   const DEFAULT_RULES=Object.freeze({timerEnabled:false, stakeMode:"none", goldAmount:500, cardEntryFee:500});
   const GOLD_OPTIONS=[100,250,500,1000];
-  const STEP6B_PHASES=["turn_start","draw","main","actions","last","end"];
-  const STEP6C_RESOURCE_CAP=10;
   const STEP6C_INITIAL_HAND=4;
-  const STEP6C_DRAW_PER_TURN=2;
-  const STEP6D_PLAY_PHASES=new Set(["main","actions"]);
-  const STEP6B_PHASE_LABELS={turn_start:"Inicio de turno",draw:"Draw Phase",main:"Main Phase",actions:"Action Phase",last:"Last Phase",end:"End Phase"};
   let busy=false;
   let activeCode="";
   let activeOwnerUid="";
@@ -365,10 +360,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   let arenaEnteredCode="";
   let arenaLaunchTimer=null;
   let combatLaunchTimer=null;
-  let combatEnteredCode="";
-  let privateCombatInitInFlight=false;
-  let turnResourceInFlight=false;
-  let cardPlayInFlight=false;
   let enginePrepInFlight=false;
   let realEngineStartTimer=null;
   let realEngineEnteredCode="";
@@ -660,7 +651,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       random.classList.toggle("is-searching",randomMatchSearching);
     }
     if(ready&&busy) ready.disabled=true;
-    const disableRuleButtons=busy||activeRole!==1||!activeCode||["configured","arena_ready","battle_active"].includes(String(roomCache?.phase||"waiting"));
+    const disableRuleButtons=busy||activeRole!==1||!activeCode||["configured","arena_ready","prebattle","active"].includes(String(roomCache?.phase||"waiting"));
     for(const id of ["pvpTimerToggleBtn","pvpStakeModeBtn","pvpStakeAmountBtn"]){ const btn=$(id); if(btn) btn.disabled=disableRuleButtons; }
   }
 
@@ -835,21 +826,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       && Number.isInteger(Number(state.initialPlayableCount)) && Number(state.initialPlayableCount)>=0
       && hand.length+deck.length+played.length===Number(state.initialPlayableCount)
       && Number(state.honor||0)>=0 && Number(state.maxHonor||0)>=0;
-  }
-  function getOwnPrivateCombat6c(){ return ownPrivateState?.combat6c||null; }
-  function getPublicCombatStats(room,role){
-    const stats=room?.combatState?.playerStats?.[role]||room?.combatState?.playerStats?.[String(role)]||{};
-    return {hand:Number(stats.hand||0),deck:Number(stats.deck||0),honor:Number(stats.honor||0),maxHonor:Number(stats.maxHonor||0),privateReady:stats.privateReady===true};
-  }
-  function bothPrivateCombatReady(room){ return getPublicCombatStats(room,1).privateReady && getPublicCombatStats(room,2).privateReady; }
-  function publicStatsMatchPrivate6c(room,role,state){
-    if(!validatePrivateCombat6c(state,activeCode,role)) return false;
-    const stats=getPublicCombatStats(room,role);
-    return stats.privateReady
-      && stats.hand===normalizeFirebaseArray(state.handKeys).length
-      && stats.deck===normalizeFirebaseArray(state.deckKeys).length
-      && stats.honor===Number(state.honor||0)
-      && stats.maxHonor===Number(state.maxHonor||0);
   }
   function getCardTemplate6c(key){
     const wanted=String(key||"");
@@ -1099,232 +1075,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     return {valid:errors.length===0,archetypes:PVP_BOT_ARCHETYPES.length,profiles:PVP_BOT_PROFILES.length,levels:15,botsPerLevel:15,totalBots:225,leagues:(globalThis.HALLVALLA_PVP_LEAGUES||[]).length,errors};
   }
   globalThis.hvPvpBotAudit=auditPvpBotDefinitions;
-
-  function getCardPortrait6c(card){
-    try{ if(card?.portrait) return String(card.portrait); }catch(_){ }
-    try{ if(typeof getResolvedCardPortraitSource==="function") return String(getResolvedCardPortraitSource(card)||""); }catch(_){ }
-    return "";
-  }
-  function escapeHtml6d(value){ return String(value??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-  function canPlayCardNow6d(room,cost=0){
-    const combat=room?.combatState||{};
-    const phase=String(combat.turnPhase||"");
-    const myTurn=Number(combat.activeRole||0)===Number(activeRole||0);
-    const state=getOwnPrivateCombat6c();
-    return String(room?.phase||"")==="battle_active"
-      && validateCanonicalCombatState(room)
-      && myTurn
-      && STEP6D_PLAY_PHASES.has(phase)
-      && validatePrivateCombat6c(state,activeCode,activeRole)
-      && Number(state.honor||0)>=Math.max(0,Number(cost||0)||0)
-      && !busy && !cardPlayInFlight;
-  }
-  function cardPlayReason6d(room,cost=0){
-    const combat=room?.combatState||{};
-    if(Number(combat.activeRole||0)!==Number(activeRole||0)) return "ESPERA";
-    const phase=String(combat.turnPhase||"");
-    if(!STEP6D_PLAY_PHASES.has(phase)) return "MAIN / ACTION";
-    const state=getOwnPrivateCombat6c();
-    if(!validatePrivateCombat6c(state,activeCode,activeRole)) return "PREPARANDO";
-    if(Number(state.honor||0)<Math.max(0,Number(cost||0)||0)) return "SIN HONOR";
-    return "JUGAR";
-  }
-  function renderOwnHand6c(){
-    const holder=$("pvpStep6cHand");
-    if(!holder) return;
-    const state=getOwnPrivateCombat6c();
-    if(!validatePrivateCombat6c(state,activeCode,activeRole)){
-      holder.innerHTML='<div class="pvp-step6c-hand-wait">Preparando mano privada...</div>';
-      setText("pvpStep6cOwnHonor","0/0"); setText("pvpStep6cOwnHandCount","0"); setText("pvpStep6cOwnDeckCount","0");
-      return;
-    }
-    const hand=normalizeFirebaseArray(state.handKeys).map(v=>String(v||""));
-    setText("pvpStep6cOwnHonor",`${Number(state.honor||0)}/${Number(state.maxHonor||0)}`);
-    setText("pvpStep6cOwnHandCount",String(hand.length));
-    setText("pvpStep6cOwnDeckCount",String(normalizeFirebaseArray(state.deckKeys).length));
-    holder.innerHTML=hand.map((key,index)=>{
-      const card=getCardTemplate6c(key); const name=String(card?.name||key); const cost=Math.max(0,Number(card?.cost||0)||0); const portrait=getCardPortrait6c(card);
-      const playable=canPlayCardNow6d(roomCache||{},cost);
-      const action=cardPlayReason6d(roomCache||{},cost);
-      return `<button class="pvp-step6c-card${playable?" is-playable":""}" type="button" data-hand-index="${index}" data-card-key="${escapeHtml6d(key)}" ${playable?"":"disabled"} aria-label="${playable?"Jugar":"Carta no disponible"}: ${escapeHtml6d(name)}">${portrait?`<img src="${escapeHtml6d(portrait)}" alt="">`:""}<div><strong>${escapeHtml6d(name)}</strong><span>Coste ${cost}</span><span class="pvp-step6d-card-action">${action}</span></div></button>`;
-    }).join("")||'<div class="pvp-step6c-hand-wait">La mano está vacía.</div>';
-  }
-
-  async function publishPrivateCombatStats6c(code,role,state){
-    if(!validatePrivateCombat6c(state,code,role)) return false;
-    const patch={};
-    patch[`combatState/playerStats/${role}/hand`]=normalizeFirebaseArray(state.handKeys).length;
-    patch[`combatState/playerStats/${role}/deck`]=normalizeFirebaseArray(state.deckKeys).length;
-    patch[`combatState/playerStats/${role}/honor`]=Number(state.honor||0);
-    patch[`combatState/playerStats/${role}/maxHonor`]=Number(state.maxHonor||0);
-    patch[`combatState/playerStats/${role}/privateReady`]=true;
-    patch[`combatState/playerStats/${role}/updatedAt`]=Date.now();
-    await withTimeout(update(ref(db,`games/${code}/public`),patch),`Publicar conteos privados J${role} en ${code}`,5000);
-    return true;
-  }
-  function normalizePlayedEvents6d(value){
-    if(!value||typeof value!=="object") return [];
-    return Object.values(value).filter(v=>v&&typeof v==="object").sort((a,b)=>Number(a.seq||0)-Number(b.seq||0));
-  }
-  function renderPlayedCards6d(room){
-    const combat=room?.combatState||{};
-    setText("pvpStep6dPlayed1Label",String(combat?.players?.[1]?.name||"JUGADOR 1"));
-    setText("pvpStep6dPlayed2Label",String(combat?.players?.[2]?.name||"JUGADOR 2"));
-    for(const role of [1,2]){
-      const holder=$(role===1?"pvpStep6dPlayed1":"pvpStep6dPlayed2");
-      if(!holder) continue;
-      const events=normalizePlayedEvents6d(combat?.playedCards?.[role]||combat?.playedCards?.[String(role)]);
-      holder.innerHTML=events.map(event=>{
-        const key=String(event?.key||"");
-        const card=getCardTemplate6c(key);
-        const portrait=getCardPortrait6c(card);
-        const name=String(event?.name||card?.name||key||"Carta");
-        const cost=Math.max(0,Number(event?.cost||0)||0);
-        return `<article class="pvp-step6d-played-card">${portrait?`<img src="${escapeHtml6d(portrait)}" alt="">`:""}<div><strong>${escapeHtml6d(name)}</strong><small>Coste ${cost} · T${Number(event?.turn||0)}</small></div></article>`;
-      }).join("")||'<em>Ninguna carta jugada.</em>';
-    }
-  }
-  function setPlayHint6d(room){
-    const combat=room?.combatState||{};
-    const phase=String(combat.turnPhase||"");
-    const myTurn=Number(combat.activeRole||0)===Number(activeRole||0);
-    if(!myTurn) setText("pvpStep6dPlayHint","Espera tu turno. Tus cartas siguen privadas.");
-    else if(!STEP6D_PLAY_PHASES.has(phase)) setText("pvpStep6dPlayHint","Podrás jugar cartas al llegar a Main Phase o Action Phase.");
-    else setText("pvpStep6dPlayHint","Puedes jugar una carta: el coste se descuenta de tu Honor y la carta se revela a ambos jugadores.");
-  }
-  async function playCardFromHand6d(handIndex){
-    if(busy||cardPlayInFlight||!activeCode||!(activeRole===1||activeRole===2)) return false;
-    const index=Number(handIndex);
-    if(!Number.isInteger(index)||index<0) return false;
-    busy=true; cardPlayInFlight=true;
-    try{
-      syncLocalButtons();
-      const publicRef=ref(db,`games/${activeCode}/public`);
-      const roomSnap=await withTimeout(get(publicRef),`Leer estado antes de jugar carta ${activeCode}`,5000);
-      if(!roomSnap.exists()) throw new Error("La sala ya no existe.");
-      const room=roomSnap.val()||{};
-      if(String(room?.phase||"")!=="battle_active"||!validateCanonicalCombatState(room)) throw new Error("El combate canónico no está listo.");
-      const combat=room.combatState||{};
-      if(Number(combat.activeRole||0)!==Number(activeRole)) throw new Error("Solo el jugador con el turno activo puede jugar cartas.");
-      const phase=String(combat.turnPhase||"");
-      if(!STEP6D_PLAY_PHASES.has(phase)) throw new Error("Las cartas solo se pueden jugar en Main Phase o Action Phase durante 6D.");
-      if(!bothPrivateCombatReady(room)) throw new Error("Aún se está preparando el estado privado de uno de los jugadores.");
-
-      const ownRef=ref(db,`games/${activeCode}/private/player${activeRole}`);
-      const privateSnap=await withTimeout(get(ownRef),`Leer mano privada antes de jugar J${activeRole}`,5000);
-      if(!privateSnap.exists()) throw new Error("No existe tu estado privado.");
-      const payload=privateSnap.val()||{};
-      if(String(payload.ownerUid||"")!==String(activeOwnerUid||"")) throw new Error("La mano privada ya no pertenece a este usuario.");
-      const state=payload.combat6c||null;
-      if(!validatePrivateCombat6c(state,activeCode,activeRole)) throw new Error("La mano privada no es válida.");
-      const hand=normalizeFirebaseArray(state.handKeys).map(v=>String(v||""));
-      const key=String(hand[index]||"");
-      if(!key) throw new Error("La carta seleccionada ya no está en esa posición de la mano.");
-      const card=getCardTemplate6c(key);
-      const name=String(card?.name||key);
-      const cost=Math.max(0,Number(card?.cost||0)||0);
-      const honor=Math.max(0,Number(state.honor||0)||0);
-      if(honor<cost) throw new Error(`Honor insuficiente: necesitas ${cost} y tienes ${honor}.`);
-
-      const nextHand=hand.slice(); nextHand.splice(index,1);
-      const playedKeys=normalizeFirebaseArray(state.playedKeys).map(v=>String(v||"")); playedKeys.push(key);
-      const nextHonor=honor-cost;
-      const nextPlaySeq=Number(state.playSeq||0)+1;
-      const nextActionSeq=Number(combat.actionSeq||0)+1;
-      const actionId=`a${String(nextActionSeq).padStart(6,"0")}`;
-      const now=Date.now();
-      const event={id:actionId,seq:nextActionSeq,type:"play_card",role:Number(activeRole),key,name,cost,turn:Number(combat.turnNumber||1),phase,at:now,effectsResolved:false};
-
-      const patch={};
-      patch[`private/player${activeRole}/combat6c/handKeys`]=nextHand;
-      patch[`private/player${activeRole}/combat6c/playedKeys`]=playedKeys;
-      patch[`private/player${activeRole}/combat6c/honor`]=nextHonor;
-      patch[`private/player${activeRole}/combat6c/playSeq`]=nextPlaySeq;
-      patch[`private/player${activeRole}/combat6c/lastPlayedKey`]=key;
-      patch[`private/player${activeRole}/combat6c/lastPlayedAt`]=now;
-      patch[`public/combatState/playerStats/${activeRole}/hand`]=nextHand.length;
-      patch[`public/combatState/playerStats/${activeRole}/honor`]=nextHonor;
-      patch[`public/combatState/playerStats/${activeRole}/updatedAt`]=now;
-      patch[`public/combatState/actionSeq`]=nextActionSeq;
-      patch[`public/combatState/playedCards/${activeRole}/${actionId}`]=event;
-      patch[`public/combatState/lastAction`]=event;
-      patch[`public/combatState/updatedAt`]=now;
-
-      await withTimeout(update(ref(db,`games/${activeCode}`),patch),`Jugar ${name} de forma atómica en ${activeCode}`,6000);
-      ownPrivateState={...payload,combat6c:{...state,handKeys:nextHand,playedKeys,honor:nextHonor,playSeq:nextPlaySeq,lastPlayedKey:key,lastPlayedAt:now}};
-      mark(`PASO 6D · J${activeRole} jugó ${name} · coste ${cost} · Honor ${nextHonor}/${Number(state.maxHonor||0)}.`);
-      renderOwnHand6c();
-      return true;
-    }catch(error){
-      console.error(`[HallValla][${STEP}] Jugar carta falló:`,error);
-      await hvPopup(`JUGAR CARTA FALLÓ: ${error?.message||error}`,"PvP");
-      return false;
-    }finally{
-      cardPlayInFlight=false; busy=false; syncLocalButtons();
-      try{ const snap=activeCode?await get(ref(db,`games/${activeCode}/public`)):null; if(snap?.exists()) renderRoomSnapshot(snap.val()||{},activeCode); }catch(_){ }
-    }
-  }
-
-  async function ensureOwnCombatPrivateState(room,code){
-    if(privateCombatInitInFlight||!code||code!==activeCode||!(activeRole===1||activeRole===2)) return false;
-    if(String(room?.phase||"")!=="battle_active"||!room?.combatState) return false;
-    privateCombatInitInFlight=true;
-    try{
-      const ownRef=ref(db,`games/${code}/private/player${activeRole}`);
-      const snap=await withTimeout(get(ownRef),`Leer estado privado 6D J${activeRole}`,5000);
-      if(!snap.exists()) throw new Error(`private/player${activeRole} no existe.`);
-      const payload=snap.val()||{};
-      if(String(payload.ownerUid||"")!==String(activeOwnerUid||"")) throw new Error("El estado privado ya no pertenece a este usuario.");
-      let state=payload.combat6c||null;
-      if(!validatePrivateCombat6c(state,code,activeRole)){
-        state=buildPrivateCombat6c(payload,code,activeRole);
-        await withTimeout(update(ownRef,{combat6c:state}),`Inicializar mano privada 6D J${activeRole}`,5000);
-      }
-      ownPrivateState={...payload,combat6c:state};
-      if(!publicStatsMatchPrivate6c(room,activeRole,state)) await publishPrivateCombatStats6c(code,activeRole,state);
-      renderOwnHand6c();
-      return true;
-    }catch(error){
-      console.error(`[HallValla][${STEP}] Inicialización privada 6D falló:`,error);
-      mark(`Mano privada J${activeRole} falló: ${error?.message||error}`);
-      return false;
-    }finally{ privateCombatInitInFlight=false; }
-  }
-  async function applyOwnTurnResources6c(room){
-    if(turnResourceInFlight) throw new Error("La recarga del turno ya está en curso.");
-    const combat=room?.combatState||{};
-    const role=Number(activeRole||0);
-    if(Number(combat.activeRole||0)!==role) throw new Error("Solo el jugador activo puede procesar sus recursos.");
-    turnResourceInFlight=true;
-    try{
-      const ownRef=ref(db,`games/${activeCode}/private/player${role}`);
-      const snap=await withTimeout(get(ownRef),`Leer recursos privados J${role}`,5000);
-      if(!snap.exists()) throw new Error("No existe el estado privado del jugador.");
-      const payload=snap.val()||{};
-      let state=payload.combat6c||null;
-      if(!validatePrivateCombat6c(state,activeCode,role)) throw new Error("La mano privada 6D todavía no está preparada.");
-      const turnKey=`${Number(combat.turnNumber||1)}-${role}`;
-      if(String(state.lastTurnStarted||"")!==turnKey){
-        const firstTurnNoDraw=state.skipFirstTurnDraw===true;
-        const deck=normalizeFirebaseArray(state.deckKeys).map(v=>String(v||""));
-        const hand=normalizeFirebaseArray(state.handKeys).map(v=>String(v||""));
-        const drawCount=firstTurnNoDraw?0:STEP6C_DRAW_PER_TURN;
-        const actualDraw=Math.min(drawCount,deck.length);
-        const drawn=deck.slice(0,actualDraw);
-        const nextDeck=deck.slice(actualDraw);
-        const nextHand=[...hand,...drawn];
-        const honorGain=Number(combat.turnNumber||1)>3?2:1;
-        const nextMax=Math.min(STEP6C_RESOURCE_CAP,Math.max(0,Number(state.maxHonor||0))+honorGain);
-        state={...state,deckKeys:nextDeck,handKeys:nextHand,honor:nextMax,maxHonor:nextMax,lastTurnStarted:turnKey,skipFirstTurnDraw:false,resourceSeq:Number(state.resourceSeq||0)+1,lastDrawCount:actualDraw,lastHonorGain:honorGain,lastResourceAt:Date.now()};
-        await withTimeout(update(ownRef,{combat6c:state}),`Aplicar Draw/Honor J${role}`,5000);
-      }
-      ownPrivateState={...payload,combat6c:state};
-      await publishPrivateCombatStats6c(activeCode,role,state);
-      renderOwnHand6c();
-      return state;
-    }finally{ turnResourceInFlight=false; }
-  }
-
   function defaultStartConfig(){ return {startingRole:0,secondRole:0,resolved:false,resolvedAt:0,source:"direct_matchmaking"}; }
   function resolveDirectStartConfig(room,code){
     const p1Uid=String(room?.playerSlots?.player1Uid||"");
@@ -1449,147 +1199,10 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }
 
 
-  function validateCanonicalCombatState(room){
-    const combat=room?.combatState;
-    const arena=room?.arenaBootstrap;
-    if(!combat||typeof combat!=="object"||combat.schema!=="hallvalla-pvp-step6d-combat-state"||combat.status!=="active") return false;
-    if(!arena||!validateArenaBootstrap(room)) return false;
-    if(String(combat.matchCode||"")!==String(arena.matchCode||room?.code||activeCode||"")) return false;
-    const turnNumber=Number(combat.turnNumber||0);
-    const active=Number(combat.activeRole||0), waiting=Number(combat.waitingRole||0);
-    const phase=String(combat.turnPhase||"");
-    if(turnNumber<1||![1,2].includes(active)||![1,2].includes(waiting)||active===waiting) return false;
-    if(!STEP6B_PHASES.includes(phase)) return false;
-    if(String(combat?.players?.[1]?.uid||"")!==String(room?.playerSlots?.player1Uid||"")) return false;
-    if(String(combat?.players?.[2]?.uid||"")!==String(room?.playerSlots?.player2Uid||"")) return false;
-    return combat.sourceOfTruth==="firebase" && combat.actionsEnabled===true && combat.cardPlayEnabled===true && combat.phaseControlEnabled===true && combat.resourceControlEnabled===true && combat.privateHands===true;
-  }
 
-  function step6bPhaseLabel(phase){ return STEP6B_PHASE_LABELS[String(phase||"")]||String(phase||"Fase"); }
 
-  function clearStep6aCombatView(){
-    combatEnteredCode="";
-    const shell=$("gameShell");
-    if(shell) shell.classList.remove("pvp-step6a-active","pvp-step6b-active","pvp-step6d-active");
-    hide("pvpStep6aCombatGate",true);
-  }
 
-  function renderStep6aCombat(room){
-    if(String(room?.phase||"")!=="battle_active"||!validateCanonicalCombatState(room)) return false;
-    const combat=room.combatState;
-    const rules=combat.settings||{};
-    const active=Number(combat.activeRole||0);
-    const waiting=Number(combat.waitingRole||0);
-    const myRole=Number(activeRole||0);
-    const phase=String(combat.turnPhase||"turn_start");
-    const myTurn=myRole===active;
-    clearArenaLaunchTimer();
-    $("onlineLobby")?.classList.add("hidden");
-    $("mainMenu")?.classList.add("hidden");
-    globalThis.hvHydrateAssetGroup?.("battle");
-    const shell=$("gameShell");
-    if(shell){ shell.classList.remove("hidden","pvp-step5-preview","pvp-step6a-active","pvp-step6b-active","pvp-step6d-active"); shell.classList.add("pvp-step6b-active","pvp-step6d-active"); }
-    hide("pvpStep5ArenaGate",true);
-    hide("pvpStep6aCombatGate",false);
-    setText("pvpStep6aTurn",String(combat.turnNumber||1));
-    setText("pvpStep6aPlayer1",String(combat?.players?.[1]?.name||"Jugador 1"));
-    setText("pvpStep6aPlayer2",String(combat?.players?.[2]?.name||"Jugador 2"));
-    setText("pvpStep6aPlayer1State",active===1?"TURNO ACTIVO":"EN ESPERA");
-    setText("pvpStep6aPlayer2State",active===2?"TURNO ACTIVO":"EN ESPERA");
-    setText("pvpStep6aLocalState",myTurn?"TU TURNO":"ESPERA");
-    setText("pvpStep6aPhase",`Fase: ${step6bPhaseLabel(phase)}`);
-    setText("pvpStep6aTimer",`Timer: ${rules.timerEnabled?"ON":"OFF"}`);
-    const stake=rules.stakeMode==="card"?"Carta · economía pendiente 6D":(rules.stakeMode==="gold"?`Oro · ${Number(rules.goldAmount||500)} · economía pendiente 6D`:"Gratis");
-    setText("pvpStep6aStake",`Apuesta: ${stake}`);
-    const activeName=String(combat?.players?.[active]?.name||`J${active}`);
-    setText("pvpStep6aStatus",`Sala ${combat.matchCode} · Turno ${combat.turnNumber} · ${step6bPhaseLabel(phase)}. ${activeName} controla el avance. En Main/Action ya se pueden jugar cartas con coste de Honor.`);
-    setText("p1HudName",String(combat?.players?.[1]?.name||"Jugador 1"));
-    setText("p2HudName",String(combat?.players?.[2]?.name||"Jugador 2"));
-    setText("p1Badge",active===1?"Turno":"Espera");
-    setText("p2Badge",active===2?"Turno":"Espera");
-    setText("phaseBanner",`TURNO ${combat.turnNumber} · ${step6bPhaseLabel(phase).toUpperCase()}`);
-    const p1Stats=getPublicCombatStats(room,1), p2Stats=getPublicCombatStats(room,2);
-    setText("p1Life","—"); setText("p2Life","—");
-    setText("p1Hand",String(p1Stats.hand)); setText("p2Hand",String(p2Stats.hand));
-    setText("p1Deck",String(p1Stats.deck)); setText("p2Deck",String(p2Stats.deck));
-    setText("p1Honor",String(p1Stats.honor)); setText("p2Honor",String(p2Stats.honor));
-    const ownStats=myRole===1?p1Stats:p2Stats;
-    const rivalStats=myRole===1?p2Stats:p1Stats;
-    setText("turnHonorHudValue",`${ownStats.honor}/${ownStats.maxHonor}`);
-    setText("rivalHonorHudValue",`${rivalStats.honor}/${rivalStats.maxHonor}`);
-    renderPlayedCards6d(room);
-    setPlayHint6d(room);
-    renderOwnHand6c();
-    const resourcesReady=bothPrivateCombatReady(room);
-    const advanceBtn=$("pvpStep6bAdvanceBtn");
-    if(advanceBtn){
-      advanceBtn.disabled=!myTurn||busy||!resourcesReady;
-      advanceBtn.textContent=phase==="end"?"TERMINAR TURNO":(phase==="turn_start"?"INICIAR DRAW PHASE":"SIGUIENTE FASE");
-      advanceBtn.title=!resourcesReady?"Esperando que ambos jugadores preparen su mano privada":(myTurn?(phase==="end"?"Finalizar este turno y entregar el siguiente al rival":(phase==="turn_start"?"Aplicar Honor/robo y entrar a Draw Phase":"Avanzar la fase oficial en Firebase")):"Solo el jugador activo puede avanzar la fase");
-    }
-    setText("pvpStep6bHint",!resourcesReady?"Preparando la mano privada de ambos jugadores...":(myTurn?(phase==="end"?"Al terminar End Phase, el Turno pasa al rival.":(phase==="turn_start"?"Al iniciar Draw Phase se recarga tu Honor; en tu primer turno no robas porque ya comienzas con 4 cartas.":(STEP6D_PLAY_PHASES.has(phase)?"Puedes jugar cartas o avanzar la fase cuando termines.":"Solo tú puedes avanzar esta fase."))):"Esperando que el jugador activo avance la fase."));
-    void ensureOwnCombatPrivateState(room,String(combat.matchCode||activeCode||""));
-    const first=combatEnteredCode!==String(combat.matchCode||activeCode||"");
-    combatEnteredCode=String(combat.matchCode||activeCode||"");
-    if(first) mark(`PASO 6D · combate ACTIVE · Turno ${combat.turnNumber} pertenece a J${active} · cartas jugables en Main/Action.`);
-    return true;
-  }
 
-  async function advanceCanonicalPhase(){
-    if(busy||!activeCode||!(activeRole===1||activeRole===2)) return false;
-    busy=true;
-    try{
-      syncLocalButtons();
-      const publicRef=ref(db,`games/${activeCode}/public`);
-      const snap=await withTimeout(get(publicRef),`Leer fase canónica ${activeCode}`,5000);
-      if(!snap.exists()) throw new Error("La sala ya no existe.");
-      const room=snap.val()||{};
-      if(String(room?.phase||"")!=="battle_active"||!validateCanonicalCombatState(room)) throw new Error("El combate canónico no está listo para avanzar fases.");
-      const combat=room.combatState||{};
-      const currentActive=Number(combat.activeRole||0);
-      if(currentActive!==Number(activeRole)) throw new Error("Solo el jugador con el turno activo puede avanzar la fase.");
-      if(!bothPrivateCombatReady(room)) throw new Error("Aún se está preparando la mano privada de uno de los jugadores.");
-      const currentPhase=String(combat.turnPhase||"turn_start");
-      const currentIndex=STEP6B_PHASES.indexOf(currentPhase);
-      if(currentIndex<0) throw new Error(`Fase desconocida: ${currentPhase}`);
-      if(currentPhase==="turn_start") await applyOwnTurnResources6c(room);
-      let nextPhase="";
-      let nextTurn=Number(combat.turnNumber||1);
-      let nextActive=currentActive;
-      let nextWaiting=Number(combat.waitingRole||0);
-      if(currentPhase==="end"){
-        nextTurn+=1;
-        nextActive=nextWaiting;
-        nextWaiting=currentActive;
-        nextPhase="turn_start";
-      }else{
-        nextPhase=STEP6B_PHASES[currentIndex+1];
-      }
-      const phaseSeq=Number(combat.phaseSeq||0)+1;
-      await withTimeout(update(publicRef,{
-        "combatState/turnNumber":nextTurn,
-        "combatState/activeRole":nextActive,
-        "combatState/waitingRole":nextWaiting,
-        "combatState/turnPhase":nextPhase,
-        "combatState/phaseSeq":phaseSeq,
-        "combatState/updatedAt":Date.now(),
-        "combatState/lastTransition/from":currentPhase,
-        "combatState/lastTransition/to":nextPhase,
-        "combatState/lastTransition/byRole":currentActive,
-        "combatState/lastTransition/at":Date.now()
-      }),`Avanzar fase ${currentPhase} → ${nextPhase} en ${activeCode}`);
-      mark(currentPhase==="end"?`PASO 6D · Turno ${nextTurn} entregado a J${nextActive}.`:(currentPhase==="turn_start"?`PASO 6D · Honor/robo J${currentActive} aplicado · ${step6bPhaseLabel(nextPhase)}.`:`PASO 6D · ${step6bPhaseLabel(currentPhase)} → ${step6bPhaseLabel(nextPhase)}.`));
-      return true;
-    }catch(error){
-      console.error(`[HallValla][${STEP}] Avance de fase falló:`,error);
-      await hvPopup(`AVANCE DE FASE FALLÓ: ${error?.message||error}`,"PvP");
-      return false;
-    }finally{
-      busy=false;
-      syncLocalButtons();
-      try{ const snap=activeCode?await get(ref(db,`games/${activeCode}/public`)):null; if(snap?.exists()) renderRoomSnapshot(snap.val()||{},activeCode); }catch(_){ }
-    }
-  }
 
 
   function getBattleProfile6e(payload={}){
@@ -1751,8 +1364,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const p1Leader=units.find(u=>u.owner===1&&u.leader);
     const p2Leader=units.find(u=>u.owner===2&&u.leader);
     const timerOn=!!settings.timerEnabled;
-    const duelLimit=typeof DUEL_TIME_LIMIT_MS!=="undefined"?Number(DUEL_TIME_LIMIT_MS):600000;
-    const clockVersion=typeof CLOCK_RULESET_VERSION!=="undefined"?CLOCK_RULESET_VERSION:1;
     const ts=typeof serverTimestamp==="function"?serverTimestamp():Date.now();
     return {
       schema:"hallvalla-pvp-real-engine-step6f",
@@ -1782,8 +1393,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       turnPhase:"prebattle",
       turnKey:"RT-PRE",
       turnStartedAt:null,
-      clockRulesetVersion:clockVersion,
-      playerClockMs:{1:duelLimit,2:duelLimit},
       matchSettings:{
         timerEnabled:timerOn,
         stakeMode:String(settings.stakeMode||"none"),
@@ -1848,10 +1457,10 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
             }
             return true;
           }
-          hide("pvpStep5ArenaGate",true);hide("pvpStep6aCombatGate",true);
+          hide("pvpStep5ArenaGate",true);
           $("onlineLobby")?.classList.add("hidden");$("mainMenu")?.classList.add("hidden");
           const shell=$("gameShell");
-          if(shell){shell.classList.add("hidden");shell.classList.remove("pvp-step5-preview","pvp-step6a-active","pvp-step6b-active","pvp-step6d-active");}
+          if(shell){shell.classList.add("hidden");shell.classList.remove("pvp-step5-preview");}
           const startedAt=Math.max(0,Number(room?.prebattleStartedAt||0));
           const lead=Math.max(0,Number(room?.prebattleLeadInMs||250));
           const duration=Math.max(3000,Number(room?.prebattleDurationMs||3250));
@@ -1898,10 +1507,10 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       clearArenaLaunchTimer();clearCombatLaunchTimer();clearRealEngineStartTimer6e();
       detachRoomListener();detachOwnPrivateListener();
       globalThis.hideHallvallaPreBattleVs?.();
-      hide("pvpStep5ArenaGate",true);hide("pvpStep6aCombatGate",true);
+      hide("pvpStep5ArenaGate",true);
       const shell=$("gameShell");
       if(shell){
-        shell.classList.remove("hidden","pvp-step5-preview","pvp-step6a-active","pvp-step6b-active","pvp-step6d-active");
+        shell.classList.remove("hidden","pvp-step5-preview");
         shell.classList.add("pvp-step6e-real-bridge");
       }
       $("onlineLobby")?.classList.add("hidden");$("mainMenu")?.classList.add("hidden");
@@ -1960,7 +1569,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const rules=getRules(room);
     const host=activeRole===1;
     const phase=String(room?.phase||"waiting");
-    const configured=["configured","arena_ready","battle_active"].includes(phase) && room?.startConfig?.resolved===true;
+    const configured=["configured","arena_ready","prebattle","active"].includes(phase) && room?.startConfig?.resolved===true;
     const timerBtn=$("pvpTimerToggleBtn"), modeBtn=$("pvpStakeModeBtn"), amountBtn=$("pvpStakeAmountBtn");
     if(timerBtn){ timerBtn.textContent=`Timer: ${rules.timerEnabled?"ON":"OFF"}`; timerBtn.disabled=!host||busy||configured; }
     if(modeBtn){ modeBtn.textContent=`Apuesta: ${rules.stakeMode==="gold"?"Oro":(rules.stakeMode==="card"?"Carta":"Gratis")}`; modeBtn.disabled=!host||busy||configured; }
@@ -2007,7 +1616,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function getPlayerName(room,role){ return String(room?.playerNames?.[role] || room?.playerNames?.[String(role)] || getProfileNameSafe(role)); }
   function recordRecentOpponentFromRoom(room,code){
     const phase=String(room?.phase||"");
-    if(!(phase==="active"||phase==="battle_active"||phase==="ended"))return;
+    if(!(phase==="active"||phase==="ended"))return;
     const role=Number(activeRole);
     if(role!==1&&role!==2)return;
     const otherRole=role===1?2:1;
@@ -2025,9 +1634,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function renderRoomSnapshot(room,code=activeCode){
     room=room&&typeof room==="object"?room:{}; roomCache=room;
     const roomPhase=String(room?.phase||"");
-    if(!["arena_ready","battle_active"].includes(roomPhase)&&arenaEnteredCode&&arenaEnteredCode===String(code||activeCode||"")){
+    if(roomPhase!=="arena_ready"&&arenaEnteredCode&&arenaEnteredCode===String(code||activeCode||"")){
       clearStep5ArenaPreview();
-      clearStep6aCombatView();
       $("onlineLobby")?.classList.remove("hidden");
     }
     const p1Uid=String(room?.playerSlots?.player1Uid||""); const p2Uid=String(room?.playerSlots?.player2Uid||"");
@@ -2057,8 +1665,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     setPresence("pvpRoomPlayer1Presence",p1Uid?"connected":"waiting"); setPresence("pvpRoomPlayer2Presence",p2Uid?"connected":"waiting");
     setReadyCheck(1,p1Ready); setReadyCheck(2,p2Ready);
     renderRules(room);
-    const combatActive=renderStep6aCombat(room);
-    const arenaReady=combatActive?false:renderStep5ArenaPreview(room);
+    const arenaReady=renderStep5ArenaPreview(room);
 
     const input=$("joinCode"); if(input){ input.value=code||room?.code||""; input.readOnly=!!activeRole; }
     const ownReady=activeRole===2?p2Ready:p1Ready;
@@ -2074,7 +1681,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }else if(!bothPrepared){
       setText("pvpRoomMessage","Paso 4: preparando el mazo privado de ambos jugadores...");
     }else if(startCfg.resolved){
-      setText("pvpRoomMessage",combatActive?`Duelo activo: ${getPlayerName(room,startCfg.startingRole)} recibió la prioridad inicial.`:(arenaReady?`Arena conectada. Preparando ambos clientes para el duelo...`:`Rival confirmado. Entrando directamente al duelo...`));
+      setText("pvpRoomMessage",arenaReady?`Arena conectada. Preparando ambos clientes para el duelo...`:`Rival confirmado. Entrando directamente al duelo...`);
     }else if(bothReady){
       setText("pvpRoomMessage","Ambos están listos. Entrando directamente al duelo...");
     }else{
@@ -2190,7 +1797,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }
 
     if(startCfg.resolved){
-      if(String(room?.phase||"")==="battle_active"&&validateCanonicalCombatState(room))return;
+      if(isRealEnginePayload6e(room)){ void launchRealEngine6e(code,room); return; }
       if(String(room?.phase||"")==="arena_ready"&&validateArenaBootstrap(room))scheduleCanonicalCombatStart(room,code);
       else scheduleArenaBootstrap(room,code);
       return;
@@ -2300,7 +1907,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }
 
   function resetUi({resetJoin=true}={}){
-    clearRematchWait(); clearRandomAutoReady(); clearPvpBotPreludeTimers(); detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); clearRealEngineStartTimer6e(); privateCombatInitInFlight=false; turnResourceInFlight=false; cardPlayInFlight=false; enginePrepInFlight=false; pvpBotFallbackInFlight=false; activePvpBotProfile=null; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; realEngineEnteredCode=""; realEngineVsCode=""; realEngineVsPromise=null; globalThis.hideHallvallaPreBattleVs?.(); clearStep5ArenaPreview(); clearStep6aCombatView(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false);
+    clearRematchWait(); clearRandomAutoReady(); clearPvpBotPreludeTimers(); detachRoomListener(); detachOwnPrivateListener(); clearArenaLaunchTimer(); clearCombatLaunchTimer(); clearRealEngineStartTimer6e(); enginePrepInFlight=false; pvpBotFallbackInFlight=false; activePvpBotProfile=null; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; realEngineEnteredCode=""; realEngineVsCode=""; realEngineVsPromise=null; globalThis.hideHallvallaPreBattleVs?.(); clearStep5ArenaPreview(); setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false);
     try{ document.getElementById("pvpStep6eRealBadge")?.remove(); document.getElementById("pvpStep6eShield")?.remove(); }catch(_){ }
     try{ $("gameShell")?.classList.remove("pvp-step6e-real-bridge"); }catch(_){ }
     const input=$("joinCode"); if(input){ input.readOnly=false; if(resetJoin) input.value=""; }
@@ -2555,8 +2162,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       ];
       const p1Leader=units.find(u=>u?.owner===1&&u?.leader);
       const p2Leader=units.find(u=>u?.owner===2&&u?.leader);
-      const duelLimit=typeof DUEL_TIME_LIMIT_MS!=="undefined"?Number(DUEL_TIME_LIMIT_MS):600000;
-      const clockVersion=typeof CLOCK_RULESET_VERSION!=="undefined"?CLOCK_RULESET_VERSION:1;
       const rarityCap=pvpBotRarityLabel(botDeck.policy.maxRarity);
       const publicShowcase={1:buildPublicShowcase(ownPayload),2:{leaderType:profile.leaderType,principalKeys:[]}};
       const pub={
@@ -2571,8 +2176,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         adventureEnemyUnitMasteryRank:botMasteryRank,realtimeExperimental:true,
         adventurePrincipalKeys:{1:[],2:[]},principalSlots:{1:0,2:0},pvpPrincipalKeys:{1:[],2:[]},
         adventureAiState:{deck:[],hand:botDraw.hand,honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),lastTurnStarted:"RT",skipFirstTurnDraw:true,principalSlots:0,principalKeys:[],principalKey:""},
-        createdAt:Date.now(),currentPlayer:0,turn:1,phase:"active",turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:serverTimestamp(),
-        clockRulesetVersion:clockVersion,playerClockMs:{1:duelLimit,2:duelLimit},
+        createdAt:Date.now(),currentPlayer:0,turn:1,phase:"active",turnPhase:"realtime",turnKey:"RT-1",
         playerSlots:{player1Uid:myUid,player2Uid:botUid},
         playerNames:{1:getProfileNameSafe(1),2:botName},playerLevels:{1:getProfileLevelSafe(),2:botLevel},
         playerShowcase:publicShowcase,playerPrepared:{1:true,2:true},lobbyReady:{1:true,2:true},
@@ -2830,7 +2434,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       await markAndPaint(`2/8 · validando mazo local J2...`); const privatePayload=buildOwnPrivatePayload(joinUid,2);
       await markAndPaint(`3/8 · leyendo sala ${code}...`); const publicRef=ref(db,`games/${code}/public`); const beforeSnap=await withTimeout(get(publicRef),`Leer sala ${code}`);
       if(!beforeSnap.exists()) throw new Error("La sala no existe o ya fue cerrada."); const before=beforeSnap.val()||{}; const hostUid=String(before?.playerSlots?.player1Uid||""); const currentJ2=String(before?.playerSlots?.player2Uid||"");
-      if(!hostUid) throw new Error("La sala no tiene un anfitrión válido."); if(hostUid===joinUid) throw new Error("No puedes unirte a tu propia sala desde el mismo usuario."); if(["configured","arena_ready","battle_active"].includes(String(before?.phase||""))) throw new Error("Esta sala ya definió su arranque. Crea una nueva partida."); if(String(before?.phase||"")!=="waiting") throw new Error("La sala ya no está esperando jugadores."); if(currentJ2&&currentJ2!==joinUid) throw new Error("La sala ya tiene un segundo jugador.");
+      if(!hostUid) throw new Error("La sala no tiene un anfitrión válido."); if(hostUid===joinUid) throw new Error("No puedes unirte a tu propia sala desde el mismo usuario."); if(["configured","arena_ready","prebattle","active"].includes(String(before?.phase||""))) throw new Error("Esta sala ya definió su arranque. Crea una nueva partida."); if(String(before?.phase||"")!=="waiting") throw new Error("La sala ya no está esperando jugadores."); if(currentJ2&&currentJ2!==joinUid) throw new Error("La sala ya tiene un segundo jugador.");
       if(!currentJ2){ await markAndPaint(`4/8 · reclamando slot de J2 en ${code}...`); await withTimeout(set(ref(db,`games/${code}/public/playerSlots/player2Uid`),joinUid),`Reclamar J2 en ${code}`); claimedNow=true; }
       else await markAndPaint(`4/8 · el slot J2 ya pertenece a este usuario; reanudando...`);
       await markAndPaint(`5/8 · guardando private/player2 con mazo...`); await writeAndConfirmOwnPrivate(code,2,joinUid,privatePayload); privateWritten=true;
@@ -2921,7 +2525,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       realEngineEnteredCode="";realEngineVsCode="";realEngineVsPromise=null;
       clearArenaLaunchTimer();clearCombatLaunchTimer();clearRealEngineStartTimer6e();
       $("gameShell")?.classList.add("hidden");
-      $("gameShell")?.classList.remove("pvp-step5-preview","pvp-step6a-active","pvp-step6b-active","pvp-step6d-active","pvp-step6e-real-bridge");
+      $("gameShell")?.classList.remove("pvp-step5-preview","pvp-step6e-real-bridge");
       $("mainMenu")?.classList.add("hidden");
       $("onlineLobby")?.classList.remove("hidden");
       setRoomPanelVisible(true);
@@ -2981,7 +2585,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         ]);
       }
     }catch(error){ console.warn(error); }
-    resetUi({resetJoin:true}); $("onlineLobby")?.classList.add("hidden"); $("gameShell")?.classList.add("hidden"); $("gameShell")?.classList.remove("pvp-step5-preview","pvp-step6a-active","pvp-step6b-active","pvp-step6d-active"); $("mainMenu")?.classList.remove("hidden"); try{ if(typeof globalThis.renderHomeProgress==="function") globalThis.renderHomeProgress(); }catch(_){ } try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
+    resetUi({resetJoin:true}); $("onlineLobby")?.classList.add("hidden"); $("gameShell")?.classList.add("hidden"); $("gameShell")?.classList.remove("pvp-step5-preview"); $("mainMenu")?.classList.remove("hidden"); try{ if(typeof globalThis.renderHomeProgress==="function") globalThis.renderHomeProgress(); }catch(_){ } try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
   }
   function backToMain(){ void leaveRoom(); }
 
@@ -3007,22 +2611,18 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   globalThis.pvpRebuildStep6dReady=toggleReady;
   globalThis.pvpRebuildStep6dLeave=leaveRoom;
   globalThis.pvpRebuildStep6dCopyCode=copyCode;
-  globalThis.pvpRebuildStep6dAdvancePhase=advanceCanonicalPhase;
-  globalThis.pvpRebuildStep6dPlayCard=playCardFromHand6d;
   globalThis.pvpRebuildStep6cOpen=openCleanRoom;
   globalThis.pvpRebuildStep6cCreate=createMinimalPublicRoom;
   globalThis.pvpRebuildStep6cJoin=joinExistingRoom;
   globalThis.pvpRebuildStep6cReady=toggleReady;
   globalThis.pvpRebuildStep6cLeave=leaveRoom;
   globalThis.pvpRebuildStep6cCopyCode=copyCode;
-  globalThis.pvpRebuildStep6cAdvancePhase=advanceCanonicalPhase;
   globalThis.pvpRebuildStep6bOpen=openCleanRoom;
   globalThis.pvpRebuildStep6bCreate=createMinimalPublicRoom;
   globalThis.pvpRebuildStep6bJoin=joinExistingRoom;
   globalThis.pvpRebuildStep6bReady=toggleReady;
   globalThis.pvpRebuildStep6bLeave=leaveRoom;
   globalThis.pvpRebuildStep6bCopyCode=copyCode;
-  globalThis.pvpRebuildStep6bAdvancePhase=advanceCanonicalPhase;
   globalThis.pvpRebuildStep6aOpen=openCleanRoom;
   globalThis.pvpRebuildStep6aCreate=createMinimalPublicRoom;
   globalThis.pvpRebuildStep6aJoin=joinExistingRoom;
@@ -3075,16 +2675,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   on("pvpStakeAmountBtn","click",cycleStakeAmount);
   on("pvpStep5LeaveBtn","click",leaveRoom);
   on("pvpStep6aLeaveBtn","click",leaveRoom);
-  on("pvpStep6bAdvanceBtn","click",()=>{ void advanceCanonicalPhase(); });
-  try{
-    const handHolder=$("pvpStep6cHand");
-    if(handHolder) handHolder.addEventListener("click",event=>{
-      const button=event?.target?.closest?.("[data-hand-index]");
-      if(!button||button.disabled) return;
-      const index=Number(button.getAttribute("data-hand-index"));
-      if(Number.isInteger(index)&&index>=0) void playCardFromHand6d(index);
-    });
-  }catch(_){ }
 
   try{ const previous=sessionStorage.getItem("hallvalla_pvp_rebuild_last_marker"); if(previous) console.info(`[HallValla][${STEP}] marcador previo:`,previous); }catch(_){ }
 })();

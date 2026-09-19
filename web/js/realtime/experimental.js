@@ -20,10 +20,10 @@ const HALLVALLA_RT_CFG=Object.freeze({
   aiDeployCooldownMs:280,
   summonCooldownMs:0,
   spawnEgressDelayMs:250,
-  // v176: respaldo/fallback. El ritmo real se calcula por unidad en 05b.
-  // Ventana compacta: ataque 10–16 s; movimiento 10–18 s, con marcha menos frecuente.
-  attackCooldownMs:13000,
-  baseMoveCooldownMs:22000,
+  // v216: respaldo/fallback. El ritmo real se calcula por unidad en unit-load-profiles.
+  // Todas las unidades: ataque 2 s más rápido y movimiento 3 s más rápido respecto a v176.
+  attackCooldownMs:11000,
+  baseMoveCooldownMs:19000,
   loopMs:100,
   motionLoopMs:250,
   leaderEffectEveryMs:10000,
