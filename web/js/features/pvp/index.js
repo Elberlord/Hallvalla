@@ -2503,7 +2503,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         return false;
       }
 
-      if(typeof globalThis.hvEnsureFeature==="function")await globalThis.hvEnsureFeature("pve");
       const botMakeLeader=(typeof makeLeader==="function")?makeLeader:globalThis.makeLeader;
       if(typeof botMakeLeader!=="function")throw new Error("El motor de HallValla no está listo para crear el BOT PvP.");
 

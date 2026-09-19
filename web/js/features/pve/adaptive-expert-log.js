@@ -1,6 +1,9 @@
 /* HallValla · PvE adaptive expert learning log
    Responsibility: human-readable persistence/export of the adaptive campaign AI diary.
-   Loaded lazily before features/pve/index.js and exposes one explicit API. */
+   Loaded lazily with the PvE adaptive modules and exposes one explicit API. */
+
+(function installHallVallaAdaptiveExpertLog(global){
+  "use strict";
 
 const ADAPTIVE_EXPERT_TEXT_LOG_KEY="expertLearningTextLogV1";
 const ADAPTIVE_EXPERT_TEXT_LOG_LIMIT=120;
@@ -89,7 +92,7 @@ function buildAdaptiveExpertBattleText(pub,{runKey,snapshot,humanSummary,aiSumma
   const lines=[
     "================================================================================",
     `[${at.toLocaleString("es-ES")}] ${battle?.enemyName||battleId||"Duelo de Aventura"} · ${resultLabel}`,
-    `Run: ${runKey||"sin-id"} · Turno final: ${Math.max(1,Number(pub?.turn||1))} · Líder IA: ${String(pub?.playerLeaders?.[2]||battle?.enemyLeaderType||"desconocido")}`,
+    `Run: ${runKey||"sin-id"} · Modo: tiempo real · Líder IA: ${String(pub?.playerLeaders?.[2]||battle?.enemyLeaderType||"desconocido")}`,
     "",
     "[MAZO HUMANO OBSERVADO]",
     `Cartas: ${adaptiveExpertFormatCounts(snapshot?.cardCounts||{},20)}`,
@@ -169,4 +172,6 @@ const HallVallaAdaptiveExpertLog=Object.freeze({
   getStatus:getAdaptiveExpertLearningLogStatus,
   exportText:exportAdaptiveExpertLearningLog
 });
-globalThis.HallVallaAdaptiveExpertLog=HallVallaAdaptiveExpertLog;
+global.HallVallaAdaptiveExpertLog=HallVallaAdaptiveExpertLog;
+
+})(globalThis);

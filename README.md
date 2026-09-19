@@ -1,21 +1,22 @@
-## v211 - Auditoria frontend: primer submodulo PvE
+# HallValla v212 - Cierre de auditoría PvE
 
-Base operativa: v210.
+Base: v211 aprobada manualmente.
 
-Este lote continua la auditoria profunda sin cambiar gameplay ni layout. Se extrajo el diario humano-legible de aprendizaje de la IA adaptativa desde `web/js/features/pve/index.js` a `web/js/features/pve/adaptive-expert-log.js`.
+Este build elimina el antiguo motor PvE por turnos, que quedó inalcanzable desde que TR es canónico, y deja PvE dividido únicamente en campaña adaptativa, doctrina de mazo y diario experto.
 
-- API nueva: `globalThis.HallVallaAdaptiveExpertLog`.
-- La feature PvE sigue siendo lazy; el submodulo carga inmediatamente antes de `features/pve/index.js`.
-- Sin cambios en reglas Firebase, geometria canonica o CSS.
-- Build `20260919.211`.
-- Cache `hallvalla-runtime-v211`.
+Cambios clave:
+- eliminado `features/pve/index.js` monolítico;
+- -251 KB / -4,755 líneas dentro de `features/pve`;
+- eliminado `adventureEnemyTurn`, AI Combat Engine y AI Tempo Engine antiguos;
+- eliminados timers/locks y callers exclusivos de esa ruta;
+- eliminado preload PvE innecesario al crear BOT PvP;
+- reglas Firebase, layout y motor TR sin cambios;
+- build `20260919.212`, cache `hallvalla-runtime-v212`.
 
-Documentacion principal:
-- `docs/AUDITORIA_PROFUNDA_FRONTEND_v211.md`
-- `docs/FRONTEND_ARCHITECTURE_v211.md`
-- `docs/FRONTEND_MODULE_INVENTORY_v211.md`
-- `docs/MAINTENANCE_RULES_v211.md`
-- `docs/FRONTEND_HOTSPOTS_v211.md`
-- `docs/SMOKE_TEST_v211.md`
-
-Antes de usar v211 como base del siguiente lote, probar manualmente una batalla de Aventura y la exportacion del diario IA desde Configuracion.
+Documentación:
+- `docs/AUDITORIA_PROFUNDA_FRONTEND_v212.md`
+- `docs/FRONTEND_ARCHITECTURE_v212.md`
+- `docs/FRONTEND_MODULE_INVENTORY_v212.md`
+- `docs/FRONTEND_HOTSPOTS_v212.md`
+- `docs/MAINTENANCE_RULES_v212.md`
+- `docs/SMOKE_TEST_v212.md`

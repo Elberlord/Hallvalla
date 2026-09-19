@@ -26,8 +26,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {firebaseConfig as hallvallaFirebaseConfig} from "../firebase-config.js?h=7d86f726043e";
 
-const BUILD = "20260919.211";
-const RESOURCE_HASHES = Object.freeze({"account/auth.js":"e3ddf342dc91","account/friends.js":"2962e102ec26","account/profile-shop-packs.js":"658de74f6d26","adventure/engine-ui.js":"e431b29beabd","battle/actions-inspector.js":"0c46a175641b","battle/board-interactions.js":"f09f19ea3f96","battle/combat-turn-ai.js":"32e721009d7a","battle/render-battle-tutorial.js":"92094b4dd0cf","config/ui-canonical.js":"7a2a785bfcb2","core/assets-leaders.js":"7bc6a4a7863d","core/boot-config.js":"aa33080bfad0","core/fx-audio-profile.js":"4d9661363f4d","core/runtime-clocks.js":"09d395990f92","dev/calibrators.js":"be9d7c44d3ea","dev/universal-layout-editor.js":"07d37bd3fbb1","dragon/contracts.js":"80a9ad483e7f","dragon/egg.js":"a3df7e88a7ba","features/adventure/index.js":"bfc8244b62ef","features/forge/index.js":"784a7fbef7a2","features/pve/adaptive-expert-log.js":"f3de3da612ca","features/pve/index.js":"d362646b1ef1","features/pvp/index.js":"8ae466448d26","features/shop/index.js":"4fe46c5bc3f0","forge/deck-builder.js":"46ba99610035","game/cards-specials-lore.js":"dd6d2307d304","game/decks-units-combat-rules.js":"5521fe8d0b48","game/unit-load-profiles.js":"19c25612020e","input/gamepad-controls.js":"6d76d7316bb6","layout/battle.js":"f805d683e94e","layout/forge-bridge.js":"4e9c3f1f59fc","layout/universal-runtime.js":"076160d454fe","network/battle-state.js":"7b587ab44303","realtime/experimental.js":"e64cd511f60b","render/field-figures-3d.js":"f0e52063c31a","system/exact-guides-mobile.js":"3227beaa638d","system/settings-events.js":"5f18dfc291a5"});
+const BUILD = "20260919.212";
+const RESOURCE_HASHES = Object.freeze({"account/auth.js":"e3ddf342dc91","account/friends.js":"2962e102ec26","account/profile-shop-packs.js":"658de74f6d26","adventure/engine-ui.js":"891dc52a7b6b","battle/actions-inspector.js":"0c46a175641b","battle/board-interactions.js":"f09f19ea3f96","battle/combat-turn-ai.js":"70f6ddbf9f6a","battle/render-battle-tutorial.js":"92094b4dd0cf","config/ui-canonical.js":"7a2a785bfcb2","core/assets-leaders.js":"7bc6a4a7863d","core/boot-config.js":"aa33080bfad0","core/fx-audio-profile.js":"4d9661363f4d","core/runtime-clocks.js":"85d94872f60c","dev/calibrators.js":"be9d7c44d3ea","dev/universal-layout-editor.js":"07d37bd3fbb1","dragon/contracts.js":"80a9ad483e7f","dragon/egg.js":"a3df7e88a7ba","features/adventure/index.js":"bfc8244b62ef","features/forge/index.js":"784a7fbef7a2","features/pve/adaptive-campaign.js":"a095a338fff3","features/pve/adaptive-expert-log.js":"41248e8cf93c","features/pve/ai-deck-doctrine.js":"24e342a402c2","features/pvp/index.js":"6129afe622d1","features/shop/index.js":"4fe46c5bc3f0","forge/deck-builder.js":"46ba99610035","game/cards-specials-lore.js":"dd6d2307d304","game/decks-units-combat-rules.js":"d9056c5c35fa","game/unit-load-profiles.js":"19c25612020e","input/gamepad-controls.js":"6d76d7316bb6","layout/battle.js":"f805d683e94e","layout/forge-bridge.js":"4e9c3f1f59fc","layout/universal-runtime.js":"076160d454fe","network/battle-state.js":"9f10633df850","realtime/experimental.js":"e64cd511f60b","render/field-figures-3d.js":"f0e52063c31a","system/exact-guides-mobile.js":"3227beaa638d","system/settings-events.js":"5f18dfc291a5"});
 const DECLARED_BUILD = document.querySelector('meta[name="hallvalla-version"]')?.content || "";
 if (DECLARED_BUILD !== BUILD) {
   console.warn(`[HallValla] Versión transitoria: index=${DECLARED_BUILD || "sin declarar"}, loader=${BUILD}. Se continúa para evitar bloquear el arranque durante propagación/caché.`);
@@ -287,8 +287,9 @@ const CORE_PARTS = [
    visitas futuras. Una carga fallida nunca se marca como READY. */
 const FEATURE_PARTS = Object.freeze({
   "pve": [
-    "features/pve/adaptive-expert-log.js",
-    "features/pve/index.js"
+    "features/pve/ai-deck-doctrine.js",
+    "features/pve/adaptive-campaign.js",
+    "features/pve/adaptive-expert-log.js"
   ],
   "pvp": [
     "features/pvp/index.js"
@@ -407,7 +408,6 @@ installAsyncFeatureProxy("openPackShop","shop");
 installAsyncFeatureProxy("closePackShop","shop");
 installAsyncFeatureProxy("openForgeHub","forge");
 installAsyncFeatureProxy("closeForgeHub","forge");
-installAsyncFeatureProxy("adventureEnemyTurn","pve");
 installAsyncFeatureProxy("openAdventureMap","adventure");
 installAsyncFeatureProxy("showAdventureMapOnly","adventure");
 installAsyncFeatureProxy("renderAdventureMap","adventure");
