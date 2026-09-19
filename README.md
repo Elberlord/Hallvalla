@@ -1,3 +1,13 @@
+## v209 — Ranking PvP negro y dorado
+
+- Rediseña exclusivamente el modal de Ranking PvP tomando como base una tabla clásica de líderes: `Pos / Jugador / Puntuación`.
+- La paleta pasa a negro y dorado, sin cajas marrones ni colores ajenos al estilo HallValla.
+- Se conserva la información real: posición propia, ID PvP, liga, G/P/E, partidas, puntos y progreso hacia la siguiente liga.
+- El jugador actual queda resaltado y el podio recibe jerarquía visual sin modificar cálculo, Firebase ni reglas de ranking.
+- No se incluye el formulario de simulación del ejemplo: el ranking continúa alimentándose exclusivamente con resultados PvP reales.
+- Build `20260919.209`, cache `hallvalla-runtime-v209`.
+- Diagnóstico: `docs/FIX_PVP_RANKING_BLACK_GOLD_v209.md`.
+
 ## v208 — Restauración de listeners PvP
 
 - Corrige el `ReferenceError: detachRoomListener is not defined` que impedía abrir PvP en v207.

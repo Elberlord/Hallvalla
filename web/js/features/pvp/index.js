@@ -162,12 +162,12 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
       const pos=mine.position?`#${mine.position}`:"SIN CLASIFICAR";
       const league=leagueForPoints(mine.points);
       const leagueProgress=league.nextMin===null?"Liga máxima":`${Math.max(0,league.nextMin-league.points)} pts para Liga ${league.nextName}`;
-      summary.innerHTML=`<div class="pvp-ranking-my-position">${esc(pos)}</div><div class="pvp-ranking-my-name">${esc(mine.name)}</div><div class="pvp-ranking-my-id" title="${esc(myUid)}">ID PvP: ${esc(shortUid(myUid))}</div><div class="pvp-ranking-my-league" data-league="${esc(league.key)}"><b>LIGA ${esc(league.name.toUpperCase())}</b><span>${esc(leagueProgress)}</span></div><div class="pvp-ranking-my-stats">${esc(statsText(mine))} · Partidas ${Number(mine.games||0)}</div>`;
+      summary.innerHTML=`<div class="pvp-ranking-my-position"><small>TU POSICIÓN</small><strong>${esc(pos)}</strong></div><div class="pvp-ranking-my-player"><div class="pvp-ranking-my-name">${esc(mine.name)}</div><div class="pvp-ranking-my-id" title="${esc(myUid)}">ID PvP: ${esc(shortUid(myUid))}</div><div class="pvp-ranking-my-league" data-league="${esc(league.key)}"><b>LIGA ${esc(league.name.toUpperCase())}</b><span>${esc(statsText(mine))} · Partidas ${Number(mine.games||0)}</span></div></div><div class="pvp-ranking-my-score"><small>PUNTUACIÓN</small><strong>${Number(mine.points||0).toLocaleString("es-ES")}</strong><span>${esc(leagueProgress)}</span></div>`;
     }
     const list=$("pvpRankingList");
     if(!list)return;
     if(!cache.rows.length){
-      list.innerHTML='<div class="pvp-ranking-empty">Todavía no hay duelos PvP registrados. Tu primera partida terminada inaugurará el ranking.</div>';
+      list.innerHTML='<tr class="pvp-ranking-empty-row"><td colspan="3">Todavía no hay duelos PvP registrados. Tu primera partida terminada inaugurará el ranking.</td></tr>';
       return;
     }
     const visible=cache.rows.slice(0,TOP_VISIBLE);
@@ -176,7 +176,10 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
     list.innerHTML=visible.map(row=>{
       const isMe=row.uid===myUid;
       const league=leagueForPoints(row.points);
-      return `${row._separator?'<div class="pvp-ranking-separator">··· TU POSICIÓN ···</div>':''}<div class="pvp-ranking-row${isMe?' is-me':''}"><span class="pvp-ranking-pos">#${Number(row.position||0)}</span><span class="pvp-ranking-player"><b>${esc(row.name)}</b><small>${esc(shortUid(row.uid))} · Liga ${esc(league.name)}</small></span><span class="pvp-ranking-record">G ${Number(row.wins||0)} · P ${Number(row.losses||0)} · E ${Number(row.draws||0)}</span><span class="pvp-ranking-points">${Number(row.points||0)} pts</span></div>`;
+      const position=Number(row.position||0);
+      const rankClass=position>=1&&position<=3?` rank-${position}`:"";
+      const separator=row._separator?'<tr class="pvp-ranking-separator"><td colspan="3">··· TU POSICIÓN ···</td></tr>':'';
+      return `${separator}<tr class="pvp-ranking-row${rankClass}${isMe?' is-me':''}"><td class="pvp-ranking-pos">${position?`#${position}`:"—"}</td><td><span class="pvp-ranking-player"><b>${esc(row.name)}</b><small>${esc(shortUid(row.uid))} · Liga ${esc(league.name)}</small><small class="pvp-ranking-record">G ${Number(row.wins||0)} · P ${Number(row.losses||0)} · E ${Number(row.draws||0)}</small></span></td><td class="pvp-ranking-score"><span class="pvp-ranking-points">${Number(row.points||0).toLocaleString("es-ES")}</span><small>pts</small></td></tr>`;
     }).join("");
   }
 
@@ -185,12 +188,12 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
     if(!modal)return false;
     modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");
     const list=$("pvpRankingList"),summary=$("pvpRankingOwnSummary");
-    if(list)list.innerHTML='<div class="pvp-ranking-empty">Cargando ranking...</div>';
+    if(list)list.innerHTML='<tr class="pvp-ranking-empty-row"><td colspan="3">Cargando ranking...</td></tr>';
     if(summary)summary.textContent="Cargando tus estadísticas...";
     try{renderRankingModal(await loadRanking({force:true}));return true;}
     catch(error){
       console.error("[HallValla][PvP Ranking] Error al cargar ranking:",error);
-      if(list)list.innerHTML=`<div class="pvp-ranking-empty">No se pudo cargar el ranking: ${esc(error?.message||error)}</div>`;
+      if(list)list.innerHTML=`<tr class="pvp-ranking-empty-row"><td colspan="3">No se pudo cargar el ranking: ${esc(error?.message||error)}</td></tr>`;
       return false;
     }
   }

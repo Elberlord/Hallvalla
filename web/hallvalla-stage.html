@@ -22,15 +22,15 @@
 </script>
 <script>
   // v181: esta página ES el juego lógico. index.html es el shell físico.
-  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260919.208"});
+  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260919.209"});
   document.documentElement.dataset.hvDesignStage="1366x636";
 </script>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260919.208">
-<meta name="hallvalla-build" content="v8_MODULAR_20260919.208">
+<meta name="hallvalla-version" content="20260919.209">
+<meta name="hallvalla-build" content="v8_MODULAR_20260919.209">
 <meta name="hallvalla-build-name" content="Design Stage fijo 1366×636 · v192 arquitectura modular · canon v191 preservado">
-<link rel="stylesheet" href="styles.css?h=531ed7a4a678"/>
+<link rel="stylesheet" href="styles.css?h=d78f8adef214"/>
 
 <link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.90">
 <link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.90">
@@ -646,14 +646,25 @@
   </div>
 </div>
 
-<div id="pvpRankingModal" class="pvp-ranking-modal hidden" aria-hidden="true" aria-label="Ranking PvP HallValla">
+<div id="pvpRankingModal" class="pvp-ranking-modal hidden" aria-hidden="true" aria-label="Tabla de líderes PvP HallValla">
   <div class="pvp-ranking-card" role="dialog" aria-modal="true" aria-labelledby="pvpRankingTitle">
     <button id="pvpRankingCloseBtn" class="pvp-ranking-close" type="button" aria-label="Cerrar ranking">×</button>
     <div class="pvp-ranking-kicker">HALLVALLA · VS ONLINE</div>
-    <h2 id="pvpRankingTitle" class="pvp-ranking-title">RANKING PvP</h2>
+    <h2 id="pvpRankingTitle" class="pvp-ranking-title">TABLA DE LÍDERES</h2>
     <div id="pvpRankingOwnSummary" class="pvp-ranking-own-summary">Cargando tus estadísticas...</div>
     <div class="pvp-ranking-rules">Victoria +3 · Derrota −2 · Empate 0 · Matchmaking cerrado por liga</div>
-    <div id="pvpRankingList" class="pvp-ranking-list" aria-live="polite"></div>
+    <div class="pvp-ranking-table-wrapper">
+      <table class="pvp-ranking-table" aria-label="Clasificación PvP">
+        <thead>
+          <tr>
+            <th scope="col">Pos</th>
+            <th scope="col">Jugador</th>
+            <th scope="col">Puntuación</th>
+          </tr>
+        </thead>
+        <tbody id="pvpRankingList" aria-live="polite"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -1481,6 +1492,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=000feb01b4e1"></script>
+<script type="module" src="js/bootstrap-loader.js?h=69e24423035f"></script>
 </body>
 </html>
