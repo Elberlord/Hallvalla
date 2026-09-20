@@ -1,0 +1,17 @@
+HALLVALLA — PENDIENTES DESPUÉS DE v228
+Build: 20260920.228
+
+COMPLETADO EN v228
+- decks-units-combat-rules.js separado por responsabilidades.
+- Validación/tamaño de mazos y niveles de líder -> game/deck-validation.js.
+- Selección y construcción runtime de mazo/líder -> game/deck-leader-runtime.js.
+- Factories -> game/entity-factories.js.
+- Reglas compartidas de combate -> game/shared-combat-rules.js.
+- Perfil Home protegido mediante ruta fresca y fallback.
+- Pociones Mina reducidas a 250 gemas cada una.
+
+SIGUIENTE
+1. PvP: dividir ranking/resultados, lobby/matchmaking, BOT y sincronización.
+2. Motor automático: dividir realtime/experimental.js y retirar el nombre histórico "experimental".
+3. Nombres/contratos heredados: turnsRemaining, damagedThisTurn, *TurnKey y equivalentes.
+4. Cierre final: código muerto/assets huérfanos + Aventura completa + PvP BOT + PvP concurrente real + gamepad Windows/Android + Mina/Forja/colección/tutorial + hashes/cache/Firebase finales.

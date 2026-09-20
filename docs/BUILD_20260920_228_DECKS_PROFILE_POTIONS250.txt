@@ -1,0 +1,29 @@
+HALLVALLA BUILD 20260920.228
+============================
+
+CAMBIOS
+- Mina: Poción de Experiencia = 250 gemas.
+- Mina: Poción de Mando = 250 gemas.
+- Perfil Home: nueva ruta assets/home/profile_default.webp + hash + fallback.
+- Auditoría: game/decks-units-combat-rules.js reducido de 2230 a 258 líneas.
+- Nuevo game/deck-validation.js.
+- Nuevo game/deck-leader-runtime.js.
+- Nuevo game/entity-factories.js.
+- Nuevo game/shared-combat-rules.js.
+- card-special-rules.js ya no contiene el contrato de validación de mazos.
+
+NO CAMBIA
+- Firebase Rules/backend.
+- Gameplay/balance del combate por esta separación.
+- Máximo de líderes: Nv.45 / Tier XV.
+- Máximo de unidades: 45, conservando la representación I–XLV definida en v227.
+- Una compra diaria independiente por cada poción.
+
+VALIDACIÓN
+- JS syntax: PASS.
+- Declaraciones identificadas antes/después del split: 1305/1305 PASS; sin faltantes ni extras.
+- RESOURCE_HASHES: 52/52 PASS.
+- ASSET_HASHES: 722/722 PASS.
+- Bootstrap hash en HTML: PASS.
+- Manifiesto Android de assets: 668/668, hashes/tamaños PASS.
+- Firebase backend byte-equivalent vs v227: PASS.

@@ -2072,7 +2072,7 @@ function renderHallvallaMineMissions(state=seedHallvallaMineMissionFacts(getHall
 const HALLVALLA_MINE_SHOP_STORAGE_KEY="hallvalla_mine_shop_v1";
 const HALLVALLA_MINE_SHOP_PIECES_REQUIRED=25;
 const HALLVALLA_MINE_SHOP_PIECE_COST=250;
-const HALLVALLA_MINE_LEVEL_POTION_COST=500;
+const HALLVALLA_MINE_LEVEL_POTION_COST=250;
 const HALLVALLA_MINE_SHOP_OFFER_COUNT=6;
 const HALLVALLA_MINE_SHOP_KEYS=Object.freeze([
   "vorthalix_oraculo_osario",
