@@ -681,7 +681,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const factory=globalThis.createHallvallaPvpSyncProtocolApi;
     if(typeof factory!=="function")throw new Error("El módulo PvP sync/protocol no está cargado.");
     pvpSyncProtocolApi=factory({
-      db,ref,get,set,update,remove,onValue,withTimeout,normalizeFirebaseArray,
+      db,ref,get,set,update,remove,onValue,runTransaction,onDisconnect,serverTimestamp,withTimeout,normalizeFirebaseArray,
       mark,setText,setPresence,setReadyCheck,
       getReadyButton:()=>$("pvpReadyBtn"),
       getActiveContext:()=>({activeCode,activeOwnerUid,activeRole}),
@@ -692,7 +692,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       validateArenaBootstrap,ensureOwnRealEnginePrep6e,getPreparedFlag,getReadyFlag,defaultStartConfig,getPlayerName,
       schedulePvpBotBattleLaunch,clearArenaLaunchTimer,scheduleCanonicalCombatStart,scheduleArenaBootstrap,resolveDirectStartConfig,
       isPhaseWriteInFlight:()=>phaseWriteInFlight,
-      setPhaseWriteInFlight:(value)=>{phaseWriteInFlight=!!value;}
+      setPhaseWriteInFlight:(value)=>{phaseWriteInFlight=!!value;},
+      handleOpponentDisconnect
     });
     return pvpSyncProtocolApi;
   }
@@ -702,9 +703,10 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function detachRoomListener(){return ensurePvpSyncProtocolApi().detachRoomListener();}
   function attachRoomListener(code){return ensurePvpSyncProtocolApi().attachRoomListener(code);}
   function reconcileRoomPhase(room,code){return ensurePvpSyncProtocolApi().reconcileRoomPhase(room,code);}
+  function signalOwnPvpDisconnect(code,role,ownerUid,reason){return ensurePvpSyncProtocolApi().signalOwnDisconnect(code,role,ownerUid,reason);}
 
   function resetUi({resetJoin=true}={}){
-    clearRematchWait(); clearRandomAutoReady(); clearPvpBotPreludeTimers(); detachRoomListener(); detachOwnPrivateListener(); ensurePvpSyncEngineBridgeApi().reset(); pvpBotFallbackInFlight=false; activePvpBotProfile=null; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false);
+    clearRematchWait(); clearRandomAutoReady(); clearPvpBotPreludeTimers(); void ensurePvpSyncProtocolApi().cancelDisconnectGuards(); detachRoomListener(); detachOwnPrivateListener(); ensurePvpSyncEngineBridgeApi().reset(); pvpBotFallbackInFlight=false; activePvpBotProfile=null; busy=false; activeCode=""; activeOwnerUid=""; activeRole=0; roomCache=null; setRoomPanelVisible(false); setReadyCheck(1,false); setReadyCheck(2,false);
     try{ document.getElementById("pvpStep6eRealBadge")?.remove(); document.getElementById("pvpStep6eShield")?.remove(); }catch(_){ }
     try{ $("gameShell")?.classList.remove("pvp-step6e-real-bridge"); }catch(_){ }
     const input=$("joinCode"); if(input){ input.readOnly=false; if(resetJoin) input.value=""; }
@@ -1474,6 +1476,31 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }finally{busy=false;syncLocalButtons();}
   }
 
+  let opponentDisconnectInFlight=false;
+  async function handleOpponentDisconnect(room,code,disconnectedRole,marker={}){
+    if(opponentDisconnectInFlight)return false;
+    opponentDisconnectInFlight=true;
+    try{
+      const role=Number(disconnectedRole||0);
+      const rivalName=String(room?.playerNames?.[role]||room?.playerNames?.[String(role)]||`Jugador ${role}`);
+      mark(`PvP · ${rivalName} se desconectó. Sus puntos reciben penalización; tu partida no cuenta como victoria.`);
+      try{
+        if(typeof globalThis.hvPvpRankingRecordDisconnect==="function"){
+          await globalThis.hvPvpRankingRecordDisconnect(room,code,role,String(marker?.reason||"connection_lost"));
+        }
+      }catch(error){console.warn("[HallValla][PvP Disconnect] No se pudo registrar el -2 del rival:",error);}
+      try{
+        if(typeof globalThis.hallvallaUploadCloudSave==="function"){
+          await globalThis.hallvallaUploadCloudSave(auth?.currentUser,{force:true,reason:"pvp_opponent_disconnect_mastery"});
+        }
+      }catch(error){console.warn("[HallValla][PvP Disconnect] Las bajas locales se conservaron; la nube reintentará.",error);}
+      await hvPopup(`${rivalName} se desconectó del combate.
+
+La partida termina sin victoria para ti. El jugador que salió recibe -2 puntos PvP. Las bajas realizadas antes de la desconexión se conservan.`,"Rival desconectado");
+      return await leaveRoom({skipDisconnectPenalty:true,remoteDisconnect:true});
+    }finally{opponentDisconnectInFlight=false;}
+  }
+
   async function leaveBattleResultToHome(){
     clearRematchWait();
     // v206 · Nunca borramos la sala que sirve de prueba al ranking antes de que
@@ -1489,17 +1516,54 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     return leaveRoom();
   }
 
-  async function leaveRoom(){
+  async function leaveRoom(options={}){
+    const opts=(options&&typeof options==="object"&&!Array.isArray(options))?options:{};
+    const skipDisconnectPenalty=opts.skipDisconnectPenalty===true;
+    const remoteDisconnect=opts.remoteDisconnect===true;
     clearRematchWait();
     await stopRandomMatchSearch();
-    const code=activeCode, ownerUid=activeOwnerUid, role=activeRole; detachRoomListener(); detachOwnPrivateListener();
+    const code=activeCode, ownerUid=activeOwnerUid, role=activeRole;
+    let abandonment=false;
+    let liveRoom=null;
     try{
-      if(code&&ownerUid&&role===1){
+      if(code&&ownerUid&&(role===1||role===2)){
+        const snap=await get(ref(db,`games/${code}/public`));
+        liveRoom=snap.exists()?(snap.val()||{}):null;
+        const activeHuman=!!liveRoom&&String(liveRoom?.mode||"")==="online"&&liveRoom?.pvpBotMatch!==true&&["active","battle_active"].includes(String(liveRoom?.phase||""));
+        if(activeHuman&&!skipDisconnectPenalty){
+          abandonment=true;
+          await signalOwnPvpDisconnect(code,role,ownerUid,"left_match");
+          const markedSnap=await get(ref(db,`games/${code}/public`));
+          const markedRoom=markedSnap.exists()?(markedSnap.val()||liveRoom):liveRoom;
+          if(typeof globalThis.hvPvpRankingRecordDisconnect==="function"){
+            await globalThis.hvPvpRankingRecordDisconnect(markedRoom,code,role,"left_match");
+          }
+          try{
+            if(typeof globalThis.hallvallaUploadCloudSave==="function"){
+              await globalThis.hallvallaUploadCloudSave(auth?.currentUser,{force:true,reason:"pvp_abandonment_mastery"});
+            }
+          }catch(error){console.warn("[HallValla][PvP Disconnect] Bajas guardadas localmente; nube pendiente.",error);}
+        }
+      }
+    }catch(error){console.warn("[HallValla][PvP Disconnect] No se pudo cerrar la salida competitiva limpiamente:",error);}
+
+    if(!abandonment){try{await ensurePvpSyncProtocolApi().cancelDisconnectGuards();}catch(_){ }}
+    detachRoomListener(); detachOwnPrivateListener();
+    try{
+      if(code&&ownerUid&&abandonment){
+        // Durante una partida activa no destruimos inmediatamente el estado público:
+        // el rival necesita ver presence=false y registrar/confirmar el abandono.
+        await removeOwnPrivateBranch(code,role,ownerUid);
+      }else if(code&&ownerUid&&remoteDisconnect){
+        await markAndPaint(`Cerrando duelo ${code} tras desconexión del rival...`);
+        const publicRef=ref(db,`games/${code}/public`);
+        await Promise.allSettled([
+          removeOwnPrivateBranch(code,role,ownerUid),
+          withTimeout(remove(publicRef),`Cerrar sala abandonada ${code}`,4000)
+        ]);
+      }else if(code&&ownerUid&&role===1){
         await markAndPaint(`J1 cerrando sala ${code}...`);
         const publicRef=ref(db,`games/${code}/public`);
-        // v213 · El dueño J1 puede borrar directamente public y su rama private.
-        // Las reglas validan ownership; ambas limpiezas son independientes y se
-        // ejecutan en paralelo para no sumar dos viajes de red al botón HOME.
         await Promise.allSettled([
           removeOwnPrivateBranch(code,1,ownerUid),
           withTimeout(remove(publicRef),`Cerrar sala ${code}`,4000)
@@ -1508,8 +1572,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       else if(code&&ownerUid&&role===2){
         await markAndPaint(`J2 saliendo de sala ${code}...`);
         const publicRef=ref(db,`games/${code}/public`);
-        // Mismo principio para J2: Firebase verifica que solo su propio slot pueda
-        // liberarse. No necesitamos leer la sala antes de escribirla.
         await Promise.allSettled([
           removeOwnPrivateBranch(code,2,ownerUid),
           withTimeout(update(publicRef,{"playerSlots/player2Uid":null,"playerNames/2":"Esperando rival","playerLevels/2":0,"playerPrepared/2":false,"rematchReady/2":false,"lobbyReady/1":false,"lobbyReady/2":false,"phase":"waiting","startConfig/startingRole":0,"startConfig/secondRole":0,"startConfig/resolved":false,"startConfig/resolvedAt":0,"startConfig/source":"direct_matchmaking","arenaBootstrap":null,"combatState":null,"enginePrep":null}),`Liberar J2 en ${code}`,4000)

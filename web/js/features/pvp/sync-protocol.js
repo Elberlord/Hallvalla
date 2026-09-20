@@ -17,7 +17,7 @@ combate. Es la capa de coordinación entre el orquestador PvP y Firebase.
 (function(){
   function createHallvallaPvpSyncProtocolApi(deps={}){
     const {
-      db, ref, get, set, update, remove, onValue,
+      db, ref, get, set, update, remove, onValue, runTransaction, onDisconnect, serverTimestamp,
       withTimeout,
       normalizeFirebaseArray,
       mark,
@@ -49,13 +49,19 @@ combate. Es la capa de coordinación entre el orquestador PvP y Firebase.
       scheduleArenaBootstrap,
       resolveDirectStartConfig,
       isPhaseWriteInFlight,
-      setPhaseWriteInFlight
+      setPhaseWriteInFlight,
+      handleOpponentDisconnect
     }=deps;
 
     let roomUnsubscribe=null;
     let roomListenerToken=0;
     let ownPrivateUnsubscribe=null;
     let ownPrivateListenerToken=0;
+    let presenceDisconnectHandle=null;
+    let privateDisconnectHandle=null;
+    let armedPresenceCode="";
+    let armedPresenceRole=0;
+    const handledDisconnectKeys=new Set();
 
     function context(){
       const value=typeof getActiveContext==="function"?getActiveContext():{};
@@ -69,6 +75,69 @@ combate. Es la capa de coordinación entre el orquestador PvP y Firebase.
     }
     function setPhaseBusy(value){
       try{setPhaseWriteInFlight?.(!!value);}catch(_){ }
+    }
+
+    async function cancelDisconnectGuards(){
+      try{await presenceDisconnectHandle?.cancel?.();}catch(_){ }
+      try{await privateDisconnectHandle?.cancel?.();}catch(_){ }
+      presenceDisconnectHandle=null;
+      privateDisconnectHandle=null;
+      armedPresenceCode="";
+      armedPresenceRole=0;
+    }
+
+    async function armOwnPresence(code,role,ownerUid){
+      if(!code||!ownerUid||(role!==1&&role!==2))return false;
+      if(armedPresenceCode===String(code)&&armedPresenceRole===Number(role)&&presenceDisconnectHandle)return true;
+      await cancelDisconnectGuards();
+      const presenceRef=ref(db,`games/${code}/public/presence/${role}`);
+      try{
+        await set(presenceRef,{uid:String(ownerUid),connected:true,reason:"active",at:Date.now()});
+        presenceDisconnectHandle=onDisconnect(presenceRef);
+        await presenceDisconnectHandle.set({uid:String(ownerUid),connected:false,reason:"connection_lost",at:serverTimestamp()});
+        const ownPrivateRef=ref(db,`games/${code}/private/player${role}`);
+        privateDisconnectHandle=onDisconnect(ownPrivateRef);
+        await privateDisconnectHandle.remove();
+        armedPresenceCode=String(code);
+        armedPresenceRole=Number(role);
+        return true;
+      }catch(error){
+        console.warn(`[HallValla][PvP Presence] No se pudo armar onDisconnect J${role}:`,error);
+        return false;
+      }
+    }
+
+    async function signalOwnDisconnect(code,role,ownerUid,reason="left_match"){
+      if(!code||!ownerUid||(role!==1&&role!==2))return false;
+      await cancelDisconnectGuards();
+      try{
+        await withTimeout(set(ref(db,`games/${code}/public/presence/${role}`),{
+          uid:String(ownerUid),connected:false,reason:String(reason||"left_match"),at:Date.now()
+        }),`Marcar desconexión J${role} en ${code}`,4000);
+        return true;
+      }catch(error){
+        console.warn(`[HallValla][PvP Presence] No se pudo marcar salida J${role}:`,error);
+        return false;
+      }
+    }
+
+    function maybeHandleOpponentDisconnect(room,code){
+      const active=context();
+      const role=Number(active.activeRole||0);
+      if(role!==1&&role!==2)return false;
+      if(!["active","battle_active"].includes(String(room?.phase||"")))return false;
+      if(room?.pvpBotMatch===true||String(room?.mode||"")!=="online")return false;
+      const otherRole=role===1?2:1;
+      const otherUid=String(room?.playerSlots?.[`player${otherRole}Uid`]||"");
+      if(!otherUid)return false;
+      const marker=room?.presence?.[otherRole]||room?.presence?.[String(otherRole)]||null;
+      if(!marker||marker.connected!==false)return false;
+      if(marker.uid&&String(marker.uid)!==otherUid)return false;
+      const key=`${code}:${otherRole}:${String(marker.at||0)}:${String(marker.reason||"")}`;
+      if(handledDisconnectKeys.has(key))return true;
+      handledDisconnectKeys.add(key);
+      void handleOpponentDisconnect?.(room,code,otherRole,marker);
+      return true;
     }
 
     function detachOwnPrivateListener(){
@@ -256,6 +325,10 @@ combate. Es la capa de coordinación entre el orquestador PvP y Firebase.
 
     function attachRoomListener(code){
       detachRoomListener();
+      const activeAtAttach=context();
+      if(activeAtAttach.activeOwnerUid&&(Number(activeAtAttach.activeRole)===1||Number(activeAtAttach.activeRole)===2)){
+        void armOwnPresence(code,Number(activeAtAttach.activeRole),String(activeAtAttach.activeOwnerUid));
+      }
       const token=roomListenerToken;
       const roomRef=ref(db,`games/${code}/public`);
       roomUnsubscribe=onValue(roomRef,snapshot=>{
@@ -279,6 +352,7 @@ combate. Es la capa de coordinación entre el orquestador PvP y Firebase.
         }
         const room=snapshot.val()||{};
         recordRecentOpponentFromRoom?.(room,code);
+        if(maybeHandleOpponentDisconnect(room,code))return;
         if(isRematchWaitActive?.()){
           const freshActive=context();
           const otherRole=Number(freshActive.activeRole)===1?2:1;
@@ -309,6 +383,7 @@ combate. Es la capa de coordinación entre el orquestador PvP y Firebase.
     function detachAll(){
       detachRoomListener();
       detachOwnPrivateListener();
+      void cancelDisconnectGuards();
     }
 
     return Object.freeze({
@@ -318,6 +393,9 @@ combate. Es la capa de coordinación entre el orquestador PvP y Firebase.
       detachOwnPrivateListener,
       removeOwnPrivateBranch,
       reconcileRoomPhase,
+      armOwnPresence,
+      signalOwnDisconnect,
+      cancelDisconnectGuards,
       detachAll
     });
   }

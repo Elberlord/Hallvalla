@@ -88,9 +88,18 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
       const p1=isBotUid(p1Uid)?null:ensure(p1Uid,result.player1Name,result.endedAt);
       const p2=isBotUid(p2Uid)?null:ensure(p2Uid,result.player2Name,result.endedAt);
       if(!p1&&!p2)continue;
+      const resultType=String(result.resultType||"normal");
+      const winner=Number(result.winnerRole||0);
+      const loser=Number(result.loserRole||0);
+      if(resultType==="disconnect"){
+        // Abandono/desconexión: solo se castiga al que salió. El rival que
+        // permaneció conectado no recibe victoria, empate, partida ni puntos.
+        const penalized=loser===1?p1:(loser===2?p2:null);
+        if(penalized){penalized.games++;penalized.losses++;penalized.points-=2;}
+        continue;
+      }
       if(p1)p1.games++;
       if(p2)p2.games++;
-      const winner=Number(result.winnerRole||0);
       if(winner===1){if(p1){p1.wins++;p1.points+=3;}if(p2){p2.losses++;p2.points-=2;}}
       else if(winner===2){if(p2){p2.wins++;p2.points+=3;}if(p1){p1.losses++;p1.points-=2;}}
       else{if(p1)p1.draws++;if(p2)p2.draws++;}
@@ -204,14 +213,19 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
   function buildResultPayload(state,gameCode){
     const p1Uid=safeUid(state?.playerSlots?.player1Uid);
     const p2Uid=safeUid(state?.playerSlots?.player2Uid);
+    const resultType=String(state?.resultType||"normal");
     const winnerRole=Number(state?.winner||0);
     const loserRole=Number(state?.loser||0);
     if(!gameCode||!p1Uid||!p2Uid||p1Uid===p2Uid)return null;
     if(![0,1,2].includes(winnerRole))return null;
-    if(winnerRole===0&&loserRole!==0)return null;
-    if(winnerRole===1&&loserRole!==2)return null;
-    if(winnerRole===2&&loserRole!==1)return null;
-    return {
+    if(resultType==="disconnect"){
+      if(winnerRole!==0||![1,2].includes(loserRole))return null;
+    }else{
+      if(winnerRole===0&&loserRole!==0)return null;
+      if(winnerRole===1&&loserRole!==2)return null;
+      if(winnerRole===2&&loserRole!==1)return null;
+    }
+    const payload={
       schema:RESULT_SCHEMA,
       gameCode:String(gameCode),
       createdAt:Number(state?.createdAt||0),
@@ -223,6 +237,12 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
       winnerRole,
       loserRole
     };
+    if(resultType==="disconnect"){
+      payload.resultType="disconnect";
+      payload.disconnectRole=loserRole;
+      payload.disconnectReason=String(state?.disconnectReason||"connection_lost").slice(0,32);
+    }
+    return payload;
   }
 
   async function ensureRankedTerminalSource(state,gameCode){
@@ -257,6 +277,38 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
     }
     console.error("[HallValla][PvP Ranking] No se pudo confirmar el cierre del PvP BOT:",lastError);
     return false;
+  }
+
+  async function recordDisconnectResult(room,gameCode,loserRole,reason="connection_lost"){
+    try{
+      const role=Number(loserRole||0);
+      if(role!==1&&role!==2)return false;
+      const code=String(gameCode||room?.code||"").trim();
+      if(!code)return false;
+      const marker=room?.disconnects?.[role]||room?.disconnects?.[String(role)]||{};
+      const state={...room,
+        resultType:"disconnect",
+        disconnectReason:String(reason||marker?.reason||"connection_lost"),
+        winner:0,
+        loser:role,
+        endedAt:Math.max(1,Number(marker?.at||Date.now()))
+      };
+      const payload=buildResultPayload(state,code);
+      if(!payload)return false;
+      const mine=getMyUid();
+      if(mine!==payload.player1Uid&&mine!==payload.player2Uid)return false;
+      const resultRef=ref(db,`pvpResults/${payload.gameCode}`);
+      const tx=await runTransaction(resultRef,current=>current?undefined:payload,{applyLocally:false});
+      if(tx?.committed||tx?.snapshot?.val?.()){
+        rankingCache.loadedAt=0;
+        console.info(`[HallValla][PvP Ranking] Desconexión registrada en ${payload.gameCode}. J${role} -2 pts; rival sin victoria.`,payload);
+        return true;
+      }
+      return false;
+    }catch(error){
+      console.error("[HallValla][PvP Ranking] No se pudo registrar penalización por desconexión:",error);
+      return false;
+    }
   }
 
   let latestResultCommitPromise=null;
@@ -304,6 +356,7 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
   globalThis.hvPvpRankingOpen=openRanking;
   globalThis.hvPvpRankingClose=closeRanking;
   globalThis.hvPvpRankingRecordResult=recordBattleResult;
+  globalThis.hvPvpRankingRecordDisconnect=recordDisconnectResult;
   globalThis.hvPvpRankingFlushResult=flushBattleResult;
   globalThis.hvPvpRankingLoad=loadRanking;
   globalThis.hvPvpLeagueForPoints=leagueForPoints;

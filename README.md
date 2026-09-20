@@ -1,20 +1,21 @@
-# HallValla v237 — PvP direct J2 claim + block diagnostics
+# HallValla v238 — PvP disconnect / abandonment handling
 
-Build: `20260920.237`
+Build: `20260920.238`
 
-Base: v236.
+Base: v237, que fue la primera prueba con dos cuentas reales que sí completó el matchmaking directo J1/J2.
 
-## Corrección principal
-- Matchmaking humano por **liga PvP + disponibilidad**.
-- El nivel general de cuenta no filtra rivales. Un jugador Nivel 18 en Liga Piedra puede emparejarse con cualquier otro jugador disponible de Liga Piedra.
-- `level` y `pvpPoints` permanecen como metadata; no forman parte de la elegibilidad humana.
-- Las entradas de cada liga se ordenan por UID y se forman parejas deterministas `0↔1`, `2↔3`, etc.
-- El primer UID de cada pareja conserva su sala como J1.
-- El segundo UID entra directamente como J2; el único claim autoritativo es `playerSlots/player2Uid`.
-- Ya no existe el arbitraje ambiguo donde ambos clientes podían esperar que el otro reclamara.
-- Ya no se escribe `claimedBy` para emparejar humanos. El slot J2 usa `runTransaction` y las reglas Firebase lo aceptan solo en fase `waiting`, con J2 vacío y UID propio.
-- El BOT queda diferido mientras la pareja humana correspondiente está disponible.
-- Cache runtime: `hallvalla-runtime-v237`.
+## Cambio principal
+- PvP humano activo detecta desconexión real mediante Firebase `onDisconnect`.
+- El jugador que abandona/desconecta primero recibe **-2 puntos PvP y 1 derrota**.
+- El rival que permanece conectado **no recibe victoria, empate ni puntos**.
+- Las bajas de unidades realizadas antes de la desconexión se conservan; la Maestría las registra en el instante de la baja.
+- Salir antes de que el combate esté activo no aplica penalización.
+- El rival recibe un aviso claro de desconexión y el duelo se limpia de forma segura.
+- `private/playerN` queda protegido con cleanup `onDisconnect`.
 
 ## Firebase
-Las reglas no cambian respecto de v236. El campo `level` continúa siendo obligatorio como metadata por contrato, pero no se usa como filtro de matchmaking.
+**Esta versión SÍ modifica `backend/firebase/database.rules.json`.**
+Hay que desplegar las reglas nuevas para que el registro especial de desconexión y el cleanup por J2 cuando cae J1 funcionen en producción.
+
+## Diagnóstico de v236/v237
+Que v237 funcionara al eliminar el claim intermedio confirma que el bloqueo anterior estaba en la capa extra `matchmaking/random -> claimedBy`, no en el nivel del jugador ni en Liga Piedra. El claim canónico sigue siendo la transacción sobre `playerSlots/player2Uid`.

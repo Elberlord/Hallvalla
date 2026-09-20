@@ -1,0 +1,7 @@
+HallValla — Pendientes después de v238
+
+1. Confirmar en dos clientes reales el nuevo contrato de desconexión PvP.
+2. Si pasa: considerar cerrado PvP estructural (ranking/resultados, lobby/matchmaking, BOT, sync/protocol).
+3. Siguiente bloque: dividir realtime/experimental.js y retirar el nombre histórico experimental.
+4. Después: auditoría de nombres/contratos heredados turn*, damagedThisTurn, etc.
+5. Cierre final funcional y limpieza de código/assets/cache/Firebase.

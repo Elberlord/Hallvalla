@@ -1,0 +1,25 @@
+HallValla v238 — PvP desconexión / abandono
+Fecha: 2026-09-20
+
+CONTRATO
+- Solo aplica con PvP humano online y combate en phase active/battle_active.
+- Jugador que se desconecta/abandona primero: -2 puntos PvP, +1 derrota.
+- Jugador que permanece: sin victoria, sin empate, sin cambio de puntos y sin partida añadida al historial por ese abandono.
+- Bajas previas: se conservan; la Maestría se acredita al producirse cada muerte.
+- Antes de combate activo: sin penalización.
+
+DETECCIÓN
+- public/presence/{role} se arma con onDisconnect.
+- onDisconnect marca connected=false y limpia private/player{role}.
+- El cliente superviviente detecta el marcador, registra el resultado inmutable en pvpResults y muestra el aviso.
+- La salida voluntaria durante combate utiliza el mismo contrato con reason=left_match.
+
+RANKING
+- pvpResults conserva schema hallvalla-pvp-result-v1.
+- Para abandono añade resultType=disconnect, disconnectRole y disconnectReason.
+- aggregateResults penaliza únicamente loserRole con -2 y una derrota.
+
+FIREBASE RULES
+- pvpResults admite resultado disconnect cuando presence del loser está en false.
+- J2 puede limpiar public si J1 se desconectó y presence/1/connected=false.
+- Los resultados normales continúan exigiendo phase=ended y battleEnded=true.
