@@ -1,0 +1,13 @@
+HallValla · build 20260920.227
+
+MINA · POCIONES / PROGRESIÓN
+- Poción de Experiencia: coste reducido de 5000 a 500 gemas.
+- Poción de Mando: coste reducido de 5000 a 500 gemas.
+- Poción de Mando: puede subir líderes hasta Nivel 45; Nivel 45 corresponde a Tier XV.
+- Poción de Experiencia: puede subir unidades hasta Nivel/Rango 45.
+- UNIT_MASTERY_MAX_RANK pasa de 15 a 45 para que el cambio sea canónico, no solo visual.
+- Conversión romana ampliada hasta XLV.
+- La curva histórica de bajas se conserva: Nv.15=1190; Nv.45=10340.
+- Se actualizan textos de Mina, combate, inspector y fallbacks de Forja.
+- La restricción de una compra diaria independiente por tipo de poción se conserva.
+- Firebase Rules no requieren cambios: los campos de compra diaria no cambian.

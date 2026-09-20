@@ -511,7 +511,7 @@ function getUnifiedDetProgressText(entity){
     const record=getUnitMasteryRecord(entity);
     const kills=Math.max(0,Math.floor(Number(record?.kills||0)));
     const rank=Math.max(1,Number(getUnitMasteryRankFromKills(kills)||1));
-    const maxRank=typeof UNIT_MASTERY_MAX_RANK==="number"?UNIT_MASTERY_MAX_RANK:15;
+    const maxRank=typeof UNIT_MASTERY_MAX_RANK==="number"?UNIT_MASTERY_MAX_RANK:45;
     const rankText=typeof romanUnitRank==="function"?romanUnitRank(rank):String(rank);
     if(rank>=maxRank)return `NIVEL ${rankText} · ${kills} muertes · nivel máximo`;
     const next=Math.max(kills,Math.floor(Number(getUnitMasteryKillsForRank(rank+1)||kills)));
@@ -981,7 +981,7 @@ function getUnifiedDetLevelDisplayData(entity){
     const record=getUnitMasteryRecord(entity);
     const kills=Math.max(0,Math.floor(Number(record?.kills||0)));
     const rank=Math.max(1,Number(getUnitMasteryRankFromKills(kills)||1));
-    const maxRank=typeof UNIT_MASTERY_MAX_RANK==='number'?UNIT_MASTERY_MAX_RANK:15;
+    const maxRank=typeof UNIT_MASTERY_MAX_RANK==='number'?UNIT_MASTERY_MAX_RANK:45;
     const rankText=typeof romanUnitRank==='function'?romanUnitRank(rank):String(rank);
     if(rank>=maxRank){
       return {...empty,visible:true,rank:rankText,progressText:'NIVEL MÁXIMO',percent:100,maxed:true,current:kills,total:kills,remaining:0};

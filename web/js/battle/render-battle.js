@@ -287,7 +287,7 @@ function getUnitTopLeftTitle(u){
   if(isUnitServiceProgression(u))return `Puntos de servicio de ${u.name}: ${getUnitServicePoints(u)}. Purificación se desbloquea en 50 y Resurrección en 100. Esta progresión no usa bajas ni concede Vida máxima.`;
   const rank=getUnitMasteryRank(u);
   const bonus=typeof getUnitMasteryDexBonusByRank==="function"?getUnitMasteryDexBonusByRank(rank):0;
-  return `Rango de maestría de ${u.name}: ${romanUnitRank(rank)} · ${getUnitMasteryProgressText(u)} · Bonus actual: +${bonus} DX. Máximo: Rango XV.`;
+  return `Rango de maestría de ${u.name}: ${romanUnitRank(rank)} · ${getUnitMasteryProgressText(u)} · Bonus actual: +${bonus} DX. Máximo: Nivel ${UNIT_MASTERY_MAX_RANK} (${romanUnitRank(UNIT_MASTERY_MAX_RANK)}).`;
 }
 function makeSafeBadgeIdPart(value){
   return String(value==null?"":value).replace(/[^a-zA-Z0-9_-]/g,"_")||"hp";

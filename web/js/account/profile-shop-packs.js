@@ -880,17 +880,21 @@ function registerLocalLeaderMasteryKill(killer,victim){
     };
   }catch(e){console.warn("[HallValla] No se pudo registrar maestría del líder:",e);return null;}
 }
-const UNIT_MASTERY_MAX_RANK=15;
+const UNIT_MASTERY_MAX_RANK=45;
 function getUnitMasteryKillsForRank(rank){
   const safeRank=Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Math.floor(Number(rank)||1)));
   if(safeRank<=1)return 0;
-  // Progresión acumulada creciente hasta Nv. XV: Nv.2=20, Nv.3=50, Nv.4=90, Nv.5=140... Nv.15=1190.
-  // Cada nuevo nivel exige 10 bajas adicionales respecto al salto anterior: +20, +30, +40... +150.
+  // Progresión acumulada creciente hasta Nv. 45. La curva conserva la regla histórica:
+  // cada nuevo nivel exige 10 bajas adicionales respecto al salto anterior (+20, +30, +40...).
+  // Nv.15=1190 y Nv.45=10340; las pociones usan exactamente estos umbrales.
   return 5*safeRank*(safeRank+1)-10;
 }
 function romanUnitRank(n){
-  const v=Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Math.floor(Number(n)||1)));
-  return ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV"][v]||"I";
+  let v=Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Math.floor(Number(n)||1)));
+  const values=[[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]];
+  let out="";
+  for(const [value,symbol] of values){while(v>=value){out+=symbol;v-=value;}}
+  return out||"I";
 }
 function normalizeUnitMasteryName(name){return String(name||"").trim().replace(/\s+/g," ");}
 function getUnitMasteryKey(entity){return normalizeUnitMasteryName(entity?.name||"").toLowerCase();}
