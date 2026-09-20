@@ -1,0 +1,38 @@
+HallValla v237 — PvP direct J2 claim + diagnósticos de bloqueo
+Fecha: 2026-09-20
+Base: v236
+
+OBJETIVO
+Atacar directamente el bucle donde dos jugadores de la misma liga se ven en matchmaking pero no llegan a iniciar el PvP.
+
+CAMBIO DE MATCHMAKING HUMANO
+- `claimedBy/claimedAt` deja de participar en el camino humano.
+- La pareja por liga se mantiene determinista (host/J1 y joiner/J2).
+- El joiner NO modifica la entrada `/matchmaking/random/<hostUid>`.
+- El único claim autoritativo es la transacción Firebase sobre:
+  `games/<code>/public/playerSlots/player2Uid`.
+- Las reglas actuales permiten esa escritura únicamente cuando:
+  * el usuario está autenticado;
+  * J2 está vacío;
+  * el valor nuevo es su propio UID;
+  * la fase sigue siendo `waiting`.
+- Después del slot J2, se escribe `private/player2`, luego presencia/prepared pública y se confirma todo por lectura.
+
+DIAGNÓSTICO NUEVO
+Los bloqueos del camino crítico ahora imprimen:
+`[HallValla][PvP BLOCK][ETAPA][ORIGEN]`
+con datos concretos de `path`, valor esperado/recibido, código Firebase, mensaje y sala.
+
+Etapas instrumentadas principales:
+- QUEUE_READ
+- HUMAN_ROOM_READ / HUMAN_ROOM_MISSING / HUMAN_ROOM_PHASE / HUMAN_ROOM_J2_OCCUPIED
+- HUMAN_CLOSE_TEMP_ROOM
+- JOIN_CODE / JOIN_ROOM_MISSING / JOIN_HOST_MISMATCH / JOIN_PHASE / JOIN_J2_OCCUPIED
+- JOIN_J2_SLOT (Firebase o transacción)
+- JOIN_PRIVATE_J2
+- JOIN_PUBLIC_J2_PREP
+- JOIN_CONFIRM_J2 / JOIN_CONFIRM_PREPARED
+- JOIN_FAILED / HUMAN_JOIN_EXCEPTION
+
+NIVEL DE CUENTA
+El nivel sigue siendo metadata. No se usa para decidir elegibilidad. El filtro competitivo humano sigue siendo `leagueKey`.

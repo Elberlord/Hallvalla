@@ -1,0 +1,8 @@
+HallValla — Pendientes después de v237
+
+1. Prueba real de matchmaking PvP con dos cuentas de la misma liga.
+   - Esperado: host/J1 espera; joiner/J2 ocupa player2Uid por transacción; ambos prepared; configured -> arena_ready -> prebattle -> active.
+   - Si falla, copiar la primera línea `[PvP BLOCK]`; contiene etapa, origen y ruta exacta.
+2. Cuando PvP concurrente pase la prueba real, continuar con el motor automático: dividir `realtime/experimental.js` y retirar el nombre histórico `experimental`.
+3. Después: auditoría de contratos heredados (`turnsRemaining`, `damagedThisTurn`, `*TurnKey`, etc.).
+4. Cierre final funcional y limpieza de código/assets/cache/Firebase.
