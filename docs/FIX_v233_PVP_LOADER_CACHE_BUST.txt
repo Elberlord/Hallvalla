@@ -1,0 +1,22 @@
+HallValla v233 — Hotfix de loader/cache PvP
+Fecha: 2026-09-20
+
+Síntoma observado
+- Consola: "HallValla PvP BOT: módulo features/pvp/bot.js no cargado."
+- Bootstrap: "Falló la entrada lazy a PvP".
+- Advertencia: stage/index v232 pero loader v229.
+
+Causa raíz
+`web/hallvalla-stage.html` todavía solicitaba:
+  js/bootstrap-loader.js?h=1b3403244b59
+Ese query correspondía a un loader histórico. Al quedar esa URL estable entre builds, el navegador/CDN podía reutilizar la respuesta antigua.
+
+Corrección canónica
+1. La etapa obtiene `hallvalla-version` y hace import dinámico de:
+   js/bootstrap-loader.js?v=<build declarado>
+2. El shell añade `hvbuild=<SHELL_BUILD>` a la URL de `hallvalla-stage.html`.
+3. Stage y loader deben tener el mismo BUILD; una discrepancia ya no sigue ejecutando módulos incompatibles.
+4. Service Worker/cache renovados a v233.
+
+PvP
+No se cambió gameplay, matchmaking, BOT ni protocolo Firebase de v232. Este build corrige exclusivamente la coherencia de carga/versionado que impedía entrar a PvP.

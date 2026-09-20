@@ -22,13 +22,13 @@
 </script>
 <script>
   // v181: esta página ES el juego lógico. index.html es el shell físico.
-  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260920.232"});
+  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260920.233"});
   document.documentElement.dataset.hvDesignStage="1366x636";
 </script>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260920.232">
-<meta name="hallvalla-build" content="v8_MODULAR_20260920.232">
+<meta name="hallvalla-version" content="20260920.233">
+<meta name="hallvalla-build" content="v8_MODULAR_20260920.233">
 <meta name="hallvalla-build-name" content="Design Stage fijo 1366×636 · v192 arquitectura modular · canon v191 preservado">
 <link rel="stylesheet" href="styles.css?h=293b6e19c06a"/>
 
@@ -1444,6 +1444,14 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
   </div>
 </div>
 
-<script type="module" src="js/bootstrap-loader.js?h=1b3403244b59"></script>
+<script type="module">
+  const hvDeclaredBuild=document.querySelector('meta[name="hallvalla-version"]')?.content||"";
+  const hvLoaderUrl=new URL("js/bootstrap-loader.js",location.href);
+  hvLoaderUrl.searchParams.set("v",hvDeclaredBuild||String(Date.now()));
+  import(hvLoaderUrl.href).catch(error=>{
+    console.error("[HallValla] No se pudo cargar el loader principal del build declarado:",hvDeclaredBuild,error);
+    globalThis.__HALLVALLA_BOOT_ERROR__=error;
+  });
+</script>
 </body>
 </html>

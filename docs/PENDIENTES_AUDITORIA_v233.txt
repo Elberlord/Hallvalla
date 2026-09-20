@@ -1,0 +1,10 @@
+HallValla — Pendientes después de v233
+
+v233 es un hotfix de coherencia de carga sobre v232. No altera el protocolo PvP ya auditado.
+
+Siguiente bloque de auditoría:
+1. Probar PvP real con dos clientes/cuentas usando v233.
+2. Si la prueba PvP completa pasa, cerrar validación funcional de sincronización concurrente.
+3. Continuar con el motor automático: dividir realtime/experimental.js y retirar el nombre histórico experimental.
+4. Revisar nombres/contratos heredados: turnsRemaining, damagedThisTurn, *TurnKey y equivalentes.
+5. Cierre final: código muerto/assets huérfanos, Aventura, PvP BOT, PvP concurrente, gamepad Windows/Android, Mina/Forja/Colección/Tutorial y hashes/cache/Firebase finales.

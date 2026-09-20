@@ -1,17 +1,15 @@
-# HallValla v232 — PvP sync/protocol split
+# HallValla v233 — Loader/cache-bust hotfix
 
-Build: `20260920.232`
+Build: `20260920.233`
 
-Esta entrega cierra el corte de sincronización/protocolo de la auditoría PvP.
+Base: v232 PvP sync/protocol split.
 
-Cambios principales:
-- Nuevo `features/pvp/sync-protocol.js`: listeners público/privado, cleanup, reconciliación de fases y rematch.
-- Nuevo `features/pvp/sync-engine-bridge.js`: handshake de arena, preparación privada J1/J2, `enginePrep`, prebattle y handoff concurrente al motor real.
-- `features/pvp/index.js`: 2069 → 1475 líneas.
-- Se mantienen separados `ranking-results.js`, `lobby-matchmaking.js` y `bot.js`.
-- Firebase Rules no cambian.
-- Build/cache/hashes actualizados a v232.
+Corrección:
+- `hallvalla-stage.html` ya no fija manualmente un hash histórico de `bootstrap-loader.js`.
+- El loader se importa usando automáticamente el build declarado por la etapa.
+- `index.html` añade `hvbuild=<SHELL_BUILD>` a la URL del iframe para evitar reutilizar una etapa anterior.
+- Si stage y loader no tienen el mismo build, el bootstrap se bloquea en vez de continuar con una mezcla incompatible.
+- Cache runtime renovada a `hallvalla-runtime-v233`.
 
-Pruebas: `docs/SMOKE_TEST_v232.md`.
-Auditoría: `docs/AUDITORIA_v232_PVP_SYNC_PROTOCOL.txt`.
-Pendientes: `docs/PENDIENTES_AUDITORIA_v232.txt`.
+Motivo del hotfix:
+En v232 el navegador podía cargar `hallvalla-stage.html` v232 junto con `bootstrap-loader.js` v229 porque el HTML conservaba el query hash histórico `h=1b3403244b59`. El loader v229 no conocía `features/pvp/bot.js`, por lo que el acceso a PvP fallaba antes de abrir el lobby.
