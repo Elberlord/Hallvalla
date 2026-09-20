@@ -28914,3 +28914,11 @@ html.hv-universal-dragging-enabled .hv-universal-selected{cursor:grabbing!import
   text-transform:none;box-shadow:0 2px 8px rgba(0,0,0,.72),0 0 9px rgba(224,163,48,.28);
 }
 #deckBuilderPanel .deck-mini-card.is-new-card{filter:drop-shadow(0 0 5px rgba(241,193,74,.32));}
+
+
+/* HallValla 20260920.230 — Mina rewards clean wheel result + soft consumed overlay */
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-used-overlay{mix-blend-mode:multiply;opacity:.92;filter:blur(2px);}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-result{min-height:22px !important;padding:0 !important;background:transparent !important;border:0 !important;box-shadow:none !important;}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-result:empty{display:none !important;}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-result b{display:block;font-size:13px !important;line-height:1.1 !important;}
+.mine-panel[data-mine-panel="rewards"] .mine-wheel-result span{display:none !important;}

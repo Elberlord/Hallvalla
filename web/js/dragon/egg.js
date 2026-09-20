@@ -374,6 +374,7 @@ function maybeAccumulateDragonKills(prevState,nextState){
   setTimeout(()=>{try{render?.();}catch(e){}},0);
 }
 registerHallvallaHook("veilCurse.killEventProcessed",({prevState,nextState})=>maybeAccumulateDragonKills(prevState,nextState),{id:"dragon-growth:accumulate-kills"});
+registerHallvallaHook("battle.unitKillRecorded",({prevState,nextState})=>maybeAccumulateDragonKills(prevState,nextState),{id:"dragon-growth:accumulate-kills-canonical"});
 
 function evolveDragonRecord(record){
   const current=normalizeDragonCompanionRecord(record);

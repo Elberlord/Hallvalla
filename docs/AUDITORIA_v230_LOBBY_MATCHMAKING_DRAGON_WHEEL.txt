@@ -1,0 +1,36 @@
+HallValla v230 — Auditoría parcial lobby/matchmaking + dragón + ruleta mina
+Fecha: 2026-09-20
+Base: v229 PVP_RANKING_DRAGON_EGG200
+
+Cambios aplicados
+1) Mina / Recompensas / Rueda
+- Se eliminó el texto inicial inferior "Rueda de la Mina" y "Presiona SPIN para tentar tu suerte".
+- El panel de resultado quedó limpio: solo muestra el nombre del resultado cuando corresponde.
+- El sombreado de premios agotados dejó de usar sectores triangulares por conic-gradient.
+- Ahora usa manchas radiales suaves por segmento consumido, para conservar oscurecimiento sin triángulo duro.
+
+2) Dragón / crecimiento por bajas
+- Se confirmó que Huevo, Bebé y Joven usan el mismo acumulador de kills.
+- Umbrales activos:
+  * Huevo -> Bebé: 200
+  * Bebé -> Joven: 5000
+  * Joven -> Adulto: 10000
+- Se añadió un hook canónico nuevo: battle.unitKillRecorded.
+- El crecimiento del dragón ya no depende únicamente del nombre legacy veilCurse.killEventProcessed.
+- Por compatibilidad, ambos hooks siguen activos.
+
+3) PvP / lobby / matchmaking
+- Se inició la separación del bloque de lobby y matchmaking hacia un módulo dedicado:
+  web/js/features/pvp/lobby-matchmaking.js
+- Este módulo concentra la lógica UI de:
+  * flujo selector / matchmaking / apuestas
+  * liga visual de matchmaking
+  * showcase visual de jugador/rival
+  * render base del estado de búsqueda
+- features/pvp/index.js quedó como orquestador y consume esa API.
+
+Objetivo de esta auditoría
+- Reducir acoplamientos viejos.
+- Aislar responsabilidades del PvP online.
+- Limpiar UI sobrante de la mina.
+- Asegurar que la progresión del dragón quede conectada a un evento canónico y no a un nombre heredado.

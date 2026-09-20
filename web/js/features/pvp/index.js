@@ -218,42 +218,55 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     return {key:String(league?.key||"stone"),name:String(league?.name||"Piedra"),points:Number(points||0),min:Number(league?.min||0),nextMin:league?.nextMin??null};
   }
   function renderMatchmakingLeague(snapshot=randomLeagueSnapshot){
+    const api=ensurePvpLobbyMatchmakingApi();
+    if(api?.renderMatchmakingLeague)return api.renderMatchmakingLeague(snapshot);
     const node=$("matchmakingLeagueLabel");
-    if(!node)return;
-    const safe=snapshot&&typeof snapshot==="object"?snapshot:{key:"stone",name:"Piedra",points:0};
-    node.textContent=`LIGA ${String(safe.name||"Piedra").toUpperCase()} · ${Number(safe.points||0)} PTS`;
-    node.dataset.league=String(safe.key||"stone");
+    if(node)node.textContent=`LIGA ${String(snapshot?.name||"Piedra").toUpperCase()} · ${Number(snapshot?.points||0)} PTS`;
   }
 
   function clearRandomAutoReady(){
     if(randomAutoReadyTimer){ clearTimeout(randomAutoReadyTimer); randomAutoReadyTimer=null; }
     randomAutoReadyCode="";
   }
+  let pvpLobbyMatchmakingApi=null;
+  function ensurePvpLobbyMatchmakingApi(){
+    if(pvpLobbyMatchmakingApi)return pvpLobbyMatchmakingApi;
+    const factory=globalThis.createHallvallaPvpLobbyMatchmakingApi;
+    if(typeof factory!=="function")return null;
+    pvpLobbyMatchmakingApi=factory({
+      $,
+      normalizeFirebaseArray,
+      LEADER_PORTRAITS:typeof LEADER_PORTRAITS!=="undefined"?LEADER_PORTRAITS:{},
+      getSelectedLeaderType:typeof getSelectedLeaderType==="function"?getSelectedLeaderType:null,
+      getSavedPrincipalKeysSafe,
+      clearRandomAutoReady,
+      hydrateAssetGroup:globalThis.hvHydrateAssetGroup,
+      setOnlineFlowModeState:(mode)=>{ onlineFlowMode=String(mode||"select"); },
+      getState:()=>({onlineFlowMode,activeRole})
+    });
+    return pvpLobbyMatchmakingApi;
+  }
   function setOnlineFlowMode(mode){
+    const api=ensurePvpLobbyMatchmakingApi();
+    if(api?.setOnlineFlowMode)return api.setOnlineFlowMode(mode);
     onlineFlowMode=String(mode||"select");
-    const selector=$("onlineModeSelect");
-    const matchmaking=$("onlineMatchmakingView");
-    const art=document.querySelector("#onlineLobby .online-modal-art");
-    const isSelect=onlineFlowMode==="select";
-    const isRandom=onlineFlowMode==="random";
-    const isWager=onlineFlowMode==="wager";
-    if(selector)selector.classList.toggle("hidden",!isSelect);
-    if(matchmaking)matchmaking.classList.toggle("hidden",!isRandom);
-    if(art){
-      art.classList.toggle("hidden",!isWager);
-      art.classList.remove("pvp-room-active");
-    }
   }
   function showOnlineModeSelect(){
+    const api=ensurePvpLobbyMatchmakingApi();
+    if(api?.showOnlineModeSelect)return api.showOnlineModeSelect();
     clearRandomAutoReady();
     setOnlineFlowMode("select");
   }
   function showWagerLobby(){
+    const api=ensurePvpLobbyMatchmakingApi();
+    if(api?.showWagerLobby)return api.showWagerLobby();
     clearRandomAutoReady();
     globalThis.hvHydrateAssetGroup?.("pvp-lobby");
     setOnlineFlowMode("wager");
   }
   function uniqueStrings(values=[]){
+    const api=ensurePvpLobbyMatchmakingApi();
+    if(api?.safeUniqueStrings)return api.safeUniqueStrings(values);
     const seen=new Set();
     return (Array.isArray(values)?values:[values]).map(v=>String(v||"").trim()).filter(v=>v&&!seen.has(v)&&(seen.add(v),true));
   }
@@ -266,6 +279,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     else{img.removeAttribute("src");img.style.visibility="hidden";}
   }
   function buildPublicShowcase(privatePayload=null){
+    const api=ensurePvpLobbyMatchmakingApi();
+    if(api?.buildPublicShowcase)return api.buildPublicShowcase(privatePayload);
     let leaderType=String(privatePayload?.battleProfile?.leaderType||"").trim();
     let principalKeys=normalizeFirebaseArray(privatePayload?.loadout?.principalKeys).map(v=>String(v||"").trim()).filter(Boolean);
     if(!leaderType){try{leaderType=String((typeof getSelectedLeaderType==="function"&&getSelectedLeaderType())||"warrior");}catch(_){leaderType="warrior";}}
@@ -282,20 +297,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     applyShowcaseImage(avatar,[leaderSrc]);
   }
   function renderRandomMatchmakingUi(room={}){
-    if(onlineFlowMode!=="random")return;
-    const role=Number(activeRole||1);
-    const otherRole=role===1?2:1;
-    const localShowcase=room?.playerShowcase?.[role]||room?.playerShowcase?.[String(role)]||buildPublicShowcase();
-    const opponentShowcase=room?.playerShowcase?.[otherRole]||room?.playerShowcase?.[String(otherRole)]||null;
-    renderShowcaseSide("player",localShowcase);
-    const otherUid=String(room?.playerSlots?.[`player${otherRole}Uid`]||"");
-    const found=!!otherUid;
-    renderShowcaseSide("opponent",found?opponentShowcase:null);
-    const searchState=$("matchmakingSearchingState");
-    if(searchState){
-      searchState.classList.toggle("is-rival-found",found);
-      searchState.classList.remove("hidden");
-    }
+    const api=ensurePvpLobbyMatchmakingApi();
+    if(api?.renderRandomMatchmakingUi)return api.renderRandomMatchmakingUi(room);
   }
   function scheduleRandomAutoReady(room,code){
     if(onlineFlowMode!=="random"||String(room?.entryMode||"")!=="random")return;

@@ -999,6 +999,7 @@ function maybeProcessVeilCurseKillEvent(prevState,nextState){
     if(changed&&Array.isArray(publicState?.units))void updatePublic({units:upgradedUnits});
   })();
   runHallvallaEffectHooks("veilCurse.killEventProcessed",{prevState,nextState});
+  runHallvallaEffectHooks("battle.unitKillRecorded",{prevState,nextState});
   return result;
 }
 

@@ -1382,11 +1382,21 @@ function getHallvallaMineWheelNextFreeMs(state=getHallvallaMineWheelState(),now=
   return Math.max(0,next-now);
 }
 function buildHallvallaMineWheelConsumedOverlay(state=getHallvallaMineWheelState()){
-  const groups=getHallvallaMineWheelCategoryRemainingIds(state),step=360/HALLVALLA_MINE_WHEEL_CATEGORIES.length;
-  return `conic-gradient(from -${(step/2).toFixed(3)}deg, ${groups.map((entry,index)=>{
-    const a=(index*step).toFixed(3),b=((index+1)*step).toFixed(3),consumed=entry.cat.id!=="neutral"&&!entry.active;
-    return `${consumed?"rgba(0,0,0,.64)":"rgba(0,0,0,0)"} ${a}deg ${b}deg`;
-  }).join(",")})`;
+  const groups=getHallvallaMineWheelCategoryRemainingIds(state);
+  const step=(Math.PI*2)/Math.max(1,HALLVALLA_MINE_WHEEL_CATEGORIES.length);
+  const radius=31;
+  const spotRadius=18;
+  const layers=[];
+  groups.forEach((entry,index)=>{
+    const consumed=entry?.cat?.id!=="neutral"&&!entry?.active;
+    if(!consumed)return;
+    const angle=(-Math.PI/2)+(index*step)+(step/2);
+    const x=(50+Math.cos(angle)*radius).toFixed(2);
+    const y=(50+Math.sin(angle)*radius).toFixed(2);
+    layers.push(`radial-gradient(circle ${spotRadius}% at ${x}% ${y}%, rgba(0,0,0,.58) 0%, rgba(0,0,0,.44) 46%, rgba(0,0,0,.18) 68%, rgba(0,0,0,0) 100%)`);
+  });
+  if(!layers.length)return "none";
+  return layers.join(",");
 }
 function renderHallvallaMineWheelVisual(state=getHallvallaMineWheelState()){
   const wheel=$("mineFortuneWheel");
@@ -1723,11 +1733,11 @@ async function spinHallvallaMineWheel(){
   hallvallaMineWheelBusy=true;
   const btn=$("mineWheelSpinBtn"),result=$("mineWheelResult");
   if(btn){btn.disabled=true;btn.textContent="SPIN...";}
-  if(result){result.className="mine-wheel-result spinning";result.innerHTML="<b>Girando...</b><span>La rueda está decidiendo tu resultado.</span>";}
+  if(result){result.className="mine-wheel-result spinning";result.innerHTML="";}
   try{
     const profile=getPlayerProfile(),tx=await transactHallvallaMineWheelSpin(profile);
     if(!tx.committed){
-      if(result){result.className="mine-wheel-result negative";result.innerHTML=`<b>No se pudo girar</b><span>${tx.reason==="gems"?`Necesitas ${Math.max(0,Number(tx.cost||0))}💎 para el siguiente tiro pagado.`:"No se pudo confirmar el tiro con Firebase."}</span>`;}
+      if(result){result.className="mine-wheel-result negative";result.innerHTML="<b>No se pudo girar</b>";}
       return;
     }
     if(tx.cost>0){const fresh=getPlayerProfile();fresh.gems=Math.max(0,Number(fresh.gems||0)-tx.cost);savePlayerProfile(fresh);}
@@ -1736,10 +1746,10 @@ async function spinHallvallaMineWheel(){
     if(tx.def?.effect==="jackpot")void recordHallvallaMineMissionStat("jackpot_wins",1);
     refreshHallvallaMineWheelCurrencies();
     await animateHallvallaMineWheelTo(tx.def);
-    if(result){const resetText=tx.state?.lastResult?.poolReset===true?`${effectText} El pool llegó a 5 premios y se reinició completo.`:effectText;result.className=`mine-wheel-result ${tx.def.kind}`;result.innerHTML=`<b>${escapeHtml(tx.def.name)}</b><span>${escapeHtml(resetText)}</span>`;}
+    if(result){result.className=`mine-wheel-result ${tx.def.kind}`;result.innerHTML=`<b>${escapeHtml(tx.def.name)}</b>`;}
   }catch(error){
     console.warn("[HallValla][Mina][Ruleta] Error durante SPIN:",error);
-    if(result){result.className="mine-wheel-result negative";result.innerHTML="<b>Error de ruleta</b><span>El tiro no pudo completarse correctamente.</span>";}
+    if(result){result.className="mine-wheel-result negative";result.innerHTML="<b>Error de ruleta</b>";}
   }finally{
     hallvallaMineWheelBusy=false;
     renderHallvallaMineWheel(getHallvallaMineWheelState());
