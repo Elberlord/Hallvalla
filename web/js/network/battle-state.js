@@ -843,6 +843,9 @@ function getBattleCardsSortedByCurrentCost(cards=[],owner=myPlayer||1){
   const source=Array.isArray(cards)?cards:[];
   const ownerNum=Math.max(1,Number(owner||1));
   return [...source].sort((a,b)=>{
+    const eggA=String(a?.key||"")==="dragon_egg"?0:1;
+    const eggB=String(b?.key||"")==="dragon_egg"?0:1;
+    if(eggA!==eggB)return eggA-eggB;
     const ca=Math.max(0,Number(typeof effectiveCardCost==="function"?effectiveCardCost(a,ownerNum):a?.cost)||0);
     const cb=Math.max(0,Number(typeof effectiveCardCost==="function"?effectiveCardCost(b,ownerNum):b?.cost)||0);
     return (ca-cb)||String(a?.name||"").localeCompare(String(b?.name||""))||String(a?.id||"").localeCompare(String(b?.id||""));
@@ -1393,7 +1396,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     :playerPrincipalPrep.deck;
   const playerBattleDrawDeck=injectLeaderEquipmentIntoDrawDeck(playerCombatDeck,leaderType,1);
   const playerDraw=realtimeExperimental
-    ?{deck:[],hand:[...playerBattleDrawDeck].sort((a,b)=>(effectiveCardCost(a,1)-effectiveCardCost(b,1))||String(a.name||"").localeCompare(String(b.name||"")))}
+    ?{deck:[],hand:getBattleCardsSortedByCurrentCost(playerBattleDrawDeck,1)}
     :drawCards(playerBattleDrawDeck,[],4);
   const playerDeck=playerDraw.deck;
   const playerHand=playerDraw.hand;
@@ -1416,7 +1419,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   let enemyInitial=adaptiveMagePilot?enemyPrepared:injectLeaderEquipmentIntoInitialState(enemyPrepared,enemyLeaderType,2);
   if(realtimeExperimental){
     const enemyCombatPool=[...(enemyInitial.hand||[]),...(enemyInitial.deck||[]),...(enemyInitial.principalCards||[])];
-    enemyCombatPool.sort((a,b)=>(effectiveCardCost(a,2)-effectiveCardCost(b,2))||String(a.name||"").localeCompare(String(b.name||"")));
+    enemyCombatPool.splice(0,enemyCombatPool.length,...getBattleCardsSortedByCurrentCost(enemyCombatPool,2));
     enemyInitial={...enemyInitial,deck:[],hand:enemyCombatPool,principalSlots:0,principalCards:[],principalKeys:[],principalCard:null,principalKey:""};
   }
   const chapterForBattle=getAdventureChapterForBattle(battle)||ADVENTURE_CHAPTER_1_1;

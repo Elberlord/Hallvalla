@@ -1,0 +1,14 @@
+HALLVALLA BUILD 20260920.229
+
+Cambios:
+- Auditoría PvP iniciada: ranking y persistencia de resultados extraídos de features/pvp/index.js a features/pvp/ranking-results.js.
+- El loader PvP carga ranking-results antes del runtime principal.
+- Huevo de Dragón: incubación reducida de 1000 a 200 eliminaciones aliadas.
+- El Huevo de Dragón (coste 0) recibe prioridad absoluta en el orden de cartas del combate; queda primero incluso frente a otras cartas de coste 0.
+- Se mantiene la eclosión al cierre del duelo en el que alcanza el umbral, evitando transformar una entidad sincronizada a mitad de un combate PvP.
+- Sin cambios de reglas Firebase en este corte.
+
+Siguiente corte de auditoría PvP:
+- lobby/matchmaking
+- BOT
+- sincronización/protocolo

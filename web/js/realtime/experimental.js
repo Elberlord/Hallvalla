@@ -922,7 +922,7 @@ function hallvallaRtArsenalEntries(category=hallvallaRtState.arsenalCategory){
     const key=`${hallvallaRtCardCategory(card)}:${card.key||card.name||card.id}`;
     const hit=groups.get(key);if(hit){hit.copies+=1;hit.ids.push(card.id);}else groups.set(key,{card,copies:1,ids:[card.id]});
   }
-  return [...groups.values()].sort((a,b)=>(effectiveCardCost(a.card,myPlayer)-effectiveCardCost(b.card,myPlayer))||String(a.card.name||"").localeCompare(String(b.card.name||"")));
+  return [...groups.values()].sort((a,b)=>((String(a?.card?.key||"")==="dragon_egg"?0:1)-(String(b?.card?.key||"")==="dragon_egg"?0:1))||(effectiveCardCost(a.card,myPlayer)-effectiveCardCost(b.card,myPlayer))||String(a.card.name||"").localeCompare(String(b.card.name||"")));
 }
 function hallvallaRtAvailableCategories(){return ["unit","spell","trap"].filter(cat=>hallvallaRtArsenalCards(cat).length>0);}
 
@@ -1903,7 +1903,7 @@ function hallvallaRtPrimePreparedState(){
     const seen=new Set();
     const arsenal=[];
     for(const card of pool){const k=String(card?.id||card?.key||card?.name||"");if(!k||seen.has(k))continue;seen.add(k);arsenal.push(card);}
-    const ordered=typeof getBattleCardsSortedByCurrentCost==="function"?getBattleCardsSortedByCurrentCost(arsenal,myPlayer||1):arsenal.sort((a,b)=>(effectiveCardCost(a,myPlayer)-effectiveCardCost(b,myPlayer))||String(a?.name||"").localeCompare(String(b?.name||"")));
+    const ordered=typeof getBattleCardsSortedByCurrentCost==="function"?getBattleCardsSortedByCurrentCost(arsenal,myPlayer||1):arsenal.sort((a,b)=>(String(a?.key||"")==="dragon_egg"?-1:0)-(String(b?.key||"")==="dragon_egg"?-1:0)||(effectiveCardCost(a,myPlayer)-effectiveCardCost(b,myPlayer))||String(a?.name||"").localeCompare(String(b?.name||"")));
     arsenal.splice(0,arsenal.length,...ordered);
     privateState={...privateState,deck:[],hand:arsenal,honor:HALLVALLA_RT_CFG.initialMana,maxHonor:HALLVALLA_RT_CFG.initialMana,lastTurnStarted:"RT",skipFirstTurnDraw:true};
   }

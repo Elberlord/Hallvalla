@@ -3,7 +3,7 @@
 
 const DRAGON_COMPANION_ELEMENTS=["lightning","fire","ice"];
 const DRAGON_COMPANION_STAGES=["egg","baby","young","adult"];
-const DRAGON_STAGE_THRESHOLDS=Object.freeze({egg:1000,baby:5000,young:10000,adult:10000});
+const DRAGON_STAGE_THRESHOLDS=Object.freeze({egg:200,baby:5000,young:10000,adult:10000});
 const DRAGON_ACTIVE_RECORD_KEY="hallvalla_active_dragon_companion_v1";
 const DRAGON_GROWTH_BATTLE_KEY="hallvalla_dragon_growth_battle_v1";
 const DRAGON_GROWTH_KILL_LEDGER_KEY="hallvalla_dragon_growth_kill_ledger_v2";
@@ -90,7 +90,7 @@ function makeDragonCompanionCard(stage,element){
     key:"dragon_egg",name:"Huevo de Dragón",type:"unit",icon:"🥚",portrait:DRAGON_COMPANION_ASSETS.egg.hand,fieldFigure:DRAGON_COMPANION_ASSETS.egg.field,
     rarity:"Especial",special:true,beast:true,assetBucket:"beasts",personalCharacter:true,dragonCompanion:true,dragonEgg:true,dragonStage:"egg",dragonElement:"mystery",
     cost:0,hp:50,atk:0,guard:0,dex:0,agi:0,mov:0,range:0,immobile:true,cannotAttack:true,cannotDefend:true,
-    text:"Personaje Personal opcional. No reemplaza al líder. Mientras permanezca vivo en el campo, todas las eliminaciones aliadas cuentan para su incubación. Si es destruido, no pierdes el duelo; conserva el progreso y deja de contar durante ese combate. Eclosiona al terminar un duelo después de alcanzar 1000 eliminaciones."
+    text:"Personaje Personal opcional. No reemplaza al líder. Mientras permanezca vivo en el campo, todas las eliminaciones aliadas cuentan para su incubación. Si es destruido, no pierdes el duelo; conserva el progreso y deja de contar durante ese combate. Eclosiona al terminar el duelo en el que alcance 200 eliminaciones."
   };
   const stats=DRAGON_COMPANION_STATS[element][stage];
   const visualStage=stage==="baby"?"baby":`${stage}_${element}`;
@@ -411,7 +411,7 @@ function processDragonGrowthAfterBattle(state){
   setActiveDragonRecordId("");
   const title=evolution.old.stage==="egg"?"El huevo ha eclosionado":`${dragonStageLabel(evolution.old.stage)} evolucionado`;
   const message=evolution.old.stage==="egg"
-    ?`El Huevo de Dragón alcanzó 1000 eliminaciones y nació un Dragón Bebé de ${dragonElementLabel(evolution.next.element)}.`
+    ?`El Huevo de Dragón alcanzó 200 eliminaciones y nació un Dragón Bebé de ${dragonElementLabel(evolution.next.element)}.`
     :`${dragonElementLabel(evolution.next.element)} alcanzó ${evolution.next.kills} eliminaciones y evolucionó a Dragón ${dragonStageLabel(evolution.next.stage)}.`;
   setTimeout(()=>hvAlert(message,title),260);
   return[evolution];

@@ -1,0 +1,15 @@
+HALLVALLA — PENDIENTES DESPUÉS DE v229
+Build: 20260920.229
+
+COMPLETADO EN v229
+- Primer corte PvP: ranking/resultados fuera de features/pvp/index.js.
+- Huevo: 200 eliminaciones para eclosión.
+- Huevo coste 0 forzado como primera carta del arsenal/mano ordenada.
+
+SIGUIENTE
+1. PvP: separar lobby/matchmaking.
+2. PvP: separar BOT.
+3. PvP: separar sincronización/protocolo.
+4. Motor automático: dividir realtime/experimental.js y retirar nombre experimental.
+5. Revisar nombres/contratos heredados: turnsRemaining, damagedThisTurn, *TurnKey y equivalentes.
+6. Cierre final: muerto/assets + Aventura + PvP BOT/concurrente + gamepad + Mina/Forja/colección/tutorial + hashes/cache/Firebase.

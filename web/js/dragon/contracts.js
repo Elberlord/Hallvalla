@@ -299,7 +299,7 @@ function applyDragonFrost(unit,sourceName="Dragón de Hielo",stacks=1,state=publ
     const egg=grantDragonEgg(battle);
     markDragonContractClaimed(battle.id);
     renderPlayerProfile(profile);renderHomeProgress();
-    setTimeout(()=>hvAlert(`Has reclamado un Huevo de Dragón. Ahora se equipa como una carta normal del mazo y debe acumular 1000 eliminaciones aliadas para quedar listo para eclosionar.
+    setTimeout(()=>hvAlert(`Has reclamado un Huevo de Dragón. Ahora se equipa como una carta normal del mazo y debe acumular 200 eliminaciones aliadas para quedar listo para eclosionar.
 
 Huevos guardados: ${getDragonEggs().length}.`,`Contrato completado: ${battle.enemyName}`),220);
     return{handled:true,value:{awarded:true,xp:battle.xp||0,gold:battle.gold||0,levelUps:xpResult.levelUps||0,cards:[],battle,progress:getAdventureProgress(),profile,dragonContract:true,eggAwarded:!!egg,egg}};
