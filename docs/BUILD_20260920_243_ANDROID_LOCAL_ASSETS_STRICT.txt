@@ -1,0 +1,8 @@
+HallValla v243 — Android 1366x636 / assets locales estrictos
+
+- El APK empaqueta todo web/assets mediante Gradle sourceSets.
+- /Hallvalla/assets/* se sirve exclusivamente desde AssetManager.
+- Se elimina el fallback remoto para assets del juego.
+- El manifiesto hallvalla_assets_current.json debe coincidir 1:1 en ruta, tamaño y SHA-256.
+- La web/Firebase siguen online; los recursos pesados visuales/sonoros ya no requieren Storage.
+- No se incluye la firma privada dentro del repositorio.

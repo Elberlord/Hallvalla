@@ -1,0 +1,16 @@
+HallValla v243 — Android 1366×636 TEST
+Fecha: 2026-09-20
+Base web: v242 CIERRE TECNICO
+
+Objetivo
+- Probar en Android el plano fijo canónico 1366×636 sin reacomodar elementos.
+
+Cambios Android
+- MainActivity VIRTUAL_WIDTH: 1366
+- MainActivity VIRTUAL_HEIGHT: 636
+- Contenedor nativo: contain, centrado, fondo negro
+- versionCode/versionName wrapper: 136 / 1.0.136
+- HOME_URL: ?apk=136&hvfit=1
+- marcador nativo: virtualWidth=1366, virtualHeight=636
+
+La web/gameplay continúa siendo v242; no se modificó lógica del juego.

@@ -41,7 +41,9 @@ require("'../../web/assets'" in gradle,
 require('hvfit=1' in main_java and 'applyContainedGameViewport' in main_java,
         'android: contenedor nativo + hvfit presentes','android: falta contenedor nativo o hvfit')
 require('shouldInterceptRequest' in main_java and 'tryOpenBundledAsset' in main_java,
-        'android: assets locales con fallback remoto','android: falta interceptor de assets')
+        'android: interceptor de assets locales presente','android: falta interceptor de assets')
+require('Bundled asset missing' in main_java and "localAssets:'strict'" in main_java and 'WebView continúa hacia GitHub Pages' not in main_java,
+        'android: /assets es local estricto sin fallback de red','android: /assets todavía permite fallback remoto')
 require('dispatchKeyEvent' in main_java and 'dispatchGenericMotionEvent' in main_java and '__hallvallaNativeGamepadUpdate' in main_java,
         'android: bridge nativo de gamepad presente','android: bridge nativo de gamepad incompleto')
 require('__hallvallaNativeGamepadUpdate' in gamepad_js and 'HV_NATIVE_GAMEPAD_INDEX' in gamepad_js,

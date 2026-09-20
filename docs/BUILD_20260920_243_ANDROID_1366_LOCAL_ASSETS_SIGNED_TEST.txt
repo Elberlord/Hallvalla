@@ -1,0 +1,27 @@
+HallValla v243 — Android signed device test
+Date: 2026-09-20
+
+Purpose
+- Physical Android validation of the fixed 1366x636 canonical layout.
+- Keep all current HallValla visual/audio assets inside the APK.
+
+APK
+- applicationId: com.hallvalla.game
+- versionCode: 136
+- versionName: 1.0.136
+- file: releases/android/HallValla-Android-v136.apk
+- SHA-256: 4a77f080e3de0bb1455184814fdb5152c092e042190e39ab0b938d4d2327e848
+- size: 155153230 bytes
+
+Static verification completed before packaging
+- ZIP/APK container integrity: PASS
+- DEX checksum + SHA-1 header signature: PASS
+- AndroidManifest versionCode/versionName: PASS
+- bundled web/assets: 638/638, SHA-256 content verified
+- canonical viewport markers: 1366x636 PASS
+- resources.arsc stored/aligned: PASS
+- APK Signature Scheme v2 cryptographic verification: PASS
+- signing certificate SHA-256: 9f2c07b9e8ba00bb8766a76bef760a5bc0fe8dbde528e34c2ee4ae337e7a1c3b
+
+Private signing material is intentionally excluded from the repository/package.
+Firebase Rules were not changed for this Android test.

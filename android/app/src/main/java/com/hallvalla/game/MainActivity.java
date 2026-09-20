@@ -34,16 +34,17 @@ import com.google.android.gms.tasks.Task;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 public class MainActivity extends Activity {
-    private static final String HOME_URL = "https://elberlord.github.io/Hallvalla/?apk=135&hvfit=1";
+    private static final String HOME_URL = "https://elberlord.github.io/Hallvalla/?apk=136&hvfit=1";
     private static final String TRUSTED_HOST = "elberlord.github.io";
     private static final String WEB_CLIENT_ID = "496903032464-mcru6mkdr99pgos2fdegarg08eb55ujf.apps.googleusercontent.com";
     private static final int RC_GOOGLE_SIGN_IN = 7311;
-    private static final int VIRTUAL_WIDTH = 1920;
-    private static final int VIRTUAL_HEIGHT = 1080;
+    private static final int VIRTUAL_WIDTH = 1366;
+    private static final int VIRTUAL_HEIGHT = 636;
     private static final float VIRTUAL_ASPECT = (float) VIRTUAL_WIDTH / (float) VIRTUAL_HEIGHT;
     private static final String LOCAL_ASSET_PATH_PREFIX = "/Hallvalla/assets/";
     private static final String LOCAL_ASSET_DIR = "";
@@ -89,8 +90,8 @@ public class MainActivity extends Activity {
         googleSignInClient = GoogleSignIn.getClient(this, googleOptions);
         inputManager = (InputManager) getSystemService(INPUT_SERVICE);
 
-        // v135: el teléfono deja de decidir la relación de aspecto del juego.
-        // Creamos un escenario nativo 16:9 tipo `contain`: el rectángulo mayor
+        // v136: el teléfono deja de decidir la relación de aspecto del juego.
+        // Creamos un escenario nativo 1366:636 tipo `contain`: el rectángulo mayor
         // que cabe en la pantalla sin deformarse. Las bandas sobrantes quedan
         // negras y absorben notch/cutout en teléfonos muy panorámicos.
         viewportRoot = new FrameLayout(this) {
@@ -132,9 +133,9 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccess(false);
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setLoadsImagesAutomatically(true);
-        // v135: la web solicita un viewport lógico 1920x1080 con `hvfit=1`.
+        // v136: la web solicita un viewport lógico 1366x636 con `hvfit=1`.
         // OverviewMode ahora sí es intencional: reduce ESE escenario completo al
-        // WebView 16:9 calculado arriba. No estira X/Y por separado.
+        // WebView 1366:636 calculado arriba. No estira X/Y por separado.
         settings.setUseWideViewPort(true);
         settings.setLoadWithOverviewMode(true);
         settings.setTextZoom(100);
@@ -143,7 +144,7 @@ public class MainActivity extends Activity {
         settings.setSupportZoom(false);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setUserAgentString(settings.getUserAgentString() + " HallVallaAndroid/135");
+        settings.setUserAgentString(settings.getUserAgentString() + " HallVallaAndroid/136");
 
         CookieManager cookies = CookieManager.getInstance();
         cookies.setAcceptCookie(true);
@@ -196,7 +197,7 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Ajusta el WebView al mayor rectángulo 16:9 que cabe en el área nativa.
+     * Ajusta el WebView al mayor rectángulo 1366:636 que cabe en el área nativa.
      * El WebView no recibe transformaciones visuales: Android entrega los taps
      * directamente sobre el mismo rectángulo que dibuja, por lo que el hit-test
      * permanece alineado con Guardar, Atrás, cartas, ruleta, etc.
@@ -245,15 +246,24 @@ public class MainActivity extends Activity {
             response.setResponseHeaders(java.util.Collections.singletonMap("Cache-Control", "public, max-age=31536000, immutable"));
             return response;
         } catch (IOException ignored) {
-            // Asset nuevo aún no incluido en esta APK: WebView continúa hacia GitHub Pages.
-            return null;
+            // Contrato v136: /Hallvalla/assets/* NUNCA cae a red. El APK debe
+            // contener el asset; el checker/Gradle valida el manifiesto antes de compilar.
+            byte[] body = "HallValla bundled asset missing".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            return new WebResourceResponse(
+                "text/plain",
+                "UTF-8",
+                404,
+                "Bundled asset missing",
+                java.util.Collections.singletonMap("Cache-Control", "no-store"),
+                new ByteArrayInputStream(body)
+            );
         } catch (Exception ignored) {
             return null;
         }
     }
 
     private void installNativeContainerMarker() {
-        evaluateOnHallValla("window.__HALLVALLA_NATIVE_CONTAINER__=Object.freeze({version:135,virtualWidth:1920,virtualHeight:1080,mode:'contain',localAssets:true,nativeGamepad:true});document.documentElement.dataset.hvNativeContainer='135';");
+        evaluateOnHallValla("window.__HALLVALLA_NATIVE_CONTAINER__=Object.freeze({version:136,virtualWidth:1366,virtualHeight:636,mode:'contain',localAssets:'strict',nativeGamepad:true});document.documentElement.dataset.hvNativeContainer='136';");
     }
 
     private boolean isGamepadDevice(InputDevice device) {
@@ -500,8 +510,8 @@ public class MainActivity extends Activity {
 
     private static final String NATIVE_GOOGLE_BRIDGE_SCRIPT = """
         (() => {
-          if (window.__hallvallaNativeGoogleBridgeV135Installed) return;
-          window.__hallvallaNativeGoogleBridgeV135Installed = true;
+          if (window.__hallvallaNativeGoogleBridgeV136Installed) return;
+          window.__hallvallaNativeGoogleBridgeV136Installed = true;
 
           const googleButtons = new Map([
             ['googleLoginSplashBtn', 'splash'],

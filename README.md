@@ -1,24 +1,23 @@
-# HallValla v242 — Cierre técnico de auditoría
+# HallValla v243 — Android 1366×636 + assets locales (prueba firmada)
 
-Build: `20260920.242`
+Web build base: `20260920.242`
+Android: `versionCode 136` · `versionName 1.0.136`
+Application ID: `com.hallvalla.game`
 
-Base: v241.
+## Objetivo de esta entrega
+Validar en un teléfono real el plano canónico 1366×636 sin que Android reacomode los elementos internos de HallValla.
 
-## Alcance
-Esta versión no modifica gameplay, balance, economía, IA ni diseño. Consolida el cierre técnico de la auditoría iniciada en las versiones anteriores.
+- El shell web usa un escenario lógico fijo 1366×636 y escala por `contain`.
+- El proyecto Android v136 usa la misma relación 1366:636.
+- Todo `web/assets/` permanece empaquetado localmente dentro de la app.
+- El APK de prueba incluido contiene 638/638 assets vigentes.
+- La APK está firmada con la misma identidad de actualización de HallValla utilizada por las versiones anteriores.
+- La firma privada/keystore NO forma parte de este repositorio ni de este ZIP.
 
-## Estado de auditoría
-- `settings-events`: responsabilidades separadas.
-- Decks/unidades/reglas: factories, validación y reglas compartidas separadas.
-- PvP: ranking/resultados, lobby/matchmaking, BOT y sincronización/protocolo separados.
-- Motor automático: runtime canónico dividido; `realtime/experimental.js` retirado.
-- Contratos heredados: auditados y migrados.
-- Código muerto/assets huérfanos: auditados y limpiados.
-- Android/web checker: alineado con la arquitectura vigente.
-- Hashes, Service Worker, cache-busting y manifiesto Android: consolidados en v242.
+## APK de prueba
+`releases/android/HallValla-Android-v136.apk`
 
-## Firebase
-`backend/firebase/database.rules.json` es la regla final de referencia de este cierre técnico y permanece byte por byte igual a v241. Su SHA-256 está documentado en `docs/FIREBASE_RULES_FINAL_v242.sha256`.
+Esta APK está destinada a la prueba física de layout/arranque en Android. La fuente Android canónica sigue en `/android` y conserva Google Sign-In nativo, gamepad y resolución local estricta de assets.
 
-## Validación funcional pendiente
-La única validación funcional expresamente pendiente del cierre es completar Aventura de extremo a extremo (victoria/derrota/progresión), que se pospone por balance/dificultad y no bloquea el cierre estructural.
+## Auditoría previa
+El cierre estructural/técnico v242 se mantiene. No se cambió gameplay, balance, economía, IA ni Firebase Rules para esta prueba Android.

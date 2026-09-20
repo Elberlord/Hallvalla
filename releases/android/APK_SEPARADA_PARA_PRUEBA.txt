@@ -1,0 +1,3 @@
+El APK firmado v136 se entrega como archivo separado para evitar duplicar ~148 MB dentro del ZIP del repositorio.
+Nombre: HallValla-Android-v136.apk
+La metadata latest.json y SHA256SUMS.txt de esta carpeta corresponden a ese APK.

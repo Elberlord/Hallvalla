@@ -35,7 +35,7 @@ jobs:
           rm -rf dist
           mkdir -p dist/downloads
           cp -a web/. dist/
-          cp releases/android/HallValla-Android-v131.apk dist/downloads/HallValla-Android.apk
+          cp releases/android/HallValla-Android-v136.apk dist/downloads/HallValla-Android.apk
           cp releases/android/latest.json dist/downloads/latest.json
           cp releases/android/SHA256SUMS.txt dist/downloads/SHA256SUMS.txt
           printf '%s\n' 'Private source repository. Public artifact contains only the HallValla web runtime and stable Android APK.' > dist/DEPLOYMENT_INFO.txt

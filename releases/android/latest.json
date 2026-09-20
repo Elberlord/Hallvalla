@@ -1,9 +1,10 @@
 {
   "platform": "android",
   "applicationId": "com.hallvalla.game",
-  "versionCode": 131,
-  "versionName": "1.0.131",
-  "file": "HallValla-Android.apk",
-  "sha256": "93a4e9cc61f8605ede4a46172680e1c2b6808e0352c5621581527d9dadbe7311",
-  "publicPath": "downloads/HallValla-Android.apk"
+  "versionCode": 136,
+  "versionName": "1.0.136",
+  "file": "HallValla-Android-v136.apk",
+  "sha256": "4a77f080e3de0bb1455184814fdb5152c092e042190e39ab0b938d4d2327e848",
+  "publicPath": "downloads/HallValla-Android.apk",
+  "purpose": "signed 1366x636 local-assets device test"
 }
