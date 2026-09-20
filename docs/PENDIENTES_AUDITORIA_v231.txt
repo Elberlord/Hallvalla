@@ -1,0 +1,21 @@
+HallValla — Pendientes de auditoría después de v231
+Fecha: 2026-09-20
+
+COMPLETADO
+- settings-events: tutoriales/misiones y recompensas extraídos.
+- decks-units-combat-rules: factories, validación/leader runtime y shared combat rules separados.
+- PvP ranking/resultados separado.
+- PvP lobby/matchmaking UI separado.
+- PvP BOT: perfiles, escalado, composición de mazos y auditoría separados en features/pvp/bot.js.
+
+SIGUIENTE
+1. PvP sincronización/protocolo concurrente:
+   - listeners public/private;
+   - ownership de escrituras;
+   - commits/updates multipath;
+   - reconciliación de fases;
+   - preparación/entrada al motor real;
+   - puente BOT/matchmaking hacia sala activa.
+2. Motor automático: dividir realtime/experimental.js y retirar el nombre histórico experimental.
+3. Contratos heredados: turnsRemaining, damagedThisTurn, *TurnKey y similares.
+4. Cierre final: código muerto/assets huérfanos + Aventura + PvP BOT + PvP concurrente + gamepad Windows/Android + Mina/Forja/colección/tutorial + hashes/cache/Firebase.

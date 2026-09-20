@@ -1,0 +1,26 @@
+HallValla v231 — Auditoría PvP · BOT separado
+Fecha: 2026-09-20
+Base: v230
+
+CORTE REALIZADO
+- Nuevo módulo: web/js/features/pvp/bot.js
+- Extraídos de features/pvp/index.js:
+  * 15 arquetipos BOT base.
+  * 225 perfiles (15 rivales x niveles I–XV).
+  * políticas de rareza por liga.
+  * escalado competitivo por liga.
+  * composición y validación de mazos BOT.
+  * selección anti-repetición de rival.
+  * nombre/UID público del BOT.
+  * auditoría hvPvpBotAudit.
+- features/pvp/index.js conserva solamente la integración/fallback que conecta matchmaking con la sala Firebase y el arranque de combate. Esta integración se revisará con el siguiente corte: sincronización/protocolo concurrente.
+
+VALIDACIÓN ESTRUCTURAL
+- 15 arquetipos base.
+- 225 perfiles BOT.
+- líderes permitidos: Guerrero, Arquero, Caballería, Hacha y Asesino.
+- Piedra resuelve nivel competitivo I.
+- Valhalla resuelve nivel competitivo XV.
+
+SIGUIENTE CORTE
+- PvP sincronización/protocolo concurrente: listeners públicos/privados, commits multipath, reconciliación de fases y ownership de escrituras.
