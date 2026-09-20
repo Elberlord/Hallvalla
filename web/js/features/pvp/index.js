@@ -40,12 +40,14 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   let rematchWaitTimer=null;
   let rematchWaitActive=false;
   const RANDOM_QUEUE_PATH="matchmaking/random";
-  const RANDOM_QUEUE_STALE_MS=120000;
   let randomMatchSearching=false;
   let randomMatchTimer=null;
   let randomSearchStartedAt=0;
   let randomOwnCreatedAt=0;
+  let randomInboundClaimUid="";
+  let randomInboundClaimSeenAt=0;
   let randomQueueDisconnect=null;
+  let randomHumanJoinInFlight=false;
   let randomLeagueSnapshot=null;
   let onlineFlowMode="select";
   let randomAutoReadyTimer=null;
@@ -718,8 +720,15 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const strong=$("matchmakingSearchingState")?.querySelector("strong");
     if(strong)strong.textContent=String(message||"BUSCANDO RIVAL...");
   }
+  const pvpMatchDiagTimes=new Map();
   function pvpMatchDiag(step,data=null){
     try{
+      const noisy=step==="humans-visible-waiting-arbitration"||step==="fallback-deferred-human-visible"||step==="inbound-human-claim"||step==="fallback-scheduled"||step==="fallback-fired"||step==="fallback-start";
+      if(noisy){
+        const now=Date.now(),last=Number(pvpMatchDiagTimes.get(step)||0);
+        if(now-last<4500)return;
+        pvpMatchDiagTimes.set(step,now);
+      }
       if(data==null)console.info(`[HallValla][PvP Matchmaking] ${step}`);
       else console.info(`[HallValla][PvP Matchmaking] ${step}`,data);
     }catch(_){ }
@@ -743,9 +752,18 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       pvpMatchDiag("fallback-fired",{role:activeRole,code:String(activeCode||""),attempt:pvpBotFallbackAttempts+1});
       if(activeRole!==1||!activeCode){pvpMatchDiag("fallback-waiting-room-not-ready",{role:activeRole,code:String(activeCode||"")});schedulePvpBotFallback(600);return;}
       setMatchmakingSearchText("BUSCANDO RIVAL...");
+      // Antes de siquiera considerar un BOT damos otra oportunidad inmediata
+      // al emparejamiento humano. Esto evita que el fallback compita con un
+      // claim real que acaba de aparecer en Firebase.
+      if(await scanRandomQueue())return;
+      const outcome=await startPvpBotFallback({force:true});
+      if(outcome?.started)return;
+      if(outcome?.deferredHuman){
+        setMatchmakingSearchText("RIVAL HUMANO DETECTADO...");
+        schedulePvpBotFallback(PVP_BOT_FALLBACK_RETRY_MS);
+        return;
+      }
       pvpBotFallbackAttempts++;
-      const started=await startPvpBotFallback({force:true});
-      if(started)return;
       if(randomMatchSearching&&pvpBotFallbackAttempts<PVP_BOT_FALLBACK_MAX_ATTEMPTS){
         setMatchmakingSearchText("BUSCANDO RIVAL...");
         schedulePvpBotFallback(PVP_BOT_FALLBACK_RETRY_MS);
@@ -769,6 +787,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     randomMatchSearching=false;
     randomSearchStartedAt=0;
     randomOwnCreatedAt=0;
+    randomInboundClaimUid="";
+    randomInboundClaimSeenAt=0;
+    randomHumanJoinInFlight=false;
     pvpBotFallbackAttempts=0;
     setMatchmakingSearchText();
     clearRandomMatchTimer();
@@ -777,25 +798,36 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     renderMatchmakingLeague();
     syncLocalButtons();
   }
-  function randomCandidateIsOlder(entry,myUid,myCreatedAt){
-    const created=Number(entry?.createdAt||0);
-    if(!created||!myCreatedAt)return true;
-    if(created<myCreatedAt)return true;
-    if(created>myCreatedAt)return false;
-    return String(entry?.uid||"")<String(myUid||"");
+  function randomPairClaimOwnerUid(uidA,uidB){
+    const a=String(uidA||""),b=String(uidB||"");
+    if(!a||!b||a===b)return "";
+    // Comparación ASCII simple: idéntica en todos los navegadores/dispositivos.
+    return a>b?a:b;
+  }
+  function randomCandidateCanBeClaimedByMe(entry,myUid){
+    const otherUid=String(entry?.uid||"");
+    return !!otherUid&&randomPairClaimOwnerUid(myUid,otherUid)===String(myUid||"");
+  }
+  function randomEntryHasUsableCode(entry){return normalizeCode(entry?.code||"").length===8;}
+  function randomEntryIsSameLeagueHuman(entry,myUid,myLeagueKey){
+    return !!entry&&String(entry.uid||"")!==String(myUid||"")&&String(entry.leagueKey||"")===String(myLeagueKey||"")&&randomEntryHasUsableCode(entry);
+  }
+  function noteInboundHumanClaim(claimedBy){
+    const uid=String(claimedBy||"");
+    if(!uid){randomInboundClaimUid="";randomInboundClaimSeenAt=0;return;}
+    if(uid!==randomInboundClaimUid){randomInboundClaimUid=uid;randomInboundClaimSeenAt=Date.now();}
   }
   async function claimRandomCandidate(candidate,myUid,myLeagueKey){
     const candidateUid=String(candidate?.uid||"");
     const leagueKey=String(myLeagueKey||"");
-    if(!candidateUid||candidateUid===myUid||!leagueKey)return null;
+    if(!candidateUid||candidateUid===myUid||!leagueKey||!randomCandidateCanBeClaimedByMe(candidate,myUid))return null;
     const targetRef=ref(db,`${RANDOM_QUEUE_PATH}/${candidateUid}`);
     const nowTs=Date.now();
     const result=await withTimeout(runTransaction(targetRef,current=>{
       if(!current||String(current.uid||"")!==candidateUid)return;
       if(String(current.leagueKey||"")!==leagueKey)return;
+      if(!randomEntryHasUsableCode(current))return;
       if(String(current.claimedBy||""))return;
-      const created=Number(current.createdAt||0);
-      if(!created||nowTs-created>RANDOM_QUEUE_STALE_MS)return;
       return Object.assign({},current,{claimedBy:myUid,claimedAt:nowTs});
     }),`Reclamar rival aleatorio ${candidateUid}`,6000);
     return result?.committed?(result.snapshot?.val()||null):null;
@@ -825,44 +857,56 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     $("onlineLobby")?.classList.remove("hidden");
   }
   async function randomJoinClaimedEntry(entry){
+    if(randomHumanJoinInFlight)return false;
+    randomHumanJoinInFlight=true;
     const myUid=String(auth?.currentUser?.uid||"");
     const code=normalizeCode(entry?.code||"");
     const ownerUid=String(entry?.uid||"");
     const myLeagueKey=String(randomLeagueSnapshot?.key||"");
-    if(!myUid||!ownerUid||code.length!==8||!myLeagueKey)return false;
-    if(String(entry?.leagueKey||"")!==myLeagueKey){await releaseRandomCandidate(ownerUid,myUid);return false;}
-    const roomSnap=await withTimeout(get(ref(db,`games/${code}/public`)),`Validar sala aleatoria ${code}`,6000);
-    const room=roomSnap.exists()?(roomSnap.val()||{}):null;
-    if(!room||String(room?.playerSlots?.player1Uid||"")!==ownerUid||String(room?.phase||"")!=="waiting"||String(room?.playerSlots?.player2Uid||"")){
-      try{await remove(ref(db,`${RANDOM_QUEUE_PATH}/${ownerUid}`));}catch(_){ }
+    try{
+      if(!myUid||!ownerUid||code.length!==8||!myLeagueKey)return false;
+      if(String(entry?.leagueKey||"")!==myLeagueKey){await releaseRandomCandidate(ownerUid,myUid);return false;}
+      pvpMatchDiag("human-join-start",{ownerUid,code});
+      const roomSnap=await withTimeout(get(ref(db,`games/${code}/public`)),`Validar sala aleatoria ${code}`,6000);
+      const room=roomSnap.exists()?(roomSnap.val()||{}):null;
+      if(!room||String(room?.playerSlots?.player1Uid||"")!==ownerUid||String(room?.phase||"")!=="waiting"||String(room?.playerSlots?.player2Uid||"")){
+        try{await remove(ref(db,`${RANDOM_QUEUE_PATH}/${ownerUid}`));}catch(_){ }
+        return false;
+      }
+      if(activeRole===1&&activeCode)await closeOwnRandomHostedRoomSilently();
+      await removeOwnRandomQueue();
+      const input=$("joinCode");if(input)input.value=code;
+      const joined=await joinExistingRoom();
+      if(joined){
+        try{await remove(ref(db,`${RANDOM_QUEUE_PATH}/${ownerUid}`));}catch(_){ }
+        await stopRandomMatchSearch({removeQueueEntry:false});
+        pvpMatchDiag("human-join-success",{ownerUid,code,role:activeRole});
+        mark(`Rival aleatorio encontrado · sala ${code}.`);
+        return true;
+      }
+      await releaseRandomCandidate(ownerUid,myUid);
+      if(randomMatchSearching&&!activeCode){
+        const created=await createMinimalPublicRoom();
+        if(created){await publishOwnRandomQueue();schedulePvpBotFallback();}
+      }
       return false;
+    }catch(error){
+      pvpMatchDiag("human-join-failed",{ownerUid,code,message:String(error?.message||error)});
+      try{await releaseRandomCandidate(ownerUid,myUid);}catch(_){ }
+      throw error;
+    }finally{
+      randomHumanJoinInFlight=false;
     }
-    if(activeRole===1&&activeCode)await closeOwnRandomHostedRoomSilently();
-    await removeOwnRandomQueue();
-    const input=$("joinCode");if(input)input.value=code;
-    const joined=await joinExistingRoom();
-    if(joined){
-      try{await remove(ref(db,`${RANDOM_QUEUE_PATH}/${ownerUid}`));}catch(_){ }
-      await stopRandomMatchSearch({removeQueueEntry:false});
-      mark(`Rival aleatorio encontrado · sala ${code}.`);
-      return true;
-    }
-    await releaseRandomCandidate(ownerUid,myUid);
-    if(randomMatchSearching&&!activeCode){
-      const created=await createMinimalPublicRoom();
-      if(created){await publishOwnRandomQueue();schedulePvpBotFallback();}
-    }
-    return false;
   }
   async function startPvpBotFallback({force=false}={}){
-    if(pvpBotFallbackInFlight||!randomMatchSearching||activeRole!==1||!activeCode){
-      pvpMatchDiag("fallback-blocked",{inFlight:pvpBotFallbackInFlight,searching:randomMatchSearching,role:activeRole,code:String(activeCode||"")});
-      return false;
+    if(pvpBotFallbackInFlight||randomHumanJoinInFlight||!randomMatchSearching||activeRole!==1||!activeCode){
+      pvpMatchDiag("fallback-blocked",{inFlight:pvpBotFallbackInFlight,humanJoinInFlight:randomHumanJoinInFlight,searching:randomMatchSearching,role:activeRole,code:String(activeCode||"")});
+      return {started:false,deferredHuman:false};
     }
-    if(busy&&!force){pvpMatchDiag("fallback-busy");return false;}
+    if(busy&&!force){pvpMatchDiag("fallback-busy");return {started:false,deferredHuman:false};}
     const myUid=String(auth?.currentUser?.uid||activeOwnerUid||"");
     const waitingCode=normalizeCode(activeCode||"");
-    if(!myUid||waitingCode.length!==8){pvpMatchDiag("fallback-invalid-owner-or-code",{hasUid:!!myUid,code:waitingCode});return false;}
+    if(!myUid||waitingCode.length!==8){pvpMatchDiag("fallback-invalid-owner-or-code",{hasUid:!!myUid,code:waitingCode});return {started:false,deferredHuman:false};}
     pvpMatchDiag("fallback-start",{code:waitingCode,force});
     const league=randomLeagueSnapshot||await resolveMyRandomLeague();
     const leagueKey=String(league?.key||"stone");
@@ -871,15 +915,17 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     try{
       const queueSnap=await withTimeout(get(ref(db,RANDOM_QUEUE_PATH)),`Revisar rivales humanos antes del BOT ${waitingCode}`,4000);
       const queueNow=queueSnap.exists()?(queueSnap.val()||{}):{};
-      const now=Date.now();
-      const humanVisible=Object.values(queueNow).some(entry=>entry&&String(entry.uid||"")!==myUid&&String(entry.leagueKey||"")===leagueKey&&!String(entry.claimedBy||"")&&Number(entry.createdAt||0)>0&&now-Number(entry.createdAt||0)<=RANDOM_QUEUE_STALE_MS);
-      if(humanVisible){
-        pvpMatchDiag("fallback-deferred-human-visible",{league:leagueKey});
-        return false;
+      const ownEntry=queueNow?.[myUid]||null;
+      const inbound=String(ownEntry?.claimedBy||"");
+      const humanVisible=Object.values(queueNow).some(entry=>randomEntryIsSameLeagueHuman(entry,myUid,leagueKey));
+      if(inbound||humanVisible){
+        if(inbound)noteInboundHumanClaim(inbound);
+        pvpMatchDiag("fallback-deferred-human-visible",{league:leagueKey,inboundClaim:inbound||null});
+        return {started:false,deferredHuman:true};
       }
     }catch(error){
       pvpMatchDiag("fallback-human-check-failed",{message:String(error?.message||error)});
-      return false;
+      return {started:false,deferredHuman:false};
     }
     const ownQueueRef=ref(db,`${RANDOM_QUEUE_PATH}/${myUid}`);
     pvpBotFallbackInFlight=true;
@@ -892,14 +938,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const existingOwnSnap=await withTimeout(get(ownQueueRef),`Validar cola propia antes del BOT ${waitingCode}`,5000);
       let existingOwn=existingOwnSnap.exists()?(existingOwnSnap.val()||{}):null;
       if(existingOwn&&String(existingOwn.claimedBy||"")&&String(existingOwn.claimedBy||"")!==myUid){
-        const externalClaimAge=Date.now()-Number(existingOwn.claimedAt||0);
-        if(Number.isFinite(externalClaimAge)&&externalClaimAge>8000){
-          pvpMatchDiag("clearing-stale-human-claim",{ageMs:externalClaimAge,claimedBy:String(existingOwn.claimedBy||"")});
-          await withTimeout(update(ownQueueRef,{claimedBy:"",claimedAt:0}),`Liberar claim humano obsoleto ${waitingCode}`,4000);
-        }else{
-          pvpMatchDiag("human-claim-in-progress",{ageMs:externalClaimAge,claimedBy:String(existingOwn.claimedBy||"")});
-          return false;
-        }
+        const claimant=String(existingOwn.claimedBy||"");
+        noteInboundHumanClaim(claimant);
+        pvpMatchDiag("human-claim-in-progress",{claimedBy:claimant});
+        // Nunca permitimos que el BOT compita con un claim humano. La rutina
+        // scanRandomQueue se encarga de liberar claims huérfanos usando tiempo
+        // observado localmente, no timestamps del otro dispositivo.
+        return {started:false,deferredHuman:true};
       }
       if(!existingOwn||String(existingOwn.uid||"")!==myUid||String(existingOwn.leagueKey||"")!==leagueKey){
         await withTimeout(set(ownQueueRef,{
@@ -918,7 +963,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const queueValue=queueBeforeClose.exists()?(queueBeforeClose.val()||{}):null;
       if(queueValue&&String(queueValue.claimedBy||"")&&String(queueValue.claimedBy||"")!==myUid){
         pvpMatchDiag("human-claim-won-race",{claimedBy:String(queueValue.claimedBy||"")});
-        return false;
+        return {started:false,deferredHuman:false};
       }
       try{await randomQueueDisconnect?.cancel?.();}catch(_){ }
       randomQueueDisconnect=null;
@@ -928,11 +973,11 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
 
       const waitingPublicRef=ref(db,`games/${waitingCode}/public`);
       const waitingSnap=await withTimeout(get(waitingPublicRef),`Confirmar sala antes del BOT ${waitingCode}`,5000);
-      if(!waitingSnap.exists()){pvpMatchDiag("fallback-waiting-room-missing");return false;}
+      if(!waitingSnap.exists()){pvpMatchDiag("fallback-waiting-room-missing");return {started:false,deferredHuman:false};}
       const waiting=waitingSnap.val()||{};
       if(String(waiting?.playerSlots?.player1Uid||"")!==myUid||String(waiting?.phase||"")!=="waiting"||String(waiting?.playerSlots?.player2Uid||"")){
         pvpMatchDiag("fallback-waiting-room-changed",{phase:String(waiting?.phase||""),player2:String(waiting?.playerSlots?.player2Uid||"")});
-        return false;
+        return {started:false,deferredHuman:false};
       }
 
       const botMakeLeader=(typeof makeLeader==="function")?makeLeader:globalThis.makeLeader;
@@ -1014,7 +1059,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const finalWaiting=finalWaitingSnap.exists()?(finalWaitingSnap.val()||{}):null;
       if(!finalWaiting||String(finalWaiting?.playerSlots?.player1Uid||"")!==myUid||String(finalWaiting?.phase||"")!=="waiting"||String(finalWaiting?.playerSlots?.player2Uid||"")){
         pvpMatchDiag("fallback-final-room-check-failed",{phase:String(finalWaiting?.phase||""),player2:String(finalWaiting?.playerSlots?.player2Uid||"")});
-        return false;
+        return {started:false,deferredHuman:false};
       }
 
       botPublicRef=ref(db,`games/${botCode}/public`);
@@ -1051,7 +1096,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       pvpMatchDiag("fallback-success",{room:botCode,rival:botName,league:String(league?.name||"Piedra"),botLevel,botMasteryRank,botAiLevel});
       fallbackSucceeded=true;
       mark(`Rival encontrado · ${botName} · Liga ${String(league?.name||"Piedra")} · Nv. ${botLevel} · Rango ${botMasteryRank}.`);
-      return true;
+      return {started:true,deferredHuman:false};
     }catch(error){
       console.error(`[HallValla][${STEP}] Fallback BOT PvP falló:`,error);
       setMatchmakingSearchText("BUSCANDO RIVAL...");
@@ -1059,7 +1104,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       if(botPrivateRef){try{await remove(botPrivateRef);}catch(_){ }}
       if(botPublicRef){try{await remove(botPublicRef);}catch(_){ }}
       mark(`No se pudo iniciar BOT PvP: ${error?.message||error}`);
-      return false;
+      return {started:false,deferredHuman:false};
     }finally{
       // Si el fallback cerró nuestra entrada de matchmaking pero no llegó a arrancar
       // la batalla, volvemos a publicarla SOLO si la sala sigue esperando y nadie
@@ -1084,36 +1129,68 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     }
   }
   async function scanRandomQueue(){
-    if(!randomMatchSearching||busy)return false;
+    if(!randomMatchSearching||busy||randomHumanJoinInFlight)return false;
     const myUid=String(auth?.currentUser?.uid||"");
     if(!myUid)return false;
     if(!randomLeagueSnapshot)randomLeagueSnapshot=await resolveMyRandomLeague();
     const myLeagueKey=String(randomLeagueSnapshot?.key||"stone");
     renderMatchmakingLeague(randomLeagueSnapshot);
-    const searchAge=randomSearchStartedAt?Date.now()-randomSearchStartedAt:0;
     let snap;
     try{snap=await get(ref(db,RANDOM_QUEUE_PATH));}catch(_){return false;}
     const all=snap.exists()?(snap.val()||{}):{};
-    const nowTs=Date.now();
     const queueEntries=Object.values(all).filter(Boolean);
-    const otherHumanEntries=queueEntries.filter(entry=>String(entry?.uid||"")!==myUid);
-    const candidates=queueEntries.filter(entry=>{
-      if(!entry||String(entry.uid||"")===myUid||String(entry.claimedBy||""))return false;
-      if(String(entry.leagueKey||"")!==myLeagueKey)return false;
-      const created=Number(entry.createdAt||0);
-      if(!created||nowTs-created>RANDOM_QUEUE_STALE_MS)return false;
-      if(activeRole===1&&randomOwnCreatedAt&&!randomCandidateIsOlder(entry,myUid,randomOwnCreatedAt))return false;
-      return normalizeCode(entry.code||"").length===8;
-    }).sort((a,b)=>Number(a.createdAt||0)-Number(b.createdAt||0)||String(a.uid||"").localeCompare(String(b.uid||"")));
-    if(otherHumanEntries.length&&candidates.length===0){
-      const otherLeagues=[...new Set(otherHumanEntries.map(entry=>String(entry?.leagueKey||"?")).filter(Boolean))];
-      pvpMatchDiag("humans-visible-but-not-eligible",{myLeague:myLeagueKey,otherLeagues,count:otherHumanEntries.length});
+    const ownEntry=all?.[myUid]||null;
+    const inboundClaim=String(ownEntry?.claimedBy||"");
+
+    // Si alguien ya reclamó nuestra cola, ese cliente está intentando entrar
+    // en nuestra sala. No competimos reclamando a un tercero al mismo tiempo.
+    if(inboundClaim&&inboundClaim!==myUid){
+      noteInboundHumanClaim(inboundClaim);
+      const claimantEntry=all?.[inboundClaim]||null;
+      const claimantStillSearching=!!claimantEntry&&String(claimantEntry?.leagueKey||"")===myLeagueKey&&randomEntryHasUsableCode(claimantEntry);
+      const observedFor=Math.max(0,Date.now()-Number(randomInboundClaimSeenAt||Date.now()));
+      // Un claim normal desaparece enseguida porque el reclamante entra a esta
+      // sala. Si el reclamante se desconectó entre claim y join, su propia cola
+      // desaparece por onDisconnect; tras una breve gracia, el dueño puede
+      // liberar SU entrada sin depender del reloj del otro dispositivo.
+      if(!claimantStillSearching&&observedFor>=15000){
+        try{
+          await update(ref(db,`${RANDOM_QUEUE_PATH}/${myUid}`),{claimedBy:"",claimedAt:0});
+          pvpMatchDiag("orphan-human-claim-cleared",{claimedBy:inboundClaim,observedFor});
+          noteInboundHumanClaim("");
+        }catch(error){pvpMatchDiag("orphan-human-claim-clear-failed",{message:String(error?.message||error)});}
+      }else{
+        pvpMatchDiag("inbound-human-claim",{claimedBy:inboundClaim,league:myLeagueKey,claimantStillSearching,observedFor});
+      }
+      return false;
     }
+    noteInboundHumanClaim("");
+
+    const otherHumanEntries=queueEntries.filter(entry=>String(entry?.uid||"")!==myUid);
+    const candidates=otherHumanEntries.filter(entry=>{
+      if(!randomEntryIsSameLeagueHuman(entry,myUid,myLeagueKey))return false;
+      if(String(entry.claimedBy||""))return false;
+      return randomCandidateCanBeClaimedByMe(entry,myUid);
+    }).sort((a,b)=>{const au=String(a.uid||""),bu=String(b.uid||"");return au<bu?-1:au>bu?1:0;});
+
+    if(otherHumanEntries.length&&candidates.length===0){
+      const sameLeague=otherHumanEntries.filter(entry=>randomEntryIsSameLeagueHuman(entry,myUid,myLeagueKey));
+      const reasonCounts={otherLeague:0,invalidCode:0,alreadyClaimed:0,peerIsArbiter:0};
+      for(const entry of otherHumanEntries){
+        if(String(entry?.leagueKey||"")!==myLeagueKey){reasonCounts.otherLeague++;continue;}
+        if(!randomEntryHasUsableCode(entry)){reasonCounts.invalidCode++;continue;}
+        if(String(entry?.claimedBy||"")){reasonCounts.alreadyClaimed++;continue;}
+        if(!randomCandidateCanBeClaimedByMe(entry,myUid)){reasonCounts.peerIsArbiter++;continue;}
+      }
+      pvpMatchDiag("humans-visible-waiting-arbitration",{myLeague:myLeagueKey,count:otherHumanEntries.length,sameLeague:sameLeague.length,reasons:reasonCounts});
+    }
+
     for(const candidate of candidates){
       let claimed=null;
       try{claimed=await claimRandomCandidate(candidate,myUid,myLeagueKey);}
       catch(error){pvpMatchDiag("candidate-claim-failed",{uid:String(candidate?.uid||""),code:String(candidate?.code||""),message:String(error?.message||error)});claimed=null;}
       if(!claimed)continue;
+      pvpMatchDiag("candidate-claimed",{uid:String(candidate?.uid||""),code:String(candidate?.code||"")});
       if(await randomJoinClaimedEntry(claimed))return true;
     }
     return false;
@@ -1128,6 +1205,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const payload={uid:myUid,code,createdAt:randomOwnCreatedAt,name:getProfileNameSafe(1),level:getProfileLevelSafe(),leagueKey:String(randomLeagueSnapshot.key||"stone"),leagueName:String(randomLeagueSnapshot.name||"Piedra"),pvpPoints:Number(randomLeagueSnapshot.points||0),claimedBy:"",claimedAt:0};
     await set(ref(db,`${RANDOM_QUEUE_PATH}/${myUid}`),payload);
     try{randomQueueDisconnect=onDisconnect(ref(db,`${RANDOM_QUEUE_PATH}/${myUid}`));await randomQueueDisconnect.remove();}catch(_){randomQueueDisconnect=null;}
+    pvpMatchDiag("queue-published",{code,league:String(randomLeagueSnapshot.key||"stone")});
   }
   async function startRandomMatchmaking(){
     if(randomMatchSearching){
@@ -1149,15 +1227,17 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     setMatchmakingSearchText("BUSCANDO RIVAL...");
     syncLocalButtons();mark(`Buscando rival de Liga ${randomLeagueSnapshot.name}...`);
     try{
-      if(await scanRandomQueue())return true;
+      // Las reglas Firebase solo permiten reclamar a otro jugador si este
+      // cliente ya publicó su propia entrada de matchmaking con la misma liga.
+      // Por eso la cola propia SIEMPRE se publica antes del primer scan.
       const created=await createMinimalPublicRoom();
       if(!created)throw new Error("No se pudo preparar la sala para matchmaking.");
       await publishOwnRandomQueue();
       pvpBotFallbackAttempts=0;
-      schedulePvpBotFallback();
       mark(`Buscando rival de Liga ${randomLeagueSnapshot?.name||"Piedra"}...`);
-      randomMatchTimer=setInterval(()=>{void scanRandomQueue();},1800);
-      void scanRandomQueue();
+      randomMatchTimer=setInterval(()=>{void scanRandomQueue();},1200);
+      if(await scanRandomQueue())return true;
+      schedulePvpBotFallback();
       return true;
     }catch(error){
       console.error(error);
@@ -1247,8 +1327,18 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       await markAndPaint(`3/8 · leyendo sala ${code}...`); const publicRef=ref(db,`games/${code}/public`); const beforeSnap=await withTimeout(get(publicRef),`Leer sala ${code}`);
       if(!beforeSnap.exists()) throw new Error("La sala no existe o ya fue cerrada."); const before=beforeSnap.val()||{}; const hostUid=String(before?.playerSlots?.player1Uid||""); const currentJ2=String(before?.playerSlots?.player2Uid||"");
       if(!hostUid) throw new Error("La sala no tiene un anfitrión válido."); if(hostUid===joinUid) throw new Error("No puedes unirte a tu propia sala desde el mismo usuario."); if(["configured","arena_ready","prebattle","active"].includes(String(before?.phase||""))) throw new Error("Esta sala ya definió su arranque. Crea una nueva partida."); if(String(before?.phase||"")!=="waiting") throw new Error("La sala ya no está esperando jugadores."); if(currentJ2&&currentJ2!==joinUid) throw new Error("La sala ya tiene un segundo jugador.");
-      if(!currentJ2){ await markAndPaint(`4/8 · reclamando slot de J2 en ${code}...`); await withTimeout(set(ref(db,`games/${code}/public/playerSlots/player2Uid`),joinUid),`Reclamar J2 en ${code}`); claimedNow=true; }
-      else await markAndPaint(`4/8 · el slot J2 ya pertenece a este usuario; reanudando...`);
+      if(!currentJ2){
+        await markAndPaint(`4/8 · reclamando slot de J2 en ${code}...`);
+        const slotRef=ref(db,`games/${code}/public/playerSlots/player2Uid`);
+        const slotTx=await withTimeout(runTransaction(slotRef,current=>{
+          const owner=String(current||"");
+          if(!owner)return joinUid;
+          if(owner===joinUid)return current;
+          return;
+        }),`Reclamar J2 atómicamente en ${code}`,6000);
+        if(!slotTx?.committed||String(slotTx.snapshot?.val()||"")!==joinUid)throw new Error("Otro jugador ocupó el slot J2 antes de que este cliente pudiera reclamarlo.");
+        claimedNow=true;
+      }else await markAndPaint(`4/8 · el slot J2 ya pertenece a este usuario; reanudando...`);
       await markAndPaint(`5/8 · guardando private/player2 con mazo...`); await writeAndConfirmOwnPrivate(code,2,joinUid,privatePayload); privateWritten=true;
       await markAndPaint(`6/8 · publicando presencia + prepared=true de J2, sin exponer el mazo...`);
       await withTimeout(update(publicRef,{"playerNames/2":privatePayload.profile.name,"playerLevels/2":privatePayload.profile.level,"playerShowcase/2":buildPublicShowcase(privatePayload),"playerPrepared/2":true,"lobbyReady/2":false}),`Presencia/preparación J2 en ${code}`);

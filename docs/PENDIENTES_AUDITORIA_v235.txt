@@ -1,0 +1,6 @@
+HallValla — Pendientes después de v235
+
+1. Ejecutar la prueba PvP real definitiva con dos cuentas de la misma liga.
+2. Confirmar que ambas llegan a combate y jugar una partida completa para validar sincronización de invocaciones, daño, bajas, magia, resultado y rematch.
+3. Si pasa, cerrar PvP sync/matchmaking y continuar con la división/renombrado del motor automático realtime/experimental.js.
+4. Después: contratos heredados turn*, cierre funcional, gamepad, sistemas secundarios y limpieza final.

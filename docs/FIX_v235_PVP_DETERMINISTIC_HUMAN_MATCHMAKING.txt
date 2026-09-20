@@ -1,0 +1,36 @@
+HallValla v235 — Matchmaking humano determinista
+Fecha: 2026-09-20
+Base: v234
+
+CAUSA RAÍZ OBSERVADA
+Dos cuentas reales podían verse dentro de matchmaking/random y mostrar la misma Liga Piedra, pero seguir apareciendo como no elegibles. La elegibilidad todavía mezclaba dos condiciones históricas:
+1. createdAt/antigüedad de entrada calculados con Date.now() de cada dispositivo.
+2. Solo se intentaba reclamar a la entrada considerada más antigua.
+Con relojes desfasados, ambos clientes podían verse y ninguno quedar autorizado a reclamar.
+
+OTRO FALLO DETECTADO EN LA REVISIÓN
+startRandomMatchmaking ejecutaba un scan antes de publicar la entrada propia. Las Firebase Rules de matchmaking permiten reclamar una entrada ajena solo si el reclamante ya tiene su propia entrada en matchmaking/random y ambas leagueKey coinciden. Ese primer claim podía ser rechazado por reglas.
+
+CORRECCIÓN CANÓNICA
+- Se elimina createdAt como filtro de elegibilidad. Sigue siendo metadata únicamente.
+- La liga es el único filtro de emparejamiento de gameplay.
+- Los demás guards son exclusivamente técnicos: UID distinto, código válido, entrada no reclamada y sala waiting.
+- Un desempate determinista ASCII por UID elige un único reclamante para cada pareja.
+- Orden obligatorio: crear sala propia -> publicar cola propia -> scan -> claim.
+- J2 se ocupa mediante runTransaction.
+- randomHumanJoinInFlight bloquea scan/fallback mientras el cliente ya está migrando a la sala del rival.
+- Si nuestra cola ya tiene claimedBy de otro humano, esperamos su join y el BOT queda bloqueado.
+- Un claim huérfano se puede liberar por el dueño tras 15 s observados localmente si la cola del reclamante ya desapareció. No se comparan timestamps de dos dispositivos.
+- El fallback vuelve a hacer scan humano antes de comenzar y las deferencias por humano no consumen el máximo de intentos BOT.
+
+PRUEBAS INTERNAS
+- 10,000 pares aleatorios de UID: exactamente un árbitro por pareja: PASS.
+- Desfase de reloj simulado entre -24 h y +24 h: no altera elegibilidad: PASS.
+- Contrato estático: publishOwnRandomQueue ocurre antes del primer scan: PASS.
+- Filtro histórico randomCandidateIsOlder: eliminado.
+- Filtro histórico RANDOM_QUEUE_STALE_MS: eliminado.
+- Claim J2 atómico: presente.
+- Candado de join humano: presente.
+
+PRUEBA REAL REQUERIDA
+Dos cuentas Google distintas en la misma liga: BUSCANDO -> rival encontrado -> configured -> arena_ready -> prebattle/active -> combate.
