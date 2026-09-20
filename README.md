@@ -1,8 +1,16 @@
-# HallValla v238 — PvP disconnect / abandonment handling
+# HallValla v239 — Motor automático canónico + seguridad PvP
 
-Build: `20260920.238`
+Build: `20260920.239`
 
 Base: v237, que fue la primera prueba con dos cuentas reales que sí completó el matchmaking directo J1/J2.
+
+
+## v239 · Auditoría actual
+- `realtime/experimental.js` deja de formar parte del runtime y se divide en cinco módulos canónicos.
+- El estado nuevo usa `realtimeEnabled` y las APIs activas usan nombres `Realtime`, sin `Experimental`.
+- PvP añade guard previo de checkpoints para impedir que gameplay normal altere estructura de sala/identidad/reglas/resultados.
+- Firebase valida el owner de `rtCheckpoint` contra el UID autenticado de J1/J2.
+- Esta versión modifica `backend/firebase/database.rules.json`; deben desplegarse las reglas junto con el frontend.
 
 ## Cambio principal
 - PvP humano activo detecta desconexión real mediante Firebase `onDisconnect`.

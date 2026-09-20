@@ -1,0 +1,25 @@
+HallValla v239 — Motor automático canónico + seguridad PvP
+Fecha: 2026-09-20
+Base: v238
+
+MOTOR AUTOMÁTICO
+- Se elimina web/js/realtime/experimental.js del runtime activo.
+- El motor canónico queda dividido en:
+  realtime/core.js
+  realtime/network-sync.js
+  realtime/input-ui.js
+  realtime/autonomy.js
+  realtime/runtime.js
+- Los nombres activos Experimental/realtimeExperimental se reemplazan por Realtime/realtimeEnabled.
+- Se conservan los identificadores RT internos solo como contrato técnico temporal; se revisarán en la auditoría de nombres heredados.
+
+SEGURIDAD PVP
+- Se agrega validación cliente previa a todo checkpoint del motor online.
+- Una acción normal de carta/recurso no puede modificar estructura de sala, slots, reglas, identidad, matchmaking, presence ni resultado terminal.
+- Solo el checkpoint terminal puede tocar phase/battleEnded/winner/loser/endedAt.
+- Las ramas privadas no pueden mutar ownerUid, schema, battleProfile, loadout ni engine6e mediante gameplay.
+- Firebase valida realtimeEnabled como booleano.
+- Firebase valida rtCheckpoint: owner 1/2, kind, seq, timestamp/id y que el owner corresponda al UID autenticado del slot.
+
+LÍMITE DE ESTA CAPA
+Estas defensas reducen escrituras accidentales/manipulaciones triviales, pero el motor sigue siendo parcialmente client-authoritative. La validación criptográfica/servidor de daño, coste de cartas y trayectoria completa requeriría mover la resolución competitiva crítica a backend/Cloud Functions.

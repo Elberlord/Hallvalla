@@ -791,7 +791,7 @@ function hvGamepadUseDirection(dx,dy){
   hvGamepadPointerDeactivate();
   const modal=hvGamepadVisibleModal();
   if(modal){hvGamepadState.mode="ui";hvGamepadMoveUi(dx,dy);return;}
-  if(hvGamepadBattleOpen()&&typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()&&typeof hallvallaRtGetInputState==="function"){
+  if(hvGamepadBattleOpen()&&typeof isHallvallaRealtime==="function"&&isHallvallaRealtime()&&typeof hallvallaRtGetInputState==="function"){
     if(hallvallaRtGetInputState()==="targeting"&&typeof hallvallaRtMoveTargetCursor==="function")hallvallaRtMoveTargetCursor(dx,dy);
     return;
   }
@@ -837,7 +837,7 @@ function hvGamepadHandleButtons(gp){
     }
   }
 
-  const rt=battle&&!modal&&typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()&&typeof hallvallaRtGetInputState==="function";
+  const rt=battle&&!modal&&typeof isHallvallaRealtime==="function"&&isHallvallaRealtime()&&typeof hallvallaRtGetInputState==="function";
   if(rt){
     const level=hallvallaRtGetInputState();
     // TR canónico: LB y RB quedan reservados para recursos defensivos del duelo.

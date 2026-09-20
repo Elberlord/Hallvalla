@@ -1053,7 +1053,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         adventureAiLevel:botAiLevel,
         adventureAiDrawBonus:0,adventureAiHonorBonus:0,
         adventureAiStyle:`Rival PvP · ${String(profile.style||"balanced")} · Liga ${String(league?.name||"Piedra")} · IA ${botAiLevel}`,
-        adventureEnemyUnitMasteryRank:botMasteryRank,realtimeExperimental:true,
+        adventureEnemyUnitMasteryRank:botMasteryRank,realtimeEnabled:true,
         adventurePrincipalKeys:{1:[],2:[]},principalSlots:{1:0,2:0},pvpPrincipalKeys:{1:[],2:[]},
         adventureAiState:{deck:[],hand:botDraw.hand,honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),lastTurnStarted:"RT",skipFirstTurnDraw:true,principalSlots:0,principalKeys:[],principalKey:""},
         createdAt:Date.now(),currentPlayer:0,turn:1,phase:"active",turnPhase:"realtime",turnKey:"RT-1",

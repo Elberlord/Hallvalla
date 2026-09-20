@@ -51,7 +51,7 @@ async function startBasicTutorialBattle(){
     boardCols:COLS,
     mode:"tutorial",
     tutorialBasic:true,
-    realtimeExperimental:true,
+    realtimeEnabled:true,
     createdAt:now,
     // El primer orbe debe estar visible al entrar para que el jugador aprenda la mecánica sin esperar 14 s.
     engineStartedAt:now-15050,

@@ -54,8 +54,8 @@ function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}
 const RESOURCE_MAX_CAP=10;
-const REALTIME_EXPERIMENTAL_RESOURCE_MAX_CAP=10;
-function getActiveResourceMaxCap(){return (typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental())?REALTIME_EXPERIMENTAL_RESOURCE_MAX_CAP:RESOURCE_MAX_CAP;}
+const REALTIME_RESOURCE_MAX_CAP=10;
+function getActiveResourceMaxCap(){return (typeof isHallvallaRealtime==="function"&&isHallvallaRealtime())?REALTIME_RESOURCE_MAX_CAP:RESOURCE_MAX_CAP;}
 function capResourceMax(value){return Math.min(getActiveResourceMaxCap(),Math.max(0,Number(value||0)));}
 function capResourceAmount(value,maxValue){return Math.min(capResourceMax(maxValue),Math.max(0,Number(value||0)));}
 function getResourceRecharge(prevMax,rawGain){
@@ -63,7 +63,7 @@ function getResourceRecharge(prevMax,rawGain){
   const maxHonor=capResourceMax(previousMax+Math.max(0,Number(rawGain||0)));
   return {honor:maxHonor,maxHonor,gain:Math.max(0,maxHonor-previousMax),capped:maxHonor>=RESOURCE_MAX_CAP};
 }
-function getResourceLabel(owner,opts={}){const caps=!!opts.caps;const realtime=(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental());const label=realtime?"Mana":(ownerUsesMana(owner)?"Mana":"Honor");return caps?label.toUpperCase():label}
+function getResourceLabel(owner,opts={}){const caps=!!opts.caps;const realtime=(typeof isHallvallaRealtime==="function"&&isHallvallaRealtime());const label=realtime?"Mana":(ownerUsesMana(owner)?"Mana":"Honor");return caps?label.toUpperCase():label}
 
 function hasActiveLeader(owner,units=publicState?.units||[]){return !!(units||[]).find(u=>u.owner===owner&&u.leader)}
 function hasWarriorLeaderUnitShield(){return false;}
@@ -579,7 +579,7 @@ function spendActionStatsByAttack(attacker,defender,units,mods={},hitResult=null
   return {units:out,spent,remaining,available:attackAvailable,needed:defenseNeeded};
 }
 function evasionPressureText(unitName,spent,remaining){
-  return spent>0?` Presión: ${unitName} pierde ${spent} Evasión disponible ${typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()?"durante el ciclo táctico actual":"hasta el final del siguiente ciclo táctico"}${typeof remaining==="number"?` (resta ${remaining})`:""}.`:"";
+  return spent>0?` Presión: ${unitName} pierde ${spent} Evasión disponible ${typeof isHallvallaRealtime==="function"&&isHallvallaRealtime()?"durante el ciclo táctico actual":"hasta el final del siguiente ciclo táctico"}${typeof remaining==="number"?` (resta ${remaining})`:""}.`:"";
 }
 function actionStatSpendText(unitName,spent,remaining){
   return spent>0?` Esfuerzo: ${unitName} gasta ${spent} PREC/EVA necesaria hasta el final del ciclo táctico actual${typeof remaining==="number"?` (reserva restante ${remaining})`:""}.`:"";
@@ -906,7 +906,7 @@ function getAttackPrecisionScore(attacker,mods={}){
   if(!attacker||attacker.leader)return 0;
   // En TR la precisión no queda consumida permanentemente por haber atacado/evadido.
   // La evasión sí se agota bajo fuego concentrado y se recupera por ventana temporal.
-  const realtime=(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental());
+  const realtime=(typeof isHallvallaRealtime==="function"&&isHallvallaRealtime());
   const pressure=realtime?0:getEvasionPressure(attacker);
   const raw=effectiveDex(attacker)+(mods.attackerDex||0)+effectiveAgi(attacker)+(mods.attackerAgi||0)-pressure-Math.max(0,Number(mods.attackerPrecisionPenalty||0));
   return applyCombatPrecisionPercentPenalty(raw,mods);

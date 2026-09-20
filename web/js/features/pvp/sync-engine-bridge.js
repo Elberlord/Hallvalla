@@ -214,7 +214,7 @@ canónico cuando ambos clientes están preparados.
       const p1Leader=units.find(u=>u.owner===1&&u.leader),p2Leader=units.find(u=>u.owner===2&&u.leader),timerOn=!!settings.timerEnabled,ts=typeof serverTimestamp==="function"?serverTimestamp():Date.now();
       return {
         schema:"hallvalla-pvp-real-engine-step6f",pvpRebuildStep:"6I_FULL_DUEL_UNLOCK",pvpStep6fMode:"unit_summon_only",pvpStep6gAttacks:true,pvpStep6hMagicTest:false,pvpFullDuelEnabled:true,pvpAtomicActionMode:"multipath_v1",privacyMode:"stealth_private_v1",pvpTestClockSuspended:false,pvpBridgeReadOnly:false,
-        code:String(code||room?.code||""),boardRows:rows,boardCols:cols,mode:"online",entryMode:String(room?.entryMode||"wager"),createdAt:Number(room?.createdAt||Date.now()),engineStartedAt:0,phase:"prebattle",prebattleStartedAt:ts,prebattleLeadInMs:250,prebattleDurationMs:3250,realtimeExperimental:true,currentPlayer:0,turn:1,turnPhase:"prebattle",turnKey:"RT-PRE",turnStartedAt:null,
+        code:String(code||room?.code||""),boardRows:rows,boardCols:cols,mode:"online",entryMode:String(room?.entryMode||"wager"),createdAt:Number(room?.createdAt||Date.now()),engineStartedAt:0,phase:"prebattle",prebattleStartedAt:ts,prebattleLeadInMs:250,prebattleDurationMs:3250,realtimeEnabled:true,currentPlayer:0,turn:1,turnPhase:"prebattle",turnKey:"RT-PRE",turnStartedAt:null,
         matchSettings:{timerEnabled:timerOn,stakeMode:String(settings.stakeMode||"none"),goldAmount:Number(settings.goldAmount||500),cardEntryFee:500,economyState:String(settings.stakeMode||"none")==="none"?"not_required":"pending_economy_validation"},
         playerSlots:{player1Uid:String(room?.playerSlots?.player1Uid||""),player2Uid:String(room?.playerSlots?.player2Uid||"")},
         playerNames:{1:getPlayerName?.(room,1)||"Jugador 1",2:getPlayerName?.(room,2)||"Jugador 2"},playerLeaders:{1:p1.leaderType,2:p2.leaderType},playerLeaderLevels:{1:Number(p1.leaderLevel||1),2:Number(p2.leaderLevel||1)},playerLeaderAbilities:{1:String(p1.leaderAbility||""),2:String(p2.leaderAbility||"")},principalSlots:{1:0,2:0},pvpPrincipalKeys:{1:[],2:[]},
@@ -243,7 +243,7 @@ canónico cuando ambos clientes están preparados.
             if(String(room?.entryMode||"")==="random"){
               if(Number(current.activeRole)===1){
                 const publicRef=ref(db,`games/${code}/public`),freshSnap=await withTimeout(get(publicRef),`Confirmar arranque directo de matchmaking ${code}`,5000);
-                if(freshSnap.exists()&&isRealEnginePrebattle6e(freshSnap.val()||{}))await withTimeout(update(publicRef,{phase:"active",realtimeExperimental:true,currentPlayer:0,turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:serverTimestamp(),engineStartedAt:Date.now(),prebattleCompletedAt:serverTimestamp()}),`Activar combate de matchmaking ${code}`,5000);
+                if(freshSnap.exists()&&isRealEnginePrebattle6e(freshSnap.val()||{}))await withTimeout(update(publicRef,{phase:"active",realtimeEnabled:true,currentPlayer:0,turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:serverTimestamp(),engineStartedAt:Date.now(),prebattleCompletedAt:serverTimestamp()}),`Activar combate de matchmaking ${code}`,5000);
               }
               return true;
             }
@@ -254,7 +254,7 @@ canónico cuando ambos clientes están preparados.
             await globalThis.showHallvallaPreBattleVs(room,{key:`pvp:${code}`,leftOwner:current.activeRole,rightOwner:current.activeRole===1?2:1,startAt,endAt});
             if(Number(context().activeRole)===1){
               const publicRef=ref(db,`games/${code}/public`),freshSnap=await withTimeout(get(publicRef),`Confirmar fin del VS ${code}`,5000);
-              if(freshSnap.exists()&&isRealEnginePrebattle6e(freshSnap.val()||{}))await withTimeout(update(publicRef,{phase:"active",realtimeExperimental:true,currentPlayer:0,turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:serverTimestamp(),engineStartedAt:Date.now(),prebattleCompletedAt:serverTimestamp()}),`Activar combate después del VS ${code}`,5000);
+              if(freshSnap.exists()&&isRealEnginePrebattle6e(freshSnap.val()||{}))await withTimeout(update(publicRef,{phase:"active",realtimeEnabled:true,currentPlayer:0,turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:serverTimestamp(),engineStartedAt:Date.now(),prebattleCompletedAt:serverTimestamp()}),`Activar combate después del VS ${code}`,5000);
             }
             return true;
           }catch(error){console.error(`[HallValla][${STEP}] VS previo al motor real falló:`,error);mark?.(`VS previo al motor real falló: ${error?.message||error}`);globalThis.hideHallvallaPreBattleVs?.();return false;}

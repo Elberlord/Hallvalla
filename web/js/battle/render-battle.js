@@ -758,7 +758,7 @@ function ensureLeaderBasesLayer(){
       if(handleDirectBoardTargetEvent(ev,x,y))return;
       // TR canónico: tocar/clicar tu propio líder activa el escudo de 3 s.
       // Esto hace accesible la defensa tanto en móvil/PC como con mando (RB).
-      if(u&&u.leader&&Number(u.owner)===Number(myPlayer||0)&&typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()&&typeof hallvallaRtActivateLeaderShield==="function"){
+      if(u&&u.leader&&Number(u.owner)===Number(myPlayer||0)&&typeof isHallvallaRealtime==="function"&&isHallvallaRealtime()&&typeof hallvallaRtActivateLeaderShield==="function"){
         ev.preventDefault();
         ev.stopPropagation();
         flashBoardSelectedCell(x,y);
@@ -946,7 +946,7 @@ function ensureBattleHandDelegation(row){
     if(Date.now()-lastBoardDragEndedAt<450){ev.preventDefault();ev.stopPropagation();return;}
     const card=(privateState?.hand||[]).find(c=>String(c.id)===String(el.dataset.id));
     if(card){
-      const rt=typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental();
+      const rt=typeof isHallvallaRealtime==="function"&&isHallvallaRealtime();
       if(rt){
         const playState=getCardPlayState(card);
         if(!playState.canPlay){setHint(playState.reason);return;}
@@ -968,7 +968,7 @@ function getHandCardRenderSpec(c){
 function renderHand(){
   const drawer=$("handDrawer"),info=$("handInfo"),row=$("handRow");
   if(!drawer||!info||!row)return;
-  if(typeof isHallvallaRealtimeExperimental==="function"&&isHallvallaRealtimeExperimental()){drawer.classList.remove("open");if(typeof hallvallaRtRenderArsenal==="function")hallvallaRtRenderArsenal();return;}
+  if(typeof isHallvallaRealtime==="function"&&isHallvallaRealtime()){drawer.classList.remove("open");if(typeof hallvallaRtRenderArsenal==="function")hallvallaRtRenderArsenal();return;}
   drawer.classList.toggle("open",handOpen);
   ensureBattleHandDelegation(row);
   const hand=typeof getBattleCardsSortedByCurrentCost==="function"?getBattleCardsSortedByCurrentCost(privateState?.hand||[],myPlayer||1):[...(privateState?.hand||[])];

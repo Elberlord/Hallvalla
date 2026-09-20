@@ -1,0 +1,14 @@
+HallValla · Pendientes después de v239
+
+CERRADO EN v239
+- Motor automático dividido en core/network-sync/input-ui/autonomy/runtime.
+- Retirado el nombre histórico experimental del código activo.
+- Seguridad PvP: guard de checkpoints + validación Firebase de owner del checkpoint.
+
+SIGUIENTE BLOQUE
+1. Nombres/contratos heredados: turnsRemaining, damagedThisTurn, *TurnKey, turnKey/turnPhase y equivalentes.
+2. Determinar cuáles sobreviven como sentinel/compatibilidad técnica y cuáles se eliminan.
+3. Cierre final: código muerto/assets huérfanos, Aventura completa, PvP BOT, PvP humano concurrente, gamepad Windows/Android, Mina/Forja/Colección/tutorial, hashes/cache/Firebase finales.
+
+SEGURIDAD PVP PENDIENTE PARA CIERRE
+- El runtime sigue parcialmente client-authoritative. La validación completa de daño/coste/posición requeriría resolución competitiva crítica en backend.

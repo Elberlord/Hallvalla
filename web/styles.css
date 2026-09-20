@@ -27192,22 +27192,22 @@ html.hv-universal-dragging-enabled .hv-universal-selected{cursor:move!important;
   box-shadow:0 8px 20px rgba(0,0,0,.35);
 }
 .hallvalla-rt-status[hidden]{display:none !important;}
-.hv-rt-experimental #turnTimerHud,
-.hv-rt-experimental #playerClock1,
-.hv-rt-experimental #playerClock2,
-.hv-rt-experimental #endBtn,
-.hv-rt-experimental #toggleActionsBtn,
-.hv-rt-experimental #mobileToggleActionsBtn{
+.hv-realtime #turnTimerHud,
+.hv-realtime #playerClock1,
+.hv-realtime #playerClock2,
+.hv-realtime #endBtn,
+.hv-realtime #toggleActionsBtn,
+.hv-realtime #mobileToggleActionsBtn{
   display:none !important;
 }
-.hv-rt-experimental #handDrawer{
+.hv-realtime #handDrawer{
   pointer-events:auto !important;
 }
-.hv-rt-experimental #handDrawer.open{
+.hv-realtime #handDrawer.open{
   visibility:visible !important;
   opacity:1 !important;
 }
-.hv-rt-experimental .hv-rt-dev-toggle.active{
+.hv-realtime .hv-rt-dev-toggle.active{
   border-color:rgba(99,238,152,.72) !important;
   box-shadow:0 0 0 1px rgba(99,238,152,.2),0 0 18px rgba(99,238,152,.14) !important;
 }
@@ -27217,44 +27217,11 @@ html.hv-universal-dragging-enabled .hv-universal-selected{cursor:move!important;
 
 
 /* ============================================================
-   HallValla 20260912.73 — TR experimental se elige ANTES del duelo
-   ============================================================ */
-#mainMenu .home-rt-experimental-toggle{
-  position:fixed !important;
-  left:50% !important;
-  top:104px !important;
-  transform:translateX(-50%) !important;
-  z-index:42 !important;
-  min-width:280px !important;
-  min-height:36px !important;
-  padding:7px 18px !important;
-  border:1px solid rgba(232,188,74,.62) !important;
-  border-radius:999px !important;
-  background:rgba(5,5,7,.84) !important;
-  color:#f2d37a !important;
-  box-shadow:0 8px 24px rgba(0,0,0,.42),inset 0 0 0 1px rgba(255,255,255,.025) !important;
-  font:900 12px/1 Georgia,serif !important;
-  letter-spacing:.08em !important;
-  cursor:pointer !important;
-  pointer-events:auto !important;
-}
-#mainMenu .home-rt-experimental-toggle.active{
-  background:linear-gradient(180deg,rgba(69,42,5,.94),rgba(16,11,4,.94)) !important;
-  border-color:#ffd66d !important;
-  color:#fff2bd !important;
-  box-shadow:0 0 20px rgba(255,195,54,.22),0 8px 24px rgba(0,0,0,.48) !important;
-}
-@media (max-width:760px){
-  #mainMenu .home-rt-experimental-toggle{top:92px !important;min-width:230px !important;min-height:32px !important;font-size:10px !important;padding:6px 12px !important;}
-}
-
-
-/* ============================================================
    HallValla 20260913.74 — TR targeting: campo libre mientras eliges carta
    ============================================================ */
-.hv-rt-experimental.hv-rt-card-targeting #handDrawer,
-html.hv-rt-experimental.hv-rt-card-targeting #gameShell #handDrawer.hand-drawer,
-body.hv-rt-experimental.hv-rt-card-targeting #gameShell #handDrawer.hand-drawer{
+.hv-realtime.hv-rt-card-targeting #handDrawer,
+html.hv-realtime.hv-rt-card-targeting #gameShell #handDrawer.hand-drawer,
+body.hv-realtime.hv-rt-card-targeting #gameShell #handDrawer.hand-drawer{
   display:none !important;
   visibility:hidden !important;
   opacity:0 !important;
@@ -27265,7 +27232,7 @@ body.hv-rt-experimental.hv-rt-card-targeting #gameShell #handDrawer.hand-drawer{
    HallValla 20260913.78 — TR arsenal iconográfico canónico
    ============================================================ */
 .rt-arsenal-panel{display:none;}
-html.hv-rt-experimental #rtArsenalPanel{
+html.hv-realtime #rtArsenalPanel{
   display:flex!important;
   position:absolute;
   left:16px;
@@ -27283,8 +27250,8 @@ html.hv-rt-experimental #rtArsenalPanel{
   backdrop-filter:none;
   overflow:visible;
 }
-html.hv-rt-experimental #handDrawer,
-html.hv-rt-experimental #handBtn{display:none!important;}
+html.hv-realtime #handDrawer,
+html.hv-realtime #handBtn{display:none!important;}
 .rt-arsenal-context{display:flex;align-items:center;height:25px;overflow:visible;}
 .rt-arsenal-context strong{display:none!important;}
 .rt-arsenal-back{
@@ -27336,10 +27303,10 @@ html.hv-rt-experimental #handBtn{display:none!important;}
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 2px;color:#f6edda;
   font:900 6px/1 system-ui;text-shadow:0 1px 2px #000;white-space:nowrap;overflow:hidden;
 }
-html.hv-rt-experimental.hv-rt-card-targeting #rtArsenalPanel,
-body.hv-rt-experimental.hv-rt-card-targeting #rtArsenalPanel{visibility:hidden!important;opacity:0!important;pointer-events:none!important;}
+html.hv-realtime.hv-rt-card-targeting #rtArsenalPanel,
+body.hv-realtime.hv-rt-card-targeting #rtArsenalPanel{visibility:hidden!important;opacity:0!important;pointer-events:none!important;}
 .rt-target-cancel{display:none;position:absolute;z-index:50;left:70px;top:175px;width:38px;height:38px;border:1px solid rgba(225,185,83,.55);border-radius:50%;background:rgba(4,6,9,.88);color:#f4d77f;font:900 22px/34px system-ui;box-shadow:0 4px 16px rgba(0,0,0,.35);cursor:pointer;}
-html.hv-rt-experimental.hv-rt-card-targeting #rtTargetCancelBtn:not([hidden]){display:block;}
+html.hv-realtime.hv-rt-card-targeting #rtTargetCancelBtn:not([hidden]){display:block;}
 #grid .cell.hv-rt-target-cursor{outline:3px solid rgba(255,226,122,.98)!important;outline-offset:-4px;box-shadow:inset 0 0 0 2px rgba(22,13,3,.9),inset 0 0 19px rgba(255,215,80,.22),0 0 12px rgba(255,215,80,.55)!important;z-index:30;}
 #grid .cell.hv-rt-target-cursor::after{content:"";position:absolute;inset:5px;border:1px dashed rgba(255,244,194,.95);pointer-events:none;z-index:95;}
 .settings-controls-zone{margin:12px 0;padding:12px;border:1px solid rgba(207,164,69,.24);border-radius:14px;background:rgba(8,10,14,.48);}
@@ -27349,7 +27316,7 @@ html.hv-rt-experimental.hv-rt-card-targeting #rtTargetCancelBtn:not([hidden]){di
 .rt-keybind-grid button span{font:700 9px/1.18 system-ui}.rt-keybind-grid button strong{flex:none;min-width:42px;padding:4px 6px;border-radius:7px;background:#111723;color:#f2d47d;font:900 9px/1 system-ui;text-align:center}
 .rt-keybind-grid button.is-capturing{border-color:#f0c85e;box-shadow:0 0 0 1px rgba(240,200,94,.28),0 0 12px rgba(240,200,94,.16)}
 @media(max-width:760px){
-  html.hv-rt-experimental #rtArsenalPanel{left:8px;top:96px;width:168px;gap:5px;}
+  html.hv-realtime #rtArsenalPanel{left:8px;top:96px;width:168px;gap:5px;}
   .rt-arsenal-category,.rt-arsenal-category>img,.rt-arsenal-card{width:48px;height:48px;flex-basis:48px;}
   .rt-arsenal-categories,.rt-arsenal-cards{gap:5px;}
   .rt-target-cancel{left:54px;top:145px;width:34px;height:34px;}

@@ -962,7 +962,7 @@ function showAdventureGuardianIntro(specialKey=pendingAdventureSpecial,battleId=
   hvPrefetchAdventureBattleContext(battle,pendingAdventureSpecial,previewInitial);
   const principalKeys=getAiPrincipalKeysForBattle(battle,previewInitial);
   const principalCards=principalKeys.map(key=>getAdventureDeckCardTemplateByKey(key)).filter(Boolean);
-  const rtPreview=typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested();
+  const rtPreview=typeof isHallvallaRealtimeRequested==="function"&&isHallvallaRealtimeRequested();
   const principalLine=principalCards.length
     ?(rtPreview
       ?`\nLos Personajes Principales no comienzan desplegados; entran al mazo como unidades normales.`

@@ -15,7 +15,7 @@ The canonical runtime is loaded by `bootstrap-loader.js`. Do not add direct `<sc
 - `dragon/`: dragon contracts and dragon egg progression.
 - `render/`: field figure rendering.
 - `input/`: gamepad/input integration.
-- `realtime/`: experimental real-time mode.
+- `realtime/`: canonical automatic combat runtime, split into core/network/input/autonomy/runtime.
 - `layout/`: canonical runtime geometry. One owner per screen.
 - `features/`: heavy lazy-loaded features.
 - `dev/`: development-only tooling loaded with `?dev`.

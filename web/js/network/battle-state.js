@@ -800,8 +800,34 @@ async function commitPvpStep6fAtomicAction(publicPatch={},privatePatch={}){
     pvpStep6fAtomicActionInFlight=false;
   }
 }
+const HALLVALLA_PVP_RUNTIME_FORBIDDEN_PUBLIC_ROOTS=new Set([
+  "code","schema","mode","entryMode","createdAt","playerSlots","playerNames","playerLevels","playerShowcase",
+  "playerPrepared","lobbyReady","settings","startConfig","arenaBootstrap","enginePrep","matchSettings",
+  "presence","disconnects","rematchReady","privacyMode","pvpBotMatch","pvpBotProfile"
+]);
+const HALLVALLA_PVP_RUNTIME_TERMINAL_ROOTS=new Set(["phase","battleEnded","winner","loser","endedAt"]);
+const HALLVALLA_PVP_RUNTIME_FORBIDDEN_PRIVATE_ROOTS=new Set(["ownerUid","schema","battleProfile","loadout","engine6e"]);
+function hallvallaValidateRealtimeCheckpointPatch(publicPatch={},privatePatch={},kind=""){
+  const actionKind=String(kind||"card");
+  const terminal=actionKind==="terminal";
+  const publicKeys=Object.keys(publicPatch||{});
+  const privateKeys=Object.keys(privatePatch||{});
+  const blockedPublic=publicKeys.find(key=>{const root=String(key||"").split("/")[0];return HALLVALLA_PVP_RUNTIME_FORBIDDEN_PUBLIC_ROOTS.has(root)||(!terminal&&HALLVALLA_PVP_RUNTIME_TERMINAL_ROOTS.has(root));});
+  if(blockedPublic)return{ok:false,scope:"public",key:blockedPublic,kind:actionKind,reason:"forbidden_public_mutation"};
+  const blockedPrivate=privateKeys.find(key=>HALLVALLA_PVP_RUNTIME_FORBIDDEN_PRIVATE_ROOTS.has(String(key||"").split("/")[0]));
+  if(blockedPrivate)return{ok:false,scope:"private",key:blockedPrivate,kind:actionKind,reason:"forbidden_private_mutation"};
+  return{ok:true};
+}
+globalThis.hallvallaValidateRealtimeCheckpointPatch=hallvallaValidateRealtimeCheckpointPatch;
+
 async function commitRealtimeOnlineCheckpoint(publicPatch={},privatePatch={},kind="",options={}){
   if(!gameId||!publicState||!privateState||publicState.mode!=="online")return false;
+  const securityCheck=hallvallaValidateRealtimeCheckpointPatch(publicPatch,privatePatch,kind);
+  if(!securityCheck.ok){
+    console.error("[HallValla][PvP Security] Checkpoint bloqueado antes de Firebase.",securityCheck);
+    setHint("Acción PvP bloqueada por validación de seguridad.");
+    return false;
+  }
   const writeGameId=gameId,writePlayer=Number(myPlayer||0),lifecycleToken=getBattleLifecycleToken();
   const stillActive=()=>gameId===writeGameId&&Number(myPlayer||0)===writePlayer&&isBattleLifecycleTokenActive(lifecycleToken);
   if(!stillActive())return false;
@@ -813,7 +839,7 @@ async function commitRealtimeOnlineCheckpoint(publicPatch={},privatePatch={},kin
     undeadRemains:Array.isArray(publicPatch?.undeadRemains)?publicPatch.undeadRemains:[...(publicState.undeadRemains||[])],
     moralePressure:publicPatch?.moralePressure||publicState.moralePressure||{1:0,2:0},
     ...publicPatch,
-    realtimeExperimental:true,
+    realtimeEnabled:true,
     rtCheckpoint:{owner:writePlayer,kind:String(kind||"card"),seq:Math.max(0,Number(options?.rtClientSeq||0)),at:Date.now(),id:`${writePlayer}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`}
   };
   const normalized=(await normalizePublicPatchBeforeCommit(checkpoint,{sanitizeFirebase:true})).patch;
@@ -837,7 +863,7 @@ async function commitRealtimeOnlineCheckpoint(publicPatch={},privatePatch={},kin
     }
     networkPublicStateRaw=networkPublicStateRaw?hallvallaApplyLocalPatch(networkPublicStateRaw,cleanPublic):cleanPublic;
     return true;
-  }catch(error){console.error("[HallValla][TR PvP] checkpoint de acción falló",error);setHint("No se pudo sincronizar la acción PvP.");return false;}
+  }catch(error){console.error("[HallValla][PvP Runtime] checkpoint de acción falló",error);setHint("No se pudo sincronizar la acción PvP.");return false;}
 }
 function getBattleCardsSortedByCurrentCost(cards=[],owner=myPlayer||1){
   const source=Array.isArray(cards)?cards:[];
@@ -1300,7 +1326,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const leaderLevel=getLocalLeaderLevel(leaderType);
   const leaderAbility=getLocalLeaderAbility(leaderType);
   const leaderStats=getLeaderBattleStats(leaderType,leaderLevel,leaderAbility);
-  const realtimeExperimental=typeof isHallvallaRealtimeExperimentalRequested==="function"&&isHallvallaRealtimeExperimentalRequested();
+  const realtimeEnabled=typeof isHallvallaRealtimeRequested==="function"&&isHallvallaRealtimeRequested();
   const specialTemplate=ADVENTURE_SPECIALS[specialKey];
   if(!specialTemplate)return;
   let battle=getAdventureBattle(battleId)||ADVENTURE_GUARDIAN_BATTLE;
@@ -1391,11 +1417,11 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     renderPlayerProfile(profile);
     battle={...battle,dragonContractEntryGoldCost:entryCost};
   }
-  const playerCombatDeck=realtimeExperimental
+  const playerCombatDeck=realtimeEnabled
     ?shuffle([...(playerPrincipalPrep.deck||[]),...(playerPrincipalPrep.principalCards||[])])
     :playerPrincipalPrep.deck;
   const playerBattleDrawDeck=injectLeaderEquipmentIntoDrawDeck(playerCombatDeck,leaderType,1);
-  const playerDraw=realtimeExperimental
+  const playerDraw=realtimeEnabled
     ?{deck:[],hand:getBattleCardsSortedByCurrentCost(playerBattleDrawDeck,1)}
     :drawCards(playerBattleDrawDeck,[],4);
   const playerDeck=playerDraw.deck;
@@ -1417,7 +1443,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   // El Hechicero conserva Cañón Arcano como núcleo adaptativo. No se inyecta
   // Foco Estabilizador automáticamente porque sustituiría cartas fuera del constructor global.
   let enemyInitial=adaptiveMagePilot?enemyPrepared:injectLeaderEquipmentIntoInitialState(enemyPrepared,enemyLeaderType,2);
-  if(realtimeExperimental){
+  if(realtimeEnabled){
     const enemyCombatPool=[...(enemyInitial.hand||[]),...(enemyInitial.deck||[]),...(enemyInitial.principalCards||[])];
     enemyCombatPool.splice(0,enemyCombatPool.length,...getBattleCardsSortedByCurrentCost(enemyCombatPool,2));
     enemyInitial={...enemyInitial,deck:[],hand:enemyCombatPool,principalSlots:0,principalCards:[],principalKeys:[],principalCard:null,principalKey:""};
@@ -1427,14 +1453,14 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     makeLeader(1,Math.floor(COLS/2),ROWS-1,leaderType,leaderLevel,leaderAbility),
     makeAdventureEnemyLeader(battle,enemyLeaderType,enemyLeaderLevel,enemyLeaderAbility)
   ];
-  const playerPrincipalUnits=realtimeExperimental?[]:makeStartingPrincipalUnits(playerPrincipalPrep.principalCards,1,leaderType,startingUnits,playerPrincipalSlots);
+  const playerPrincipalUnits=realtimeEnabled?[]:makeStartingPrincipalUnits(playerPrincipalPrep.principalCards,1,leaderType,startingUnits,playerPrincipalSlots);
   startingUnits.push(...playerPrincipalUnits);
-  const enemyPrincipalUnits=realtimeExperimental?[]:makeStartingPrincipalUnits(enemyInitial.principalCards||[],2,enemyLeaderType,startingUnits,enemyInitial.principalSlots||0);
+  const enemyPrincipalUnits=realtimeEnabled?[]:makeStartingPrincipalUnits(enemyInitial.principalCards||[],2,enemyLeaderType,startingUnits,enemyInitial.principalSlots||0);
   startingUnits.push(...enemyPrincipalUnits);
   const entryEffects=applyStartingPrincipalEntryEffects(startingUnits);
   startingUnits=entryEffects.units;
   const principalLogs=[];
-  if(realtimeExperimental)principalLogs.push("La batalla inicia directamente; las cartas del mazo se gestionan desde el arsenal.");
+  if(realtimeEnabled)principalLogs.push("La batalla inicia directamente; las cartas del mazo se gestionan desde el arsenal.");
   if(playerPrincipalUnits.length)principalLogs.push(`Tus Personajes Principales son ${playerPrincipalUnits.map(u=>u.name).join(", ")}: comienzan convocados sin pagar Honor.`);
   if(enemyPrincipalUnits.length)principalLogs.push(`Personajes Principales enemigos: ${enemyPrincipalUnits.map(u=>u.name).join(", ")}, ya convocados al iniciar.`);
   const enemyUnitMasteryRank=typeof getAdventureEnemyUnitMasteryRank==="function"?getAdventureEnemyUnitMasteryRank(battle):(battle.beastEvent?UNIT_MASTERY_MAX_RANK:1);
@@ -1466,19 +1492,19 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     beastmasterYoungDragonElement:battle.beastmasterYoungDragonElement||"",
     beastmasterEntryGoldCost:battle.beastmasterEntryGoldCost||0,
     adventureSpecial:specialKey,
-    realtimeExperimental:!!realtimeExperimental,
-    principalSlots:realtimeExperimental?{1:0,2:0}:{1:playerPrincipalSlots,2:enemyInitial.principalSlots||0},
-    adventurePrincipalKeys:realtimeExperimental?{1:[],2:[]}:{1:playerPrincipalPrep.principalKeys||[],2:enemyInitial.principalKeys||[]},
-    adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,maxHonor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,principalSlots:realtimeExperimental?0:(enemyInitial.principalSlots||0),principalKeys:realtimeExperimental?[]:(enemyInitial.principalKeys||[]),principalKey:realtimeExperimental?"":(enemyInitial.principalKey||"")},
+    realtimeEnabled:!!realtimeEnabled,
+    principalSlots:realtimeEnabled?{1:0,2:0}:{1:playerPrincipalSlots,2:enemyInitial.principalSlots||0},
+    adventurePrincipalKeys:realtimeEnabled?{1:[],2:[]}:{1:playerPrincipalPrep.principalKeys||[],2:enemyInitial.principalKeys||[]},
+    adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:realtimeEnabled?HALLVALLA_RT_CFG.initialMana:0,maxHonor:realtimeEnabled?HALLVALLA_RT_CFG.initialMana:0,principalSlots:realtimeEnabled?0:(enemyInitial.principalSlots||0),principalKeys:realtimeEnabled?[]:(enemyInitial.principalKeys||[]),principalKey:realtimeEnabled?"":(enemyInitial.principalKey||"")},
     createdAt:Date.now(),phase:"active",turnKey:"RT-1",
     playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},
     playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},
     playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},
-    playerStats:{1:{hp:leaderStats.hp,honor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,maxHonor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,deck:playerDeck.length,hand:playerHand.length,hasHiddenUnits:countHiddenUnitCards([...playerDeck,...playerHand])>0},2:{hp:enemyLeaderStats.hp,honor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,maxHonor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length,hasHiddenUnits:countHiddenUnitCards([...(enemyInitial.deck||[]),...(enemyInitial.hand||[])])>0}},
+    playerStats:{1:{hp:leaderStats.hp,honor:realtimeEnabled?HALLVALLA_RT_CFG.initialMana:0,maxHonor:realtimeEnabled?HALLVALLA_RT_CFG.initialMana:0,deck:playerDeck.length,hand:playerHand.length,hasHiddenUnits:countHiddenUnitCards([...playerDeck,...playerHand])>0},2:{hp:enemyLeaderStats.hp,honor:realtimeEnabled?HALLVALLA_RT_CFG.initialMana:0,maxHonor:realtimeEnabled?HALLVALLA_RT_CFG.initialMana:0,deck:enemyInitial.deck.length,hand:enemyInitial.hand.length,hasHiddenUnits:countHiddenUnitCards([...(enemyInitial.deck||[]),...(enemyInitial.hand||[])])>0}},
     erictoGraveyard:[],moralePressure:{1:0,2:0},units:startingUnits,statusFxEvent:entryEffects.statusFxEvent||null,floatFxEvent:entryEffects.floatFxEvent||null,
     log:[...principalLogs,`${battle.beastEvent?"Evento":(battle.isGuardian?"Prueba previa":"Aventura "+chapterForBattle.number)}: ${battle.title}. Rival: ${battle.enemyName}. IA táctica máxima desde el primer duelo. Recompensa: ${getBattleRewardLabel(battle)}.`].slice(0,18)
   };
-  const privatePayload={ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,maxHonor:realtimeExperimental?HALLVALLA_RT_CFG.initialMana:0,principalSlots:realtimeExperimental?0:playerPrincipalSlots,principalKeys:realtimeExperimental?[]:(playerPrincipalPrep.principalKeys||[]),principalKey:realtimeExperimental?"":(playerPrincipalPrep.principalKeys?.[0]||"")};
+  const privatePayload={ownerUid:uid,leaderType,leaderLevel,leaderAbility,adventureSpecial:specialKey,adventureBattleId:battle.id,deck:playerDeck,hand:playerHand,honor:realtimeEnabled?HALLVALLA_RT_CFG.initialMana:0,maxHonor:realtimeEnabled?HALLVALLA_RT_CFG.initialMana:0,principalSlots:realtimeEnabled?0:playerPrincipalSlots,principalKeys:realtimeEnabled?[]:(playerPrincipalPrep.principalKeys||[]),principalKey:realtimeEnabled?"":(playerPrincipalPrep.principalKeys?.[0]||"")};
 
   // VS previo: aparece después de que el duelo ya está completamente preparado,
   // pero antes de publicar/iniciar el turno real para que el reloj no consuma estos 3 segundos.

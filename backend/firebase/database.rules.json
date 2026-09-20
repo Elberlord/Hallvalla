@@ -58,6 +58,12 @@
             "$unitIndex": {
               ".validate": "root.child('games').child($gameId).child('public').child('privacyMode').val() !== 'stealth_private_v1' || !newData.exists() || newData.child('leader').val() === true || !((newData.child('stealth').val() === true || newData.child('hidden').val() === true) && newData.child('revealed').val() !== true)"
             }
+          },
+          "realtimeEnabled": {
+            ".validate": "newData.val() === true || newData.val() === false"
+          },
+          "rtCheckpoint": {
+            ".validate": "!newData.exists() || (newData.hasChildren(['owner','kind','seq','at','id']) && newData.child('owner').isNumber() && (newData.child('owner').val() === 1 || newData.child('owner').val() === 2) && newData.child('kind').isString() && newData.child('seq').isNumber() && newData.child('seq').val() >= 0 && newData.child('at').isNumber() && newData.child('id').isString() && ((newData.child('owner').val() === 1 && root.child('games').child($gameId).child('public').child('playerSlots').child('player1Uid').val() === auth.uid) || (newData.child('owner').val() === 2 && root.child('games').child($gameId).child('public').child('playerSlots').child('player2Uid').val() === auth.uid)))"
           }
         },
         "private": {
