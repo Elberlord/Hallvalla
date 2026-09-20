@@ -507,6 +507,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function clearStep5ArenaPreview(){return ensurePvpSyncEngineBridgeApi().clearStep5ArenaPreview();}
   function renderStep5ArenaPreview(room){return ensurePvpSyncEngineBridgeApi().renderStep5ArenaPreview(room);}
   function scheduleArenaBootstrap(room,code){return ensurePvpSyncEngineBridgeApi().scheduleArenaBootstrap(room,code);}
+  function buildRealPrivateState6e(payload,code,role){return ensurePvpSyncEngineBridgeApi().buildRealPrivateState6e(payload,code,role);}
   function ensureOwnRealEnginePrep6e(room,code){return ensurePvpSyncEngineBridgeApi().ensureOwnRealEnginePrep6e(room,code);}
   function isRealEnginePayload6e(room){return ensurePvpSyncEngineBridgeApi().isRealEnginePayload6e(room);}
   function launchRealEngine6e(code,room){return ensurePvpSyncEngineBridgeApi().launchRealEngine6e(code,room);}
@@ -865,6 +866,21 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     pvpMatchDiag("fallback-start",{code:waitingCode,force});
     const league=randomLeagueSnapshot||await resolveMyRandomLeague();
     const leagueKey=String(league?.key||"stone");
+    // Prioridad absoluta a un rival humano elegible. El BOT solo entra cuando
+    // no existe otra cuenta real, libre y vigente dentro de la misma liga.
+    try{
+      const queueSnap=await withTimeout(get(ref(db,RANDOM_QUEUE_PATH)),`Revisar rivales humanos antes del BOT ${waitingCode}`,4000);
+      const queueNow=queueSnap.exists()?(queueSnap.val()||{}):{};
+      const now=Date.now();
+      const humanVisible=Object.values(queueNow).some(entry=>entry&&String(entry.uid||"")!==myUid&&String(entry.leagueKey||"")===leagueKey&&!String(entry.claimedBy||"")&&Number(entry.createdAt||0)>0&&now-Number(entry.createdAt||0)<=RANDOM_QUEUE_STALE_MS);
+      if(humanVisible){
+        pvpMatchDiag("fallback-deferred-human-visible",{league:leagueKey});
+        return false;
+      }
+    }catch(error){
+      pvpMatchDiag("fallback-human-check-failed",{message:String(error?.message||error)});
+      return false;
+    }
     const ownQueueRef=ref(db,`${RANDOM_QUEUE_PATH}/${myUid}`);
     pvpBotFallbackInFlight=true;
     let queueClosedForFallback=false;
@@ -1075,15 +1091,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     const myLeagueKey=String(randomLeagueSnapshot?.key||"stone");
     renderMatchmakingLeague(randomLeagueSnapshot);
     const searchAge=randomSearchStartedAt?Date.now()-randomSearchStartedAt:0;
-    if(searchAge>=PVP_BOT_FALLBACK_MS&&activeRole===1&&activeCode){
-      setMatchmakingSearchText("BUSCANDO RIVAL...");
-      if(await startPvpBotFallback({force:true}))return true;
-    }
     let snap;
     try{snap=await get(ref(db,RANDOM_QUEUE_PATH));}catch(_){return false;}
     const all=snap.exists()?(snap.val()||{}):{};
     const nowTs=Date.now();
-    const candidates=Object.values(all).filter(entry=>{
+    const queueEntries=Object.values(all).filter(Boolean);
+    const otherHumanEntries=queueEntries.filter(entry=>String(entry?.uid||"")!==myUid);
+    const candidates=queueEntries.filter(entry=>{
       if(!entry||String(entry.uid||"")===myUid||String(entry.claimedBy||""))return false;
       if(String(entry.leagueKey||"")!==myLeagueKey)return false;
       const created=Number(entry.createdAt||0);
@@ -1091,14 +1105,16 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       if(activeRole===1&&randomOwnCreatedAt&&!randomCandidateIsOlder(entry,myUid,randomOwnCreatedAt))return false;
       return normalizeCode(entry.code||"").length===8;
     }).sort((a,b)=>Number(a.createdAt||0)-Number(b.createdAt||0)||String(a.uid||"").localeCompare(String(b.uid||"")));
+    if(otherHumanEntries.length&&candidates.length===0){
+      const otherLeagues=[...new Set(otherHumanEntries.map(entry=>String(entry?.leagueKey||"?")).filter(Boolean))];
+      pvpMatchDiag("humans-visible-but-not-eligible",{myLeague:myLeagueKey,otherLeagues,count:otherHumanEntries.length});
+    }
     for(const candidate of candidates){
       let claimed=null;
-      try{claimed=await claimRandomCandidate(candidate,myUid,myLeagueKey);}catch(_){claimed=null;}
+      try{claimed=await claimRandomCandidate(candidate,myUid,myLeagueKey);}
+      catch(error){pvpMatchDiag("candidate-claim-failed",{uid:String(candidate?.uid||""),code:String(candidate?.code||""),message:String(error?.message||error)});claimed=null;}
       if(!claimed)continue;
       if(await randomJoinClaimedEntry(claimed))return true;
-    }
-    if(randomMatchSearching&&activeRole===1&&randomOwnCreatedAt&&Date.now()-randomOwnCreatedAt>=PVP_BOT_FALLBACK_MS){
-      if(await startPvpBotFallback())return true;
     }
     return false;
   }

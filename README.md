@@ -1,15 +1,16 @@
-# HallValla v233 — Loader/cache-bust hotfix
+# HallValla v234 — PvP handshake + fallback BOT hotfix
 
-Build: `20260920.233`
+Build: `20260920.234`
 
-Base: v232 PvP sync/protocol split.
+Base: v233.
 
-Corrección:
-- `hallvalla-stage.html` ya no fija manualmente un hash histórico de `bootstrap-loader.js`.
-- El loader se importa usando automáticamente el build declarado por la etapa.
-- `index.html` añade `hvbuild=<SHELL_BUILD>` a la URL del iframe para evitar reutilizar una etapa anterior.
-- Si stage y loader no tienen el mismo build, el bootstrap se bloquea en vez de continuar con una mezcla incompatible.
-- Cache runtime renovada a `hallvalla-runtime-v233`.
+## Correcciones
+- Reparado el deadlock `configured -> arena_ready` que podía dejar dos cuentas reales conectadas sin iniciar el duelo.
+- El puente PvP ahora expone `buildRealPrivateState6e` al orquestador BOT; se elimina el `ReferenceError` del fallback.
+- El fallback BOT tiene un único controlador de reintentos; ya no se dispara también desde cada escaneo de cola.
+- Antes de preparar un BOT se comprueba nuevamente si existe un rival humano elegible de la misma liga; el humano tiene prioridad.
+- Se añadieron diagnósticos de cola para detectar cuentas visibles pero no elegibles (por ejemplo, ligas distintas).
+- Cache runtime: `hallvalla-runtime-v234`.
 
-Motivo del hotfix:
-En v232 el navegador podía cargar `hallvalla-stage.html` v232 junto con `bootstrap-loader.js` v229 porque el HTML conservaba el query hash histórico `h=1b3403244b59`. El loader v229 no conocía `features/pvp/bot.js`, por lo que el acceso a PvP fallaba antes de abrir el lobby.
+## Firebase
+No requiere cambios de reglas respecto de v233.

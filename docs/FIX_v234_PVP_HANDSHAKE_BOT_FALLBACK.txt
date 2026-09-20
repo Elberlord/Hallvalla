@@ -1,0 +1,23 @@
+HallValla v234 — PvP handshake + fallback BOT hotfix
+Fecha: 2026-09-20
+Base: v233
+
+1. DOS CUENTAS REALES
+Se detectó un deadlock de sincronización: J1 publicaba phase=configured manteniendo phaseWriteInFlight=true. El listener podía recibir esa escritura durante el candado, descartar reconcileRoomPhase y no recibir otra modificación posterior. Resultado: ambos clientes podían estar presentes/preparados sin avanzar a arena_ready.
+
+Corrección: tras confirmar la escritura configured, J1 agenda scheduleArenaBootstrap directamente. Ya no depende del eco del listener para avanzar configured -> arena_ready.
+
+2. FALLBACK BOT
+buildRealPrivateState6e se había movido a sync-engine-bridge.js durante v232 pero startPvpBotFallback seguía llamándolo como símbolo local. Se exportó desde la API del bridge y index.js usa un wrapper explícito.
+
+3. SPAM DE CONSOLA
+El fallback se disparaba desde el temporizador dedicado y también desde scanRandomQueue cada 1.8 s. Ahora el temporizador es el único controlador BOT y respeta PVP_BOT_FALLBACK_MAX_ATTEMPTS.
+
+4. PRIORIDAD HUMANA
+Antes de crear un BOT se vuelve a leer matchmaking/random. Si existe otra cuenta real libre, vigente y de la misma liga, el fallback se pospone.
+
+5. DIAGNÓSTICO
+Si existen humanos en cola pero ninguno es elegible, se registra humans-visible-but-not-eligible con las ligas detectadas. Esto permite distinguir un error de sincronización de dos cuentas ubicadas en ligas diferentes.
+
+6. PRUEBA ESTÁTICA
+Prueba simulada: waiting + J1/J2 prepared + J1/J2 ready -> escritura configured -> scheduleArenaBootstrap directo: PASS.

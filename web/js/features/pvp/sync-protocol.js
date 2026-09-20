@@ -189,6 +189,7 @@ combate. Es la capa de coordinación entre el orquestador PvP y Firebase.
           };
           await withTimeout(set(publicRef,rematchRoom),`Preparar rematch en ${code}`,6000);
           mark?.(`REMATCH · ambos jugadores aceptaron. Reiniciando duelo directo en ${code}.`);
+          setTimeout(()=>{void reconcileRoomPhase(rematchRoom,code);},0);
         }catch(error){
           console.error(error);
           mark?.(`REMATCH falló: ${error?.message||error}`);
@@ -245,6 +246,10 @@ combate. Es la capa de coordinación entre el orquestador PvP y Firebase.
           "startConfig/source":"direct_matchmaking"
         }),`Configurar entrada directa al duelo ${code}`);
         mark?.(`Rival confirmado · duelo directo configurado en ${code}.`);
+        // No dependemos del eco del listener para avanzar. Ese callback puede
+        // llegar mientras phaseWriteInFlight sigue activo y quedar descartado.
+        // Programar arena aquí evita el deadlock configured -> arena_ready.
+        scheduleArenaBootstrap?.(Object.assign({},room,{phase:"configured",startConfig:direct}),code);
       }catch(error){console.error(error);}
       finally{setPhaseBusy(false);}
     }

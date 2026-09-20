@@ -1,0 +1,6 @@
+HallValla — Pendientes después de v234
+
+1. Repetir PvP real con dos cuentas de la misma liga y verificar: rival encontrado -> configured -> arena_ready -> prebattle -> active.
+2. Completar una partida real y validar sincronización de invocaciones, daño, bajas, magia, resultado y rematch.
+3. Si v234 pasa, cerrar PvP sync/protocol y continuar con la división/renombrado del motor automático realtime/experimental.js.
+4. Más adelante: contratos heredados turn*, cierre funcional completo, gamepad, sistemas secundarios y limpieza final.
