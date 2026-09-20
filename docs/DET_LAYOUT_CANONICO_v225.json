@@ -1,0 +1,100 @@
+{
+  "version": 7,
+  "designStage": {
+    "width": 1366,
+    "height": 636,
+    "mode": "fixed"
+  },
+  "units": "design-px",
+  "source": "JSON aprobado por el usuario para Hua Lan; horneado como base universal DET en v225",
+  "items": {
+    "div[data-det-icon-key=\"range\"]": {
+      "x": -26.04107666015625,
+      "y": 2.003082275390625
+    },
+    "div[data-det-icon-key=\"agility\"]": {
+      "x": -27.0426025390625,
+      "y": 0
+    },
+    "div[data-det-icon-key=\"guard\"]": {
+      "x": -28.04412841796875,
+      "y": -2.003173828125
+    },
+    "div[data-det-icon-key=\"attack\"]": {
+      "x": -28.0440673828125,
+      "y": -2.003173828125
+    },
+    "div[data-det-icon-key=\"movement\"]": {
+      "x": -26.04095458984375,
+      "y": 0
+    },
+    "div[data-det-icon-key=\"dexterity\"]": {
+      "x": -27.04248046875,
+      "y": 1.0015716552734375
+    },
+    "div[data-det-icon-key=\"hp\"]": {
+      "x": -27.04254150390625,
+      "y": -2.0031585693359375
+    },
+    "#detTypeValue": {
+      "x": 2.003173828125,
+      "y": 2.003143310546875
+    },
+    "#detRarityValue": {
+      "x": 4.00628662109375,
+      "y": 4.006317138671875
+    },
+    "#detStateValue": {
+      "x": 1.0015869140625,
+      "y": 5.0078125
+    },
+    "#detCopiesValue": {
+      "x": 16.02508544921875,
+      "y": 1.0015869140625
+    },
+    "#detOwnEffectsList": {
+      "x": -40.06304931640625,
+      "y": 1.00152587890625
+    },
+    "#detStatValueHp": {
+      "x": 8.0125732421875,
+      "y": -6.009437561035156
+    },
+    "#detStatValueDexterity": {
+      "x": 8.0125732421875,
+      "y": -3.004730224609375
+    },
+    "#detStatValueMovement": {
+      "x": 8.01263427734375,
+      "y": -2.003143310546875
+    },
+    "#detStatValueAttack": {
+      "x": 6.00946044921875,
+      "y": -3.004730224609375
+    },
+    "#detStatValueGuard": {
+      "x": 6.0093994140625,
+      "y": 0
+    },
+    "#detStatValueAgility": {
+      "x": 7.010986328125,
+      "y": -1.001556396484375
+    },
+    "#detStatValueRange": {
+      "x": 8.0125732421875,
+      "y": -1.001556396484375
+    },
+    "#detPortraitImage": {
+      "x": 1.001556396484375,
+      "y": -13.020477294921875
+    },
+    "button[data-ability-title=\"Golpe de Apertura\"]": {
+      "x": -17.02679443359375,
+      "y": 11.01739501953125
+    }
+  },
+  "notes": [
+    "No se hornea el selector del contenedor det-v32-card porque era un nombre legacy sin desplazamiento.",
+    "El selector Ataque por la espalda se migra a Golpe de Apertura."
+  ]
+}

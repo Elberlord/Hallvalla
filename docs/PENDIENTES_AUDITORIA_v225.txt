@@ -1,0 +1,16 @@
+HALLVALLA — PENDIENTES DESPUÉS DE v225
+Build: 20260920.225
+
+COMPLETADO EN v225
+- JSON DET de Hua Lan horneado como layout canónico universal.
+- Clase legacy det-v32-card retirada del shell; DET usa det-v33-card.
+- Misiones, Maestrías y tutoriales extraídos de settings-events.js.
+- Producción deja de depender accidentalmente del calibrador DEV de Misiones.
+
+SIGUIENTE
+1. Extraer recompensas de settings-events.js: paquete de bienvenida + cadena diaria.
+2. Auditar game/decks-units-combat-rules.js: factories, reglas de mazo/líder y resolución compartida.
+3. Dividir features/pvp/index.js: ranking/resultados, lobby/matchmaking, BOT y sync.
+4. Modularizar realtime/experimental.js y retirar el nombre histórico "experimental".
+5. Revisar nombres/contratos heredados: *TurnKey, turnsRemaining, damagedThisTurn y equivalentes que aún sobrevivan.
+6. Auditoría final de código muerto/assets huérfanos y smoke completo: Aventura, PvP BOT, PvP concurrente real, gamepad Windows/Android, Mina, Forja, colección y tutoriales.

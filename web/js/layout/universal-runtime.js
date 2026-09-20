@@ -5,6 +5,32 @@
 (()=>{
   "use strict";
   const CANONICAL_CONFIG={"version":10,"designStage":{"width":1366,"height":636,"mode":"fixed"},"units":"design-px","editor":"v191-baked-from-user-dev-json-stable-slots","items":{"#closeDeckBuilderBtn":{"x":5.008,"y":526.828},"div.deckbuilder-parchment-stage:nth-of-type(1)":{"x":1.002,"y":-7.011,"sx":95,"sy":96},"#deckCollectionPager":{"x":6.009,"y":9.014},"#deckCollectionPrevBtn":{"x":4.006},"button[data-beast-tab=\"info\"]:nth-of-type(1)":{"x":736.157,"y":-225.354},"button[data-beast-tab=\"rewards\"]:nth-of-type(2)":{"x":354.557,"y":-113.178},"button[data-beast-tab=\"global\"]:nth-of-type(3)":{"x":-31.049,"y":15.024},"div[data-beast-season-seal=\"1\"]:nth-of-type(1)":{"x":-724.139,"y":509.801},"#deckBuilderDeckPanel":{"x":16.025146484375,"y":-9.01416015625,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"section#deckBuilderDeckPanel · × × × × × × × × × × × × × × × × × × × × × × × × × × × "},"div[data-draft-index=\"4\"]":{"x":-3.00469970703125,"y":1.001495361328125,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Arquero egipcio de línea · clic/tap para ver detalles"},"div[data-draft-index=\"3\"]":{"x":-1.001708984375,"y":2.003143310546875,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Arquero egipcio de línea · clic/tap para ver detalles"},"div[data-draft-index=\"2\"]":{"x":-1.00164794921875,"y":2.00311279296875,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Arquera del desierto · clic/tap para ver detalles"},"#currentDeckList":{"x":-1.00146484375,"y":-2.003143310546875,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div#currentDeckList · Mazo completo de 30 cartas"},"div[data-draft-index=\"13\"]":{"x":-3.00469970703125,"y":-6.00946044921875,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Saboteador de Iga · clic/tap para ver detalles"},"div[data-draft-index=\"14\"]":{"x":-8.0125732421875,"y":-8.012664794921875,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Saboteador de Iga · clic/tap para ver detalles"},"div[data-draft-index=\"12\"]":{"x":-3.0047607421875,"y":-9.014190673828125,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Explorador mongol · clic/tap para ver detalles"},"div[data-draft-index=\"11\"]":{"x":-1.00152587890625,"y":-9.01416015625,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Samurai Yabusame · clic/tap para ver detalles"},"div[data-draft-index=\"10\"]":{"x":1.00152587890625,"y":-10.015716552734375,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Simo Häyhä · clic/tap para ver detalles"},"div[data-draft-index=\"15\"]":{"x":3.00469970703125,"y":-16.025238037109375,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Asesina del desierto · clic/tap para ver detalles"},"div[data-draft-index=\"16\"]":{"x":-1.00152587890625,"y":-14.022003173828125,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Fireball · clic/tap para ver detalles"},"div[data-draft-index=\"17\"]":{"x":-4.00634765625,"y":-13.020538330078125,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Maldición de arena · clic/tap para ver detalles"},"div[data-draft-index=\"18\"]":{"x":-4.00634765625,"y":-14.022064208984375,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Maldición de arena · clic/tap para ver detalles"},"div[data-draft-index=\"19\"]":{"x":-8.0126953125,"y":-15.023651123046875,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Veneno de la Serpiente Primordial · clic/tap para ver "},"div[data-draft-index=\"20\"]":{"x":0,"y":-16.02520751953125,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Banquete de Ceniza · clic/tap para ver detalles"},"div[data-draft-index=\"21\"]":{"x":-3.004638671875,"y":-18.028289794921875,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Huevo de Dragón · clic/tap para ver detalles"},"div[data-draft-index=\"22\"]":{"x":-4.0062255859375,"y":-19.02984619140625,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · William Wallace · clic/tap para ver detalles"},"div[data-draft-index=\"23\"]":{"x":-5.00787353515625,"y":-18.028350830078125,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Richard Corazón de León · clic/tap para ver detalles"},"div[data-draft-index=\"24\"]":{"x":-9.0142822265625,"y":-17.02679443359375,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Aquiles · clic/tap para ver detalles"},"div[data-draft-index=\"25\"]":{"x":0,"y":-25.039306640625,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Hua Lan · clic/tap para ver detalles"},"div[data-draft-index=\"26\"]":{"x":-2.003173828125,"y":-22.03460693359375,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Ulises / Odiseo · clic/tap para ver detalles"},"div[data-draft-index=\"27\"]":{"x":-5.0079345703125,"y":-26.04095458984375,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Sun Tzu · clic/tap para ver detalles"},"div[data-draft-index=\"28\"]":{"x":-5.00787353515625,"y":-25.039337158203125,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Hannibal Barca · clic/tap para ver detalles"},"div[data-draft-index=\"29\"]":{"x":-10.0157470703125,"y":-24.037841796875,"sx":100,"sy":100,"opacity":100,"z":0,"backgroundOff":false,"borderOff":false,"shadowOff":false,"hidden":false,"label":"div · Leónidas · clic/tap para ver detalles"}}};
+  // v225 · DET canónico horneado desde el JSON aprobado por el usuario.
+  // Son offsets de diseño 1366×636. Se aplican en producción y ?dev; el editor
+  // sigue pudiendo previsualizar cambios sin que el layout dependa de localStorage.
+  const DET_CANONICAL_ITEMS=Object.freeze({
+    'div[data-det-icon-key="range"]':{x:-26.04107666015625,y:2.003082275390625},
+    'div[data-det-icon-key="agility"]':{x:-27.0426025390625,y:0},
+    'div[data-det-icon-key="guard"]':{x:-28.04412841796875,y:-2.003173828125},
+    'div[data-det-icon-key="attack"]':{x:-28.0440673828125,y:-2.003173828125},
+    'div[data-det-icon-key="movement"]':{x:-26.04095458984375,y:0},
+    'div[data-det-icon-key="dexterity"]':{x:-27.04248046875,y:1.0015716552734375},
+    'div[data-det-icon-key="hp"]':{x:-27.04254150390625,y:-2.0031585693359375},
+    '#detTypeValue':{x:2.003173828125,y:2.003143310546875},
+    '#detRarityValue':{x:4.00628662109375,y:4.006317138671875},
+    '#detStateValue':{x:1.0015869140625,y:5.0078125},
+    '#detCopiesValue':{x:16.02508544921875,y:1.0015869140625},
+    '#detOwnEffectsList':{x:-40.06304931640625,y:1.00152587890625},
+    '#detStatValueHp':{x:8.0125732421875,y:-6.009437561035156},
+    '#detStatValueDexterity':{x:8.0125732421875,y:-3.004730224609375},
+    '#detStatValueMovement':{x:8.01263427734375,y:-2.003143310546875},
+    '#detStatValueAttack':{x:6.00946044921875,y:-3.004730224609375},
+    '#detStatValueGuard':{x:6.0093994140625,y:0},
+    '#detStatValueAgility':{x:7.010986328125,y:-1.001556396484375},
+    '#detStatValueRange':{x:8.0125732421875,y:-1.001556396484375},
+    '#detPortraitImage':{x:1.001556396484375,y:-13.020477294921875},
+    'button[data-ability-title="Golpe de Apertura"]':{x:-17.02679443359375,y:11.01739501953125}
+  });
   const originalStyles=new WeakMap();
   const touched=new Set();
   let previewItems=null;
@@ -115,7 +141,8 @@
       if(original.pointerEvents)node.style.setProperty("pointer-events",original.pointerEvents,original.pointerEventsPriority);else node.style.removeProperty("pointer-events");
     }
   }
-  function effectiveItems(){return previewItems||CANONICAL_CONFIG.items||{};}
+  function canonicalItems(){return {...(CANONICAL_CONFIG.items||{}),...DET_CANONICAL_ITEMS};}
+  function effectiveItems(){return previewItems||canonicalItems();}
   function restoreAll(){for(const node of Array.from(touched)){if(node?.isConnected)restoreNode(node);}touched.clear();}
   function applyAll(){
     restoreAll();
@@ -133,7 +160,7 @@
   function clearPreview(){previewItems=null;applyAll();}
   const api={
     version:2,
-    getCanonical:()=>JSON.parse(JSON.stringify(CANONICAL_CONFIG)),
+    getCanonical:()=>JSON.parse(JSON.stringify({...CANONICAL_CONFIG,items:canonicalItems()})),
     setPreview,clearPreview,apply:applyAll,
     normalizeState
   };
