@@ -723,7 +723,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   const pvpMatchDiagTimes=new Map();
   function pvpMatchDiag(step,data=null){
     try{
-      const noisy=step==="humans-visible-waiting-arbitration"||step==="fallback-deferred-human-visible"||step==="inbound-human-claim"||step==="fallback-scheduled"||step==="fallback-fired"||step==="fallback-start";
+      const noisy=step==="paired-human-host-waiting"||step==="paired-human-host-unpaired"||step==="humans-visible-no-pair"||step==="fallback-deferred-human-visible"||step==="inbound-human-claim"||step==="fallback-scheduled"||step==="fallback-fired"||step==="fallback-start";
       if(noisy){
         const now=Date.now(),last=Number(pvpMatchDiagTimes.get(step)||0);
         if(now-last<4500)return;
@@ -798,15 +798,29 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     renderMatchmakingLeague();
     syncLocalButtons();
   }
-  function randomPairClaimOwnerUid(uidA,uidB){
-    const a=String(uidA||""),b=String(uidB||"");
-    if(!a||!b||a===b)return "";
-    // Comparación ASCII simple: idéntica en todos los navegadores/dispositivos.
-    return a>b?a:b;
+  function randomQueueUidCompare(a,b){
+    const au=String(a?.uid||a||""),bu=String(b?.uid||b||"");
+    return au<bu?-1:au>bu?1:0;
   }
-  function randomCandidateCanBeClaimedByMe(entry,myUid){
-    const otherUid=String(entry?.uid||"");
-    return !!otherUid&&randomPairClaimOwnerUid(myUid,otherUid)===String(myUid||"");
+  function buildDeterministicLeaguePairs(entries=[]){
+    const clean=(Array.isArray(entries)?entries:[])
+      .filter(entry=>entry&&String(entry.uid||"")&&randomEntryHasUsableCode(entry))
+      .sort(randomQueueUidCompare);
+    const pairs=[];
+    for(let index=0;index<clean.length;index+=2){
+      pairs.push({host:clean[index]||null,joiner:clean[index+1]||null});
+    }
+    return pairs;
+  }
+  function findDeterministicPairForUid(entries,myUid){
+    const uid=String(myUid||"");
+    if(!uid)return null;
+    const pairs=buildDeterministicLeaguePairs(entries);
+    for(const pair of pairs){
+      if(String(pair.host?.uid||"")===uid)return{role:"host",host:pair.host,joiner:pair.joiner};
+      if(String(pair.joiner?.uid||"")===uid)return{role:"joiner",host:pair.host,joiner:pair.joiner};
+    }
+    return null;
   }
   function randomEntryHasUsableCode(entry){return normalizeCode(entry?.code||"").length===8;}
   function randomEntryIsSameLeagueHuman(entry,myUid,myLeagueKey){
@@ -820,7 +834,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   async function claimRandomCandidate(candidate,myUid,myLeagueKey){
     const candidateUid=String(candidate?.uid||"");
     const leagueKey=String(myLeagueKey||"");
-    if(!candidateUid||candidateUid===myUid||!leagueKey||!randomCandidateCanBeClaimedByMe(candidate,myUid))return null;
+    if(!candidateUid||candidateUid===myUid||!leagueKey)return null;
     const targetRef=ref(db,`${RANDOM_QUEUE_PATH}/${candidateUid}`);
     const nowTs=Date.now();
     const result=await withTimeout(runTransaction(targetRef,current=>{
@@ -1167,31 +1181,52 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     noteInboundHumanClaim("");
 
     const otherHumanEntries=queueEntries.filter(entry=>String(entry?.uid||"")!==myUid);
-    const candidates=otherHumanEntries.filter(entry=>{
-      if(!randomEntryIsSameLeagueHuman(entry,myUid,myLeagueKey))return false;
-      if(String(entry.claimedBy||""))return false;
-      return randomCandidateCanBeClaimedByMe(entry,myUid);
-    }).sort((a,b)=>{const au=String(a.uid||""),bu=String(b.uid||"");return au<bu?-1:au>bu?1:0;});
+    const sameLeagueEntries=queueEntries.filter(entry=>
+      entry&&String(entry?.leagueKey||"")===myLeagueKey&&randomEntryHasUsableCode(entry)
+    );
+    const pair=findDeterministicPairForUid(sameLeagueEntries,myUid);
 
-    if(otherHumanEntries.length&&candidates.length===0){
-      const sameLeague=otherHumanEntries.filter(entry=>randomEntryIsSameLeagueHuman(entry,myUid,myLeagueKey));
-      const reasonCounts={otherLeague:0,invalidCode:0,alreadyClaimed:0,peerIsArbiter:0};
+    if(pair?.role==="host"){
+      const joinerUid=String(pair.joiner?.uid||"");
+      if(joinerUid){
+        pvpMatchDiag("paired-human-host-waiting",{host:myUid,joiner:joinerUid,league:myLeagueKey});
+      }else if(otherHumanEntries.length){
+        pvpMatchDiag("paired-human-host-unpaired",{host:myUid,league:myLeagueKey,visible:otherHumanEntries.length});
+      }
+      return false;
+    }
+
+    if(pair?.role==="joiner"&&pair.host){
+      const candidate=pair.host;
+      const hostUid=String(candidate?.uid||"");
+      // Si la entrada del host ya está reclamada por nosotros, continuamos la unión.
+      // Si la reclamó otro UID, la pareja se recalculará en el siguiente scan.
+      const claimedBy=String(candidate?.claimedBy||"");
+      if(claimedBy&&claimedBy!==myUid){
+        pvpMatchDiag("paired-human-host-already-claimed",{host:hostUid,claimedBy,joiner:myUid});
+        return false;
+      }
+      let claimed=candidate;
+      if(!claimedBy){
+        try{claimed=await claimRandomCandidate(candidate,myUid,myLeagueKey);}
+        catch(error){
+          pvpMatchDiag("paired-human-claim-failed",{host:hostUid,code:String(candidate?.code||""),message:String(error?.message||error)});
+          claimed=null;
+        }
+      }
+      if(!claimed)return false;
+      pvpMatchDiag("paired-human-claimed",{host:hostUid,joiner:myUid,code:String(candidate?.code||"")});
+      if(await randomJoinClaimedEntry(claimed))return true;
+      return false;
+    }
+
+    if(otherHumanEntries.length){
+      const reasonCounts={otherLeague:0,invalidCode:0};
       for(const entry of otherHumanEntries){
         if(String(entry?.leagueKey||"")!==myLeagueKey){reasonCounts.otherLeague++;continue;}
         if(!randomEntryHasUsableCode(entry)){reasonCounts.invalidCode++;continue;}
-        if(String(entry?.claimedBy||"")){reasonCounts.alreadyClaimed++;continue;}
-        if(!randomCandidateCanBeClaimedByMe(entry,myUid)){reasonCounts.peerIsArbiter++;continue;}
       }
-      pvpMatchDiag("humans-visible-waiting-arbitration",{myLeague:myLeagueKey,count:otherHumanEntries.length,sameLeague:sameLeague.length,reasons:reasonCounts});
-    }
-
-    for(const candidate of candidates){
-      let claimed=null;
-      try{claimed=await claimRandomCandidate(candidate,myUid,myLeagueKey);}
-      catch(error){pvpMatchDiag("candidate-claim-failed",{uid:String(candidate?.uid||""),code:String(candidate?.code||""),message:String(error?.message||error)});claimed=null;}
-      if(!claimed)continue;
-      pvpMatchDiag("candidate-claimed",{uid:String(candidate?.uid||""),code:String(candidate?.code||"")});
-      if(await randomJoinClaimedEntry(claimed))return true;
+      pvpMatchDiag("humans-visible-no-pair",{myLeague:myLeagueKey,count:otherHumanEntries.length,reasons:reasonCounts});
     }
     return false;
   }

@@ -1,20 +1,20 @@
-# HallValla v235 — PvP deterministic human matchmaking
+# HallValla v236 — PvP deterministic league pairing
 
-Build: `20260920.235`
+Build: `20260920.236`
 
-Base: v234.
+Base: v235.
 
-## Correcciones PvP de esta versión
-- El emparejamiento humano ya no usa `createdAt` ni la hora local del dispositivo como criterio de elegibilidad.
-- Dos jugadores de la misma liga se arbitran de forma determinista por UID; exactamente uno reclama la sala del otro.
-- Cada cliente crea su sala y publica su propia entrada de matchmaking **antes** del primer intento de claim, tal como exigen las Firebase Rules actuales.
-- El slot J2 se reclama con `runTransaction`, evitando que dos clientes puedan ocuparlo simultáneamente.
-- Un cliente con claim humano entrante no intenta reclamar a otro jugador ni activar un BOT.
-- Se añadió candado `randomHumanJoinInFlight` durante claim → cierre de sala provisional → join, evitando escaneos/fallback paralelos.
-- El fallback BOT da prioridad absoluta a cualquier humano visible de la misma liga y sus aplazamientos por humano no consumen los intentos BOT.
-- Claims humanos huérfanos pueden recuperarse por el dueño de la cola tras una gracia local, sin comparar relojes entre dispositivos.
-- Diagnósticos repetitivos de matchmaking fueron limitados para no inundar la consola.
-- Cache runtime: `hallvalla-runtime-v235`.
+## Corrección principal
+- Matchmaking humano por **liga PvP + disponibilidad**.
+- El nivel general de cuenta no filtra rivales. Un jugador Nivel 18 en Liga Piedra puede emparejarse con cualquier otro jugador disponible de Liga Piedra.
+- `level` y `pvpPoints` permanecen como metadata; no forman parte de la elegibilidad humana.
+- Las entradas de cada liga se ordenan por UID y se forman parejas deterministas `0↔1`, `2↔3`, etc.
+- El primer UID de cada pareja conserva su sala como J1.
+- El segundo UID reclama esa sala y entra como J2.
+- Ya no existe el arbitraje ambiguo donde ambos clientes podían esperar que el otro reclamara.
+- El claim de cola sigue protegido por Firebase y el slot J2 continúa usando `runTransaction`.
+- El BOT queda diferido mientras la pareja humana correspondiente está disponible.
+- Cache runtime: `hallvalla-runtime-v236`.
 
 ## Firebase
-No requiere cambios de reglas respecto de v234. El nuevo orden de publicación/claim se ajusta al contrato ya existente de `matchmaking/random`.
+Las reglas no cambian respecto de v235. El campo `level` continúa siendo obligatorio como metadata por contrato, pero no se usa como filtro de matchmaking.

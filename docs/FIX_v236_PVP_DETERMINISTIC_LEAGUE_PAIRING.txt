@@ -1,0 +1,28 @@
+HallValla v236 — Parejas deterministas por liga
+Fecha: 2026-09-20
+Base: v235
+
+OBSERVACIÓN REAL
+Dos cuentas de Liga Piedra se veían mutuamente pero quedaban en `humans-visible-waiting-arbitration`, causando un bucle de espera y aplazamiento del fallback BOT.
+
+ACLARACIÓN SOBRE NIVEL DE CUENTA
+El nivel general del jugador NO debe determinar el matchmaking PvP. Un jugador puede ser Nivel 18 y seguir siendo novato competitivo en Liga Piedra.
+- `level`: metadata de perfil/sala.
+- `pvpPoints`: metadata/ranking.
+- `leagueKey`: único criterio competitivo de emparejamiento humano.
+
+CAUSA
+El arbitraje par-a-par por UID podía dejar a ambos clientes observando al rival pero sin converger en un join efectivo.
+
+CORRECCIÓN
+1. Se toma la cola válida de una misma `leagueKey`.
+2. Se ordena ASCII por UID, idéntico en todos los clientes.
+3. Se forman parejas consecutivas: 0↔1, 2↔3, etc.
+4. Primer UID de la pareja = host/J1; mantiene su sala.
+5. Segundo UID = joiner/J2; reclama la entrada del host y migra a esa sala.
+6. Claim de matchmaking permanece transaccional según Firebase Rules.
+7. Slot `player2Uid` permanece transaccional con `runTransaction`.
+8. Nivel, puntos y createdAt no intervienen en la pareja.
+
+COMPORTAMIENTO CON NÚMERO IMPAR
+Si hay 3 jugadores, 0↔1 forman partida y 2 espera. Cuando la primera pareja abandona la cola, el tercero puede emparejarse con el próximo jugador o llegar al fallback BOT según corresponda.

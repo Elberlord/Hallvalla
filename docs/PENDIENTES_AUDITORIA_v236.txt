@@ -1,0 +1,7 @@
+HallValla — Pendientes después de v236
+
+1. Confirmar con dos cuentas reales que el pairing por liga entra a combate completo.
+2. Si pasa: cerrar auditoría estructural PvP.
+3. Motor automático: dividir realtime/experimental.js y retirar nombre histórico experimental.
+4. Revisar contratos heredados turnKey/turnPhase/*TurnKey/turnsRemaining/damagedThisTurn.
+5. Cierre funcional y limpieza final del repositorio.
