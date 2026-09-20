@@ -1,0 +1,17 @@
+HallValla v241 — Estado del cierre de auditoría
+
+CERRADO
+- settings-events: responsabilidades separadas.
+- decks/units/combat rules: factories, validación y reglas compartidas separadas.
+- PvP: ranking/resultados, lobby/matchmaking, BOT y sync/protocolo separados.
+- Motor continuo: realtime/experimental retirado y dividido en módulos canónicos.
+- Contratos legacy: auditados/migrados en v240.
+- Código muerto / assets huérfanos: auditados y limpiados en v241.
+
+SIGUIENTE
+1. Prueba funcional completa de Aventura.
+2. PvP BOT completo.
+3. PvP humano concurrente completo, incluida desconexión/rematch/ranking/bajas.
+4. Gamepad Windows/Android.
+5. Mina / Forja / Colección / Tutorial / Eventos / Tienda.
+6. Cierre final de Firebase Rules, hashes, Service Worker, cache y documentación.

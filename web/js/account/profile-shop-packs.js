@@ -807,13 +807,6 @@ function applyUnitServicePointsToUnits(units,unit,result){
   const key=result.key||getUnitMasteryKey(unit);
   return units.map(u=>!u||u.leader||Number(u.owner)!==Number(unit.owner)||getUnitMasteryKey(u)!==key?u:{...u,servicePoints:result.afterPoints});
 }
-function unitServiceUnlockText(result){
-  if(!result)return "";
-  const parts=[];
-  if(result.unlockedPurification)parts.push("Purificación queda desbloqueada");
-  if(result.unlockedResurrection)parts.push("Resurrección queda desbloqueada");
-  return parts.length?` Progreso de servicio: ${parts.join(" y ")}.`:"";
-}
 function annotateUnitWithServiceProgress(unit){
   if(!isUnitServiceProgression(unit))return unit;
   return {...unit,servicePoints:getUnitServicePoints(unit),masteryRank:1,masteryDexBonus:0};

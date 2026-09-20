@@ -533,40 +533,6 @@ function getBestErictoReanimationChoice(ericto,units=publicState?.units||[],grav
   const cell=[...cells].sort((a,b)=>enemyLeader?dist(a,enemyLeader)-dist(b,enemyLeader):0)[0];
   return {graveId:record.graveId,x:cell.x,y:cell.y};
 }
-function chooseErictoReanimationChoice(ericto,units=publicState?.units||[],graveyard=publicState?.erictoGraveyard||[]){
-  const cells=getAdjacentFreeCells(ericto,units);
-  const corpses=getErictoEligibleCorpses(ericto,graveyard);
-  if(!cells.length||!corpses.length)return Promise.resolve(null);
-  return new Promise(resolve=>{
-    const overlay=document.createElement("div");
-    overlay.style.cssText="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.84);display:flex;align-items:center;justify-content:center;padding:18px";
-    const panel=document.createElement("div");
-    panel.style.cssText="width:min(820px,96vw);max-height:88vh;overflow:auto;background:#0b0710;border:2px solid #7d45a8;border-radius:18px;padding:20px;color:#f0e6f7;box-shadow:0 0 48px #000";
-    panel.innerHTML=`<h2 style="margin:0 0 6px">Necromancia de Farsalia</h2><p style="margin:0 0 16px;color:#c9b8d7">Elige un cadáver y la celda adyacente donde regresará. La unidad reanimada regresa inmediatamente y queda sujeta a sus tiempos normales de movimiento y ataque.</p><div class="ericto-corpse-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px"></div><h3 style="margin:18px 0 8px">Celda de reanimación</h3><div class="ericto-cell-list" style="display:flex;flex-wrap:wrap;gap:8px"></div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px"><button type="button" data-cancel style="padding:10px 16px;border-radius:9px;border:1px solid #777;background:#18151b;color:#eee">Cancelar</button><button type="button" data-confirm disabled style="padding:10px 16px;border-radius:9px;border:1px solid #b88be0;background:#4b2268;color:#fff;font-weight:800">Reanimar</button></div>`;
-    overlay.appendChild(panel);document.body.appendChild(overlay);
-    let chosenCorpse=null,chosenCell=null;
-    const confirm=panel.querySelector('[data-confirm]');
-    const sync=()=>{confirm.disabled=!(chosenCorpse&&chosenCell);};
-    corpses.forEach(rec=>{
-      const b=document.createElement("button");b.type="button";
-      const bp=Number(rec.battlePower)||getUnitBattlePower(rec.snapshot)||0;
-      b.innerHTML=`<b>${escapeHtml(rec.name||"Unidad caída")}</b><br><small>J${Number(rec.originalOwner||0)} · PB ${bp||"—"} · Vida ${Math.ceil(Number(rec.snapshot?.maxHp||rec.snapshot?.hp||1)/2)}/${Number(rec.snapshot?.maxHp||rec.snapshot?.hp||1)}</small>`;
-      b.style.cssText="padding:12px;text-align:left;border-radius:10px;border:1px solid #6d4b7e;background:#17101d;color:#f4eafa;cursor:pointer";
-      b.onclick=()=>{panel.querySelectorAll('.ericto-corpse-list button').forEach(x=>x.style.outline='none');b.style.outline='3px solid #b77be2';chosenCorpse=rec;sync();};
-      panel.querySelector('.ericto-corpse-list').appendChild(b);
-    });
-    cells.forEach(cell=>{
-      const b=document.createElement("button");b.type="button";b.textContent=`${cell.x+1}, ${cell.y+1}`;
-      b.style.cssText="padding:9px 12px;border-radius:9px;border:1px solid #6d4b7e;background:#17101d;color:#f4eafa;cursor:pointer";
-      b.onclick=()=>{panel.querySelectorAll('.ericto-cell-list button').forEach(x=>x.style.outline='none');b.style.outline='3px solid #b77be2';chosenCell=cell;sync();};
-      panel.querySelector('.ericto-cell-list').appendChild(b);
-    });
-    const finish=value=>{overlay.remove();resolve(value);};
-    panel.querySelector('[data-cancel]').onclick=()=>finish(null);
-    confirm.onclick=()=>finish({graveId:chosenCorpse.graveId,x:chosenCell.x,y:chosenCell.y});
-    overlay.onclick=e=>{if(e.target===overlay)finish(null);};
-  });
-}
 
 /* =====================================================================
    7BOARDCTRL8R · PODER DE BATALLA
@@ -1711,54 +1677,6 @@ function applyVeilCurseAfterHpDamage(units,source,target,hpLoss){
     text:` Cuenta regresiva mortal: ${liveTarget.name} queda marcada con 3.`,
     statusFxEvent:makeStatusFxEvent("curse_apply",cursed,0)
   };
-}
-function makeVeilCurseKillSnapshot(unit){
-  if(!unit)return null;
-  return{id:String(unit.id||""),key:String(unit.key||""),name:String(unit.name||"Unidad"),owner:Number(unit.owner||0),leader:!!unit.leader,portrait:String(unit.portrait||""),rarity:String(unit.rarity||"Básica")};
-}
-function resolveVeilCurseCycleTick(units,owner,combatWindowKey=String(publicState?.combatWindowKey||"")){
-  const before=[...(units||[])];
-  let logs=[];
-  let statusFxEvent=null;
-  let floatFxEvent=null;
-  const kills=[];
-  const doomedIds=new Set();
-  let out=before.map(unit=>{
-    if(!unit||Number(unit.owner)!==Number(owner)||!hasVeilCurse(unit))return unit;
-    if(String(unit.veilCurseAppliedWindowKey||"")===String(combatWindowKey||""))return unit;
-    const current=Math.max(1,Number(unit.veilCurseCyclesRemaining||VEIL_CURSE_START_COUNT));
-    const nextCount=Math.max(0,current-1);
-    if(nextCount>0){
-      const next={...unit,veilCurseCyclesRemaining:nextCount};
-      if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("curse_tick",next,0);
-      logs.push(`Cuenta regresiva mortal: ${unit.name} pasa de ${current} a ${nextCount}.`);
-      return next;
-    }
-    const source={
-      id:String(unit.veilCurseSourceId||""),
-      key:String(unit.veilCurseSourceKey||"morgana"),
-      name:String(unit.veilCurseSourceName||"Morgana"),
-      owner:Number(unit.veilCurseSourceOwner||0),
-      leader:false,
-      portrait:String(unit.veilCurseSourcePortrait||CARD_PORTRAITS.morgana||""),
-      rarity:String(unit.veilCurseSourceRarity||"Épica")
-    };
-    const victim=makeVeilCurseKillSnapshot(unit);
-    doomedIds.add(unit.id);
-    kills.push({killer:source,victim});
-    if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("curse_execute",unit,0);
-    if(!floatFxEvent)floatFxEvent=makeFloatFxEvent("curse",unit,0,{iconText:"0",labelText:"DERROTADA"});
-    logs.push(`Cuenta regresiva mortal: ${unit.name} llega a 0 y cae derrotada. La baja pertenece a ${source.name}, aunque ya no esté en el campo.`);
-    return {...clearVeilCurseStatus(unit),hp:0,damagedThisWindow:true};
-  });
-  out=out.filter(u=>Number(u.hp||0)>0&&!doomedIds.has(u.id));
-  if(doomedIds.size){
-    const bloodVictory=applyBloodVictoryForDeaths(before,out);
-    out=bloodVictory.units;
-    if(bloodVictory.logs?.length)logs.push(...bloodVictory.logs);
-  }
-  const killEvent=kills.length?{id:`veil-${combatWindowKey||"turn"}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,at:Date.now(),kills}:null;
-  return{units:out,logs,statusFxEvent,floatFxEvent,killEvent,killCreditOwner:kills.length?Number(kills[0].killer.owner||0):0};
 }
 
 // v7EO - Identificación táctica de unidades de espada.

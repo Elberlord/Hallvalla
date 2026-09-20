@@ -309,14 +309,6 @@ Huevos guardados: ${getDragonEggs().length}.`,`Contrato completado: ${battle.ene
 /* -------------------------------------------------------------------------
    IA del jefe: inmóvil, radio 5, dos ataques directos y un elemental 3×3.
    ------------------------------------------------------------------------- */
-function dragonTargetScore(target,units,areaMode=false){
-  if(!target)return -9999;
-  let score=(target.leader?95:0)+Math.max(0,40-Number(target.hp||0))*2+Math.max(0,Number(effectiveAtk(target)||0))*5;
-  if(target.key==="acolyte_healer"||Number(target.heal||0)>0)score+=90;
-  if(Number(getUnitAttackRange(target)||1)>=4)score+=55;
-  if(areaMode)score+=(units||[]).filter(u=>u.owner===target.owner&&u.hp>0&&Math.max(Math.abs(u.x-target.x),Math.abs(u.y-target.y))<=1).length*40;
-  return score;
-}
 function dragonCellsCentered3x3(target){
   const cells=[];
   for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)cells.push({x:target.x+dx,y:target.y+dy,dx,dy});
@@ -342,12 +334,6 @@ function dragonApplyElementStatus(unit,def,stacks,state){
   if(def.element==="fire")return applyBurnToUnit(unit,def.enemyName,Math.max(1,Number(stacks)||1),1);
   if(def.element==="ice")return applyDragonFrost(unit,def.enemyName,stacks,state);
   return applyDragonElectrocution(unit,def.enemyName,stacks,state);
-}
-function dragonAreaDamageAt(def,cell,isMain=false){
-  if(isMain)return def.atk;
-  if(def.element==="lightning")return cell.depth>=2?4:5;
-  if(def.element==="fire")return Math.abs(cell.dx)+Math.abs(cell.dy)===2?4:6;
-  return Math.abs(cell.dx)+Math.abs(cell.dy)===2?3:4;
 }
 function dragonElementFxType(def){return def.element==="fire"?"burn_apply":def.element==="ice"?"freeze_apply":"shock_apply";}
 /* v216 · eliminado el runner enemigo legacy de contratos y su hook de turno; TR canónico resuelve el combate. */

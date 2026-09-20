@@ -1,19 +1,20 @@
-# HallValla v240 — Contratos canónicos del motor
+# HallValla v241 — Cierre: código muerto y assets huérfanos
 
-Build: `20260920.240`
+Build: `20260920.241`
 
-Base: v239.
+Base: v240.
 
-## Auditoría v240
-- Cerrado el bloque legacy de `turnKey`, `turnPhase`, `currentPlayer`, `*TurnKey`, `damagedThisTurn`, `turnsRemaining` y equivalentes.
-- Gameplay activo usa `combatWindowKey`, `runtimeMode`, `combatWindowIndex`, `*WindowKey`, `damagedThisWindow` y `cyclesRemaining`.
-- Los aliases históricos están aislados en `web/js/core/runtime-contracts.js` para compatibilidad con snapshots/builds anteriores.
-- `battle/combat-turn-ai.js` pasa a `battle/combat-ai.js`.
-- PvP terminal deja de depender de `currentPlayer`; Firebase valida `resultCommitOwner` contra el UID real de J1/J2.
-- Campos persistentes de contenido como `poisonTurns`/`burnTurns` se conservan deliberadamente: son contadores de duración de esquema, no turnos de jugador.
+## Auditoría v241
+- Eliminación conservadora de código sin consumidores reales.
+- 29 funciones top-level muertas eliminadas tras análisis iterativo de referencias.
+- 8 declaraciones/variables sin lectura eliminadas.
+- Eliminados assets huérfanos confirmados y duplicados exactos de la Mina.
+- Saneado el checker Android histórico v180: ahora valida las rutas, viewport, gamepad, build y manifiesto vigentes.
+- El manifiesto Android pasa a `hallvalla_assets_current.json`.
+- No se eliminaron recursos detectados únicamente como candidatos cuando podían cargarse mediante rutas dinámicas (audio, secuencias FX, badges, branding).
 
 ## Firebase
-**v240 modifica `backend/firebase/database.rules.json`. Deben publicarse las reglas junto con el frontend.**
+Las reglas de Firebase permanecen iguales a v240.
 
 ## Próximo bloque
-Cierre final: código muerto/assets huérfanos + pruebas completas de Aventura, PvP BOT, PvP humano concurrente, gamepad, Mina/Forja/Colección/Tutorial y validación final de hashes/cache/Firebase.
+Prueba funcional completa de Aventura.

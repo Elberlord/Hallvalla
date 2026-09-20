@@ -58,15 +58,9 @@ const REALTIME_RESOURCE_MAX_CAP=10;
 function getActiveResourceMaxCap(){return (typeof isHallvallaRealtime==="function"&&isHallvallaRealtime())?REALTIME_RESOURCE_MAX_CAP:RESOURCE_MAX_CAP;}
 function capResourceMax(value){return Math.min(getActiveResourceMaxCap(),Math.max(0,Number(value||0)));}
 function capResourceAmount(value,maxValue){return Math.min(capResourceMax(maxValue),Math.max(0,Number(value||0)));}
-function getResourceRecharge(prevMax,rawGain){
-  const previousMax=capResourceMax(prevMax);
-  const maxHonor=capResourceMax(previousMax+Math.max(0,Number(rawGain||0)));
-  return {honor:maxHonor,maxHonor,gain:Math.max(0,maxHonor-previousMax),capped:maxHonor>=RESOURCE_MAX_CAP};
-}
 function getResourceLabel(owner,opts={}){const caps=!!opts.caps;const realtime=(typeof isHallvallaRealtime==="function"&&isHallvallaRealtime());const label=realtime?"Mana":(ownerUsesMana(owner)?"Mana":"Honor");return caps?label.toUpperCase():label}
 
 function hasActiveLeader(owner,units=publicState?.units||[]){return !!(units||[]).find(u=>u.owner===owner&&u.leader)}
-function hasWarriorLeaderUnitShield(){return false;}
 function applyWarriorLeaderUnitShield(defenderBefore,attacker,damaged,units=publicState?.units||[]){
   return{unit:damaged,blocked:false};
 }
@@ -291,11 +285,9 @@ function getPaidSummonCostText(card,player=card?.owner,units=publicState?.units|
 function effectiveCardValue(card,field){const abilityBonus=0;return (card?.[field]||0)+abilityBonus}
 function unitsInPlay(units=publicState?.units||[]){return units||[]}
 function ownerHasUnit(owner,key,units=publicState?.units||[]){return unitsInPlay(units).some(u=>u.owner===owner&&u.key===key&&u.hp>0)}
-function getMerlinDrawBonus(owner,units=publicState?.units||[]){return 0 /* TR canónico: Merlín ya no modifica robos; su efecto es descuento de Magias/Trampas. */}
 function firstOwnerUnit(owner,key,units=publicState?.units||[]){return unitsInPlay(units).find(u=>u.owner===owner&&u.key===key&&u.hp>0)||null}
 function adjacentUnits(u,units=publicState?.units||[]){return unitsInPlay(units).filter(t=>t.id!==u?.id&&dist(u,t)<=1)}
 function adjacentAllies(u,units=publicState?.units||[]){return adjacentUnits(u,units).filter(t=>t.owner===u.owner)}
-function adjacentEnemies(u,units=publicState?.units||[]){return adjacentUnits(u,units).filter(t=>t.owner!==u.owner)}
 function isBasicUnit(u){return !!u&&!u.leader&&!u.special&&String(u.rarity||"Básica").toLowerCase().includes("bás")}
 function isRangedAttack(attacker,defender){return !!attacker&&!!defender&&dist(attacker,defender)>1&&(attacker.range||1)>1}
 function isHalfHpOrLess(u){return !!u&&(u.hp||0)<=Math.ceil(effectiveMaxHp(u)/2)}
@@ -400,31 +392,6 @@ function getMoralePressureState(state=publicState,units=state?.units||publicStat
 function getMoraleAttackPenalty(owner,state=publicState,units=state?.units||publicState?.units||[]){
   const snapshot=getMoralePressureState(state,units);
   return Math.max(0,Number(snapshot.penalties?.[Number(owner)]||0));
-}
-function advanceMoralePressureAfterWindow(state,endingOwner,units=state?.units||[]){
-  endingOwner=Number(endingOwner||0);
-  const other=endingOwner===1?2:1;
-  const beforeRaw=state?.moralePressure||{};
-  const before={1:Math.max(0,Number(beforeRaw?.[1]??beforeRaw?.["1"]??0)),2:Math.max(0,Number(beforeRaw?.[2]??beforeRaw?.["2"]??0))};
-  const presence1=hasMoraleIntrusion(1,units,state),presence2=hasMoraleIntrusion(2,units,state);
-  const next={1:presence1?before[1]:0,2:presence2?before[2]:0};
-  if(other===1&&presence1)next[1]+=1;
-  if(other===2&&presence2)next[2]+=1;
-  const nextState={...state,units,moralePressure:{1:next[1],2:next[2]}};
-  const status=getMoralePressureState(nextState,units);
-  const logs=[];
-  for(const owner of [1,2]){
-    if(before[owner]>0&&next[owner]===0)logs.push(`J${owner} pierde su presencia al otro lado de la línea: su contador de presión moral se reinicia.`);
-  }
-  if(other===1&&presence1){
-    const p=status.penalties[2]||0;
-    logs.push(status.neutralized?`J1 mantiene su incursión ${next[1]} turno${next[1]===1?"":"s"}, pero la presión queda neutralizada porque J2 también cruzó la línea.`:`J1 consolida su incursión ${next[1]} turno${next[1]===1?"":"s"}: la moral de J2 cae y sus ataques reciben -${p} AT.`);
-  }
-  if(other===2&&presence2){
-    const p=status.penalties[1]||0;
-    logs.push(status.neutralized?`J2 mantiene su incursión ${next[2]} turno${next[2]===1?"":"s"}, pero la presión queda neutralizada porque J1 también cruzó la línea.`:`J2 consolida su incursión ${next[2]} turno${next[2]===1?"":"s"}: la moral de J1 cae y sus ataques reciben -${p} AT.`);
-  }
-  return{moralePressure:{1:next[1],2:next[2]},status,logs};
 }
 
 

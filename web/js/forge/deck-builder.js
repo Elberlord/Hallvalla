@@ -816,31 +816,6 @@ function craftCardCopy(cardKey){
   renderDeckBuilder();
   return true;
 }
-function disenchantAllSurplusCards(){
-  if(isCollectionBrowseOnly())return false;
-  const collection=getPlayerCollection();
-  collection.cards=Array.isArray(collection.cards)?collection.cards:[];
-  collection.materials=normalizeCraftMaterials(collection.materials||{});
-  let destroyed=0;
-  collection.cards.forEach(card=>{
-    const hydrated=hydrateCardVisualData(card);
-    const surplus=Math.max(0,Number(card.qty||0)-maxCopiesForCard(hydrated));
-    if(surplus>0){
-      const rarityKey=getCraftRarityKey(hydrated);
-      card.qty=Number(card.qty||0)-surplus;
-      collection.materials[rarityKey]=(collection.materials[rarityKey]||0)+(surplus*CRAFT_MATERIAL_GAIN);
-      destroyed+=surplus;
-    }
-  });
-  collection.cards=collection.cards.filter(c=>Number(c.qty||0)>0);
-  if(destroyed<=0){hvAlert("No tienes copias sobrantes para convertir ahora mismo.","Sin sobrantes");return false;}
-  savePlayerCollection(collection);
-  renderNotificationBadge();
-  renderHomeProgress();
-  renderDeckBuilder();
-  hvAlert(`Convertiste ${destroyed} copia${destroyed===1?"":"s"} sobrante${destroyed===1?"":"s"} en material de rareza.`,"Material obtenido");
-  return true;
-}
 function countInDraft(cardKey){return currentDeckDraft.filter(c=>c.key===cardKey).length}
 function sanitizeDeckDraftToCollection(deck=[]){
   const collection=[...getCollectionCardsExpanded(),...getUnlockedAdventureSpecialCollectionTemplates()];
@@ -994,7 +969,6 @@ function getDeckBuilderMiniImageHtml(card){
   return `<span class="deck-mini-fallback">${escapeHtml(card?.icon||"✦")}</span>`;
 }
 function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,addDisabled=false,addLockReason="",used=0,maxAllowed=1,readOnly=false,collectionLocked=false,gameplayLocked=false}={}){
-  const isPrincipal=false;
   const cls=`deck-mini-card ${getCardVisualClass(card)} ${disabled?"disabled":""} ${mode==="deck"?"in-deck":"in-collection"} ${card?.craftableMissing?"craft-missing":""} ${collectionLocked?"collection-locked":""} ${gameplayLocked?"gameplay-locked":""} ${readOnly?"read-only":""}`;
   const name=escapeHtml(card?.name||"Carta");
   const data=mode==="deck"

@@ -2,7 +2,6 @@
 /* HallValla 7BOARDCTRL8AC · Acciones, selección, inspector y guías tácticas */
 
 function isPvpStep6fLimitedMode(){try{return globalThis.__HALLVALLA_PVP_STEP6F_LIMITED__?.()===true}catch(_){return false}}
-function isPvpStep6gAttackMode(){try{return globalThis.__HALLVALLA_PVP_STEP6G_ATTACKS__?.()===true}catch(_){return false}}
 function isPvpStep6hMagicTestMode(){try{return globalThis.__HALLVALLA_PVP_STEP6H_MAGIC_TEST__?.()===true}catch(_){return false}}
 function isPvpStep6hAllowedHandCard(card){return !!card&&(card.type==="unit"||(isPvpStep6hMagicTestMode()&&card.key==="fireball"));}
 function summonZones(player){if(typeof isHallvallaRealtime==="function"&&isHallvallaRealtime()&&typeof hallvallaRtGetSummonZones==="function")return hallvallaRtGetSummonZones(player,publicState?.units||[]).map(c=>`${c.x},${c.y}`);const l=getLeader(player);if(!l)return[];const res=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(getUnitAt(x,y))continue;if(dist(l,{x,y})<=1)res.push(`${x},${y}`)}return res}
@@ -87,7 +86,6 @@ function getPlayableCardsInHand(){
   if(!publicState||!privateState||isBattleEnded())return[];
   return hand.filter(c=>getCardPlayState(c).canPlay);
 }
-function hasPlayableCardsInHand(){return getPlayableCardsInHand().length>0}
 
 function syncHandAutoClose(){
   if(!publicState||!privateState)return;

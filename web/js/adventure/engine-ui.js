@@ -65,17 +65,6 @@ function isAdventureMapBattleCompleted(battle,progress=getAdventureProgress()){
   return !!chapter.completedBattles?.[battle.id];
 }
 
-function isFinalMapBossBattleId(battleId){
-  const battle=getAdventureBattle(battleId);
-  const chapter=getAdventureChapterForBattle(battle);
-  if(!battle||!chapter)return false;
-  const required=getRequiredChapterBattles(chapter);
-  const finalRequired=required[required.length-1];
-  return !!finalRequired&&finalRequired.id===battle.id;
-}
-function isAchillesExtremeBattleId(battleId){
-  return battleId==="chapter4_1_battle5";
-}
 function isChapterComplete(chapter,progress=getAdventureProgress()){
   const ch=getChapterProgress(progress,chapter);
   const required=getRequiredChapterBattles(chapter);

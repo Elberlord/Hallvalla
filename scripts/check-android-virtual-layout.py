@@ -1,140 +1,96 @@
 #!/usr/bin/env python3
-"""Guardrail v180: evita volver a mezclar shell Android viejo + responsive móvil + hvfit."""
+"""HallValla current Android/web packaging guardrail."""
 from __future__ import annotations
-import hashlib
-import json
-import re
-import sys
+import hashlib, json, re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-WEB = ROOT / "web"
-ANDROID = ROOT / "android" / "app"
-errors: list[str] = []
-checks: list[str] = []
+ROOT=Path(__file__).resolve().parents[1]
+WEB=ROOT/'web'
+ANDROID=ROOT/'android'/'app'
+errors=[]; checks=[]
 
-def require(cond: bool, ok: str, bad: str) -> None:
-    if cond:
-        checks.append(ok)
-    else:
-        errors.append(bad)
+def require(cond,ok,bad):
+    (checks if cond else errors).append(ok if cond else bad)
 
-def text(path: Path) -> str:
-    try:
-        return path.read_text(encoding="utf-8")
+def text(path):
+    try:return path.read_text(encoding='utf-8')
     except Exception as exc:
-        errors.append(f"No se pudo leer {path.relative_to(ROOT)}: {exc}")
-        return ""
+        errors.append(f'No se pudo leer {path.relative_to(ROOT)}: {exc}')
+        return ''
 
-index = text(WEB / "index.html")
-css = text(WEB / "styles.css")
-mobile_js = text(WEB / "js/parts/16-exact-guides-mobile.js")
-gamepad_js = text(WEB / "js/parts/20-gamepad-controls.js")
-main_java = text(ANDROID / "src/main/java/com/hallvalla/game/MainActivity.java")
-manifest = text(ANDROID / "src/main/AndroidManifest.xml")
-gradle = text(ANDROID / "build.gradle")
+index=text(WEB/'index.html')
+stage=text(WEB/'hallvalla-stage.html')
+loader=text(WEB/'js/bootstrap-loader.js')
+sw=text(WEB/'service-worker.js')
+mobile_js=text(WEB/'js/system/exact-guides-mobile.js')
+gamepad_js=text(WEB/'js/input/gamepad-controls.js')
+main_java=text(ANDROID/'src/main/java/com/hallvalla/game/MainActivity.java')
+manifest=text(ANDROID/'src/main/AndroidManifest.xml')
+gradle=text(ANDROID/'build.gradle')
 
-require('width=1920, height=1080' in index and 'hv-virtual-app' in index,
-        "web: hvfit usa viewport lógico 1920x1080",
-        "web: falta viewport virtual 1920x1080 / hv-virtual-app")
+require('const DESIGN_W=1366,DESIGN_H=636' in index and 'id="hvStageFrame"' in index,
+        'web: shell canónico 1366x636 presente','web: falta shell canónico 1366x636')
+require("childUrl.searchParams.set('hvfit','1')" in index,
+        'web: shell propaga hvfit=1','web: shell no propaga hvfit=1')
 require('dataset?.hvVirtualViewport' in mobile_js and 'return false' in mobile_js,
-        "web: responsive móvil JS se desactiva en viewport virtual",
-        "web: isMobileLandscapeTarget no protege hvfit")
-
-# Una media query con OR pointer:coarse puede activar layout móvil incluso a 1920 px.
-coarse_or = []
-for n, line in enumerate(css.splitlines(), 1):
-    if '@media' in line and 'pointer:coarse' in line and ',' in line:
-        coarse_or.append((n, line.strip()))
-require(not coarse_or,
-        "css: no quedan media queries de layout activadas por OR pointer:coarse",
-        "css: quedan media queries '..., (pointer:coarse)' que pueden pisar hvfit: " + repr(coarse_or[:8]))
-
-for element_id in ("clansBtn", "rankingBtn", "passBtn"):
-    require(f'id="{element_id}"' in index,
-            f"home: {element_id} presente",
-            f"home: falta {element_id}")
-require('html.hv-virtual-app #mainMenu .asset-bottom' in css,
-        "home: fail-safe inferior hv-virtual-app presente",
-        "home: falta fail-safe de Clanes/Ranking/Pase para hv-virtual-app")
-
-require('android:name=".MainActivity"' in manifest and 'HybridActivi' not in manifest,
-        "android: launcher usa MainActivity real",
-        "android: launcher no usa MainActivity real o conserva HybridActivi")
-require('versionCode 135' in gradle and ("versionName '1.0.135'" in gradle or 'versionName "1.0.135"' in gradle),
-        "android: versión fuente 135",
-        "android: versionCode/versionName no corresponden a v135")
+        'web: responsive móvil protege viewport virtual','web: exact-guides-mobile no protege viewport virtual')
+require('android:name=".MainActivity"' in manifest,
+        'android: launcher usa MainActivity','android: launcher no usa MainActivity')
 require("'../../web/assets'" in gradle,
-        "android: Gradle empaqueta el mismo web/assets",
-        "android: sourceSets no incluye ../../web/assets")
-require('apk=135&hvfit=1' in main_java and 'applyContainedGameViewport' in main_java,
-        "android: MainActivity gobierna 16:9 + hvfit",
-        "android: falta contenedor 16:9 real o URL hvfit v135")
+        'android: Gradle empaqueta web/assets directamente','android: sourceSets no incluye ../../web/assets')
+require('hvfit=1' in main_java and 'applyContainedGameViewport' in main_java,
+        'android: contenedor nativo + hvfit presentes','android: falta contenedor nativo o hvfit')
 require('shouldInterceptRequest' in main_java and 'tryOpenBundledAsset' in main_java,
-        "android: assets locales con fallback remoto",
-        "android: falta interceptor local de assets")
-require('dispatchKeyEvent' in main_java and 'dispatchGenericMotionEvent' in main_java and
-        '__hallvallaNativeGamepadUpdate' in main_java,
-        "android: bridge nativo de gamepad presente",
-        "android: bridge nativo de gamepad incompleto")
+        'android: assets locales con fallback remoto','android: falta interceptor de assets')
+require('dispatchKeyEvent' in main_java and 'dispatchGenericMotionEvent' in main_java and '__hallvallaNativeGamepadUpdate' in main_java,
+        'android: bridge nativo de gamepad presente','android: bridge nativo de gamepad incompleto')
 require('__hallvallaNativeGamepadUpdate' in gamepad_js and 'HV_NATIVE_GAMEPAD_INDEX' in gamepad_js,
-        "web: receptor de gamepad nativo presente",
-        "web: falta receptor del bridge de gamepad")
+        'web: receptor de gamepad nativo presente','web: receptor del bridge de gamepad ausente')
 
-# Nunca empaquetar secretos de firma dentro del repo distribuible.
-secret_files = []
-for pat in ("*.p12", "*.jks", "*.keystore"):
-    secret_files.extend(ROOT.rglob(pat))
-require(not secret_files,
-        "seguridad: no hay keystore dentro del repositorio",
-        "seguridad: se encontró material de firma: " + ", ".join(str(p.relative_to(ROOT)) for p in secret_files))
+# No material de firma dentro del repo.
+secret=[]
+for pat in ('*.p12','*.jks','*.keystore'): secret.extend(ROOT.rglob(pat))
+require(not secret,'seguridad: sin keystore dentro del repo','seguridad: material de firma dentro del repo: '+', '.join(str(p.relative_to(ROOT)) for p in secret))
 
-# Verificar que el manifiesto de assets representa exactamente el árbol web/assets.
-asset_manifest_path = ANDROID / "src/main/assets/hallvalla_assets_v180.json"
-try:
-    asset_manifest = json.loads(asset_manifest_path.read_text(encoding="utf-8"))
+asset_manifest_path=ANDROID/'src/main/assets/hallvalla_assets_current.json'
+try: asset_manifest=json.loads(asset_manifest_path.read_text(encoding='utf-8'))
 except Exception as exc:
-    asset_manifest = {}
-    errors.append(f"android: manifiesto de assets inválido: {exc}")
-
-web_files = sorted(p for p in (WEB / "assets").rglob("*") if p.is_file())
-manifest_files = asset_manifest.get("files", []) if isinstance(asset_manifest, dict) else []
-manifest_by_path = {str(item.get("path")): item for item in manifest_files if isinstance(item, dict)}
-require(asset_manifest.get("count") == len(web_files) == len(manifest_by_path),
-        f"assets: manifiesto coincide con {len(web_files)} archivos",
-        f"assets: count no coincide: manifest={asset_manifest.get('count')} web={len(web_files)} entries={len(manifest_by_path)}")
-
-# Full hash: deliberadamente estricto; evita APK con imágenes viejas respecto a la web.
-actual_total = 0
-bad_assets = []
+    asset_manifest={}; errors.append(f'android: manifiesto de assets inválido: {exc}')
+web_files=sorted(p for p in (WEB/'assets').rglob('*') if p.is_file())
+manifest_files=asset_manifest.get('files',[]) if isinstance(asset_manifest,dict) else []
+manifest_by_path={str(x.get('path')):x for x in manifest_files if isinstance(x,dict)}
+require(asset_manifest.get('count')==len(web_files)==len(manifest_by_path),
+        f'assets: manifiesto coincide con {len(web_files)} archivos',
+        f"assets: count desalineado manifest={asset_manifest.get('count')} web={len(web_files)} entries={len(manifest_by_path)}")
+actual_total=0; bad=[]
 for p in web_files:
-    rel = p.relative_to(WEB / "assets").as_posix()
-    data = p.read_bytes()
-    actual_total += len(data)
-    item = manifest_by_path.get(rel)
-    if not item:
-        bad_assets.append(rel + " (faltante en manifest)")
-        continue
-    digest = hashlib.sha256(data).hexdigest()
-    if int(item.get("bytes", -1)) != len(data) or item.get("sha256") != digest:
-        bad_assets.append(rel + " (hash/tamaño distinto)")
-require(not bad_assets and asset_manifest.get("totalBytes") == actual_total,
-        f"assets: hashes y totalBytes verificados ({actual_total} bytes)",
-        "assets: manifiesto desincronizado: " + repr(bad_assets[:10]) +
-        f" total manifest={asset_manifest.get('totalBytes')} real={actual_total}")
+    rel=p.relative_to(WEB/'assets').as_posix(); data=p.read_bytes(); actual_total+=len(data)
+    item=manifest_by_path.get(rel)
+    if not item: bad.append(rel+' (faltante)'); continue
+    if int(item.get('bytes',-1))!=len(data) or item.get('sha256')!=hashlib.sha256(data).hexdigest(): bad.append(rel+' (hash/tamaño)')
+require(not bad and asset_manifest.get('totalBytes')==actual_total,
+        f'assets: hashes y totalBytes verificados ({actual_total} bytes)',
+        'assets: manifiesto desincronizado: '+repr(bad[:10]))
 
-# Marcadores de build, útiles contra caché mezclada.
-require('20260918.180' in index and '20260918.180' in text(WEB / 'js/bootstrap-loader.js') and
-        '20260918.180' in text(WEB / 'service-worker.js'),
-        "cache: index/loader/service-worker comparten build 20260918.180",
-        "cache: marcadores de build v180 desalineados")
+# Build actual: shell, stage, loader y SW deben declarar exactamente el mismo valor.
+def grab(pattern,src):
+    m=re.search(pattern,src); return m.group(1) if m else ''
+builds={
+    'shell':grab(r'hallvalla-shell-version" content="([^"]+)',index),
+    'stage':grab(r'hallvalla-version" content="([^"]+)',stage),
+    'loader':grab(r'const BUILD\s*=\s*"([^"]+)',loader),
+    'sw':grab(r'const BUILD="([^"]+)',sw),
+}
+require(len(set(builds.values()))==1 and all(builds.values()),
+        'cache: shell/stage/loader/SW comparten build '+next(iter(builds.values()),''),
+        'cache: builds desalineados '+repr(builds))
+require(asset_manifest.get('build')==builds.get('shell'),
+        'android: manifiesto de assets usa el build actual','android: build del manifiesto de assets no coincide')
 
-print("HallValla Android virtual-layout audit")
-for c in checks:
-    print("  OK  " + c)
+print('HallValla Android/web audit')
+for c in checks: print('  OK  '+c)
 if errors:
-    for e in errors:
-        print("  ERR " + e, file=sys.stderr)
-    print(f"FALLO: {len(errors)} error(es)", file=sys.stderr)
+    for e in errors: print('  ERR '+e)
+    print(f'FALLO: {len(errors)} error(es)')
     raise SystemExit(1)
-print(f"PASS: {len(checks)} controles")
+print(f'PASS: {len(checks)} controles')

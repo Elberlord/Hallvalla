@@ -390,30 +390,6 @@ function makeMagicFxEvent(caster,target,magicKind="arcane",meta={}){
   if(!fx)return null;
   return {...fx,weaponKind:"fire_magic",attackSound:meta.attackSound||(kind==="fire"?"attack_fire_magic":kind==="heal"?"spell_cast":"spell_damage"),impactSound:meta.impactSound||(kind==="heal"?"heal":"impact_magic")};
 }
-function makeDefenseFxEvent(type,defender){
-  if(!defender)return null;
-  return {
-    eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
-    type:type||"guard_block",
-    unitId:defender.id||"",
-    unitOwner:defender.owner||0,
-    unitName:defender.name||"",
-    at:{x:Number(defender.x||0),y:Number(defender.y||0)},
-    rarityClass:getFxRarityClass(defender)
-  };
-}
-function makeDodgeFxEvent(unit){
-  if(!unit)return null;
-  return {
-    eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
-    type:"dodge",
-    unitId:unit.id||"",
-    unitOwner:unit.owner||0,
-    unitName:unit.name||"",
-    at:{x:Number(unit.x||0),y:Number(unit.y||0)},
-    rarityClass:getFxRarityClass(unit)
-  };
-}
 function makeStatusFxEvent(type,unit,amount=0){
   if(!unit)return null;
   return {

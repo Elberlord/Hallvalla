@@ -46,7 +46,6 @@ function getCurrentLeaderDeckLevel(){
   const level=typeof getLocalLeaderLevel==="function"?getLocalLeaderLevel(type):1;
   return getLeaderDeckLevel(level);
 }
-function getCurrentLeaderDeckTier(){return getLeaderDeckTierFromLevel(getCurrentLeaderDeckLevel());}
 // Compatibilidad: ningún modo nuevo debe extraer cartas como Principales.
 function getPrincipalSlotsForLeaderLevel(){return 0;}
 function getCurrentPrincipalSlots(){return 0;}

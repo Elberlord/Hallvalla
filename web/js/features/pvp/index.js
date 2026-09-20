@@ -25,7 +25,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
 (function(){
   const STEP="PVP-REBUILD-STEP6I2";
   const FIREBASE_TIMEOUT_MS=10000;
-  const DEFAULT_RULES=Object.freeze({timerEnabled:false, stakeMode:"none", goldAmount:500, cardEntryFee:500});
   const GOLD_OPTIONS=[100,250,500,1000];
   const STEP6C_INITIAL_HAND=4;
   let busy=false;
@@ -984,7 +983,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       // reclamarla mientras preparamos el rival automático. Un humano que ya hubiera
       // entrado se detecta de nuevo en la sala antes de activar el duelo.
       const queueBeforeClose=await withTimeout(get(ownQueueRef),`Revalidar cola antes del fallback ${waitingCode}`,4000);
-      const queueValue=queueBeforeClose.exists()?(queueBeforeClose.val()||{}):null;
       try{await randomQueueDisconnect?.cancel?.();}catch(_){ }
       randomQueueDisconnect=null;
       await withTimeout(remove(ownQueueRef),`Cerrar cola para fallback ${waitingCode}`,4000);

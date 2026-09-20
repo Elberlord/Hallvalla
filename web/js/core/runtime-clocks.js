@@ -195,7 +195,6 @@ function battleCancelAnimationFrame(id){hallvallaBattleLifecycle.cancelAnimation
 function battleOwnEventListener(target,type,handler,options,label=""){return hallvallaBattleLifecycle.event(target,type,handler,options,label);}
 function battleOwnObserver(observer,label="observer"){return hallvallaBattleLifecycle.observer(observer,label);}
 function battleOwnNode(node,label="node"){return hallvallaBattleLifecycle.node(node,label);}
-function battleSleep(ms,label="ai-delay"){return hallvallaBattleLifecycle.delay(ms,label);}
 function getHallvallaLifecycleSnapshot(){return {battle:hallvallaBattleLifecycle.snapshot()};}
 globalThis.__HALLVALLA_LIFECYCLE_SNAPSHOT__=getHallvallaLifecycleSnapshot;
 
@@ -204,9 +203,6 @@ globalThis.__HALLVALLA_LIFECYCLE_SNAPSHOT__=getHallvallaLifecycleSnapshot;
    eliminados físicamente. Los aliases legacy solo sobreviven en la frontera de
    compatibilidad y no gobiernan el combate activo. */
 
-const AI_THINK_DELAY_MS=1400;
-const AI_ACTION_DELAY_MS=2200;
-const AI_PHASE_DELAY_MS=1200;
 const ADVENTURE_AI_BEST_SKILL_LEVEL=20;
 
 let authReady=false,authReadyWaiters=[];
@@ -288,5 +284,4 @@ async function ensureFirebaseAuthReady(surface="online"){
   else setText("lobbyStatus",message);
   return false;
 }
-function isMobileBattleViewport(){return typeof window!=="undefined"&&window.matchMedia&&window.matchMedia("(max-width:980px), (pointer:coarse)").matches}
 

@@ -92,7 +92,6 @@ function resolveBeastCellTraps(moving,units,traps){
   return{units:out,traps:nextTraps,logs};
 }
 
-let hallvallaMoveActionInFlight=false;
 function getBattleDamage(attacker,mods={}){const base=Math.max(0,effectiveAtk(attacker)+(mods.attackerAtk||0)-(mods.damageReduction||0));return Math.max(0,Math.round(base*getEquipmentDamageMultiplier(attacker)))}
 function isWarriorLeaderSweepAttacker(unit){
   return !!(unit&&unit.leader&&unit.leaderType==="warrior"&&Number(unit.hp||0)>0);

@@ -1,0 +1,316 @@
+{
+  "build": "20260920.241",
+  "removedFunctions": [
+    {
+      "name": "unitServiceUnlockText",
+      "file": "web/js/account/profile-shop-packs.js",
+      "lines": 7
+    },
+    {
+      "name": "isAchillesExtremeBattleId",
+      "file": "web/js/adventure/engine-ui.js",
+      "lines": 3
+    },
+    {
+      "name": "isFinalMapBossBattleId",
+      "file": "web/js/adventure/engine-ui.js",
+      "lines": 8
+    },
+    {
+      "name": "hasPlayableCardsInHand",
+      "file": "web/js/battle/actions-inspector.js",
+      "lines": 1
+    },
+    {
+      "name": "isPvpStep6gAttackMode",
+      "file": "web/js/battle/actions-inspector.js",
+      "lines": 1
+    },
+    {
+      "name": "chooseAcolytePurificationStatus",
+      "file": "web/js/battle/board-interactions.js",
+      "lines": 11
+    },
+    {
+      "name": "chooseAcolyteResurrectionChoice",
+      "file": "web/js/battle/board-interactions.js",
+      "lines": 12
+    },
+    {
+      "name": "chooseAcolyteTechnique",
+      "file": "web/js/battle/board-interactions.js",
+      "lines": 25
+    },
+    {
+      "name": "chooseSmartAcolyteChoice",
+      "file": "web/js/battle/board-interactions.js",
+      "lines": 32
+    },
+    {
+      "name": "getAcolytePurifyTargets",
+      "file": "web/js/battle/board-interactions.js",
+      "lines": 5
+    },
+    {
+      "name": "getAcolyteTransferTargets",
+      "file": "web/js/battle/board-interactions.js",
+      "lines": 12
+    },
+    {
+      "name": "getUnitContextOptions",
+      "file": "web/js/battle/board-interactions.js",
+      "lines": 3
+    },
+    {
+      "name": "getUnitEffectHonorCommitState",
+      "file": "web/js/battle/board-interactions.js",
+      "lines": 7
+    },
+    {
+      "name": "makeDefenseFxEvent",
+      "file": "web/js/core/fx-audio-profile.js",
+      "lines": 12
+    },
+    {
+      "name": "makeDodgeFxEvent",
+      "file": "web/js/core/fx-audio-profile.js",
+      "lines": 12
+    },
+    {
+      "name": "battleSleep",
+      "file": "web/js/core/runtime-clocks.js",
+      "lines": 1
+    },
+    {
+      "name": "isMobileBattleViewport",
+      "file": "web/js/core/runtime-clocks.js",
+      "lines": 1
+    },
+    {
+      "name": "dragonAreaDamageAt",
+      "file": "web/js/dragon/contracts.js",
+      "lines": 6
+    },
+    {
+      "name": "dragonTargetScore",
+      "file": "web/js/dragon/contracts.js",
+      "lines": 8
+    },
+    {
+      "name": "disenchantAllSurplusCards",
+      "file": "web/js/forge/deck-builder.js",
+      "lines": 25
+    },
+    {
+      "name": "chooseErictoReanimationChoice",
+      "file": "web/js/game/card-special-rules.js",
+      "lines": 34
+    },
+    {
+      "name": "makeVeilCurseKillSnapshot",
+      "file": "web/js/game/card-special-rules.js",
+      "lines": 4
+    },
+    {
+      "name": "resolveVeilCurseCycleTick",
+      "file": "web/js/game/card-special-rules.js",
+      "lines": 44
+    },
+    {
+      "name": "getCurrentLeaderDeckTier",
+      "file": "web/js/game/deck-validation.js",
+      "lines": 1
+    },
+    {
+      "name": "adjacentEnemies",
+      "file": "web/js/game/shared-combat-rules.js",
+      "lines": 1
+    },
+    {
+      "name": "advanceMoralePressureAfterWindow",
+      "file": "web/js/game/shared-combat-rules.js",
+      "lines": 25
+    },
+    {
+      "name": "getMerlinDrawBonus",
+      "file": "web/js/game/shared-combat-rules.js",
+      "lines": 1
+    },
+    {
+      "name": "getResourceRecharge",
+      "file": "web/js/game/shared-combat-rules.js",
+      "lines": 5
+    },
+    {
+      "name": "hasWarriorLeaderUnitShield",
+      "file": "web/js/game/shared-combat-rules.js",
+      "lines": 1
+    }
+  ],
+  "removedDeclarations": [
+    {
+      "name": "AI_THINK_DELAY_MS",
+      "file": "web/js/core/runtime-clocks.js",
+      "line": 206
+    },
+    {
+      "name": "AI_ACTION_DELAY_MS",
+      "file": "web/js/core/runtime-clocks.js",
+      "line": 207
+    },
+    {
+      "name": "AI_PHASE_DELAY_MS",
+      "file": "web/js/core/runtime-clocks.js",
+      "line": 208
+    },
+    {
+      "name": "hallvallaMoveActionInFlight",
+      "file": "web/js/battle/combat-ai.js",
+      "line": 95
+    },
+    {
+      "name": "ACOLYTE_HEALER_EFFECT_COSTS",
+      "file": "web/js/battle/board-interactions.js",
+      "line": 378
+    },
+    {
+      "name": "isPrincipal",
+      "file": "web/js/forge/deck-builder.js",
+      "line": 972
+    },
+    {
+      "name": "DEFAULT_RULES",
+      "file": "web/js/features/pvp/index.js",
+      "line": 28
+    },
+    {
+      "name": "queueValue",
+      "file": "web/js/features/pvp/index.js",
+      "line": 987
+    }
+  ],
+  "removedAssets": [
+    {
+      "path": "assets/field_figures_light/basic/richard_lionheart.webp",
+      "bytes": 46218
+    },
+    {
+      "path": "assets/field_figures_light/no_muertos/restos_no_muerto.webp",
+      "bytes": 32028
+    },
+    {
+      "path": "assets/home/btn_play.webp",
+      "bytes": 103220
+    },
+    {
+      "path": "assets/mine/rewards/icons/boost_pos.webp",
+      "bytes": 122982
+    },
+    {
+      "path": "assets/mine/rewards/icons/fragments_neg.webp",
+      "bytes": 105410
+    },
+    {
+      "path": "assets/mine/rewards/icons/fragments_pos.webp",
+      "bytes": 95150
+    },
+    {
+      "path": "assets/mine/rewards/icons/gems_neg.webp",
+      "bytes": 90652
+    },
+    {
+      "path": "assets/mine/rewards/icons/gems_pos.webp",
+      "bytes": 112922
+    },
+    {
+      "path": "assets/mine/rewards/icons/gold_neg.webp",
+      "bytes": 95082
+    },
+    {
+      "path": "assets/mine/rewards/icons/gold_pos.webp",
+      "bytes": 95978
+    },
+    {
+      "path": "assets/mine/rewards/icons/neutral.webp",
+      "bytes": 68000
+    },
+    {
+      "path": "assets/mine/rewards/icons/penalty_neg.webp",
+      "bytes": 100160
+    },
+    {
+      "path": "assets/mine/rewards/icons/pieces_pos.webp",
+      "bytes": 102284
+    },
+    {
+      "path": "assets/shop/layers/daily_offer.webp",
+      "bytes": 19458
+    },
+    {
+      "path": "assets/shop/layers/featured_bundle.webp",
+      "bytes": 65376
+    },
+    {
+      "path": "assets/shop/layers/header.webp",
+      "bytes": 13532
+    },
+    {
+      "path": "assets/shop/layers/pack_basic.webp",
+      "bytes": 24242
+    },
+    {
+      "path": "assets/shop/layers/pack_epic.webp",
+      "bytes": 26314
+    },
+    {
+      "path": "assets/shop/layers/pack_legendary.webp",
+      "bytes": 33332
+    },
+    {
+      "path": "assets/shop/layers/pack_mythic.webp",
+      "bytes": 30198
+    },
+    {
+      "path": "assets/shop/layers/pack_rare.webp",
+      "bytes": 26478
+    },
+    {
+      "path": "assets/shop/layers/shop_background.webp",
+      "bytes": 12224
+    },
+    {
+      "path": "assets/shop/layers/sidebar.webp",
+      "bytes": 31196
+    },
+    {
+      "path": "assets/shop/layers/topbar.webp",
+      "bytes": 14080
+    },
+    {
+      "path": "assets/ui/adventure/btn_historia.webp",
+      "bytes": 95372
+    },
+    {
+      "path": "assets/ui/deck_forge/materiales_creacion_asset.webp",
+      "bytes": 276684
+    },
+    {
+      "path": "assets/ui/evasion_rogue_emblem.webp",
+      "bytes": 393556
+    },
+    {
+      "path": "assets/ui/precision_crosshair_emblem.webp",
+      "bytes": 374942
+    },
+    {
+      "path": "assets/ui/realtime/badge-lb.webp",
+      "bytes": 11880
+    },
+    {
+      "path": "assets/ui/realtime/badge-rb.webp",
+      "bytes": 12006
+    }
+  ],
+  "removedAssetBytes": 2630956,
+  "remainingAssets": 638
+}

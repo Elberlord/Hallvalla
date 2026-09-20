@@ -1,0 +1,8 @@
+HallValla v241 — Código muerto / assets huérfanos
+Funciones eliminadas: 29
+Declaraciones sin lectura eliminadas: 8
+Assets eliminados: 30
+Espacio eliminado: 2,630,956 bytes
+Assets activos restantes: 638
+
+Criterio: solo se eliminó contenido con ausencia demostrable de consumidores. Se preservaron rutas dinámicas (audio/FX/controller/branding) cuando existía un consumidor por construcción de ruta.
