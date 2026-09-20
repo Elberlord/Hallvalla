@@ -843,7 +843,7 @@ function playDestroyFx(unit){
 function maybePlayBattleFx(prevPub,nextPub){
   if(!prevPub||!nextPub||!Array.isArray(prevPub.units)||!Array.isArray(nextPub.units))return;
   // 7HFE: cada turno inicia con la zona de avisos visuales completamente limpia.
-  if((prevPub.turnKey||"")!==(nextPub.turnKey||""))clearEventSplashOverlay(true);
+  if((prevPub.combatWindowKey||"")!==(nextPub.combatWindowKey||""))clearEventSplashOverlay(true);
   const explicitAttackFx=nextPub.battleFxEvent&&!nextPub.battleFxEvent.privateStealthEvent&&nextPub.battleFxEvent.eventId!==prevPub?.battleFxEvent?.eventId?nextPub.battleFxEvent:null;
   let explicitDefenseFx=nextPub.defenseFxEvent&&!nextPub.defenseFxEvent.privateStealthEvent&&nextPub.defenseFxEvent.eventId!==prevPub?.defenseFxEvent?.eventId?nextPub.defenseFxEvent:null;
   const explicitDodgeFx=nextPub.dodgeFxEvent&&!nextPub.dodgeFxEvent.privateStealthEvent&&nextPub.dodgeFxEvent.eventId!==prevPub?.dodgeFxEvent?.eventId?nextPub.dodgeFxEvent:null;
@@ -852,10 +852,10 @@ function maybePlayBattleFx(prevPub,nextPub){
   const explicitCardVisualEvent=nextPub.cardVisualEvent&&nextPub.cardVisualEvent.eventId!==prevPub?.cardVisualEvent?.eventId?nextPub.cardVisualEvent:null;
   // Si el resultado fue una esquiva, no se procesa ningún evento de Guardia viejo o concurrente.
   if(explicitDodgeFx&&explicitDodgeFx.type==="dodge")explicitDefenseFx=null;
-  if((prevPub.turnKey||"")===(nextPub.turnKey||"")&&(prevPub.currentPlayer===nextPub.currentPlayer)&&JSON.stringify(prevPub.units)===JSON.stringify(nextPub.units)&&!explicitAttackFx&&!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx&&!explicitCardVisualEvent)return;
+  if((prevPub.combatWindowKey||"")===(nextPub.combatWindowKey||"")&&JSON.stringify(prevPub.units)===JSON.stringify(nextPub.units)&&!explicitAttackFx&&!explicitDefenseFx&&!explicitDodgeFx&&!explicitStatusFx&&!explicitFloatFx&&!explicitCardVisualEvent)return;
   const fxKey=(explicitAttackFx||explicitDefenseFx||explicitDodgeFx||explicitStatusFx||explicitFloatFx||explicitCardVisualEvent)
     ? `${gameId||"game"}:${explicitAttackFx?.eventId||"none"}:${explicitDefenseFx?.eventId||"none"}:${explicitDodgeFx?.eventId||"none"}:${explicitStatusFx?.eventId||"none"}:${explicitFloatFx?.eventId||"none"}:${explicitCardVisualEvent?.eventId||"none"}`
-    : `${gameId||"game"}:${nextPub.turnKey||nextPub.turn||0}:${(nextPub.log||[])[0]||""}:${nextPub.units.length}`;
+    : `${gameId||"game"}:${nextPub.combatWindowKey||nextPub.combatWindowIndex||0}:${(nextPub.log||[])[0]||""}:${nextPub.units.length}`;
   if(fxKey===lastBattleFxKey)return;
   const prevUnits=prevPub.units||[];
   const nextUnits=nextPub.units||[];
@@ -871,7 +871,7 @@ function maybePlayBattleFx(prevPub,nextPub){
   added.forEach(u=>battleSetTimeout(()=>playSummonFx(u),80));
   const demigodAdded=added.find(u=>getFxRarityClass(u)==="fx-demigod");
   if(demigodAdded){
-    const summonKey=`${gameId||"game"}:${demigodAdded.id||demigodAdded.name}:${nextPub.turnKey||nextPub.turn||0}`;
+    const summonKey=`${gameId||"game"}:${demigodAdded.id||demigodAdded.name}:${nextPub.combatWindowKey||nextPub.combatWindowIndex||0}`;
     if(summonKey!==lastDemigodSummonKey){
       lastDemigodSummonKey=summonKey;
       battleSetTimeout(()=>showDemigodSummonPresentation(demigodAdded),140);
@@ -914,13 +914,13 @@ function maybePlayBattleFx(prevPub,nextPub){
      Los eventos ocultos por Sigilo nunca se fabrican desde una unidad no visible. */
   const visibleAdded=added.filter(u=>typeof isStealthHiddenFromViewer!=="function"||!isStealthHiddenFromViewer(u));
   const visibleDestroyed=destroyed.filter(u=>typeof isStealthHiddenFromViewer!=="function"||!isStealthHiddenFromViewer(u));
-  const summonVisuals=visibleAdded.map((u,i)=>makeSummonVisualEvent(u,`${nextPub.turnKey||nextPub.turn||0}:${i}`)).filter(Boolean);
+  const summonVisuals=visibleAdded.map((u,i)=>makeSummonVisualEvent(u,`${nextPub.combatWindowKey||nextPub.combatWindowIndex||0}:${i}`)).filter(Boolean);
   const cardVisual=explicitCardVisualEvent?makeSpellVisualEvent(explicitCardVisualEvent,prevMap,nextMap):null;
   const attackVisual=explicitAttackFx?.type==="attack"?makeAttackVisualEvent(explicitAttackFx,prevMap,nextMap):null;
   const healVisual=explicitAttackFx?.type==="heal"?makeHealVisualEvent(explicitAttackFx,prevMap,nextMap):null;
   const legacySpellVisual=!cardVisual&&!healVisual&&explicitAttackFx&&["spell","magic","heal"].includes(explicitAttackFx.type)?makeSpellVisualEvent(explicitAttackFx,prevMap,nextMap):null;
   const eventSplashPayloads=getEventSplashPayloads(explicitAttackFx,explicitDefenseFx,explicitDodgeFx,explicitStatusFx);
-  const deathVisuals=visibleDestroyed.map((u,i)=>makeDeathVisualEvent(u,`${nextPub.turnKey||nextPub.turn||0}:${i}`)).filter(Boolean);
+  const deathVisuals=visibleDestroyed.map((u,i)=>makeDeathVisualEvent(u,`${nextPub.combatWindowKey||nextPub.combatWindowIndex||0}:${i}`)).filter(Boolean);
   const primaryVisuals=[...summonVisuals.slice(0,2),cardVisual||healVisual||legacySpellVisual,attackVisual].filter(Boolean);
   primaryVisuals.forEach((item,i)=>battleSetTimeout(()=>queueEventSplashGroup([item]),i*80));
   if(summonVisuals.length>2)appendEventSplashHistory(summonVisuals.slice(2));

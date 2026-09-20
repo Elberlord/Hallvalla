@@ -46,13 +46,13 @@ async function commitCardPlay(card,publicPatch={},paidCost=null,actionLog=""){
   // Así una carta con metadata auxiliar no puede sumar a dos maestrías.
   if(typeof registerAccountMasteryAction==="function"){
     const masteryActionId=card?.id||`${card?.key||card?.type||"card"}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`;
-    const masteryEventBase=`${gameId||"local"}:${publicState?.turnKey||publicState?.turn||0}:${masteryActionId}`;
+    const masteryEventBase=`${gameId||"local"}:${publicState?.combatWindowKey||publicState?.combatWindowIndex||0}:${masteryActionId}`;
     const masteryCardType=String(card?.type||"").toLowerCase();
     if(masteryCardType==="equipment")registerAccountMasteryAction("equipment",1,`${masteryEventBase}:equipment`);
     else if(masteryCardType==="trap"||card?.trap)registerAccountMasteryAction("traps",1,`${masteryEventBase}:trap`);
     else if(masteryCardType==="spell"||card?.spell)registerAccountMasteryAction("spells",1,`${masteryEventBase}:spell`);
   }
-  pulseTurnHonorHud();
+  pulseResourceHud();
   if(typeof hallvallaRtReleaseHandFocus==="function")hallvallaRtReleaseHandFocus();
   return true;
 }
@@ -76,7 +76,7 @@ function resolveBeastCellTraps(moving,units,traps){
     n=applyDirectHpDamage(n,4);
     if(n.hp>0){
       n=applyBleedToUnit(n,trap.cardName);
-      n.bleedTurnsRemaining=2;
+      n.bleedCyclesRemaining=2;
       n.bleedDamage=1;
     }
     logs.push(`${trap.cardName} se activa: ${moving.name} recibe 4 daño directo${n.hp>0?" y Sangrado 1 durante 2 turnos":" y cae"}.`);
@@ -119,7 +119,7 @@ function resolveWarriorLeaderSweep(units,attacker,primaryDefender,{runInState=(f
       let damaged=runInState(()=>applyGuardDamage(unit,damage,mods.defenderGuard||0,0),state);
       guardLoss=Math.max(0,Number(damaged.lastGuardLoss||0));
       hpLoss=Math.max(0,Number(damaged.lastHpLoss||0));
-      damaged={...damaged,damagedThisTurn:hpLoss>0||!!damaged.damagedThisTurn};
+      damaged={...damaged,damagedThisWindow:hpLoss>0||!!damaged.damagedThisWindow};
       delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
       return damaged;
     });
@@ -145,7 +145,7 @@ function creditLocalLeaderMasteryKillsFromDiff(beforeUnits,afterUnits,leader){
   });
   return{units:out,rankLogs};
 }
-function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=[],beastTraps=[],runInState=null}={}){
+function resolveAutomaticLeaderEffectOnWindow(units,owner,{legendaryTraps=[],beastTraps=[],runInState=null}={}){
   let out=[...(units||[])];
   const leader=out.find(u=>u&&u.owner===owner&&u.leader&&Number(u.hp||0)>0);
   if(!leader)return{units:out,logs:[],triggered:false,battleFxEvent:null};
@@ -190,7 +190,7 @@ function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=
     out=out.map(unit=>{
       if(!targetIds.has(unit.id))return unit;
       const damaged=applyDirectHpDamageWithEquipment(unit,1).unit;
-      return{...damaged,damagedThisTurn:true};
+      return{...damaged,damagedThisWindow:true};
     });
     out=applyLegendaryFatalSaves(out,[...targetIds]);
     out=out.filter(unit=>Number(unit.hp||0)>0);
@@ -213,7 +213,7 @@ function resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps=
     const enemyLeader=out.find(unit=>unit&&unit.owner===enemyOwner&&unit.leader&&Number(unit.hp||0)>0);
     if(!enemyLeader)return{units:out,logs:[],triggered:false,battleFxEvent:null};
     const before=[...out];
-    out=out.map(unit=>unit.id===enemyLeader.id?resolveBlessedArmorTransition(unit,{...unit,hp:Number(unit.hp||0)-2,damagedThisTurn:true}):unit);
+    out=out.map(unit=>unit.id===enemyLeader.id?resolveBlessedArmorTransition(unit,{...unit,hp:Number(unit.hp||0)-2,damagedThisWindow:true}):unit);
     out=applyLegendaryFatalSaves(out,[enemyLeader.id]).filter(unit=>Number(unit.hp||0)>0);
     const leaderMastery=creditLocalLeaderMasteryKillsFromDiff(before,out,liveLeader);
     out=leaderMastery.units;
@@ -251,15 +251,15 @@ function applyPostCombatEquipmentRetreat(units,attackerBefore,defenderBefore){
   let out=[...(units||[])];
   let live=out.find(u=>u.id===attackerBefore?.id);
   if(!live||live.hp<=0||!defenderBefore)return{units:out,moved:false,text:""};
-  const turnKey=publicState?.turnKey||"";
+  const combatWindowKey=publicState?.combatWindowKey||"";
   const ranged=dist(attackerBefore,defenderBefore)>=2;
   let eligible=false,markKey="",label="";
-  if(ranged&&hasUnitEquipment(live,"retreat_strap")&&live.retreatStrapUsedTurnKey!==turnKey){eligible=true;markKey="retreatStrapUsedTurnKey";label="Correa de Retirada";}
-  if(!eligible&&hasUnitEquipment(live,"withdrawal_stirrups")&&Number(attackerBefore.movedSpaces||0)>=2&&live.withdrawalStirrupsUsedTurnKey!==turnKey){eligible=true;markKey="withdrawalStirrupsUsedTurnKey";label="Estribos de Repliegue";}
+  if(ranged&&hasUnitEquipment(live,"retreat_strap")&&live.retreatStrapUsedWindowKey!==combatWindowKey){eligible=true;markKey="retreatStrapUsedWindowKey";label="Correa de Retirada";}
+  if(!eligible&&hasUnitEquipment(live,"withdrawal_stirrups")&&Number(attackerBefore.movedSpaces||0)>=2&&live.withdrawalStirrupsUsedWindowKey!==combatWindowKey){eligible=true;markKey="withdrawalStirrupsUsedWindowKey";label="Estribos de Repliegue";}
   if(!eligible)return{units:out,moved:false,text:""};
   const cell=getEquipmentRetreatCell(live,defenderBefore,out);
   if(!cell)return{units:out,moved:false,text:""};
-  out=out.map(u=>u.id===live.id?{...u,x:cell.x,y:cell.y,[markKey]:turnKey}:u);
+  out=out.map(u=>u.id===live.id?{...u,x:cell.x,y:cell.y,[markKey]:combatWindowKey}:u);
   return{units:out,moved:true,text:` ${label}: ${live.name} se repliega 1 casilla.`};
 }
 function getFalconDiveRecoilDamage(attacker,defender,mods={},hit=null){
@@ -290,7 +290,7 @@ function applyMiyamotoHonesakiki(units){
       if(u.id===musashi.id)return {...u,honesakikiUsed:true};
       if(u.owner===musashi.owner||u.leader||!canReceiveUntargetedAreaEffect(u)||dist(musashi,u)>1)return u;
       let damaged=applyGuardDamage(u,damage,0,0);
-      damaged={...damaged,damagedThisTurn:(damaged.lastHpLoss||0)>0||!!damaged.damagedThisTurn,honesakikiSource:musashi.name||"Miyamoto Musashi"};
+      damaged={...damaged,damagedThisWindow:(damaged.lastHpLoss||0)>0||!!damaged.damagedThisWindow,honesakikiSource:musashi.name||"Miyamoto Musashi"};
       delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
       return damaged;
     });
@@ -305,7 +305,7 @@ function applyLegendaryFatalSaves(units,fallenIds=[]){
     // Las salvaciones fatales solo deben activarse cuando la unidad realmente cayó.
     if(Number(u.hp||0)>0)return u;
     if(u.key==="wallace"&&!u.wallaceLastBreathUsed)return {...u,hp:1,wallaceLastBreathUsed:true,guard:Math.max(0,u.guard||0)};
-    if(hasBlessedArmorAbility(u)&&!u.blessedArmorUsed)return {...u,hp:1,blessedArmorUsed:true,blessedArmorActiveTurnKey:publicState?.turnKey||"",blessedArmorTriggeredTurnKey:publicState?.turnKey||""};
+    if(hasBlessedArmorAbility(u)&&!u.blessedArmorUsed)return {...u,hp:1,blessedArmorUsed:true,blessedArmorActiveWindowKey:publicState?.combatWindowKey||"",blessedArmorTriggeredWindowKey:publicState?.combatWindowKey||""};
     return u;
   });
 }
@@ -336,26 +336,26 @@ function applyAfterDamageBonuses(units,attackerBefore,defenderBefore,hpLoss,defe
     out=out.map(u=>{
       if(u.id!==attacker.id)return u;
       let n={...u};
-      if(attackerBefore.key==="achilles")n.achillesFuryUsedTurn=true;
+      if(attackerBefore.key==="achilles")n.achillesFuryUsedWindow=true;
       if(hpLoss>0&&attackerBefore.key==="nasu_no_yoichi"&&isRangedAttack(attackerBefore,defenderBefore)&&dist(attackerBefore,defenderBefore)>=3){
         out=out.map(t=>t.id===defenderBefore.id?{...t,tempGuardBuff:(t.tempGuardBuff||0)-4}:t);
       }
-      if(hpLoss>0&&attackerBefore.key==="ragnar_lodbrok"&&!attackerBefore.ragnarUsedTurn&&(defenderBefore.leader||effectiveMaxHp(defenderBefore)>effectiveMaxHp(attackerBefore))){n.hp=Math.min(effectiveMaxHp(n),n.hp+1);n.ragnarUsedTurn=true;}
+      if(hpLoss>0&&attackerBefore.key==="ragnar_lodbrok"&&!attackerBefore.ragnarUsedWindow&&(defenderBefore.leader||effectiveMaxHp(defenderBefore)>effectiveMaxHp(attackerBefore))){n.hp=Math.min(effectiveMaxHp(n),n.hp+1);n.ragnarUsedWindow=true;}
       if(defenderFell&&attackerBefore.key==="beowulf"&&effectiveMaxHp(defenderBefore)>effectiveMaxHp(attackerBefore))n.hp=Math.min(effectiveMaxHp(n),n.hp+2);
       if(defenderFell&&attackerBefore.key==="lu_bu"&&!defenderBefore.leader){n.permAtk=(n.permAtk||0)+3;}
       return n;
     });
   }
-  if(mods.caesarId)out=out.map(u=>u.id===mods.caesarId?{...u,caesarUsedTurn:true}:u);
+  if(mods.caesarId)out=out.map(u=>u.id===mods.caesarId?{...u,caesarUsedWindow:true}:u);
   if(mods.joanId){
-    out=out.map(u=>u.id===mods.joanId?{...u,joanUsedTurn:true}:u);
+    out=out.map(u=>u.id===mods.joanId?{...u,joanUsedWindow:true}:u);
     out=out.map(u=>u.id===defenderBefore.id&&u.hp>0?{...u,guard:(u.guard||0)+8}:u);
   }
   if(defenderFell){
     const owner=attackerBefore.owner;
     out=out.map(u=>{
       let n={...u};
-      if(u.owner!==owner&&u.key==="boudica"&&!u.boudicaUsedTurn){n.permAtk=(n.permAtk||0)+2;n.boudicaUsedTurn=true;if(defenderBefore.special)n.permMov=(n.permMov||0)+1;}
+      if(u.owner!==owner&&u.key==="boudica"&&!u.boudicaUsedWindow){n.permAtk=(n.permAtk||0)+2;n.boudicaUsedWindow=true;if(defenderBefore.special)n.permMov=(n.permMov||0)+1;}
       return n;
     });
   }
@@ -416,7 +416,7 @@ function resolveTaipanPoisonAfterHit(units,attacker,target,hit,hpLoss){
   }
   const alreadyPoisoned=Number(current.poisonTurns||0)>0||Number(current.poisonDamage||0)>0;
   if(alreadyPoisoned&&!current.leader){
-    out=out.map(u=>u.id===current.id?resolveBlessedArmorTransition(u,{...u,hp:0,damagedThisTurn:true}):u);
+    out=out.map(u=>u.id===current.id?resolveBlessedArmorTransition(u,{...u,hp:0,damagedThisWindow:true}):u);
     return{units:out,text:` Mordida Letal: ${current.name} ya estaba envenenada y cae al recibir Veneno otra vez.`,statusFxEvent:makeStatusFxEvent("poison_apply",current,4),lethal:true};
   }
   out=out.map(u=>u.id===current.id?{...u,poisonTurns:3,poisonStage:1,poisonDamage:1,poisonBaseDamage:1,poisonMaxDamage:4,poisonPersistent:true,poisonSourceId:attacker.id,poisonSourceName:attacker.name}:u);
@@ -459,7 +459,7 @@ function applyUlyssesAttackTactic(units,attacker){
   const affected=(units||[]).filter(u=>u.owner===attacker.owner&&!u.leader&&u.id!==attacker.id&&u.hp>0&&dist(attacker,u)<=2);
   if(!affected.length)return{units,affected:[],log:""};
   const affectedIds=new Set(affected.map(u=>u.id));
-  const out=(units||[]).map(u=>affectedIds.has(u.id)?{...u,tempGuardBuff:(u.tempGuardBuff||0)+3,tempMovBuff:(u.tempMovBuff||0)+1,ulyssesTacticBuffTurnKey:publicState?.turnKey||""}:u);
+  const out=(units||[]).map(u=>affectedIds.has(u.id)?{...u,tempGuardBuff:(u.tempGuardBuff||0)+3,tempMovBuff:(u.tempMovBuff||0)+1,ulyssesTacticBuffWindowKey:publicState?.combatWindowKey||""}:u);
   return{units:out,affected,log:` Estratega de Ítaca: ${affected.length} unidad${affected.length===1?" aliada gana":"es aliadas ganan"} +3 Guardia y +1 MOV en radio 2.`};
 }
 function applyGenghisKhanKillDebuff(units,attackerBefore,defenderBefore,defenderFell){
@@ -472,8 +472,8 @@ function applyGenghisKhanKillDebuff(units,attackerBefore,defenderBefore,defender
   const affectedIds=new Set(affected.map(u=>u.id));
   out=out.map(u=>{
     if(!affectedIds.has(u.id))return u;
-    const nextKey=nextTurnKeyForOwner(u.owner);
-    return {...u,guard:Math.max(0,Number(u.guard||0)-2),genghisMovDebuff:Math.max(1,Number(u.genghisMovDebuff||0),1),genghisMovDebuffTurnKey:nextKey,genghisMovDebuffSource:genghis.name||"Gengis Kan"};
+    const nextKey=nextWindowKeyForOwner(u.owner);
+    return {...u,guard:Math.max(0,Number(u.guard||0)-2),genghisMovDebuff:Math.max(1,Number(u.genghisMovDebuff||0),1),genghisMovDebuffWindowKey:nextKey,genghisMovDebuffSource:genghis.name||"Gengis Kan"};
   });
   const first=out.find(u=>affectedIds.has(u.id))||affected[0];
   return{units:out,affected,log:` Horda de la Estepa: ${affected.length} unidad${affected.length===1?" enemiga pierde":"es enemigas pierden"} 2 Guardia y 1 MOV en radio 2 de ${genghis.name}.`,statusFxEvent:makeStatusFxEvent("debuff",first,2),floatFxEvent:makeFloatFxEvent("debuff",first,2,{iconText:"🛡",labelText:"-2 GD"})};
@@ -590,7 +590,7 @@ function resolveSharedAttackPreparation({
   let hit=mods.falconDive?{hit:true,roll:"PREC ∞",chance:"Golpe seguro"}:rollHit(a,d,mods);
   hit={...hit,defenseSpendNeeded:actionSpendDefenseNeeded,attackSpendAvailable:actionSpendAttackAvailable,defenderEvasionSpent:evasionPressure.spent};
   let rerollText="",arjunaDharmaPoison=false;
-  if(!hit.hit&&a.key==="arjuna"&&isRangedAttack(a,d)&&!a.arjunaRerollUsedTurn){
+  if(!hit.hit&&a.key==="arjuna"&&isRangedAttack(a,d)&&!a.arjunaRerollUsedWindow){
     const first=hit;
     const dharmaMods={...mods,attackerDex:(mods.attackerDex||0)+6};
     hit=rollHit(a,d,dharmaMods);
@@ -626,7 +626,7 @@ async function resolveSharedAttackOutcome({
   bloodBaitBonus,
   beastTraps,
   tigerFromStealthBefore,
-  turnKey,
+  combatWindowKey,
   runInState=(fn)=>fn(),
   getDragonState=()=>publicState,
   actionLogPrefix=""
@@ -650,7 +650,7 @@ async function resolveSharedAttackOutcome({
   let berserkerOsoText="",skiparWarLootText="";
   units=units.map(u=>{
     if(u.id===a.id){
-      const nextAttacker={...u,acted:true,arjunaRerollUsedTurn:u.key==="arjuna"&&isRangedAttack(a,d)?true:!!u.arjunaRerollUsedTurn};
+      const nextAttacker={...u,acted:true,arjunaRerollUsedWindow:u.key==="arjuna"&&isRangedAttack(a,d)?true:!!u.arjunaRerollUsedWindow};
       // v220: limpiar estado manual legacy. Hua Lan usa únicamente dos flags
       // automáticos de seguimiento y Khalid no necesita un flag serializado de cadena.
       delete nextAttacker.khalidChainReady;
@@ -677,7 +677,7 @@ async function resolveSharedAttackOutcome({
         if(routed.splitText)hannibalSplitText=routed.splitText;
       }
       guardLoss=damaged.lastGuardLoss||0;hpLoss=damaged.lastHpLoss||0;
-      damaged.damagedThisTurn=(hpLoss>0)||!!damaged.damagedThisTurn;
+      damaged.damagedThisWindow=(hpLoss>0)||!!damaged.damagedThisWindow;
       delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
       return damaged;
     }
@@ -794,7 +794,7 @@ async function resolveSharedAttackOutcome({
     }
   }
   if(hit.hit&&hpLoss>0&&a.key==="constrictor_snake"&&units.some(u=>u.id===d.id)){
-    units=units.map(u=>u.id===d.id?{...u,tempMovDebuff:Math.max(Number(u.tempMovDebuff||0),1),tempAgiDebuff:(u.tempAgiDebuff||0)+1,noMoveTurnKey:(u.tempMovDebuff?nextTurnKeyForOwner(u.owner):u.noMoveTurnKey)}:u);
+    units=units.map(u=>u.id===d.id?{...u,tempMovDebuff:Math.max(Number(u.tempMovDebuff||0),1),tempAgiDebuff:(u.tempAgiDebuff||0)+1,noMoveWindowKey:(u.tempMovDebuff?nextWindowKeyForOwner(u.owner):u.noMoveWindowKey)}:u);
   }
   if(hit.hit&&hpLoss>0&&a.key==="wild_boar"&&(a.movedSpaces||0)>=2){
     units=pushUnitBackIfPossible(units,d,a,1);
@@ -810,13 +810,13 @@ async function resolveSharedAttackOutcome({
     const alexTarget=units.find(u=>u.id===d.id)||d;
     alexanderWallText=` Muro de Macedonia: ${alexTarget.name} bloquea sin recibir daño y gana +1 Vida máxima.`;
   }
-  if(d&&units.some(u=>u.id===d.id&&u.bloodBaitReadyTurnKey)){
-    units=units.map(u=>u.id===d.id?(()=>{const n={...u};delete n.bloodBaitReadyTurnKey;delete n.bloodBaitOwner;return n;})():u);
+  if(d&&units.some(u=>u.id===d.id&&u.bloodBaitReadyWindowKey)){
+    units=units.map(u=>u.id===d.id?(()=>{const n={...u};delete n.bloodBaitReadyWindowKey;delete n.bloodBaitOwner;return n;})():u);
   }
   const rhinoStunTriggered=a.key==="white_rhino"&&mods.rhinoCharge&&units.some(u=>u.id===a.id);
   if(rhinoStunTriggered){
-    const stunTurnKey=nextTurnKeyForOwner(a.owner);
-    units=units.map(u=>u.id===a.id?{...u,noMoveTurnKey:stunTurnKey,noAttackTurnKey:stunTurnKey,noDefTurnKey:stunTurnKey,rhinoStunnedTurnKey:stunTurnKey}:u);
+    const stunWindowKey=nextWindowKeyForOwner(a.owner);
+    units=units.map(u=>u.id===a.id?{...u,noMoveWindowKey:stunWindowKey,noAttackWindowKey:stunWindowKey,noDefWindowKey:stunWindowKey,rhinoStunnedWindowKey:stunWindowKey}:u);
   }
   const falconRecoilResult=applyFalconDiveRecoil(a,d,units,mods,hit);
   units=falconRecoilResult.units;
@@ -852,8 +852,8 @@ async function resolveSharedAttackOutcome({
   let miyamotoCounterBleedEvent=null;
   const arcaneAdeptRangedCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="arcane_adept"&&declaredRanged;
   const miyamotoMeleeCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="miyamoto_musashi"&&declaredMelee&&(!hit.hit||hpLoss>0);
-  const counterLocked=!!((defenderAfter?.noCounterTurnKey&&defenderAfter.noCounterTurnKey===turnKey)||isRtTrapLocked(defenderAfter,"counter"));
-  const canSpecialCounter=defenderAfter&&attackerAfter&&!mods.noCounter&&!counterLocked&&!defenderAfter.counterUsedTurn&&(arcaneAdeptRangedCounter||miyamotoMeleeCounter);
+  const counterLocked=!!((defenderAfter?.noCounterWindowKey&&defenderAfter.noCounterWindowKey===combatWindowKey)||isRtTrapLocked(defenderAfter,"counter"));
+  const canSpecialCounter=defenderAfter&&attackerAfter&&!mods.noCounter&&!counterLocked&&!defenderAfter.counterUsedWindow&&(arcaneAdeptRangedCounter||miyamotoMeleeCounter);
   if(defenderAfter&&attackerAfter&&canSpecialCounter){
     const counterDefenseRemainder=runInState(()=>getCounterDefenseRemainder(a,d,mods),{units,legendaryTraps:resolvedLegendaryTraps,beastTraps});
     const isMiyamotoCounter=!!miyamotoMeleeCounter;
@@ -869,7 +869,7 @@ async function resolveSharedAttackOutcome({
       const ulfhednarCounterCrit=rollUlfhednarCritical(defenderAfter,cHit);
       const cAtk=Math.max(0,Math.round(getBattleDamage(defenderAfter,cMods)*(ulfhednarCounterCrit.multiplier||1)));
       units=units.map(u=>{
-        if(u.id===defenderAfter.id)return{...u,counterUsedTurn:true};
+        if(u.id===defenderAfter.id)return{...u,counterUsedWindow:true};
         if(u.id===attackerAfter.id){
           let damaged=applyGuardDamage(u,cAtk,cMods.defenderGuard||0,0);
           const warriorShield=applyWarriorLeaderUnitShield(attackerAfter,defenderAfter,damaged,units);
@@ -881,7 +881,7 @@ async function resolveSharedAttackOutcome({
           }
           cGuard=damaged.lastGuardLoss||0;cHp=damaged.lastHpLoss||0;
           cWarriorShieldBlocked=cWarriorShieldBlocked||warriorShield.blocked;
-          damaged.damagedThisTurn=(cHp>0)||!!damaged.damagedThisTurn;
+          damaged.damagedThisWindow=(cHp>0)||!!damaged.damagedThisWindow;
           delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
           return damaged;
         }
@@ -921,7 +921,7 @@ async function resolveSharedAttackOutcome({
       const guardText=`${cGuard>0?`consume ${cGuard} GD y `:""}${cHp>0?`inflige ${cHp} daño a HP`:"no atraviesa la Guardia"}`;
       counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${ulfhednarCounterCrit.text||""}${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${counterVenomText}${counterBleedText}${miyamotoBleedText}${counterHannibalSplitText}${unitMasteryRankUpText(counterMasteryResult)}${counterDefenseText(counterDefenseRemainder)}`;
     }else{
-      units=units.map(u=>u.id===defenderAfter.id?{...u,counterUsedTurn:true}:u);
+      units=units.map(u=>u.id===defenderAfter.id?{...u,counterUsedWindow:true}:u);
       counterText=` Contraataque: falla (${cHit.roll}/${cHit.chance}).${counterDefenseText(counterDefenseRemainder)}`;
     }
   }

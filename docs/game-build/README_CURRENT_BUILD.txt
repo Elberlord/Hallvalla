@@ -1,1 +1,1 @@
-20260918.177 · Combate fluido: controles heredados Mano/Cancelar/Siguiente fase retirados.
+20260920.240 · Contratos runtime legacy migrados a ventanas canónicas; compatibilidad Firebase aislada.

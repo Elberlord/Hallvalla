@@ -264,7 +264,7 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
         const current=before.val()||{};
         const alreadyFinal=current?.phase==="ended"&&current?.battleEnded===true&&Number(current?.winner||0)===winner&&Number(current?.loser||0)===loser&&Number(current?.endedAt||0)===endedAt;
         if(!alreadyFinal){
-          await update(publicRef,{phase:"ended",battleEnded:true,winner,loser,endedAt,currentPlayer:0,turnPhase:"realtime"});
+          await update(publicRef,expandHallvallaLegacyRuntimePatch({phase:"ended",battleEnded:true,winner,loser,endedAt,resultCommitOwner:1,runtimeMode:"continuous"}));
         }
         const confirmed=await get(publicRef);
         const finalState=confirmed.exists()?(confirmed.val()||{}):{};

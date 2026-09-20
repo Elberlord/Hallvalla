@@ -103,10 +103,10 @@ const FIELD_BOARD_INITIAL=readFieldBoardPreferences();
 let ROWS=FIELD_BOARD_INITIAL.rows,COLS=FIELD_BOARD_INITIAL.cols;
 const $=id=>document.getElementById(id);
 
-/* v217 · Presentación pública del combate ---------------------------------
-   El runtime conserva nombres históricos (TR, turnKey, turnPhase, RTC) por
-   compatibilidad interna. La interfaz de producción no expone esa jerga: para
-   el jugador HallValla simplemente es combate continuo. */
+/* v240 · Presentación pública del combate ---------------------------------
+   El runtime activo usa contratos canónicos (combatWindowKey/runtimeMode).
+   Los aliases históricos quedan aislados en core/runtime-contracts.js y nunca
+   se exponen al jugador: para producción HallValla simplemente es combate. */
 function hallvallaPublicGameplayText(value){
   let text=String(value??"");
   text=text

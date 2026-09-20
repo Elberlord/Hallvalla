@@ -12,7 +12,7 @@ function hallvallaRtReconcileRemotePublicSnapshot(viewerState,rawState){
     hallvallaRtState.onlineCastLastAckPublic=Math.max(Number(hallvallaRtState.onlineCastLastAckPublic||0),seq);
     for(const entry of (hallvallaRtState.onlinePendingCasts||[]))if(Number(entry.seq||0)<=seq)entry.publicAck=true;
   }
-  let out=viewerState;
+  let out=typeof normalizeHallvallaRuntimeState==="function"?normalizeHallvallaRuntimeState(viewerState):viewerState;
   for(const entry of (hallvallaRtState.onlinePendingCasts||[])){
     if(entry?.publicPatch&&Object.keys(entry.publicPatch).length)out=hallvallaApplyLocalPatch(out,entry.publicPatch);
   }

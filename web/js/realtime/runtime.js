@@ -46,13 +46,13 @@ function hallvallaRtPrimePreparedState(){
     for(const card of pool){const k=String(card?.id||card?.key||card?.name||"");if(!k||seen.has(k))continue;seen.add(k);arsenal.push(card);}
     const ordered=typeof getBattleCardsSortedByCurrentCost==="function"?getBattleCardsSortedByCurrentCost(arsenal,myPlayer||1):arsenal.sort((a,b)=>(String(a?.key||"")==="dragon_egg"?-1:0)-(String(b?.key||"")==="dragon_egg"?-1:0)||(effectiveCardCost(a,myPlayer)-effectiveCardCost(b,myPlayer))||String(a?.name||"").localeCompare(String(b?.name||"")));
     arsenal.splice(0,arsenal.length,...ordered);
-    privateState={...privateState,deck:[],hand:arsenal,honor:HALLVALLA_RT_CFG.initialMana,maxHonor:HALLVALLA_RT_CFG.initialMana,lastTurnStarted:"RT",skipFirstTurnDraw:true};
+    privateState={...privateState,deck:[],hand:arsenal,honor:HALLVALLA_RT_CFG.initialMana,maxHonor:HALLVALLA_RT_CFG.initialMana};
   }
   if(publicState){
-    publicState={...publicState,realtimeEnabled:true,currentPlayer:0,turnPhase:"realtime",turnKey:String(publicState.turnKey||"RT-1").startsWith("RT")?publicState.turnKey:"RT-1",rtManaOrbClaims:{1:0,2:0},rtLeaderShieldUntil:{1:0,2:0}};
+    publicState={...publicState,realtimeEnabled:true,runtimeMode:"continuous",combatWindowKey:String(publicState.combatWindowKey||"RT-1").startsWith("RT")?publicState.combatWindowKey:"RT-1",rtManaOrbClaims:{1:0,2:0},rtLeaderShieldUntil:{1:0,2:0}};
     if(publicState.playerStats?.[myPlayer])publicState={...publicState,playerStats:{...publicState.playerStats,[myPlayer]:{...publicState.playerStats[myPlayer],honor:HALLVALLA_RT_CFG.initialMana,maxHonor:HALLVALLA_RT_CFG.initialMana,deck:0,hand:(privateState?.hand||[]).length}}};
   }
-  hallvallaRtState.cycle=Math.max(1,Number(publicState?.turn||1));
+  hallvallaRtState.cycle=Math.max(1,Number(publicState?.combatWindowIndex||1));
   hallvallaRtState.lastResourceAt=now;
   hallvallaRtState.battleStartedAt=now;
   hallvallaRtState.lastAiThinkAt=now;
@@ -63,7 +63,7 @@ function hallvallaRtPrimePreparedState(){
   hallvallaRtState.lastStatusAt=now;
   hallvallaRtState.lastLocalSnapshotAt=0;
   hallvallaRtState.resourcesInitialized=false;
-  hallvallaRtState.combatWindow=0;
+  hallvallaRtState.combatWindow=Math.max(0,typeof getCombatWindowIndex==="function"?getCombatWindowIndex(publicState):Number(publicState?.combatWindowIndex||0));
   hallvallaRtState.ownerActionFlip=1;
   hallvallaRtState.lastUiAt=0;
   hallvallaRtState.handSuppressed=false;hallvallaRtState.playBusy=false;hallvallaRtState.motionBusy=false;
@@ -84,7 +84,6 @@ function hallvallaRtPrimePreparedState(){
   hallvallaRtState.supportAt.clear();
   hallvallaRtState.lastSummonedByOwner={1:null,2:null};hallvallaRtState.summonHistory={1:[],2:[]};
   handOpen=false;handManualCloseKey="";selectedUnitId=null;
-  try{stopTurnTimerLoop();}catch(_){ }
 }
 function hallvallaRtSyncPreparedBattle(){
   // TR es el único runtime de batalla para PvE, Aventura, Local y PvP.
@@ -96,7 +95,7 @@ function hallvallaRtSyncPreparedBattle(){
     return false;
   }
   if(!hallvallaRtBattleReady())return false;
-  if(publicState&&publicState.realtimeEnabled!==true)publicState={...publicState,realtimeEnabled:true,turnPhase:"realtime",currentPlayer:0};
+  if(publicState&&publicState.realtimeEnabled!==true)publicState={...publicState,realtimeEnabled:true,runtimeMode:"continuous"};
   if(!hallvallaRtState.enabled){
     hallvallaRtState.enabled=true;
     hallvallaRtPrimePreparedState();

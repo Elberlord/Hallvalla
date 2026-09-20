@@ -230,16 +230,16 @@ for(const def of Object.values(DRAGON_CONTRACT_DEFS)){
 function applyDragonElectrocution(unit,sourceName="Dragón del Relámpago",stacks=1,state=publicState){
   if(!unit||unit.hp<=0)return unit;
   if(Number(unit.electrocutionTurns||0)>0){
-    const turnKey=nextTurnKeyForOwner(unit.owner,state);
-    return{...unit,electrocutionTurns:0,electrocutionFresh:false,electrocutionSource:"",paralysisSource:sourceName,noMoveTurnKey:turnKey,noAttackTurnKey:turnKey,noDefTurnKey:turnKey,noCounterTurnKey:turnKey};
+    const combatWindowKey=nextWindowKeyForOwner(unit.owner,state);
+    return{...unit,electrocutionTurns:0,electrocutionFresh:false,electrocutionSource:"",paralysisSource:sourceName,noMoveWindowKey:combatWindowKey,noAttackWindowKey:combatWindowKey,noDefWindowKey:combatWindowKey,noCounterWindowKey:combatWindowKey};
   }
   return{...unit,electrocutionTurns:Math.max(1,Number(stacks)||1),electrocutionFresh:true,electrocutionSource:sourceName};
 }
 function applyDragonFrost(unit,sourceName="Dragón de Hielo",stacks=1,state=publicState){
   if(!unit||unit.hp<=0)return unit;
   if(Number(unit.dragonFrostTurns||0)>0){
-    const turnKey=nextTurnKeyForOwner(unit.owner,state);
-    return{...unit,dragonFrostTurns:0,dragonFrostFresh:false,dragonFrostSource:"",frozenSource:sourceName,noMoveTurnKey:turnKey,noAttackTurnKey:turnKey,noDefTurnKey:turnKey,noCounterTurnKey:turnKey};
+    const combatWindowKey=nextWindowKeyForOwner(unit.owner,state);
+    return{...unit,dragonFrostTurns:0,dragonFrostFresh:false,dragonFrostSource:"",frozenSource:sourceName,noMoveWindowKey:combatWindowKey,noAttackWindowKey:combatWindowKey,noDefWindowKey:combatWindowKey,noCounterWindowKey:combatWindowKey};
   }
   return{...unit,dragonFrostTurns:Math.max(1,Number(stacks)||1),dragonFrostFresh:true,dragonFrostSource:sourceName};
 }
@@ -262,7 +262,7 @@ function applyDragonFrost(unit,sourceName="Dragón de Hielo",stacks=1,state=publ
   registerHallvallaHook("unit.statusEntries",(entries,{unit:u})=>{
     if(Number(u?.electrocutionTurns||0)>0)entries.push({label:`Electrocución ${u.electrocutionTurns}`,name:"Electrocución",desc:"-2 AGI y no puede contraatacar. Si recibe otro ataque eléctrico antes de disiparse, el estado se consume y recibe Parálisis 1.",kind:"debuff agi-debuff",icon:"paralysis"});
     if(Number(u?.dragonFrostTurns||0)>0)entries.push({label:`Escarcha ${u.dragonFrostTurns}`,name:"Escarcha",desc:"-2 MOV y -2 AGI. Si recibe otro ataque de hielo antes de disiparse, Escarcha se consume y recibe Congelación 1.",kind:"debuff mov-debuff",icon:"debuff"});
-    if(u?.frozenSource&&u.noAttackTurnKey===publicState?.turnKey)entries.push({label:"Congelación 1",name:"Congelación",desc:"No puede moverse, atacar, defender ni contraatacar durante esta activación.",kind:"debuff",icon:"control"});
+    if(u?.frozenSource&&u.noAttackWindowKey===publicState?.combatWindowKey)entries.push({label:"Congelación 1",name:"Congelación",desc:"No puede moverse, atacar, defender ni contraatacar durante esta activación.",kind:"debuff",icon:"control"});
     if(u?.dragonBoss&&Number(u.dragonCharge||0)>=2)entries.push({label:"Carga 3/3",name:"Ataque elemental preparado",desc:"En su próxima activación con un objetivo dentro de RG 5, el dragón usará su ataque elemental de área 3×3.",kind:"buff atk-buff",icon:"buff"});
     else if(u?.dragonBoss&&Number(u.dragonCharge||0)>0)entries.push({label:`Carga ${Number(u.dragonCharge||0)+1}/3`,name:"Carga elemental",desc:"El dragón está avanzando hacia su tercer ataque: la descarga elemental de área.",kind:"buff",icon:"buff"});
     return entries;

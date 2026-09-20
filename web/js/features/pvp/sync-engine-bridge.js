@@ -48,7 +48,7 @@ canónico cuando ambos clientes están preparados.
       if(!startCfg.resolved||![1,2].includes(Number(startCfg.startingRole))||!p1Uid||!p2Uid)return null;
       return {
         schema:"hallvalla-pvp-step5-arena-bootstrap",status:"ready",matchCode:String(code||room?.code||""),mode:"pvp",createdAt:Date.now(),
-        currentPlayer:Number(startCfg.startingRole),secondPlayer:Number(startCfg.secondRole),turn:1,turnPhase:"prebattle",combatEnabled:false,
+        openingRole:Number(startCfg.startingRole),secondRole:Number(startCfg.secondRole),combatWindowIndex:0,runtimeMode:"prebattle",combatEnabled:false,
         players:{
           1:{uid:p1Uid,name:getPlayerName?.(room,1)||"Jugador 1",prepared:!!getPreparedFlag?.(room,1),ready:!!getReadyFlag?.(room,1)},
           2:{uid:p2Uid,name:getPlayerName?.(room,2)||"Jugador 2",prepared:!!getPreparedFlag?.(room,2),ready:!!getReadyFlag?.(room,2)}
@@ -63,11 +63,11 @@ canónico cuando ambos clientes están preparados.
       const active=context();
       if(!arena||typeof arena!=="object"||arena.status!=="ready"||arena.schema!=="hallvalla-pvp-step5-arena-bootstrap")return false;
       if(String(arena.matchCode||"")!==String(room?.code||active.activeCode||""))return false;
-      if(Number(arena.currentPlayer||0)!==Number(startCfg.startingRole||0))return false;
-      if(Number(arena.secondPlayer||0)!==Number(startCfg.secondRole||0))return false;
+      if(Number(arena.openingRole||0)!==Number(startCfg.startingRole||0))return false;
+      if(Number(arena.secondRole||0)!==Number(startCfg.secondRole||0))return false;
       if(String(arena?.players?.[1]?.uid||"")!==String(room?.playerSlots?.player1Uid||""))return false;
       if(String(arena?.players?.[2]?.uid||"")!==String(room?.playerSlots?.player2Uid||""))return false;
-      return arena.combatEnabled===false&&Number(arena.turn||0)===1&&String(arena.turnPhase||"")==="prebattle";
+      return arena.combatEnabled===false&&Number(arena.combatWindowIndex||0)===0&&String(arena.runtimeMode||"")==="prebattle";
     }
 
     function clearArenaLaunchTimer(){if(arenaLaunchTimer!==null){clearTimeout(arenaLaunchTimer);arenaLaunchTimer=null;}}
@@ -162,7 +162,7 @@ canónico cuando ambos clientes están preparados.
       const hand=typeof sortCardsFn==="function"?sortCardsFn(rawCards,role):rawCards;
       return {
         combat6c,
-        enginePrivate:{ownerUid:String(payload?.ownerUid||""),role:Number(role),leaderType:profile.leaderType,leaderLevel:profile.leaderLevel,leaderAbility:profile.leaderAbility,deck:[],hand,honor:initialMana(),maxHonor:initialMana(),lastTurnStarted:"RT",skipFirstTurnDraw:true,principalSlots:0,principalKeys:[],principalKey:""},
+        enginePrivate:{ownerUid:String(payload?.ownerUid||""),role:Number(role),leaderType:profile.leaderType,leaderLevel:profile.leaderLevel,leaderAbility:profile.leaderAbility,deck:[],hand,honor:initialMana(),maxHonor:initialMana(),principalSlots:0,principalKeys:[],principalKey:""},
         prep:{ownerUid:String(payload?.ownerUid||""),ready:true,role:Number(role),leaderType:profile.leaderType,leaderLevel:profile.leaderLevel,leaderAbility:profile.leaderAbility,principalSlots:0,principalKeys:[],principalKey:"",handCount:hand.length,deckCount:0,playableCardCount,hasHiddenUnits:countHiddenKeys6e(arsenalKeys)>0,preparedAt:Date.now()}
       };
     }
@@ -188,7 +188,7 @@ canónico cuando ambos clientes están preparados.
         const payload=snap.val()||{};
         if(String(payload.ownerUid||"")!==String(active.activeOwnerUid||""))throw new Error("El estado privado ya no pertenece a este usuario.");
         const built=buildRealPrivateState6e(payload,code,active.activeRole);
-        const privatePatch={combat6c:built.combat6c,engine6e:{schema:"hallvalla-pvp-engine-private-step6f",ready:true,preparedAt:Date.now()},leaderType:built.enginePrivate.leaderType,leaderLevel:built.enginePrivate.leaderLevel,leaderAbility:built.enginePrivate.leaderAbility,deck:built.enginePrivate.deck,hand:built.enginePrivate.hand,honor:initialMana(),maxHonor:initialMana(),lastTurnStarted:"RT",skipFirstTurnDraw:true,principalSlots:0,principalKeys:[],principalKey:""};
+        const privatePatch={combat6c:built.combat6c,engine6e:{schema:"hallvalla-pvp-engine-private-step6f",ready:true,preparedAt:Date.now()},leaderType:built.enginePrivate.leaderType,leaderLevel:built.enginePrivate.leaderLevel,leaderAbility:built.enginePrivate.leaderAbility,deck:built.enginePrivate.deck,hand:built.enginePrivate.hand,honor:initialMana(),maxHonor:initialMana(),principalSlots:0,principalKeys:[],principalKey:""};
         await withTimeout(update(ownRef,privatePatch),`Guardar estado privado del motor real J${active.activeRole}`,6000);
         await withTimeout(set(ref(db,`games/${code}/public/enginePrep/${active.activeRole}`),built.prep),`Publicar preparación visible J${active.activeRole}`,5000);
         mark?.(`PASO 6I · J${active.activeRole} preparado para el duelo completo · mano privada ${built.enginePrivate.hand.length} · mazo ${built.enginePrivate.deck.length}.`);
@@ -204,7 +204,7 @@ canónico cuando ambos clientes están preparados.
       if(!validateArenaBootstrap(room)||!bothEnginePrep6e(room))return null;
       if(typeof makeLeaderFn!=="function")throw new Error("El motor real de batalla no está disponible.");
       const arena=room.arenaBootstrap||{},settings=arena.settings||getRules?.(room)||{},startCfg=Object.assign({},defaultStartConfig?.()||{},room?.startConfig||{});
-      const startingRole=Number(startCfg.startingRole||arena.currentPlayer||0);
+      const startingRole=Number(startCfg.startingRole||arena.openingRole||0);
       if(![1,2].includes(startingRole))throw new Error("Jugador inicial inválido para el motor real.");
       const p1=getEnginePrep6e(room,1),p2=getEnginePrep6e(room,2),rows=Number(getBoardRows?.()||7),cols=Number(getBoardCols?.()||5);
       let units=[makeLeaderFn(1,Math.floor(cols/2),rows-1,p1.leaderType,p1.leaderLevel,p1.leaderAbility),makeLeaderFn(2,Math.floor(cols/2),0,p2.leaderType,p2.leaderLevel,p2.leaderAbility)];
@@ -214,7 +214,7 @@ canónico cuando ambos clientes están preparados.
       const p1Leader=units.find(u=>u.owner===1&&u.leader),p2Leader=units.find(u=>u.owner===2&&u.leader),timerOn=!!settings.timerEnabled,ts=typeof serverTimestamp==="function"?serverTimestamp():Date.now();
       return {
         schema:"hallvalla-pvp-real-engine-step6f",pvpRebuildStep:"6I_FULL_DUEL_UNLOCK",pvpStep6fMode:"unit_summon_only",pvpStep6gAttacks:true,pvpStep6hMagicTest:false,pvpFullDuelEnabled:true,pvpAtomicActionMode:"multipath_v1",privacyMode:"stealth_private_v1",pvpTestClockSuspended:false,pvpBridgeReadOnly:false,
-        code:String(code||room?.code||""),boardRows:rows,boardCols:cols,mode:"online",entryMode:String(room?.entryMode||"wager"),createdAt:Number(room?.createdAt||Date.now()),engineStartedAt:0,phase:"prebattle",prebattleStartedAt:ts,prebattleLeadInMs:250,prebattleDurationMs:3250,realtimeEnabled:true,currentPlayer:0,turn:1,turnPhase:"prebattle",turnKey:"RT-PRE",turnStartedAt:null,
+        code:String(code||room?.code||""),boardRows:rows,boardCols:cols,mode:"online",entryMode:String(room?.entryMode||"wager"),createdAt:Number(room?.createdAt||Date.now()),engineStartedAt:0,phase:"prebattle",prebattleStartedAt:ts,prebattleLeadInMs:250,prebattleDurationMs:3250,realtimeEnabled:true,combatWindowIndex:0,runtimeMode:"prebattle",combatWindowKey:"RT-PRE",combatWindowStartedAt:null,
         matchSettings:{timerEnabled:timerOn,stakeMode:String(settings.stakeMode||"none"),goldAmount:Number(settings.goldAmount||500),cardEntryFee:500,economyState:String(settings.stakeMode||"none")==="none"?"not_required":"pending_economy_validation"},
         playerSlots:{player1Uid:String(room?.playerSlots?.player1Uid||""),player2Uid:String(room?.playerSlots?.player2Uid||"")},
         playerNames:{1:getPlayerName?.(room,1)||"Jugador 1",2:getPlayerName?.(room,2)||"Jugador 2"},playerLeaders:{1:p1.leaderType,2:p2.leaderType},playerLeaderLevels:{1:Number(p1.leaderLevel||1),2:Number(p2.leaderLevel||1)},playerLeaderAbilities:{1:String(p1.leaderAbility||""),2:String(p2.leaderAbility||"")},principalSlots:{1:0,2:0},pvpPrincipalKeys:{1:[],2:[]},
@@ -243,7 +243,7 @@ canónico cuando ambos clientes están preparados.
             if(String(room?.entryMode||"")==="random"){
               if(Number(current.activeRole)===1){
                 const publicRef=ref(db,`games/${code}/public`),freshSnap=await withTimeout(get(publicRef),`Confirmar arranque directo de matchmaking ${code}`,5000);
-                if(freshSnap.exists()&&isRealEnginePrebattle6e(freshSnap.val()||{}))await withTimeout(update(publicRef,{phase:"active",realtimeEnabled:true,currentPlayer:0,turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:serverTimestamp(),engineStartedAt:Date.now(),prebattleCompletedAt:serverTimestamp()}),`Activar combate de matchmaking ${code}`,5000);
+                if(freshSnap.exists()&&isRealEnginePrebattle6e(freshSnap.val()||{}))await withTimeout(update(publicRef,expandHallvallaLegacyRuntimePatch({phase:"active",realtimeEnabled:true,combatWindowIndex:1,runtimeMode:"continuous",combatWindowKey:"RT-1",combatWindowStartedAt:serverTimestamp(),engineStartedAt:Date.now(),prebattleCompletedAt:serverTimestamp()})),`Activar combate de matchmaking ${code}`,5000);
               }
               return true;
             }
@@ -254,7 +254,7 @@ canónico cuando ambos clientes están preparados.
             await globalThis.showHallvallaPreBattleVs(room,{key:`pvp:${code}`,leftOwner:current.activeRole,rightOwner:current.activeRole===1?2:1,startAt,endAt});
             if(Number(context().activeRole)===1){
               const publicRef=ref(db,`games/${code}/public`),freshSnap=await withTimeout(get(publicRef),`Confirmar fin del VS ${code}`,5000);
-              if(freshSnap.exists()&&isRealEnginePrebattle6e(freshSnap.val()||{}))await withTimeout(update(publicRef,{phase:"active",realtimeEnabled:true,currentPlayer:0,turnPhase:"realtime",turnKey:"RT-1",turnStartedAt:serverTimestamp(),engineStartedAt:Date.now(),prebattleCompletedAt:serverTimestamp()}),`Activar combate después del VS ${code}`,5000);
+              if(freshSnap.exists()&&isRealEnginePrebattle6e(freshSnap.val()||{}))await withTimeout(update(publicRef,expandHallvallaLegacyRuntimePatch({phase:"active",realtimeEnabled:true,combatWindowIndex:1,runtimeMode:"continuous",combatWindowKey:"RT-1",combatWindowStartedAt:serverTimestamp(),engineStartedAt:Date.now(),prebattleCompletedAt:serverTimestamp()})),`Activar combate después del VS ${code}`,5000);
             }
             return true;
           }catch(error){console.error(`[HallValla][${STEP}] VS previo al motor real falló:`,error);mark?.(`VS previo al motor real falló: ${error?.message||error}`);globalThis.hideHallvallaPreBattleVs?.();return false;}
@@ -301,7 +301,7 @@ canónico cuando ambos clientes están preparados.
           if(!bothEnginePrep6e(fresh)){setPhaseBusy(false);scheduleCanonicalCombatStart(fresh,code);return;}
           const engine=buildRealEnginePublic6e(fresh,code);
           if(!engine)throw new Error("No se pudo construir el estado del motor real.");
-          await withTimeout(set(publicRef,engine),`Entregar sala ${code} al motor real`,7000);
+          await withTimeout(set(publicRef,expandHallvallaLegacyRuntimePatch(engine)),`Entregar sala ${code} al motor real`,7000);
           mark?.(`PASO 6I · motor real publicado para ${code} · duelo completo habilitado.`);
         }catch(error){console.error(`[HallValla][${STEP}] Puente al motor real falló:`,error);mark?.(`Puente al motor real falló: ${error?.message||error}`);}
         finally{setPhaseBusy(false);}

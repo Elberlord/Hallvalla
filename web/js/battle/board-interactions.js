@@ -386,7 +386,7 @@ function getAcolyteTransferTargets(caster,units=publicState?.units||[]){
   return (units||[]).filter(target=>{
     if(!target||target.leader||Number(target.hp||0)<=0||dist(caster,target)>rg)return false;
     if(target.owner===caster.owner){
-      if(target.noHealTurnKey===publicState?.turnKey||target.noHealWhilePoisoned)return false;
+      if(target.noHealWindowKey===publicState?.combatWindowKey||target.noHealWhilePoisoned)return false;
       return Number(target.hp||0)<Number(effectiveMaxHp(target)||target.maxHp||target.hp||0);
     }
     return !isStealthedUnit(target);
@@ -400,41 +400,41 @@ function getAcolytePurifiableStatuses(unit){
   add("poison","Veneno",Number(unit.poisonTurns||0)>0||Number(unit.poisonDamage||0)>0||!!unit.noHealWhilePoisoned);
   add("burn","Quemadura",Number(unit.burnTurns||0)>0||Number(unit.burnDamage||0)>0);
   add("veil_curse","Cuenta regresiva mortal",hasVeilCurse(unit));
-  add("fear","Miedo",!!unit.fearTurnKey||!!unit.fearSourceName);
+  add("fear","Miedo",!!unit.fearWindowKey||!!unit.fearSourceName);
   add("atk","Reducción de Ataque",Number(unit.tempAtkDebuff||0)>0||Number(unit.hannibalAtkDebuff||0)>0);
   add("guard","Reducción de Guardia",Number(unit.tempGuardBuff||0)<0||Number(unit.tempGuardDebuff||0)>0);
-  add("dex","Reducción de Destreza",Number(unit.tempDexDebuff||0)>0||!!unit.saboteadorDexZeroTurnKey);
+  add("dex","Reducción de Destreza",Number(unit.tempDexDebuff||0)>0||!!unit.saboteadorDexZeroWindowKey);
   add("agi","Reducción de Agilidad",Number(unit.tempAgiDebuff||0)>0);
   add("mov","Reducción de Movimiento",Number(unit.tempMovDebuff||0)>0||Number(unit.genghisMovDebuff||0)>0||Number(unit.hannibalMovDebuff||0)>0);
-  add("stun","Aturdimiento",!!unit.rhinoStunnedTurnKey||!!unit.stunnedUntilTurnKey);
-  add("lock","Bloqueo de acciones",!!unit.noMoveTurnKey||!!unit.noAttackTurnKey||!!unit.noDefTurnKey||!!unit.noCounterTurnKey);
-  add("silence","Silencio",!!unit.silencedTurnKey);
-  add("curse","Maldición",!!unit.noHealTurnKey||!!unit.noReductionTurnKey||!!unit.ignoreGuardNextDamageTurnKey||!!unit.doubleNextDamageTurnKey);
+  add("stun","Aturdimiento",!!unit.rhinoStunnedWindowKey||!!unit.stunnedUntilWindowKey);
+  add("lock","Bloqueo de acciones",!!unit.noMoveWindowKey||!!unit.noAttackWindowKey||!!unit.noDefWindowKey||!!unit.noCounterWindowKey);
+  add("silence","Silencio",!!unit.silencedWindowKey);
+  add("curse","Maldición",!!unit.noHealWindowKey||!!unit.noReductionWindowKey||!!unit.ignoreGuardNextDamageWindowKey||!!unit.doubleNextDamageWindowKey);
   add("naval","Bloqueo Naval",!!unit.yiSunDebuffed);
   return out;
 }
 function purifyAcolyteStatus(unit,statusKey){
   const n={...(unit||{})};
   const del=(...keys)=>keys.forEach(key=>delete n[key]);
-  if(statusKey==="bleed")del("bleedDamage","bleedSourceName","bleedTurnsRemaining","bleedTurns","bleedSource");
+  if(statusKey==="bleed")del("bleedDamage","bleedSourceName","bleedCyclesRemaining","bleedTurns","bleedSource");
   else if(statusKey==="poison")del("poisonDamage","poisonTurns","poisonStage","poisonBaseDamage","poisonMaxDamage","poisonPersistent","poisonSourceId","poisonSourceName","poisonSource","noHealWhilePoisoned");
   else if(statusKey==="burn")del("burnTurns","burnDamage","burnPersistent","burnSourceName","burnSource");
   else if(statusKey==="veil_curse")return clearVeilCurseStatus(n);
   else if(statusKey==="fear"){
-    n.tempAtkDebuff=Math.max(0,Number(n.tempAtkDebuff||0)-3);del("fearTurnKey","fearSourceName","lionFearAppliedTurnKey");
+    n.tempAtkDebuff=Math.max(0,Number(n.tempAtkDebuff||0)-3);del("fearWindowKey","fearSourceName","lionFearAppliedWindowKey");
   }else if(statusKey==="atk"){
-    n.tempAtkDebuff=0;del("hannibalAtkDebuff","hannibalAtkDebuffTurnKey","hannibalAtkDebuffSource");
+    n.tempAtkDebuff=0;del("hannibalAtkDebuff","hannibalAtkDebuffWindowKey","hannibalAtkDebuffSource");
   }else if(statusKey==="guard"){
     if(Number(n.tempGuardBuff||0)<0)n.tempGuardBuff=0;n.tempGuardDebuff=0;
   }else if(statusKey==="dex"){
-    n.tempDexDebuff=0;del("saboteadorDexZeroTurnKey","saboteadorDexZeroSource");
+    n.tempDexDebuff=0;del("saboteadorDexZeroWindowKey","saboteadorDexZeroSource");
   }else if(statusKey==="agi")n.tempAgiDebuff=0;
   else if(statusKey==="mov"){
-    n.tempMovDebuff=0;del("tempMovDebuffSource","genghisMovDebuff","genghisMovDebuffTurnKey","genghisMovDebuffSource","hannibalMovDebuff","hannibalMovDebuffTurnKey","hannibalMovDebuffSource");
-  }else if(statusKey==="stun")del("rhinoStunnedTurnKey","stunnedUntilTurnKey");
-  else if(statusKey==="lock")del("noMoveTurnKey","noAttackTurnKey","noDefTurnKey","noCounterTurnKey");
-  else if(statusKey==="silence")del("silencedTurnKey");
-  else if(statusKey==="curse")del("noHealTurnKey","noReductionTurnKey","ignoreGuardNextDamageTurnKey","doubleNextDamageTurnKey");
+    n.tempMovDebuff=0;del("tempMovDebuffSource","genghisMovDebuff","genghisMovDebuffWindowKey","genghisMovDebuffSource","hannibalMovDebuff","hannibalMovDebuffWindowKey","hannibalMovDebuffSource");
+  }else if(statusKey==="stun")del("rhinoStunnedWindowKey","stunnedUntilWindowKey");
+  else if(statusKey==="lock")del("noMoveWindowKey","noAttackWindowKey","noDefWindowKey","noCounterWindowKey");
+  else if(statusKey==="silence")del("silencedWindowKey");
+  else if(statusKey==="curse")del("noHealWindowKey","noReductionWindowKey","ignoreGuardNextDamageWindowKey","doubleNextDamageWindowKey");
   else if(statusKey==="naval"){
     n.tempDexDebuff=Math.max(0,Number(n.tempDexDebuff||0)-4);
     if(Number(n.tempGuardBuff||0)<0)n.tempGuardBuff=Math.min(0,Number(n.tempGuardBuff||0)+4);
@@ -473,7 +473,7 @@ function makeAcolyteResurrectedUnit(caster,record,cell){
   }
   const maxHp=Math.max(1,Number(revived.maxHp||record?.snapshot?.maxHp||record?.snapshot?.hp||1));
   const baseGuard=Math.max(0,Number(revived.baseGuard??revived.guard??0));
-  return {...revived,id:uid8(),owner:caster.owner,originalOwner:Number(record?.originalOwner||caster.owner),x:cell.x,y:cell.y,nexoX:cell.x,nexoY:cell.y,hp:Math.max(1,Math.ceil(maxHp/2)),maxHp,baseGuard,guard:baseGuard,moved:false,movedSpaces:0,acted:false,defenseModeReady:false,damagedThisTurn:false,summonOrigin:"hand",fieldGeneratedSummon:false,tokenSummon:false,reanimated:false,resurrectedByHealer:true,resurrectedFromGraveId:record.graveId,resurrectedOriginalUnitId:record.originalUnitId,hallvallaReadyOnSummon:true,summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"actions"};
+  return {...revived,id:uid8(),owner:caster.owner,originalOwner:Number(record?.originalOwner||caster.owner),x:cell.x,y:cell.y,nexoX:cell.x,nexoY:cell.y,hp:Math.max(1,Math.ceil(maxHp/2)),maxHp,baseGuard,guard:baseGuard,moved:false,movedSpaces:0,acted:false,defenseModeReady:false,damagedThisWindow:false,summonOrigin:"hand",fieldGeneratedSummon:false,tokenSummon:false,reanimated:false,resurrectedByHealer:true,resurrectedFromGraveId:record.graveId,resurrectedOriginalUnitId:record.originalUnitId,hallvallaReadyOnSummon:true,summonedWindowKey:publicState?.combatWindowKey||"",summonedWindowIndex:publicState?.combatWindowIndex||0,summonedRuntimeMode:getRuntimeMode?.()||"continuous"};
 }
 function chooseAcolyteTechnique(caster,units=publicState?.units||[],honor=0,graveyard=publicState?.erictoGraveyard||[]){
   const points=getUnitServicePoints(caster);
@@ -529,7 +529,7 @@ function applyAcolyteHealerEffectState(caster,choice,units=publicState?.units||[
   if(technique==="transfer"){
     const target=out.find(u=>u.id===choice?.targetId);if(!target||target.leader||dist(live,target)>getAcolyteEffectRange(live))return{success:false,reason:"Objetivo fuera de rango o inválido."};
     if(target.owner===live.owner){
-      if(target.noHealTurnKey===publicState?.turnKey||target.noHealWhilePoisoned)return{success:false,reason:`${target.name} no puede curarse ahora.`};
+      if(target.noHealWindowKey===publicState?.combatWindowKey||target.noHealWhilePoisoned)return{success:false,reason:`${target.name} no puede curarse ahora.`};
       const max=Math.max(1,Number(effectiveMaxHp(target)||target.maxHp||target.hp||1));if(Number(target.hp||0)>=max)return{success:false,reason:"La unidad aliada ya tiene la Vida completa."};
       const transferHeal=Math.max(1,getEquipmentHealingMultiplier(live));const actualTransferHeal=Math.min(transferHeal,Math.max(0,max-Number(target.hp||0)));
       out=out.map(u=>u.id===target.id?{...u,hp:Math.min(max,Number(u.hp||0)+transferHeal)}:u.id===live.id?{...u,acted:true}:u);const healedTarget=out.find(u=>u.id===target.id)||target;battleFxEvent=makeMagicFxEvent(live,healedTarget,"heal",{type:"heal",spellKey:"acolyte_transfer_heal",effectAction:"heal",hit:true});statusFxEvent=makeStatusFxEvent("heal",healedTarget,actualTransferHeal);floatFxEvent=makeFloatFxEvent("heal",healedTarget,actualTransferHeal,{iconText:"✚"});log=`${live.name} usa Transferencia vital: ${target.name} recupera ${actualTransferHeal} Vida.`;
@@ -543,7 +543,7 @@ function applyAcolyteHealerEffectState(caster,choice,units=publicState?.units||[
     if(points<50)return{success:false,reason:"Purificación requiere 50 puntos de servicio."};const target=out.find(u=>u.id===choice?.targetId);if(!target||target.leader||target.owner!==live.owner||dist(live,target)>getAcolyteEffectRange(live))return{success:false,reason:"Aliado inválido o fuera de rango."};const statuses=getAcolytePurifiableStatuses(target);const chosen=statuses.find(st=>st.key===choice?.statusKey);if(!chosen)return{success:false,reason:"El estado elegido ya no está presente."};out=out.map(u=>u.id===target.id?purifyAcolyteStatus(u,chosen.key):u.id===live.id?{...u,acted:true}:u);const purifiedTarget=out.find(u=>u.id===target.id)||target;battleFxEvent=makeMagicFxEvent(live,purifiedTarget,"heal",{type:"heal",spellKey:"acolyte_purify",effectAction:"cleanse",hit:true});statusFxEvent=makeStatusFxEvent("cleanse",purifiedTarget,0);floatFxEvent=makeFloatFxEvent("heal",purifiedTarget,0,{iconText:"◇",labelText:"PURIFICA"});log=`${live.name} usa Purificación: elimina ${chosen.label} de ${target.name}.`;return{success:true,units:out,log,honorCost:3,serviceGain:1,battleFxEvent,statusFxEvent,floatFxEvent};
   }
   if(technique==="resurrect"){
-    if(points<100)return{success:false,reason:"Resurrección requiere 100 puntos de servicio."};const grave=normalizeErictoGraveyard(publicState?.erictoGraveyard||[]);const rec=getAcolyteEligibleCorpses(live,grave).find(r=>r.graveId===choice?.graveId);const cell=getAcolyteResurrectionCells(live,out).find(c=>c.x===Number(choice?.x)&&c.y===Number(choice?.y));if(!rec||!cell)return{success:false,reason:"El cadáver o la casilla ya no están disponibles."};let revived=makeAcolyteResurrectedUnit(live,rec,cell);if(ownerHasUnit(live.owner===1?2:1,"yi_sun_sin",out))revived={...revived,tempDexDebuff:Number(revived.tempDexDebuff||0)+4,tempGuardBuff:Number(revived.tempGuardBuff||0)-4,yiSunDebuffed:true};out=out.map(u=>u.id===live.id?{...u,acted:true}:u).concat(revived);const lion=applyAfricanLionFearAura(out);out=lion.units;const nextGrave=grave.map(r=>r.graveId===rec.graveId?{...r,used:true,usedByAcolyteId:live.id,usedTurnKey:publicState?.turnKey||""}:r);log=`${live.name} usa Resurrección: ${rec.name} vuelve con ${revived.hp}/${revived.maxHp} Vida, sin debuffs y como invocada desde la mano. Puede actuar este turno.${lion.logs.length?` ${lion.logs.join(" ")}`:""}`;battleFxEvent=makeMagicFxEvent(live,revived,"heal",{type:"heal",spellKey:"acolyte_resurrect",effectAction:"resurrect",impactScale:1.25,hit:true});return{success:true,units:out,log,honorCost:4,serviceGain:1,erictoGraveyard:nextGrave,battleFxEvent,statusFxEvent:lion.statusFxEvent||makeStatusFxEvent("heal",revived,revived.hp),floatFxEvent:lion.floatFxEvent||makeFloatFxEvent("heal",revived,revived.hp,{iconText:"✚",labelText:"REGRESA"})};
+    if(points<100)return{success:false,reason:"Resurrección requiere 100 puntos de servicio."};const grave=normalizeErictoGraveyard(publicState?.erictoGraveyard||[]);const rec=getAcolyteEligibleCorpses(live,grave).find(r=>r.graveId===choice?.graveId);const cell=getAcolyteResurrectionCells(live,out).find(c=>c.x===Number(choice?.x)&&c.y===Number(choice?.y));if(!rec||!cell)return{success:false,reason:"El cadáver o la casilla ya no están disponibles."};let revived=makeAcolyteResurrectedUnit(live,rec,cell);if(ownerHasUnit(live.owner===1?2:1,"yi_sun_sin",out))revived={...revived,tempDexDebuff:Number(revived.tempDexDebuff||0)+4,tempGuardBuff:Number(revived.tempGuardBuff||0)-4,yiSunDebuffed:true};out=out.map(u=>u.id===live.id?{...u,acted:true}:u).concat(revived);const lion=applyAfricanLionFearAura(out);out=lion.units;const nextGrave=grave.map(r=>r.graveId===rec.graveId?{...r,used:true,usedByAcolyteId:live.id,usedWindowKey:publicState?.combatWindowKey||""}:r);log=`${live.name} usa Resurrección: ${rec.name} vuelve con ${revived.hp}/${revived.maxHp} Vida, sin debuffs y como invocada desde la mano. Puede actuar este turno.${lion.logs.length?` ${lion.logs.join(" ")}`:""}`;battleFxEvent=makeMagicFxEvent(live,revived,"heal",{type:"heal",spellKey:"acolyte_resurrect",effectAction:"resurrect",impactScale:1.25,hit:true});return{success:true,units:out,log,honorCost:4,serviceGain:1,erictoGraveyard:nextGrave,battleFxEvent,statusFxEvent:lion.statusFxEvent||makeStatusFxEvent("heal",revived,revived.hp),floatFxEvent:lion.floatFxEvent||makeFloatFxEvent("heal",revived,revived.hp,{iconText:"✚",labelText:"REGRESA"})};
   }
   return{success:false,reason:"Capacidad curativa inválida."};
 }
@@ -621,7 +621,7 @@ function getEffectTargetOptions(caster,units=publicState?.units||[]){
   if(caster.key==="african_lion"){return [caster];}
   if(caster.key==="black_raven"){return [caster];}
   if(caster.key==="ericto"){
-    if(caster.erictoUsedTurnKey===publicState?.turnKey)return[];
+    if(caster.erictoUsedWindowKey===publicState?.combatWindowKey)return[];
     if(getErictoLinkedReanimated(caster,units).length>=getErictoMaxReanimated(caster))return[];
     if(!getAdjacentFreeCells(caster,units).length)return[];
     return getErictoEligibleCorpses(caster,publicState?.erictoGraveyard||[]).length?[caster]:[];
@@ -639,11 +639,11 @@ function getEffectTargetOptions(caster,units=publicState?.units||[]){
     return spots;
   }
   if(caster.key==="sun_tzu"){
-    if(caster.sunTzuUsedTurn)return[];
+    if(caster.sunTzuUsedWindow)return[];
     return units.filter(a=>a.owner===owner&&a.id!==caster.id);
   }
   if(caster.key==="subotai"){
-    if(caster.subotaiUsedTurn)return[];
+    if(caster.subotaiUsedWindow)return[];
     return units.filter(a=>a.owner===owner&&a.id!==caster.id);
   }
   return[];
@@ -711,7 +711,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
   }else if(liveCaster.key==="black_raven"){
     const rev=revealStealthInRadius(out,owner,liveCaster,2,"Ojo del Cazador");out=rev.units.map(it=>it.id===liveCaster.id?{...it,acted:true}:it);const detection=typeof makeStage8StealthDetectionEvent==="function"?makeStage8StealthDetectionEvent(owner,liveCaster,2,"Ojo del Cazador"):null;log=detection?`${liveCaster.name} usa Ojo del Cazador y inspecciona el área en busca de Sigilo.`:`${liveCaster.name} usa Ojo del Cazador y revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`;return{success:true,units:out,log,battleFxEvent,stealthDetectionEvent:detection};
   }else if(liveCaster.key==="ericto"){
-    if(liveCaster.erictoUsedTurnKey===publicState?.turnKey)return{success:false,reason:"Ericto ya usó Necromancia de Farsalia durante este ciclo táctico."};
+    if(liveCaster.erictoUsedWindowKey===publicState?.combatWindowKey)return{success:false,reason:"Ericto ya usó Necromancia de Farsalia durante este ciclo táctico."};
     const current=getErictoLinkedReanimated(liveCaster,out).length;
     const maximum=getErictoMaxReanimated(liveCaster);
     if(current>=maximum)return{success:false,reason:`Ericto ya controla el máximo de ${maximum} reanimado${maximum===1?"":"s"} para su rango.`};
@@ -724,8 +724,8 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     const cell=cells.find(c=>c.x===Number(selection.x)&&c.y===Number(selection.y));
     if(!record||!cell)return{success:false,reason:"El cadáver o la celda elegida ya no están disponibles."};
     const revived=makeErictoReanimatedUnit(liveCaster,record,cell);
-    const nextGraveyard=graveyard.map(r=>r.graveId===record.graveId?{...r,used:true,usedByErictoId:liveCaster.id,usedTurnKey:publicState?.turnKey||""}:r);
-    out=out.map(it=>it.id===liveCaster.id?{...it,acted:true,erictoUsedTurnKey:publicState?.turnKey||""}:it).concat(revived);
+    const nextGraveyard=graveyard.map(r=>r.graveId===record.graveId?{...r,used:true,usedByErictoId:liveCaster.id,usedWindowKey:publicState?.combatWindowKey||""}:r);
+    out=out.map(it=>it.id===liveCaster.id?{...it,acted:true,erictoUsedWindowKey:publicState?.combatWindowKey||""}:it).concat(revived);
     log=`${liveCaster.name} usa Necromancia de Farsalia: ${record.name} regresa con ${revived.hp}/${revived.maxHp} Vida bajo su control.`;
     return{success:true,units:out,log,erictoGraveyard:nextGraveyard};
   }else if(liveCaster.key==="richard_lionheart"){
@@ -742,10 +742,10 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     out=out.map(it=>it.id===liveCaster.id?{...it,acted:true}:it).concat(token);
     log=`${liveCaster.name} activa Media Luna del Desierto e invoca una Caballería Arquera en ${target.x+1},${target.y+1}.`;
   }else if(liveCaster.key==="sun_tzu"){
-    out=out.map(it=>it.id===target.id?{...it,tempDexBuff:(it.tempDexBuff||0)+4,tempGuardBuff:(it.tempGuardBuff||0)+4}:it.id===liveCaster.id?{...it,acted:true,sunTzuUsedTurn:true}:it);
+    out=out.map(it=>it.id===target.id?{...it,tempDexBuff:(it.tempDexBuff||0)+4,tempGuardBuff:(it.tempGuardBuff||0)+4}:it.id===liveCaster.id?{...it,acted:true,sunTzuUsedWindow:true}:it);
     log=`${liveCaster.name} activa Arte de la Guerra: ${target.name} gana +4 Destreza y +4 Guardia durante este ciclo táctico.`;
   }else if(liveCaster.key==="subotai"){
-    out=out.map(it=>it.id===target.id?{...it,tempMovBuff:(it.tempMovBuff||0)+2}:it.id===liveCaster.id?{...it,acted:true,subotaiUsedTurn:true}:it);
+    out=out.map(it=>it.id===target.id?{...it,tempMovBuff:(it.tempMovBuff||0)+2}:it.id===liveCaster.id?{...it,acted:true,subotaiUsedWindow:true}:it);
     log=`${liveCaster.name} activa Marcha de Mil Horizontes: ${target.name} gana +2 Movimiento durante este ciclo táctico.`;
   }else{
     return{success:false,reason:"Este efecto es pasivo o se activa automáticamente durante el combate."};

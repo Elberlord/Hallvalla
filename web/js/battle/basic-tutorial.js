@@ -55,11 +55,10 @@ async function startBasicTutorialBattle(){
     createdAt:now,
     // El primer orbe debe estar visible al entrar para que el jugador aprenda la mecánica sin esperar 14 s.
     engineStartedAt:now-15050,
-    currentPlayer:0,
-    turn:1,
+    combatWindowIndex:1,
     phase:"active",
-    turnPhase:"realtime",
-    turnKey:"RT-1",
+    runtimeMode:"continuous",
+    combatWindowKey:"RT-1",
 
     playerSlots:{player1Uid:uid,player2Uid:"TUTORIAL_DUMMY"},
     playerNames:{1:getLocalProfileName(),2:"Instructor de práctica"},
@@ -71,8 +70,8 @@ async function startBasicTutorialBattle(){
     units,
     log:["Tutorial: recoge MANÁ, convoca, usa magia y aprende a bloquear daño con tu líder."]
   };
-  await set(ref(db,`games/${code}/public`),pub);
-  await set(getGamePrivatePlayerRef(code,1),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:2,maxHonor:2,lastTurnStarted:"RT",skipFirstTurnDraw:true});
+  await set(ref(db,`games/${code}/public`),expandHallvallaLegacyRuntimePatch(pub));
+  await set(getGamePrivatePlayerRef(code,1),{ownerUid:uid,leaderType,leaderLevel,leaderAbility,deck,hand,honor:2,maxHonor:2});
   const main=$("mainMenu");if(main)main.classList.add("hidden");
   enterGame(code,1);
 }

@@ -1,0 +1,45 @@
+HallValla build 20260920.240
+AUDITORÍA COMPLETA DE CONTRATOS LEGACY DEL RUNTIME
+
+Base: v239
+
+CERRADO EN ESTA VERSIÓN
+- turnKey -> combatWindowKey
+- turnPhase -> runtimeMode
+- turn -> combatWindowIndex
+- turnStartedAt -> combatWindowStartedAt
+- *TurnKey -> *WindowKey
+- *UsedTurn -> *UsedWindow
+- damagedThisTurn -> damagedThisWindow
+- turnsRemaining/baseTurns -> cyclesRemaining/baseCycles para restos no-muertos
+- bleedTurnsRemaining -> bleedCyclesRemaining
+- veilCurseTurnsRemaining -> veilCurseCyclesRemaining
+- summonedTurn/summonedPhase -> summonedWindowIndex/summonedRuntimeMode
+- currentPlayer deja de tener semántica de gameplay.
+
+COMPATIBILIDAD
+- web/js/core/runtime-contracts.js es la única frontera para leer aliases antiguos y
+  volver a generarlos al escribir hacia Firebase durante la migración.
+- El estado normalizado interno elimina esos aliases; el gameplay trabaja con nombres
+  canónicos.
+- currentPlayer solo se emite como sentinel wire=0 para builds antiguos.
+
+PVP / FIREBASE
+- El cierre terminal usa resultCommitOwner, no currentPlayer.
+- Firebase valida resultCommitOwner contra player1Uid/player2Uid autenticado.
+- REQUIERE desplegar backend/firebase/database.rules.json de v240.
+
+EXCEPCIONES AUDITADAS Y CONSERVADAS
+- poisonTurns, burnTurns, paralysisTurns, reviveTurns, shieldTurns, dragonFrostTurns,
+  electrocutionTurns y equivalentes son nombres persistentes de esquema de duración,
+  no control de turnos del jugador. Se conservan para compatibilidad de contenido.
+- IDs/layout keys históricos como turnTimerHud/turnHonorHud se conservan para no romper
+  calibraciones persistidas; no gobiernan el motor.
+
+ARCHIVOS
+- battle/combat-turn-ai.js renombrado a battle/combat-ai.js.
+- Nuevo core/runtime-contracts.js.
+- realtime/* continúa siendo el motor canónico dividido en v239.
+
+SIGUIENTE
+Cierre final funcional, código muerto/assets huérfanos y pruebas integrales.

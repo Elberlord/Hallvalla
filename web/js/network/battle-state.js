@@ -166,7 +166,7 @@ function makeStage8StealthAreaDamageEvent(sourceOwner,targetOwner,payload={}){
     eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
     sourceOwner:safeSource,targetOwner:safeTarget,kind,
     label:String(payload.label||"Daño de área").slice(0,96),
-    turnKey:String(publicState?.turnKey||"")
+    combatWindowKey:String(publicState?.combatWindowKey||"")
   };
   if(kind==="global_direct_hp")event.damage=Math.max(0,Number(payload.damage||0));
   if(kind==="cell_direct_hp"||kind==="cell_guard_damage"||kind==="cell_attack_damage"){
@@ -196,7 +196,7 @@ function makeStage8StealthDetectionEvent(detectorOwner,center,radius,reason="det
     center:{x,y},
     radius:Math.max(0,Number(radius||0)),
     reason:String(reason||"detección").slice(0,96),
-    turnKey:String(publicState?.turnKey||"")
+    combatWindowKey:String(publicState?.combatWindowKey||"")
   };
 }
 async function maybeResolveStage8StealthAreaDamage(){
@@ -219,7 +219,7 @@ async function maybeResolveStage8StealthAreaDamage(){
         if(!canReceiveUntargetedAreaEffect(unit))return unit;
         hitIds.push(String(unit.id||""));
         const result=typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(unit,damage):{unit:{...unit,hp:Number(unit.hp||0)-damage}};
-        return {...result.unit,damagedThisTurn:true};
+        return {...result.unit,damagedThisWindow:true};
       });
     }
   }else if(String(event.kind||"")==="cell_direct_hp"){
@@ -232,7 +232,7 @@ async function maybeResolveStage8StealthAreaDamage(){
       if(damage<=0)return unit;
       hitIds.push(String(unit.id||""));
       const result=typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(unit,damage):{unit:{...unit,hp:Number(unit.hp||0)-damage}};
-      return {...result.unit,damagedThisTurn:true};
+      return {...result.unit,damagedThisWindow:true};
     });
   }else if(String(event.kind||"")==="cell_guard_damage"){
     const cellMap=new Map((Array.isArray(event.cells)?event.cells:[]).map(cell=>[`${Number(cell.x)},${Number(cell.y)}`,cell]));
@@ -245,7 +245,7 @@ async function maybeResolveStage8StealthAreaDamage(){
       if(damage<=0)return unit;
       hitIds.push(String(unit.id||""));
       let next=typeof applyGuardDamage==="function"?applyGuardDamage(unit,damage):{...unit,hp:Number(unit.hp||0)-damage};
-      next={...next,damagedThisTurn:true};
+      next={...next,damagedThisWindow:true};
       if(Number(next.hp||0)>0&&Number(event.statusStacks||0)>0&&typeof applyDragonCompanionElementStatus==="function"){
         next=applyDragonCompanionElementStatus(next,attackerRef,Number(event.statusStacks||0),publicState);
       }
@@ -271,7 +271,7 @@ async function maybeResolveStage8StealthAreaDamage(){
       let next=typeof applyGuardDamage==="function"?applyGuardDamage(unit,damage):{...unit,hp:Number(unit.hp||0)-damage};
       const hpLoss=Math.max(0,Number(next?.lastHpLoss||0));
       delete next.lastGuardLoss;delete next.lastHpLoss;
-      next={...next,damagedThisTurn:hpLoss>0||!!next.damagedThisTurn};
+      next={...next,damagedThisWindow:hpLoss>0||!!next.damagedThisWindow};
       if(hpLoss>0&&event.applyBeastmasterVenom&&typeof applyBeastmasterVenomToTarget==="function"){
         next=(typeof isPoisonImmuneUnit==="function"&&isPoisonImmuneUnit(next)&&typeof clearPoisonStatus==="function")?clearPoisonStatus(next):applyBeastmasterVenomToTarget(next,attackerRef,5);
       }
@@ -667,7 +667,7 @@ function showBattleOutcomeSplash(result,{adventure=false,online=false,botPvp=fal
 }
 async function normalizePublicPatchBeforeCommit(sourcePatch={},options={}){
   const beforeUnits=Array.isArray(publicState?.units)?publicState.units:[];
-  let cleanPatch={...(sourcePatch||{})};
+  let cleanPatch=typeof normalizeHallvallaRuntimePatch==="function"?normalizeHallvallaRuntimePatch(sourcePatch||{}):{...(sourcePatch||{})};
   if(Array.isArray(cleanPatch.units)){
     const baseGraveyard=Array.isArray(cleanPatch.erictoGraveyard)?cleanPatch.erictoGraveyard:(publicState?.erictoGraveyard||[]);
     cleanPatch.erictoGraveyard=captureErictoGraveyard(baseGraveyard,beforeUnits,cleanPatch.units);
@@ -718,6 +718,7 @@ async function updatePublic(patch){
   const privacyProjection=projectStage8StealthPatchForNetwork(cleanPatch,myPlayer);
   const sharedVisibilityUnits=privacyProjection.visibilityUnits;
   let publicWritePatch=sanitizeSharedStealthPatch(privacyProjection.publicPatch,sharedVisibilityUnits);
+  publicWritePatch=typeof expandHallvallaLegacyRuntimePatch==="function"?expandHallvallaLegacyRuntimePatch(publicWritePatch):publicWritePatch;
   publicWritePatch=hallvallaSanitizeFirebaseValue(publicWritePatch)||{};
   const privateStealthPatch=hallvallaSanitizeFirebaseValue(privacyProjection.privatePatch)||{};
   if(!writeContextActive())return false;
@@ -846,6 +847,7 @@ async function commitRealtimeOnlineCheckpoint(publicPatch={},privatePatch={},kin
   const privacyProjection=projectStage8StealthPatchForNetwork(normalized,writePlayer);
   const sharedVisibilityUnits=privacyProjection.visibilityUnits;
   let cleanPublic=sanitizeSharedStealthPatch(privacyProjection.publicPatch,sharedVisibilityUnits);
+  cleanPublic=typeof expandHallvallaLegacyRuntimePatch==="function"?expandHallvallaLegacyRuntimePatch(cleanPublic):cleanPublic;
   cleanPublic=hallvallaSanitizeFirebaseValue(cleanPublic)||{};
   const cleanPrivate={...(hallvallaSanitizeFirebaseValue(privatePatch||{})||{}),...(hallvallaSanitizeFirebaseValue(privacyProjection.privatePatch)||{})};
   const rtClientSeq=Math.max(0,Number(options?.rtClientSeq||0));
@@ -960,7 +962,7 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   const nextStats2={...(state.playerStats?.[2]||{}),hp:outcome.p2Leader?.hp||0};
   recordLocalLeaderBattleOutcome(outcome,pvpBot?"pvp_bot":(state.mode||"pvp"));
   const endedAt=Date.now();
-  const finalPatch={units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt,stalemateNoPlay:null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)};
+  const finalPatch={units,phase:"ended",battleEnded:true,winner:outcome.winner,loser:outcome.loser,endedAt,resultCommitOwner:Number(myPlayer||0),stalemateNoPlay:null,[`playerStats/1`]:nextStats1,[`playerStats/2`]:nextStats2,log:[...baseLogs,...(state.log||[])].slice(0,18)};
   const wrote=(state.mode==="online"&&typeof commitRealtimeOnlineCheckpoint==="function")
     ?await commitRealtimeOnlineCheckpoint(finalPatch,{},"terminal")
     :await updatePublic(finalPatch);
@@ -1109,7 +1111,7 @@ function makeStartingPrincipalUnit(card,owner,leaderType,units=[],slotIndex=0){
   const cell=getPrincipalStartCell(owner,units,slotIndex);
   if(!cell)return null;
   const unit=makeUnit({...card,owner,leaderType,summonOrigin:"principal",fieldGeneratedSummon:true},cell.x,cell.y);
-  const principal={...unit,principal:true,principalStart:true,principalSlot:slotIndex+1,summonOrigin:"principal",fieldGeneratedSummon:true,summonedTurnKey:"opening",summonedTurn:0,summonedPhase:"opening",hallvallaReadyOnSummon:true};
+  const principal={...unit,principal:true,principalStart:true,principalSlot:slotIndex+1,summonOrigin:"principal",fieldGeneratedSummon:true,summonedWindowKey:"opening",summonedWindowIndex:0,summonedRuntimeMode:"opening",hallvallaReadyOnSummon:true};
   return applyHallvallaValueHooks("principal.makeUnit",principal,{card,owner,leaderType,units,slotIndex});
 }
 function makeStartingPrincipalUnits(cards=[],owner,leaderType,units=[],principalSlots=(cards||[]).length){
@@ -1496,7 +1498,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     principalSlots:realtimeEnabled?{1:0,2:0}:{1:playerPrincipalSlots,2:enemyInitial.principalSlots||0},
     adventurePrincipalKeys:realtimeEnabled?{1:[],2:[]}:{1:playerPrincipalPrep.principalKeys||[],2:enemyInitial.principalKeys||[]},
     adventureAiState:{deck:enemyInitial.deck,hand:enemyInitial.hand,honor:realtimeEnabled?HALLVALLA_RT_CFG.initialMana:0,maxHonor:realtimeEnabled?HALLVALLA_RT_CFG.initialMana:0,principalSlots:realtimeEnabled?0:(enemyInitial.principalSlots||0),principalKeys:realtimeEnabled?[]:(enemyInitial.principalKeys||[]),principalKey:realtimeEnabled?"":(enemyInitial.principalKey||"")},
-    createdAt:Date.now(),phase:"active",turnKey:"RT-1",
+    createdAt:Date.now(),phase:"active",combatWindowKey:"RT-1",
     playerSlots:{player1Uid:uid,player2Uid:"ADVENTURE_AI"},
     playerNames:{1:playerProfileName,2:cleanPlayerName(battle.enemyName||"")||LEADER_DATA[enemyLeaderType]?.name||"Rival"},
     playerLeaders:{1:leaderType,2:enemyLeaderType},playerLeaderLevels:{1:leaderLevel,2:enemyLeaderLevel},playerLeaderAbilities:{1:leaderAbility,2:enemyLeaderAbility},

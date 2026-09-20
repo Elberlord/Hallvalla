@@ -508,7 +508,7 @@ function registerAccountMasteryKillsFromUnitDiff(beforeUnits,afterUnits,sourcePa
       let creditOwner=explicitOwner||fxOwner;
       if(!creditOwner&&mode==="opposite-owner")creditOwner=Number(victim.owner)===1?2:1;
       if(Number(creditOwner)!==Number(myPlayer)||Number(victim.owner)===Number(myPlayer))return;
-      const fallbackContext=String(sourcePatch?.turnKey||publicState?.turnKey||publicState?.turn||"");
+      const fallbackContext=String(sourcePatch?.combatWindowKey||publicState?.combatWindowKey||publicState?.combatWindowIndex||"");
       const eventKey=`${gameId||"local"}:mastery:kill:${id}:${sourceEvent||fallbackContext}`;
       if(registerAccountMasteryAction("kills",1,eventKey))credited+=1;
     });

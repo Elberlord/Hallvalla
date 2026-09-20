@@ -142,7 +142,7 @@ async function hallvallaRtAttackUnit(attacker,target){
       arjunaDharmaPoison:prep.arjunaDharmaPoison,evasionPressure:prep.evasionPressure,
       preTrap:prep.preTrap,warningRune:prep.warningRune,bloodBaitBonus:prep.bloodBaitBonus,
       beastTraps:prep.beastTraps,tigerFromStealthBefore:prep.tigerFromStealthBefore,
-      turnKey:publicState?.turnKey||"RT"
+      combatWindowKey:publicState?.combatWindowKey||"RT"
     });
     units=outcome.units||prep.units;
     // En TR no existe la bandera "ya actuó": el cooldown temporal manda.
@@ -169,10 +169,10 @@ async function hallvallaRtAttackUnit(attacker,target){
 async function hallvallaRtInitializeResources(){
   if(hallvallaRtState.resourcesInitialized)return false;
   const max=HALLVALLA_RT_CFG.initialMana,startMana=HALLVALLA_RT_CFG.initialMana;
-  const privatePatch={honor:startMana,maxHonor:max,lastTurnStarted:'RT'};
-  const publicPatch={turnPhase:'realtime',currentPlayer:0,[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),honor:startMana,maxHonor:max,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}};
+  const privatePatch={honor:startMana,maxHonor:max};
+  const publicPatch={runtimeMode:'continuous',[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),honor:startMana,maxHonor:max,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}};
   if(publicState?.adventureAiState){
-    const ai={...publicState.adventureAiState,honor:startMana,maxHonor:max,lastTurnStarted:'RT'};
+    const ai={...publicState.adventureAiState,honor:startMana,maxHonor:max};
     publicPatch.adventureAiState=ai;
     publicPatch['playerStats/2']={...(publicState?.playerStats?.[2]||{}),honor:startMana,maxHonor:max,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length};
   }
@@ -189,12 +189,12 @@ async function hallvallaRtResourceAndDrawTick(now){
   hallvallaRtState.cycle+=1;
   const max=Math.max(HALLVALLA_RT_CFG.initialMana,Math.min(HALLVALLA_RT_CFG.resourceCap,Number(privateState?.maxHonor||HALLVALLA_RT_CFG.initialMana)));
   const honor=Math.min(max,Math.max(0,Number(privateState?.honor||0))+1);
-  const privatePatch={honor,maxHonor:max,lastTurnStarted:'RT'};
-  const publicPatch={turnPhase:'realtime',currentPlayer:0,[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),honor,maxHonor:max,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}};
+  const privatePatch={honor,maxHonor:max};
+  const publicPatch={runtimeMode:'continuous',[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),honor,maxHonor:max,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}};
   if(publicState?.adventureAiState){
     const ai={...publicState.adventureAiState};
     const aiMax=Math.max(HALLVALLA_RT_CFG.initialMana,Math.min(HALLVALLA_RT_CFG.resourceCap,Number(ai.maxHonor||HALLVALLA_RT_CFG.initialMana)));
-    ai.maxHonor=aiMax;ai.honor=Math.min(aiMax,Math.max(0,Number(ai.honor||0))+1);ai.lastTurnStarted='RT';
+    ai.maxHonor=aiMax;ai.honor=Math.min(aiMax,Math.max(0,Number(ai.honor||0))+1);
     publicPatch.adventureAiState=ai;
     publicPatch['playerStats/2']={...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:aiMax,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length};
   }
@@ -221,8 +221,8 @@ async function hallvallaRtManaOrbTick(now){
 async function hallvallaRtCombatRefreshTick(now){
   if(now-hallvallaRtState.lastCombatRefreshAt<HALLVALLA_RT_CFG.combatRefreshEveryMs)return false;
   hallvallaRtState.lastCombatRefreshAt=now;hallvallaRtState.combatWindow+=1;
-  const turnKey=`RTC-${hallvallaRtState.combatWindow}`;
-  let units=[...(publicState?.units||[])].map(u=>u&&Number(u.hp||0)>0&&typeof clearCycleTempStatsForUnit==="function"?clearCycleTempStatsForUnit(u,turnKey):u);
+  const combatWindowKey=`RTC-${hallvallaRtState.combatWindow}`;
+  let units=[...(publicState?.units||[])].map(u=>u&&Number(u.hp||0)>0&&typeof clearCycleTempStatsForUnit==="function"?clearCycleTempStatsForUnit(u,combatWindowKey):u);
   let legendaryTraps=[...(publicState?.legendaryTraps||[])],undeadRemains=[...(publicState?.undeadRemains||[])],logs=[];
 
   // Sangre del Pélida: la antigua curación de inicio de turno pasa a cada ciclo TR de 10 s.
@@ -244,23 +244,23 @@ async function hallvallaRtCombatRefreshTick(now){
   // Trampas que antes esperaban Start/Battle Phase ahora abren en el siguiente ciclo táctico.
   const previousState=publicState;
   try{
-    publicState={...(publicState||{}),units,turnKey,legendaryTraps,undeadRemains};
-    if(typeof resolveStartTurnLegendaryTraps==="function"){
+    publicState={...(publicState||{}),units,combatWindowKey,combatWindowIndex:hallvallaRtState.combatWindow,legendaryTraps,undeadRemains};
+    if(typeof resolveWindowStartLegendaryTraps==="function"){
       for(const owner of [1,2]){
-        publicState={...(publicState||{}),units,turnKey,legendaryTraps,undeadRemains};
-        const tr=resolveStartTurnLegendaryTraps(units,owner,turnKey);units=tr.units;legendaryTraps=tr.traps;logs.push(...(tr.logs||[]));
+        publicState={...(publicState||{}),units,combatWindowKey,combatWindowIndex:hallvallaRtState.combatWindow,legendaryTraps,undeadRemains};
+        const tr=resolveWindowStartLegendaryTraps(units,owner,combatWindowKey);units=tr.units;legendaryTraps=tr.traps;logs.push(...(tr.logs||[]));
       }
     }
     if(typeof resolveBattlePhaseLegendaryTraps==="function"){
       for(const owner of [1,2]){
-        publicState={...(publicState||{}),units,turnKey,legendaryTraps,undeadRemains};
+        publicState={...(publicState||{}),units,combatWindowKey,combatWindowIndex:hallvallaRtState.combatWindow,legendaryTraps,undeadRemains};
         const br=resolveBattlePhaseLegendaryTraps(units,owner);units=br.units;legendaryTraps=br.traps;logs.push(...(br.logs||[]));
       }
     }
   }finally{publicState=previousState;}
 
   if(await finalizeBattle(units,logs.join(" ")))return true;
-  await updatePublic({units,legendaryTraps,undeadRemains,turnKey,turnPhase:'realtime',currentPlayer:0,log:logs.length?[...logs,...(publicState?.log||[])].slice(0,18):(publicState?.log||[])});
+  await updatePublic({units,legendaryTraps,undeadRemains,combatWindowKey,combatWindowIndex:hallvallaRtState.combatWindow,runtimeMode:'continuous',log:logs.length?[...logs,...(publicState?.log||[])].slice(0,18):(publicState?.log||[])});
   return true;
 }
 
@@ -362,7 +362,7 @@ function hallvallaRtAiChoosePlay(ai,units,mana){
       const amount=Math.max(0,Number(effectiveCardValue(card,"heal")||0));
       for(const target of allies){
         if(typeof canReceiveHealFromCard==="function"&&!canReceiveHealFromCard(card,target,2))continue;
-        if(target.noHealTurnKey===publicState?.turnKey||isRtTrapLocked(target,"heal")||target.noHealWhilePoisoned)continue;
+        if(target.noHealWindowKey===publicState?.combatWindowKey||isRtTrapLocked(target,"heal")||target.noHealWhilePoisoned)continue;
         const maxHp=Math.max(1,Number(effectiveMaxHp(target)||target.hp||1)),hp=Math.max(0,Number(target.hp||0)),missing=Math.max(0,maxHp-hp);
         const cleanse=typeof cardCleanseEnabled==="function"&&cardCleanseEnabled(card)&&typeof hasCurableStatus==="function"&&hasCurableStatus(target);
         if(missing<=0&&!cleanse)continue;
@@ -399,7 +399,7 @@ function hallvallaRtAiChoosePlay(ai,units,mana){
     if(card?.spell==="paralysis"){
       for(const target of enemyUnits){
         if(typeof canDirectlyTarget==="function"&&!canDirectlyTarget(card,target))continue;
-        if(target.noMoveTurnKey===publicState?.turnKey||target.noAttackTurnKey===publicState?.turnKey||isRtTrapLocked(target,"move")||isRtTrapLocked(target,"attack"))continue;
+        if(target.noMoveWindowKey===publicState?.combatWindowKey||target.noAttackWindowKey===publicState?.combatWindowKey||isRtTrapLocked(target,"move")||isRtTrapLocked(target,"attack"))continue;
         let score=275+hallvallaRtAiThreatValue(target)*1.45+Math.max(0,Number(target.mov||0))*22+Math.max(1,Number(target.range||1))*18-cost*7;
         push("paralysis",card,target,score);
       }
@@ -500,7 +500,7 @@ async function hallvallaRtAiResolvePlay(choice,ai,units,now){
     log=`J2 usa ${card.name}: ${target.name} recibe ${actual} daño mágico${affinity}.`+log;
   }else if(choice.kind==="heal"){
     const target=nextUnits.find(u=>u.id===choice.target?.id&&u.owner===2&&Number(u.hp||0)>0);if(!target||!canReceiveHealFromCard(card,target,2))return false;
-    if(target.noHealTurnKey===publicState?.turnKey||isRtTrapLocked(target,"heal",now)||target.noHealWhilePoisoned)return false;
+    if(target.noHealWindowKey===publicState?.combatWindowKey||isRtTrapLocked(target,"heal",now)||target.noHealWhilePoisoned)return false;
     const heal=Math.max(0,Number(effectiveCardValue(card,"heal")||0)),cleanse=cardCleanseEnabled(card),hadCleanse=cleanse&&hasCurableStatus(target),actual=Math.max(0,Math.min(effectiveMaxHp(target),Number(target.hp||0)+heal)-Number(target.hp||0));
     const bh=resolveBuffHealLegendaryTraps(target,"curación",nextUnits);legendaryTraps=bh.traps||legendaryTraps;
     if(!bh.cancel){const caster=hallvallaRtGetOwnerLeader(2,nextUnits);if(caster)battleFxEvent=makeMagicFxEvent(caster,target,"heal",{type:"heal",spellKey:card.key,effectAction:cleanse?"cleanse":"heal",hit:true});}
@@ -581,7 +581,7 @@ async function hallvallaRtLeaderEffectsTick(now){
       if(heroic?.logs?.length){units=heroic.units;logs.push(...heroic.logs);changed=true;}
     }catch(_){ }
     try{
-      const auto=resolveAutomaticLeaderEffectAfterRivalTurn(units,owner,{legendaryTraps:publicState?.legendaryTraps||[],beastTraps:publicState?.beastTraps||[]});
+      const auto=resolveAutomaticLeaderEffectOnWindow(units,owner,{legendaryTraps:publicState?.legendaryTraps||[],beastTraps:publicState?.beastTraps||[]});
       if(auto?.triggered){units=auto.units;logs.push(...(auto.logs||[]));battleFxEvent=auto.battleFxEvent||battleFxEvent;changed=true;}
     }catch(error){console.warn("[HallValla][RT] efecto automático de líder falló",error);}
   }
@@ -635,8 +635,8 @@ async function hallvallaRtAutoAcolyte(caster,now){
 }
 async function hallvallaRtAutoEricto(caster,now){
   const last=Number(hallvallaRtState.supportAt.get(caster.id)||0);if(now-last<HALLVALLA_RT_CFG.supportEffectEveryMs)return false;
-  const units=[...(publicState?.units||[])].map(u=>u.id===caster.id?{...u,acted:false,erictoUsedTurnKey:""}:u),grave=publicState?.erictoGraveyard||[];
-  const live=units.find(u=>u.id===caster.id)||{...caster,erictoUsedTurnKey:""};
+  const units=[...(publicState?.units||[])].map(u=>u.id===caster.id?{...u,acted:false,erictoUsedWindowKey:""}:u),grave=publicState?.erictoGraveyard||[];
+  const live=units.find(u=>u.id===caster.id)||{...caster,erictoUsedWindowKey:""};
   const choice=typeof getBestErictoReanimationChoice==="function"?getBestErictoReanimationChoice(live,units,grave):null;if(!choice)return false;
   const result=applyUnitEffectState(live,choice,units);if(!result?.success)return false;
   hallvallaRtState.supportAt.set(caster.id,now);
@@ -795,7 +795,7 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
     let trapMove;
     try{trapMove=resolveMovementLegendaryTraps(live,{x:step.x,y:step.y},units,legendaryTraps);}catch(_){trapMove={cancel:false,units,traps:legendaryTraps,logs:[]};}
     legendaryTraps=[...(trapMove.traps||legendaryTraps)];
-    units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveTurnKey:publicState?.turnKey||'RT',rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false}:u);
+    units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveWindowKey:publicState?.combatWindowKey||'RT',rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false}:u);
     if(!trapMove.cancel){
       const moved=units.find(u=>u.id===live.id&&Number(u.hp||0)>0);
       if(moved){

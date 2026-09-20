@@ -12,10 +12,10 @@ function getEquipmentLeaderLabel(card){const data=typeof LEADER_DATA!=="undefine
 function applyInstinctCollarDuration(unit,turns){
   const duration=Math.max(1,Number(turns||1));
   if(!hasUnitEquipment(unit,"instinct_collar"))return{unit,turns:duration,reduced:false};
-  const turnKey=typeof publicState!=="undefined"?(publicState?.turnKey||""):"";
-  if(turnKey&&unit?.instinctCollarUsedTurnKey===turnKey)return{unit,turns:duration,reduced:false};
+  const combatWindowKey=typeof publicState!=="undefined"?(publicState?.combatWindowKey||""):"";
+  if(combatWindowKey&&unit?.instinctCollarUsedWindowKey===combatWindowKey)return{unit,turns:duration,reduced:false};
   const nextTurns=Math.max(1,duration-1);
-  return{unit:{...unit,instinctCollarUsedTurnKey:turnKey||`local_${Date.now()}`},turns:nextTurns,reduced:nextTurns<duration};
+  return{unit:{...unit,instinctCollarUsedWindowKey:combatWindowKey||`local_${Date.now()}`},turns:nextTurns,reduced:nextTurns<duration};
 }
 
 const STARTER_BASIC_DECK_KEYS=[
@@ -274,7 +274,7 @@ function revealUnit(u,reason="revelada"){return isStealthedUnit(u)?{...u,reveale
 function revealStealthInRadius(units,owner,center,radius,reason="detección"){let count=0;const out=(units||[]).map(u=>{if(u.owner!==owner&&isStealthedUnit(u)&&dist(u,center)<=radius){count++;return revealUnit(u,reason);}return u;});return{units:out,count};}
 function applyMongolExplorerAura(units){const list=Array.isArray(units)?units:[];const mongols=list.filter(u=>u&&u.key==="mongol_explorer"&&Number(u.hp||0)>0&&!u.leader);if(!mongols.length)return{units:list,count:0};let count=0;const out=list.map(u=>{if(!u||u.leader||!isStealthedUnit(u))return u;const revealer=mongols.find(m=>m.owner!==u.owner&&dist(m,u)<=2);if(!revealer)return u;count++;return revealUnit(u,"Ojos de la estepa");});return{units:out,count};}
 function getBeastTraps(state=publicState){return Array.isArray(state?.beastTraps)?state.beastTraps:[];}
-function makeBeastTrap(card,owner,x,y){return {id:uid8(),owner,x,y,cardKey:card.key,cardName:card.name,trapKey:card.beastTrap||"basic_hunt",createdTurnKey:publicState?.turnKey||"",createdAt:Date.now()};}
+function makeBeastTrap(card,owner,x,y){return {id:uid8(),owner,x,y,cardKey:card.key,cardName:card.name,trapKey:card.beastTrap||"basic_hunt",createdWindowKey:publicState?.combatWindowKey||"",createdAt:Date.now()};}
 function removeBeastTrapById(traps,id){return (traps||[]).filter(t=>t.id!==id);}
 function ownerHasBeastmaster(owner,units=publicState?.units||[]){return (units||[]).some(u=>u.owner===owner&&u.leader&&u.leaderType==="beastmaster"&&u.hp>0);}
 function ownerHasBeastmasterVenom(owner,units=publicState?.units||[]){return (units||[]).some(u=>u.owner===owner&&u.leader&&u.leaderType==="beastmaster"&&u.hp>0&&getLeaderAbilityForOwner(owner,units)==="prepare_hunt");}
@@ -288,23 +288,17 @@ function applyBeastmasterVenomToTarget(target,source,turns=5){
 }
 function isIgnoredByBeastTrap(unit,trap,units=publicState?.units||[]){return !!(trap&&unit&&unit.owner===trap.owner&&isBeastUnit(unit)&&ownerHasBeastmaster(trap.owner,units));}
 function getCellBeastTrapAt(x,y,state=publicState){return getBeastTraps(state).find(t=>t.x===x&&t.y===y)||null;}
-function nextTurnKeyForOwner(owner,state=publicState){
-  const currentTurn=Number(state?.turn||1)||1;
-  const currentPlayer=Number(state?.currentPlayer||1)||1;
-  const target=Number(owner||currentPlayer)||currentPlayer;
-  if(target===currentPlayer)return `${currentTurn+1}-${target}`;
-  if(currentPlayer===1&&target===2)return `${currentTurn}-${target}`;
-  return `${currentTurn+1}-${target}`;
+function nextWindowKeyForOwner(_owner,state=publicState){
+  return typeof nextCombatWindowKey==="function"?nextCombatWindowKey(state):getCombatWindowKey(state);
 }
-function currentOrNextTurnKeyForOwner(owner,state=publicState){
-  const currentPlayer=Number(state?.currentPlayer||1)||1;
-  return Number(owner||currentPlayer)===currentPlayer ? (state?.turnKey||`${state?.turn||1}-${currentPlayer}`) : nextTurnKeyForOwner(owner,state);
+function currentOrNextWindowKeyForOwner(owner,state=publicState){
+  return typeof currentOrNextCombatWindowKey==="function"?currentOrNextCombatWindowKey(owner,state):getCombatWindowKey(state);
 }
 function applyBasicParalysisSpell(target,sourceName="Parálisis",state=publicState){
   if(!target||target.leader)return target;
-  const actionTurnKey=currentOrNextTurnKeyForOwner(target.owner,state);
-  const reactionTurnKey=state?.turnKey||actionTurnKey;
-  return {...target,paralysisSource:sourceName,noMoveTurnKey:actionTurnKey,noAttackTurnKey:actionTurnKey,noDefTurnKey:actionTurnKey,noCounterTurnKey:reactionTurnKey};
+  const actionWindowKey=currentOrNextWindowKeyForOwner(target.owner,state);
+  const reactionWindowKey=state?.combatWindowKey||actionWindowKey;
+  return {...target,paralysisSource:sourceName,noMoveWindowKey:actionWindowKey,noAttackWindowKey:actionWindowKey,noDefWindowKey:actionWindowKey,noCounterWindowKey:reactionWindowKey};
 }
 function applyBasicPoisonSpell(target,sourceName="Veneno",turns=3,startDamage=1){
   if(!target||target.leader)return target;
@@ -378,7 +372,7 @@ function applySolomonDemonSeal(units,summon){
 function spawnSolomonEntity(units,solomon,key){
   const t=getSolomonEntityTemplate(key),cell=getSolomonAdjacentFreeCell(solomon,units);if(!t||!cell)return {units,spawned:null};
   let summon=makeUnit({...makeCard(t,solomon.owner),summonOrigin:"field_effect",fieldGeneratedSummon:true},cell.x,cell.y);
-  summon={...summon,solomonSummon:true,solomonSourceId:solomon.id,summonOrigin:"field_effect",fieldGeneratedSummon:true,hallvallaReadyOnSummon:false,summonedTurnKey:publicState?.turnKey||"",acted:true};
+  summon={...summon,solomonSummon:true,solomonSourceId:solomon.id,summonOrigin:"field_effect",fieldGeneratedSummon:true,hallvallaReadyOnSummon:false,summonedWindowKey:publicState?.combatWindowKey||"",acted:true};
   let out=[...units,summon].map(u=>u.id===solomon.id?{...u,solomonCurrentEntity:key,solomonPending:false}:u);
   if(key==="solomon_demon")out=applySolomonDemonSeal(out,summon);
   return {units:out,spawned:summon};
@@ -414,7 +408,7 @@ function applySolomonIfritAfterHit(units,attacker,target,hit,hpLoss){
   const targetState=out.find(u=>u.id===target.id);
   if(targetState&&Number(targetState.hp||0)>0)out=out.map(u=>u.id===target.id?applyBurnToUnit(u,attacker.name,2,2):u);
   const splashIds=out.filter(u=>u.owner!==attacker.owner&&!u.leader&&u.id!==target.id&&canReceiveUntargetedAreaEffect(u)&&dist(u,target)<=1).map(u=>u.id);
-  if(splashIds.length){out=out.map(u=>splashIds.includes(u.id)?(typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(u,4).unit:resolveBlessedArmorTransition(u,{...u,hp:Number(u.hp||0)-4,damagedThisTurn:true})):u);logs.push(`Fuego del Mandato causa hasta 4 daño directo a ${splashIds.length} enemigo(s) adyacente(s).`);}
+  if(splashIds.length){out=out.map(u=>splashIds.includes(u.id)?(typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(u,4).unit:resolveBlessedArmorTransition(u,{...u,hp:Number(u.hp||0)-4,damagedThisWindow:true})):u);logs.push(`Fuego del Mandato causa hasta 4 daño directo a ${splashIds.length} enemigo(s) adyacente(s).`);}
   const cells=[];
   for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
     if(dx===0&&dy===0)continue;
@@ -444,13 +438,13 @@ function makeErictoCorpseRecord(unit){
   let snapshot=null;
   try{snapshot=JSON.parse(JSON.stringify(unit));}catch(e){snapshot={...unit};}
   return {
-    graveId:`${unit.id||uid8()}-${publicState?.turnKey||Date.now()}`,
+    graveId:`${unit.id||uid8()}-${publicState?.combatWindowKey||Date.now()}`,
     originalUnitId:String(unit.id||""),
     name:unit.name||"Unidad caída",
     key:unit.key||"",
     originalOwner:Number(unit.owner||0),
     battlePower:getUnitBattlePower(unit),
-    destroyedTurnKey:publicState?.turnKey||"",
+    destroyedWindowKey:publicState?.combatWindowKey||"",
     destroyedAt:Date.now(),
     used:false,
     snapshot
@@ -501,7 +495,7 @@ function applyErictoCycleUpkeep(units,owner){
   for(const ericto of erictos){
     const count=getErictoLinkedReanimated(ericto,out).length;
     if(count<=0)continue;
-    out=out.map(u=>u.id===ericto.id?{...u,hp:Number(u.hp||0)-count,damagedThisTurn:true,erictoUpkeepPaidTurnKey:publicState?.turnKey||""}:u);
+    out=out.map(u=>u.id===ericto.id?{...u,hp:Number(u.hp||0)-count,damagedThisWindow:true,erictoUpkeepPaidWindowKey:publicState?.combatWindowKey||""}:u);
     const after=out.find(u=>u.id===ericto.id);
     logs.push(`Necromancia de Farsalia: ${ericto.name} pierde ${count} Vida inevitable por mantener ${count} reanimado${count===1?"":"s"}.`);
     if(!after||Number(after.hp||0)<=0)noClockKillIds.push(ericto.id);
@@ -510,7 +504,7 @@ function applyErictoCycleUpkeep(units,owner){
 }
 function resetErictoReanimatedTransientState(snapshot){
   const n={...(snapshot||{})};
-  ["id","x","y","nexoX","nexoY","owner","hp","moved","acted","defenseModeReady","damagedThisTurn","lastMoveStraightDistance","lastMoveDistance","lastMoveDx","lastMoveDy","lastMoveTurnKey","summonedTurnKey","summonedTurn","summonedPhase","yiSunDebuffed","tempAtkBuff","tempGuardBuff","tempDexBuff","tempAgiBuff","tempMovBuff","tempAtkDebuff","tempGuardDebuff","tempDexDebuff","tempAgiDebuff","tempMovDebuff","burnTurns","burnDamage","burnPersistent","burnSource","bleedTurns","bleedDamage","bleedSource","poisonTurns","poisonDamage","poisonBaseDamage","poisonMaxDamage","poisonPersistent","poisonSource","stunnedUntilTurnKey","noDefTurnKey","noHealTurnKey","solomonOrder","solomonUsedEntities","solomonCurrentEntity","solomonPending","solomonSummon","solomonSourceId","solomonSealSourceId","mulanFirstAttackUsed","mulanRepositionReady","mulanFollowupReady","mulanExecutionMoveReady","mulanExecutionChoiceReady","khalidChainReady","khalidAttackPenalty"].forEach(k=>delete n[k]);
+  ["id","x","y","nexoX","nexoY","owner","hp","moved","acted","defenseModeReady","damagedThisWindow","lastMoveStraightDistance","lastMoveDistance","lastMoveDx","lastMoveDy","lastMoveWindowKey","summonedWindowKey","summonedWindowIndex","summonedRuntimeMode","yiSunDebuffed","tempAtkBuff","tempGuardBuff","tempDexBuff","tempAgiBuff","tempMovBuff","tempAtkDebuff","tempGuardDebuff","tempDexDebuff","tempAgiDebuff","tempMovDebuff","burnTurns","burnDamage","burnPersistent","burnSource","bleedTurns","bleedDamage","bleedSource","poisonTurns","poisonDamage","poisonBaseDamage","poisonMaxDamage","poisonPersistent","poisonSource","stunnedUntilWindowKey","noDefWindowKey","noHealWindowKey","solomonOrder","solomonUsedEntities","solomonCurrentEntity","solomonPending","solomonSummon","solomonSourceId","solomonSealSourceId","mulanFirstAttackUsed","mulanRepositionReady","mulanFollowupReady","mulanExecutionMoveReady","mulanExecutionChoiceReady","khalidChainReady","khalidAttackPenalty"].forEach(k=>delete n[k]);
   return n;
 }
 function makeErictoReanimatedUnit(ericto,record,cell){
@@ -522,8 +516,8 @@ function makeErictoReanimatedUnit(ericto,record,cell){
     id:uid8(),owner:ericto.owner,originalOwner:Number(record?.originalOwner||record?.snapshot?.owner||0),
     x:cell.x,y:cell.y,nexoX:cell.x,nexoY:cell.y,
     hp:Math.max(1,Math.ceil(maxHp/2)),maxHp,baseGuard,guard:baseGuard,
-    moved:true,acted:true,defenseModeReady:false,damagedThisTurn:false,
-    summonedTurnKey:publicState?.turnKey||"",summonedTurn:publicState?.turn||0,summonedPhase:getTurnPhase?.()||"actions",
+    moved:true,acted:true,defenseModeReady:false,damagedThisWindow:false,
+    summonedWindowKey:publicState?.combatWindowKey||"",summonedWindowIndex:publicState?.combatWindowIndex||0,summonedRuntimeMode:getRuntimeMode?.()||"continuous",
     hallvallaReadyOnSummon:false,
     summonOrigin:"reanimation",fieldGeneratedSummon:true,
     reanimated:true,reanimatedByErictoId:ericto.id,reanimatedFromGraveId:record.graveId,reanimatedOriginalUnitId:record.originalUnitId,
@@ -1296,34 +1290,34 @@ function applyBleedToUnit(target,sourceName=""){
     bleedDamage:Math.max(1,Number(target.bleedDamage||0)||1),
     bleedSourceName:sourceName||target.bleedSourceName||"Sangrado"
   };
-  if(target.leader)bleed.bleedTurnsRemaining=adjusted.turns;
-  else if(adjusted.reduced)bleed.bleedTurnsRemaining=adjusted.turns;
+  if(target.leader)bleed.bleedCyclesRemaining=adjusted.turns;
+  else if(adjusted.reduced)bleed.bleedCyclesRemaining=adjusted.turns;
   return bleed;
 }
 function getBleedDurationText(u){
-  const timed=Math.max(0,Number(u?.bleedTurnsRemaining||0));
+  const timed=Math.max(0,Number(u?.bleedCyclesRemaining||0));
   if(timed>0)return ` durante ${timed*10} s`;
   return u?.leader?" durante 20 s":" hasta que sea curada o destruida";
 }
 function hasBlessedArmorAbility(u){
   return !!u&&!!u.leader&&u.leaderType==="warrior"&&u.leaderAbility==="blessed_armor";
 }
-function hasActiveBlessedArmor(u,turnKey=publicState?.turnKey||""){
-  return !!u&&!!u.blessedArmorActiveTurnKey&&u.blessedArmorActiveTurnKey===turnKey;
+function hasActiveBlessedArmor(u,combatWindowKey=publicState?.combatWindowKey||""){
+  return !!u&&!!u.blessedArmorActiveWindowKey&&u.blessedArmorActiveWindowKey===combatWindowKey;
 }
-function resolveBlessedArmorTransition(previous,next,turnKey=publicState?.turnKey||""){
+function resolveBlessedArmorTransition(previous,next,combatWindowKey=publicState?.combatWindowKey||""){
   if(!previous||!next)return next;
   const prevHp=Number(previous.hp||0);
   let nextHp=Number(next.hp||0);
   let resolved={...next};
-  if(previous.key==="armored_man_at_arms"&&nextHp<prevHp&&previous.fullPlateReductionTurnKey!==turnKey){
+  if(previous.key==="armored_man_at_arms"&&nextHp<prevHp&&previous.fullPlateReductionWindowKey!==combatWindowKey){
     nextHp=Math.min(prevHp,nextHp+1);
-    resolved={...resolved,hp:nextHp,fullPlateReductionTurnKey:turnKey,fullPlateReducedDamage:1};
+    resolved={...resolved,hp:nextHp,fullPlateReductionWindowKey:combatWindowKey,fullPlateReducedDamage:1};
     if(Number.isFinite(Number(resolved.lastHpLoss)))resolved.lastHpLoss=Math.max(0,Number(resolved.lastHpLoss||0)-1);
   }
-  if(hasActiveBlessedArmor(previous,turnKey)&&nextHp<prevHp)return {...resolved,hp:prevHp};
+  if(hasActiveBlessedArmor(previous,combatWindowKey)&&nextHp<prevHp)return {...resolved,hp:prevHp};
   if(hasBlessedArmorAbility(previous)&&!previous.blessedArmorUsed&&nextHp<=0){
-    return {...resolved,hp:1,blessedArmorUsed:true,blessedArmorActiveTurnKey:turnKey,blessedArmorTriggeredTurnKey:turnKey};
+    return {...resolved,hp:1,blessedArmorUsed:true,blessedArmorActiveWindowKey:combatWindowKey,blessedArmorTriggeredWindowKey:combatWindowKey};
   }
   return resolved;
 }
@@ -1333,7 +1327,7 @@ function isPoisonImmuneUnit(u){return !!u&&(u.key==="honey_badger"||isUndeadUnit
 function clearBleedStatus(u){
   if(!u)return u;
   const n={...u};
-  delete n.bleedDamage;delete n.bleedSourceName;delete n.bleedTurnsRemaining;
+  delete n.bleedDamage;delete n.bleedSourceName;delete n.bleedCyclesRemaining;
   return n;
 }
 const UNDEAD_REVIVE_CYCLES=3;
@@ -1347,9 +1341,9 @@ function sanitizeUndeadReviveSnapshot(u){
   if(!u)return null;
   const n={...u};
   for(const k of [
-    "burnTurns","burnDamage","burnPersistent","burnSourceName","bleedDamage","bleedSourceName","bleedTurnsRemaining","poisonTurns","poisonDamage","poisonStage","poisonBaseDamage","poisonMaxDamage","poisonPersistent","poisonSourceId","poisonSourceName","noHealWhilePoisoned",
+    "burnTurns","burnDamage","burnPersistent","burnSourceName","bleedDamage","bleedSourceName","bleedCyclesRemaining","poisonTurns","poisonDamage","poisonStage","poisonBaseDamage","poisonMaxDamage","poisonPersistent","poisonSourceId","poisonSourceName","noHealWhilePoisoned",
     "frozenSource","dragonFrostTurns","dragonFrostFresh","dragonFrostSource","electrocutionTurns","electrocutionFresh","electrocutionSource","paralysisTurns","paralysisSource",
-    "noMoveTurnKey","noAttackTurnKey","noDefTurnKey","noCounterTurnKey","incineratedOnDeath","lastFatalDamageType","damagedThisTurn","fullPlateReducedDamage"
+    "noMoveWindowKey","noAttackWindowKey","noDefWindowKey","noCounterWindowKey","incineratedOnDeath","lastFatalDamageType","damagedThisWindow","fullPlateReducedDamage"
   ])delete n[k];
   n.moved=false;n.movedSpaces=0;n.acted=false;n.evasionSpent=0;n.defending=false;
   return n;
@@ -1359,7 +1353,7 @@ function makeUndeadRemainsRecord(unit,{frozen=false}={}){
   return{
     id:`undead_remains_${unit.id||uid8()}_${Date.now()}`,
     originalUnitId:String(unit.id||""),key:String(unit.key||""),name:String(unit.name||"No Muerto"),owner:Number(unit.owner||0),
-    x:Number(unit.x||0),y:Number(unit.y||0),turnsRemaining:turns,baseTurns:turns,frozenDelayed:!!frozen,
+    x:Number(unit.x||0),y:Number(unit.y||0),cyclesRemaining:turns,baseCycles:turns,frozenDelayed:!!frozen,
     reviveHpRatio:Math.max(0,Number(unit.reviveHpRatio||UNDEAD_REVIVE_HP_RATIO)),snapshot:sanitizeUndeadReviveSnapshot(unit)
   };
 }
@@ -1397,10 +1391,10 @@ function advanceUndeadRemainsForOwner(remains=[],units=[],owner){
   for(const raw of Array.isArray(remains)?remains:[]){
     const r={...raw};
     if(Number(r.owner)!==Number(owner)){outRemains.push(r);continue;}
-    r.turnsRemaining=Math.max(0,Number(r.turnsRemaining||0)-1);
-    if(r.turnsRemaining>0){outRemains.push(r);continue;}
+    r.cyclesRemaining=Math.max(0,Number(r.cyclesRemaining||0)-1);
+    if(r.cyclesRemaining>0){outRemains.push(r);continue;}
     const occupied=outUnits.some(u=>u&&!u.leader&&Number(u.hp||0)>0&&Number(u.x)===Number(r.x)&&Number(u.y)===Number(r.y));
-    if(occupied){r.turnsRemaining=0;outRemains.push(r);logs.push(`REANIMACIÓN de ${r.name} espera: su casilla está ocupada.`);continue;}
+    if(occupied){r.cyclesRemaining=0;outRemains.push(r);logs.push(`REANIMACIÓN de ${r.name} espera: su casilla está ocupada.`);continue;}
     const revived=reviveUnitFromUndeadRemains(r);
     if(!revived){continue;}
     outUnits.push(revived);
@@ -1420,8 +1414,8 @@ function applyElementToUndeadRemains(remains=[],x,y,element,{enemyOwner=0}={}){
       changed=true;affected++;logs.push(`INCINERADO: los restos de ${r.name} son destruidos definitivamente.`);continue;
     }
     if(kind==="ice"){
-      r.turnsRemaining=Math.max(0,Number(r.turnsRemaining||0))+2;r.frozenDelayed=true;r.lastElementEffect="ice";
-      changed=true;affected++;logs.push(`CONGELADO: los restos de ${r.name} retrasan su reanimación +20 s (REANIMACIÓN: ${Math.max(0,Number(r.turnsRemaining||0))*10} s).`);
+      r.cyclesRemaining=Math.max(0,Number(r.cyclesRemaining||0))+2;r.frozenDelayed=true;r.lastElementEffect="ice";
+      changed=true;affected++;logs.push(`CONGELADO: los restos de ${r.name} retrasan su reanimación +20 s (REANIMACIÓN: ${Math.max(0,Number(r.cyclesRemaining||0))*10} s).`);
     }
     next.push(r);
   }
@@ -1449,20 +1443,20 @@ function reduceDamageForHoneyBadger(unit,amount){
 const PORCUPINE_FEAR_CHANCE=0.25;
 function applyFearToUnit(unit,sourceName="Puercoespín"){
   if(!unit)return unit;
-  if(unit.key==="berserker_de_oso")return {...unit,fearSourceName:"",fearTurnKey:""};
+  if(unit.key==="berserker_de_oso")return {...unit,fearSourceName:"",fearWindowKey:""};
   return {
     ...unit,
     tempAtkDebuff:Math.max(Number(unit.tempAtkDebuff||0),3),
     fearSourceName:sourceName,
-    fearTurnKey:nextTurnKeyForOwner(unit.owner)
+    fearWindowKey:nextWindowKeyForOwner(unit.owner)
   };
 }
-function clearCycleTempStatsForUnit(u,turnKey){
-  if(u&&u.key==="berserker_de_oso")u={...u,fearSourceName:"",fearTurnKey:"",tempAtkDebuff:u.fearTurnKey?0:u.tempAtkDebuff};
-  const fearStillActive=!!(u&&u.fearTurnKey&&u.fearTurnKey===turnKey);
-  const genghisMovStillActive=!!(u&&u.genghisMovDebuffTurnKey&&u.genghisMovDebuffTurnKey===turnKey);
-  const hannibalAtkStillActive=!!(u&&u.hannibalAtkDebuffTurnKey&&u.hannibalAtkDebuffTurnKey===turnKey);
-  const hannibalMovStillActive=!!(u&&u.hannibalMovDebuffTurnKey&&u.hannibalMovDebuffTurnKey===turnKey);
+function clearCycleTempStatsForUnit(u,combatWindowKey){
+  if(u&&u.key==="berserker_de_oso")u={...u,fearSourceName:"",fearWindowKey:"",tempAtkDebuff:u.fearWindowKey?0:u.tempAtkDebuff};
+  const fearStillActive=!!(u&&u.fearWindowKey&&u.fearWindowKey===combatWindowKey);
+  const genghisMovStillActive=!!(u&&u.genghisMovDebuffWindowKey&&u.genghisMovDebuffWindowKey===combatWindowKey);
+  const hannibalAtkStillActive=!!(u&&u.hannibalAtkDebuffWindowKey&&u.hannibalAtkDebuffWindowKey===combatWindowKey);
+  const hannibalMovStillActive=!!(u&&u.hannibalMovDebuffWindowKey&&u.hannibalMovDebuffWindowKey===combatWindowKey);
   const next={
     ...u,
     moved:false,
@@ -1471,65 +1465,65 @@ function clearCycleTempStatsForUnit(u,turnKey){
     lastMoveDistance:0,
     lastMoveDx:0,
     lastMoveDy:0,
-    lastMoveTurnKey:"",
+    lastMoveWindowKey:"",
     acted:false,
     buffAtk:0,
     tempMovDebuff:0,
     tempMovDebuffSource:"",
     genghisMovDebuff:genghisMovStillActive?Math.max(1,Number(u.genghisMovDebuff||1)):0,
-    genghisMovDebuffTurnKey:genghisMovStillActive?u.genghisMovDebuffTurnKey:"",
+    genghisMovDebuffWindowKey:genghisMovStillActive?u.genghisMovDebuffWindowKey:"",
     genghisMovDebuffSource:genghisMovStillActive?(u.genghisMovDebuffSource||"Gengis Kan"):"",
     hannibalMovDebuff:hannibalMovStillActive?Math.max(1,Number(u.hannibalMovDebuff||1)):0,
-    hannibalMovDebuffTurnKey:hannibalMovStillActive?u.hannibalMovDebuffTurnKey:"",
+    hannibalMovDebuffWindowKey:hannibalMovStillActive?u.hannibalMovDebuffWindowKey:"",
     hannibalMovDebuffSource:hannibalMovStillActive?(u.hannibalMovDebuffSource||"Hannibal Barca"):"",
     tempMovBuff:0,
     tempAtkBuff:0,
     tempGuardBuff:0,
     tempAtkDebuff: fearStillActive ? 3 : 0,
     fearSourceName: fearStillActive ? (u.fearSourceName||"Miedo") : "",
-    fearTurnKey: fearStillActive ? u.fearTurnKey : "",
+    fearWindowKey: fearStillActive ? u.fearWindowKey : "",
     hannibalAtkDebuff:hannibalAtkStillActive?Math.max(1,Number(u.hannibalAtkDebuff||1)):0,
-    hannibalAtkDebuffTurnKey:hannibalAtkStillActive?u.hannibalAtkDebuffTurnKey:"",
+    hannibalAtkDebuffWindowKey:hannibalAtkStillActive?u.hannibalAtkDebuffWindowKey:"",
     hannibalAtkDebuffSource:hannibalAtkStillActive?(u.hannibalAtkDebuffSource||"Hannibal Barca"):"",
-    lionFearAppliedTurnKey:"",
+    lionFearAppliedWindowKey:"",
     tempDexBuff:0,
     tempDexDebuff:0,
-    saboteadorDexZeroTurnKey:"",
+    saboteadorDexZeroWindowKey:"",
     saboteadorDexZeroSource:"",
     tempAgiBuff:0,
     tempAgiDebuff:0,
-    counterUsedTurn:false,
-    lanceFirstStrikeUsedTurn:false,
-    caesarUsedTurn:false,
-    hannibalUsedTurn:false,
-    joanUsedTurn:false,
-    boudicaUsedTurn:false,
-    luBuUsedTurn:false,
-    ragnarUsedTurn:false,
-    achillesFuryUsedTurn:false,
-    arjunaRerollUsedTurn:false,
-    sunTzuUsedTurn:false,
-    subotaiUsedTurn:false,
-    ulyssesUsedTurn:false,
-    genghisUsedTurn:false,
-    alexanderUsedTurn:false,
+    counterUsedWindow:false,
+    lanceFirstStrikeUsedWindow:false,
+    caesarUsedWindow:false,
+    hannibalUsedWindow:false,
+    joanUsedWindow:false,
+    boudicaUsedWindow:false,
+    luBuUsedWindow:false,
+    ragnarUsedWindow:false,
+    achillesFuryUsedWindow:false,
+    arjunaRerollUsedWindow:false,
+    sunTzuUsedWindow:false,
+    subotaiUsedWindow:false,
+    ulyssesUsedWindow:false,
+    genghisUsedWindow:false,
+    alexanderUsedWindow:false,
     khalidAttackPenalty:0,
-    damagedThisTurn:false,
+    damagedThisWindow:false,
     evasionSpent:0,
     warCryBuffs:0,
     steelWallBuffs:0,
     coverFireBuffs:0,
-    cavalryCallUsedTurn:false,
-    arrowRainUsedTurn:false,
-    arcaneBoltUsedTurn:false,
-    prepareHuntUsedTurn:false
+    cavalryCallUsedWindow:false,
+    arrowRainUsedWindow:false,
+    arcaneBoltUsedWindow:false,
+    prepareHuntUsedWindow:false
   };
   // Compatibilidad de lectura: snapshots antiguos pueden traer estos tres campos.
   // v220 deja de escribirlos y los elimina al siguiente refresco periódico.
   delete next.mulanExecutionMoveReady;
   delete next.mulanExecutionChoiceReady;
   delete next.khalidChainReady;
-  return applyHallvallaValueHooks("cycle.clearTempStats",next,{unit:u,turnKey});
+  return applyHallvallaValueHooks("cycle.clearTempStats",next,{unit:u,combatWindowKey});
 }
 function applyPorcupineSpinesAndFear(attackerBefore,defenderBefore,units){
   let out=[...(units||[])],logs=[],statusFxEvent=null,floatFxEvent=null;
@@ -1558,13 +1552,13 @@ function applyPorcupineSpinesAndFear(attackerBefore,defenderBefore,units){
   return {units:out,logs,statusFxEvent,floatFxEvent};
 }
 
-function hasActiveFearStatus(unit){return !!(unit&&Number(unit.tempAtkDebuff||0)>=3&&unit.fearTurnKey===nextTurnKeyForOwner(unit.owner));}
+function hasActiveFearStatus(unit){return !!(unit&&Number(unit.tempAtkDebuff||0)>=3&&unit.fearWindowKey);}
 function applyFearToUnitOnce(unit,sourceName="León Africano"){
   if(!unit)return unit;
-  const turnKey=publicState?.turnKey||"";
-  if(unit.lionFearAppliedTurnKey===turnKey)return unit;
-  if(hasActiveFearStatus(unit))return {...unit,lionFearAppliedTurnKey:turnKey};
-  return {...applyFearToUnit(unit,sourceName),lionFearAppliedTurnKey:turnKey};
+  const combatWindowKey=publicState?.combatWindowKey||"";
+  if(unit.lionFearAppliedWindowKey===combatWindowKey)return unit;
+  if(hasActiveFearStatus(unit))return {...unit,lionFearAppliedWindowKey:combatWindowKey};
+  return {...applyFearToUnit(unit,sourceName),lionFearAppliedWindowKey:combatWindowKey};
 }
 function applyAfricanLionFearAura(units,sourceLabel="León Africano"){
   let out=[...(units||[])],logs=[],statusFxEvent=null,floatFxEvent=null;
@@ -1597,17 +1591,17 @@ function applyBleedingCycleTick(units,owner){
     const dmg=Math.max(1,Number(u.bleedDamage||1));
     if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("bleed_tick",u,dmg);
     if(!floatFxEvent)floatFxEvent=makeFloatFxEvent("damage",u,dmg,{iconText:"🩸"});
-    const hasTimedBleed=Math.max(0,Number(u.bleedTurnsRemaining||0))>0;
-    const remainingBefore=hasTimedBleed?Math.max(1,Number(u.bleedTurnsRemaining||1)):(u.leader?2:0);
+    const hasTimedBleed=Math.max(0,Number(u.bleedCyclesRemaining||0))>0;
+    const remainingBefore=hasTimedBleed?Math.max(1,Number(u.bleedCyclesRemaining||1)):(u.leader?2:0);
     logs.push(`${u.name} pierde ${dmg} Vida por Sangrado${remainingBefore>0?` (${remainingBefore} ciclo${remainingBefore===1?"":"s"} táctico${remainingBefore===1?"":"s"} restante${remainingBefore===1?"":"s"})`:""}.`);
-    const damaged=(typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(u,dmg).unit:resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,damagedThisTurn:true}));
+    const damaged=(typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(u,dmg).unit:resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,damagedThisWindow:true}));
     if(hasTimedBleed||u.leader){
       const remaining=remainingBefore-1;
-      if(remaining>0)damaged.bleedTurnsRemaining=remaining;
+      if(remaining>0)damaged.bleedCyclesRemaining=remaining;
       else{
         delete damaged.bleedDamage;
         delete damaged.bleedSourceName;
-        delete damaged.bleedTurnsRemaining;
+        delete damaged.bleedCyclesRemaining;
       }
     }
     return damaged;
@@ -1671,7 +1665,7 @@ function applyBurnCycleTick(units){
     if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("burn_tick",u,dmg);
     if(!floatFxEvent)floatFxEvent=makeFloatFxEvent("damage",u,dmg,{iconText:"🔥"});
     logs.push(`${u.name} sufre ${dmg} daño directo por Quemadura. La Quemadura persiste hasta ser curada o hasta destruir la unidad; mientras arde, su Destreza es 0.`);
-    let next=(typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(u,dmg).unit:resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,damagedThisTurn:true}));
+    let next=(typeof applyDirectHpDamageWithEquipment==="function"?applyDirectHpDamageWithEquipment(u,dmg).unit:resolveBlessedArmorTransition(u,{...u,hp:(u.hp||0)-dmg,damagedThisWindow:true}));
     next={...next,burnTurns:Math.max(1,Number(u.burnTurns||1)),burnPersistent:true};
     if(isUndeadUnit(next)&&Number(next.hp||0)<=0)next={...next,incineratedOnDeath:true,lastFatalDamageType:"fire"};
     return next;
@@ -1684,14 +1678,14 @@ function applyBurnCycleTick(units){
 
 /* 7BOARDCTRL8AG · Morgana: cuenta regresiva mortal. */
 const VEIL_CURSE_START_COUNT=3;
-function hasVeilCurse(unit){return !!unit&&Number(unit.veilCurseTurnsRemaining||0)>0;}
+function hasVeilCurse(unit){return !!unit&&Number(unit.veilCurseCyclesRemaining||0)>0;}
 function isVeilCurseForbiddenTarget(unit){
   if(!unit||unit.leader)return true;
   return !!(unit.boss||unit.isBoss||unit.bossLeader||unit.structure||unit.building||unit.isStructure||unit.egg||unit.isEgg||unit.dragonEgg||unit.objective||unit.missionObjective||unit.isObjective);
 }
 function clearVeilCurseStatus(unit){
   const next={...(unit||{})};
-  ["veilCurseTurnsRemaining","veilCurseSourceId","veilCurseSourceKey","veilCurseSourceName","veilCurseSourceOwner","veilCurseSourcePortrait","veilCurseSourceRarity","veilCurseAppliedTurnKey"].forEach(key=>delete next[key]);
+  ["veilCurseCyclesRemaining","veilCurseSourceId","veilCurseSourceKey","veilCurseSourceName","veilCurseSourceOwner","veilCurseSourcePortrait","veilCurseSourceRarity","veilCurseAppliedWindowKey"].forEach(key=>delete next[key]);
   return next;
 }
 function applyVeilCurseAfterHpDamage(units,source,target,hpLoss){
@@ -1699,16 +1693,16 @@ function applyVeilCurseAfterHpDamage(units,source,target,hpLoss){
   if(!source||source.key!=="morgana"||Number(hpLoss||0)<=0||isVeilCurseForbiddenTarget(target))return{units:out,applied:false,text:"",statusFxEvent:null};
   const liveTarget=out.find(u=>u.id===target.id&&Number(u.hp||0)>0);
   if(!liveTarget||hasVeilCurse(liveTarget))return{units:out,applied:false,text:"",statusFxEvent:null};
-  const turnKey=String(publicState?.turnKey||"");
+  const combatWindowKey=String(publicState?.combatWindowKey||"");
   const cursed={...liveTarget,
-    veilCurseTurnsRemaining:VEIL_CURSE_START_COUNT,
+    veilCurseCyclesRemaining:VEIL_CURSE_START_COUNT,
     veilCurseSourceId:String(source.id||""),
     veilCurseSourceKey:String(source.key||"morgana"),
     veilCurseSourceName:String(source.name||"Morgana"),
     veilCurseSourceOwner:Number(source.owner||0),
     veilCurseSourcePortrait:String(source.portrait||CARD_PORTRAITS.morgana||""),
     veilCurseSourceRarity:String(source.rarity||"Épica"),
-    veilCurseAppliedTurnKey:turnKey
+    veilCurseAppliedWindowKey:combatWindowKey
   };
   const nextUnits=out.map(u=>u.id===liveTarget.id?cursed:u);
   return{
@@ -1722,7 +1716,7 @@ function makeVeilCurseKillSnapshot(unit){
   if(!unit)return null;
   return{id:String(unit.id||""),key:String(unit.key||""),name:String(unit.name||"Unidad"),owner:Number(unit.owner||0),leader:!!unit.leader,portrait:String(unit.portrait||""),rarity:String(unit.rarity||"Básica")};
 }
-function resolveVeilCurseCycleTick(units,owner,turnKey=String(publicState?.turnKey||"")){
+function resolveVeilCurseCycleTick(units,owner,combatWindowKey=String(publicState?.combatWindowKey||"")){
   const before=[...(units||[])];
   let logs=[];
   let statusFxEvent=null;
@@ -1731,11 +1725,11 @@ function resolveVeilCurseCycleTick(units,owner,turnKey=String(publicState?.turnK
   const doomedIds=new Set();
   let out=before.map(unit=>{
     if(!unit||Number(unit.owner)!==Number(owner)||!hasVeilCurse(unit))return unit;
-    if(String(unit.veilCurseAppliedTurnKey||"")===String(turnKey||""))return unit;
-    const current=Math.max(1,Number(unit.veilCurseTurnsRemaining||VEIL_CURSE_START_COUNT));
+    if(String(unit.veilCurseAppliedWindowKey||"")===String(combatWindowKey||""))return unit;
+    const current=Math.max(1,Number(unit.veilCurseCyclesRemaining||VEIL_CURSE_START_COUNT));
     const nextCount=Math.max(0,current-1);
     if(nextCount>0){
-      const next={...unit,veilCurseTurnsRemaining:nextCount};
+      const next={...unit,veilCurseCyclesRemaining:nextCount};
       if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("curse_tick",next,0);
       logs.push(`Cuenta regresiva mortal: ${unit.name} pasa de ${current} a ${nextCount}.`);
       return next;
@@ -1755,7 +1749,7 @@ function resolveVeilCurseCycleTick(units,owner,turnKey=String(publicState?.turnK
     if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("curse_execute",unit,0);
     if(!floatFxEvent)floatFxEvent=makeFloatFxEvent("curse",unit,0,{iconText:"0",labelText:"DERROTADA"});
     logs.push(`Cuenta regresiva mortal: ${unit.name} llega a 0 y cae derrotada. La baja pertenece a ${source.name}, aunque ya no esté en el campo.`);
-    return {...clearVeilCurseStatus(unit),hp:0,damagedThisTurn:true};
+    return {...clearVeilCurseStatus(unit),hp:0,damagedThisWindow:true};
   });
   out=out.filter(u=>Number(u.hp||0)>0&&!doomedIds.has(u.id));
   if(doomedIds.size){
@@ -1763,7 +1757,7 @@ function resolveVeilCurseCycleTick(units,owner,turnKey=String(publicState?.turnK
     out=bloodVictory.units;
     if(bloodVictory.logs?.length)logs.push(...bloodVictory.logs);
   }
-  const killEvent=kills.length?{id:`veil-${turnKey||"turn"}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,at:Date.now(),kills}:null;
+  const killEvent=kills.length?{id:`veil-${combatWindowKey||"turn"}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,at:Date.now(),kills}:null;
   return{units:out,logs,statusFxEvent,floatFxEvent,killEvent,killCreditOwner:kills.length?Number(kills[0].killer.owner||0):0};
 }
 

@@ -1,0 +1,24 @@
+HallValla · Pendientes después de v240
+Fecha: 2026-09-20
+
+CERRADO
+- settings-events: responsabilidades separadas.
+- decks/unidades/reglas: factories, validación, leader runtime y shared rules separados.
+- PvP: ranking/resultados, lobby/matchmaking, BOT y sync/protocol separados.
+- Motor automático: dividido y retirado el nombre experimental del runtime activo.
+- Contratos legacy de turnos: migrados a combatWindow/runtimeMode con frontera única de compatibilidad.
+- PvP terminal: autorización desacoplada de currentPlayer mediante resultCommitOwner.
+
+SIGUIENTE — CIERRE FINAL
+1. Código muerto y assets huérfanos.
+2. Smoke test de Aventura completa.
+3. PvP BOT completo.
+4. PvP concurrente real completo + desconexión/rematch/resultado.
+5. Gamepad Windows/Android.
+6. Mina / Forja / Colección / Tutorial / recompensas.
+7. Sanear checker Android histórico.
+8. Hashes, caché, Service Worker y Firebase finales.
+
+SEGURIDAD COMPETITIVA
+- El PvP sigue parcialmente client-authoritative para resolución fina de daño/coste/posición.
+- El cierre final debe identificar acciones críticas que deban validarse server-side antes de PvP competitivo con apuestas.

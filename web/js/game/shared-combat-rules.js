@@ -401,7 +401,7 @@ function getMoraleAttackPenalty(owner,state=publicState,units=state?.units||publ
   const snapshot=getMoralePressureState(state,units);
   return Math.max(0,Number(snapshot.penalties?.[Number(owner)]||0));
 }
-function advanceMoralePressureAfterTurn(state,endingOwner,units=state?.units||[]){
+function advanceMoralePressureAfterWindow(state,endingOwner,units=state?.units||[]){
   endingOwner=Number(endingOwner||0);
   const other=endingOwner===1?2:1;
   const beforeRaw=state?.moralePressure||{};
@@ -475,16 +475,16 @@ function isRtTrapLocked(unit,kind,now=hallvallaTrapNow()){
    mientras este mismo módulo registra cartas especiales. No pueden depender
    de 08-actions-inspector.js, que se carga después. */
 function getKhalidAttackPenalty(u){return u?.key==="khalid_ibn_al_walid"?Math.max(0,Number(u.khalidAttackPenalty||0)):0;}
-function getGenghisMovDebuff(u){return u&&u.genghisMovDebuffTurnKey&&u.genghisMovDebuffTurnKey===publicState?.turnKey?Math.max(1,Number(u.genghisMovDebuff||1)):0;}
-function getHannibalMovDebuff(u){return u&&u.hannibalMovDebuffTurnKey&&u.hannibalMovDebuffTurnKey===publicState?.turnKey?Math.max(1,Number(u.hannibalMovDebuff||1)):0;}
-function getHannibalAtkDebuff(u){return u&&u.hannibalAtkDebuffTurnKey&&u.hannibalAtkDebuffTurnKey===publicState?.turnKey?Math.max(1,Number(u.hannibalAtkDebuff||1)):0;}
+function getGenghisMovDebuff(u){return u&&u.genghisMovDebuffWindowKey&&u.genghisMovDebuffWindowKey===publicState?.combatWindowKey?Math.max(1,Number(u.genghisMovDebuff||1)):0;}
+function getHannibalMovDebuff(u){return u&&u.hannibalMovDebuffWindowKey&&u.hannibalMovDebuffWindowKey===publicState?.combatWindowKey?Math.max(1,Number(u.hannibalMovDebuff||1)):0;}
+function getHannibalAtkDebuff(u){return u&&u.hannibalAtkDebuffWindowKey&&u.hannibalAtkDebuffWindowKey===publicState?.combatWindowKey?Math.max(1,Number(u.hannibalAtkDebuff||1)):0;}
 function effectiveAtk(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);let v=(u?.atk||0)+(u?.buffAtk||0)+(u?.permAtk||0)+(u?.tempAtkBuff||0)-(u?.tempAtkDebuff||0)-getRtTrapDebuff(u,"atk")-getHannibalAtkDebuff(u)-getKhalidAttackPenalty(u)-(u?.leader?0:getMoraleAttackPenalty(u?.owner))+(bonus.atk||0)+(arcaneLink.atk||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=africanLionAllyAtkAura(u);v+=hectorEnemyAtkAura(u);v+=cuChulainnFearAura(u);return Math.max(0,v)}
-function isRhinoStunnedNow(u){return !!(u&&u.rhinoStunnedTurnKey&&u.rhinoStunnedTurnKey===publicState?.turnKey)}
+function isRhinoStunnedNow(u){return !!(u&&u.rhinoStunnedWindowKey&&u.rhinoStunnedWindowKey===publicState?.combatWindowKey)}
 function halveForRhinoStun(v,u){v=Math.max(0,Number(v)||0);return isRhinoStunnedNow(u)?Math.floor(v/2):v}
-function effectiveDex(u){const forcedZero=!!(u?.saboteadorDexZeroTurnKey&&u.saboteadorDexZeroTurnKey===publicState?.turnKey);const burnPanic=!!u&&!u.leader&&Number(u?.burnDamage||0)>0&&(Number(u?.burnTurns||0)>0||u?.burnPersistent===true);if(forcedZero||burnPanic)return 0;const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);const rawTempDebuff=Number(u?.tempDexDebuff||0);const legacyIgaHack=!!(u?.saboteadorDexZeroTurnKey&&rawTempDebuff>=90);const tempDebuff=legacyIgaHack?0:rawTempDebuff;let v=(u?.dex||0)+(u?.tempDexBuff||0)-tempDebuff-getRtTrapDebuff(u,"dex")+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
+function effectiveDex(u){const forcedZero=!!(u?.saboteadorDexZeroWindowKey&&u.saboteadorDexZeroWindowKey===publicState?.combatWindowKey);const burnPanic=!!u&&!u.leader&&Number(u?.burnDamage||0)>0&&(Number(u?.burnTurns||0)>0||u?.burnPersistent===true);if(forcedZero||burnPanic)return 0;const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);const rawTempDebuff=Number(u?.tempDexDebuff||0);const legacyIgaHack=!!(u?.saboteadorDexZeroWindowKey&&rawTempDebuff>=90);const tempDebuff=legacyIgaHack?0:rawTempDebuff;let v=(u?.dex||0)+(u?.tempDexBuff||0)-tempDebuff-getRtTrapDebuff(u,"dex")+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
 function effectiveAgi(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)-getRtTrapDebuff(u,"agi")+b+(arcaneLink.agi||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return applyHallvallaValueHooks("unit.effectiveAgi",Math.max(0,halveForRhinoStun(v,u)),{unit:u})}
 function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(1,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u)-Number(u?.tempHpDebuff||0)-getRtTrapDebuff(u,"hp"))}
-function isSkiparSummonMoveActive(u,state=publicState){return !!(u&&u.key==="skipar_del_drakkar"&&state&&u.summonedTurnKey&&u.summonedTurnKey===state.turnKey);}
+function isSkiparSummonMoveActive(u,state=publicState){return !!(u&&u.key==="skipar_del_drakkar"&&state&&u.summonedWindowKey&&u.summonedWindowKey===state.combatWindowKey);}
 function getCanonicalNaturalMovement(u){
   const movement=typeof getHallvallaUnitMovementProfile==="function"?getHallvallaUnitMovementProfile(u):null;
   return movement||null;
@@ -501,14 +501,14 @@ function effectiveMov(u){
 }function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
 function isAfricanElephantChargeReady(u,target){
   if(!u||!target||!isHannibalElephantCombatForm(u))return false;
-  if(Number(u.lastMoveDistance||0)!==1||u.lastMoveTurnKey!==publicState?.turnKey)return false;
+  if(Number(u.lastMoveDistance||0)!==1||u.lastMoveWindowKey!==publicState?.combatWindowKey)return false;
   if(dist(u,target)!==1)return false;
   const dx=Math.sign((target.x||0)-(u.x||0));
   const dy=Math.sign((target.y||0)-(u.y||0));
   return (dx!==0||dy!==0)&&dx===Number(u.lastMoveDx||0)&&dy===Number(u.lastMoveDy||0);
 }
 function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
-function maxTurnGuard(u){
+function maxWindowGuard(u){
   if(!u)return 0;
   if(u.berserkerOsoGuardShattered)return 0;
   const base=typeof u.baseGuard==="number"?u.baseGuard:(u.guard||0);
@@ -522,7 +522,7 @@ function getAvailableEvasionScore(u,mods={}){
   if(!u||u.leader)return 0;
   return Math.max(0,getBaseEvasionScore(u)+(mods.defenderDex||0)+(mods.defenderAgi||0)-getEvasionPressure(u));
 }
-function applyTurnStatSpendToUnit(u,spent){
+function applyWindowStatSpendToUnit(u,spent){
   if(!u||u.leader)return u;
   const n=Math.max(0,Math.ceil(Number(spent)||0));
   if(n<=0)return u;
@@ -539,7 +539,7 @@ function spendEvasionByAttack(attacker,defender,units,mods={}){
   let remaining=null;
   const out=(units||[]).map(u=>{
     if(u.id!==defender.id)return u;
-    const next=applyTurnStatSpendToUnit(u,spent);
+    const next=applyWindowStatSpendToUnit(u,spent);
     remaining=getAvailableEvasionScore(next,mods);
     return next;
   });
@@ -572,7 +572,7 @@ function spendActionStatsByAttack(attacker,defender,units,mods={},hitResult=null
   let remaining=null;
   const out=(units||[]).map(u=>{
     if(u.id!==attacker.id)return u;
-    const next=applyTurnStatSpendToUnit(u,spent);
+    const next=applyWindowStatSpendToUnit(u,spent);
     remaining=Math.max(0,getBaseEvasionScore(next)-getEvasionPressure(next));
     return next;
   });
@@ -634,14 +634,14 @@ function getCombatMods(attacker,defender,attackContext=null){
   if(attacker.key==="tomoe_gozen"&&(attacker.movedSpaces||0)>=2){mods.defenderAgi-=6;mods.notes.push(`${defender.name} -6 AGI por Jinete de la Luna Cortante.`);if((defender.range||1)>=2){mods.attackerAtk+=8;mods.notes.push(`${attacker.name} +8 AT contra unidades de rango.`);}}
   if(attacker.key==="solomon_ifrit"){mods.defenderGuard-=4;mods.notes.push(`${defender.name} -4 Guardia por Fuego del Mandato.`);}
   if(attacker.key==="beowulf"&&effectiveMaxHp(defender)>effectiveMaxHp(attacker)){mods.attackerAtk+=3;mods.notes.push(`${attacker.name} +3 AT contra enemigos de mayor Vida.`);}
-  if(attacker.key==="achilles"&&!attacker.achillesFuryUsedTurn){mods.attackerAtk+=5;mods.notes.push(`${attacker.name} +5 AT por Cólera del Pélida.`);}
+  if(attacker.key==="achilles"&&!attacker.achillesFuryUsedWindow){mods.attackerAtk+=5;mods.notes.push(`${attacker.name} +5 AT por Cólera del Pélida.`);}
   if(defender.key==="el_cid"&&effectiveAtk(attacker)>effectiveAtk(defender)){mods.defenderDex+=4;mods.defenderGuard+=4;mods.notes.push(`${defender.name} +4 DX/+4 GD por Campeador.`);}
   if(isBasicUnit(attacker)&&defender.special&&ownerHasUnit(attacker.owner,"spartacus")){mods.attackerAtk+=5;mods.notes.push(`${attacker.name} +5 AT por Romper Cadenas.`);}
   const caesar=firstOwnerUnit(defender.owner,"julius_caesar");
-  if(caesar&&!caesar.caesarUsedTurn){mods.attackerAtk-=4;mods.attackerDex-=3;mods.caesarId=caesar.id;mods.notes.push(`${attacker.name} -4 AT/-3 DX por Disciplina de las Legiones.`);}
+  if(caesar&&!caesar.caesarUsedWindow){mods.attackerAtk-=4;mods.attackerDex-=3;mods.caesarId=caesar.id;mods.notes.push(`${attacker.name} -4 AT/-3 DX por Disciplina de las Legiones.`);}
   const joan=firstOwnerUnit(defender.owner,"joan_of_arc");
-  if(joan&&!joan.joanUsedTurn&&defender.noReductionTurnKey!==publicState?.turnKey&&!isRtTrapLocked(defender,"reduction")){mods.damageReduction+=3;mods.joanId=joan.id;mods.notes.push(`Juana de Arco reduce 3 daño recibido por un aliado.`);}
-  if(defender.key==="gilgamesh"&&isRangedAttack(attacker,defender)&&defender.noReductionTurnKey!==publicState?.turnKey&&!isRtTrapLocked(defender,"reduction")){mods.damageReduction+=2;mods.notes.push(`Gilgamesh reduce 2 daño de proyectiles o magia a distancia.`);}
+  if(joan&&!joan.joanUsedWindow&&defender.noReductionWindowKey!==publicState?.combatWindowKey&&!isRtTrapLocked(defender,"reduction")){mods.damageReduction+=3;mods.joanId=joan.id;mods.notes.push(`Juana de Arco reduce 3 daño recibido por un aliado.`);}
+  if(defender.key==="gilgamesh"&&isRangedAttack(attacker,defender)&&defender.noReductionWindowKey!==publicState?.combatWindowKey&&!isRtTrapLocked(defender,"reduction")){mods.damageReduction+=2;mods.notes.push(`Gilgamesh reduce 2 daño de proyectiles o magia a distancia.`);}
   if(melee&&attacker.key==="bengal_tiger"&&isAttackFromStealth(attacker,attackContext)){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Emboscada desde Sigilo.`);}
   if(melee&&attacker.key==="bengal_tiger"&&adjacentAllies(defender).some(a=>a.owner===attacker.owner&&isBeastUnit(a))){mods.defenderAgi-=2;mods.notes.push(`${defender.name} -2 AGI por Ataque por la espalda de la manada.`);}
   if(melee&&attacker.key==="wild_boar"&&(attacker.movedSpaces||0)>=2){mods.attackerAtk+=1;mods.notes.push(`${attacker.name} +1 AT por Carga Brusca.`);}
@@ -866,10 +866,10 @@ function applySaboteadorEscapeForzado(units,defenderId){
   const affected=(units||[]).filter(u=>u.id!==defender.id&&!u.leader&&u.owner!==defender.owner&&dist(defender,u)<=1);
   if(!affected.length)return{units:units||[],triggered:false,text:""};
   const ids=new Set(affected.map(u=>u.id));
-  const turnKey=publicState?.turnKey||"";
+  const combatWindowKey=publicState?.combatWindowKey||"";
   const next=(units||[]).map(u=>{
     if(!ids.has(u.id))return u;
-    const n={...u,saboteadorDexZeroTurnKey:turnKey,saboteadorDexZeroSource:defender.name};
+    const n={...u,saboteadorDexZeroWindowKey:combatWindowKey,saboteadorDexZeroSource:defender.name};
     // Migración de partidas antiguas: elimina únicamente el falso debuff técnico de +99.
     if(Number(n.tempDexDebuff||0)>=90)n.tempDexDebuff=0;
     return n;
@@ -885,15 +885,15 @@ function consumeDefensiveStanceForAttack(defender,units,mods={}){
 }
 function consumeEquipmentPrecisionDefenseForAttack(defender,attacker,units,mods={}){
   if(!defender||!attacker||defender.leader)return{defender,units,mods,consumed:false};
-  const turnKey=publicState?.turnKey||"";
+  const combatWindowKey=publicState?.combatWindowKey||"";
   let penalty=0,markKey="",label="";
-  if(hasUnitEquipment(defender,"executioner_mantle")&&defender.executionerMantleUsedTurnKey!==turnKey){penalty=5;markKey="executionerMantleUsedTurnKey";label="Manto del Ejecutor";}
-  if(!penalty&&hasUnitEquipment(defender,"skirmisher_cloak")&&dist(attacker,defender)<=1&&defender.skirmisherCloakUsedTurnKey!==turnKey){penalty=5;markKey="skirmisherCloakUsedTurnKey";label="Capa de Escaramuza";}
-  if(!penalty&&hasUnitEquipment(defender,"light_barding")&&dist(attacker,defender)>=2&&defender.lightBardingUsedTurnKey!==turnKey){penalty=5;markKey="lightBardingUsedTurnKey";label="Barda Ligera";}
+  if(hasUnitEquipment(defender,"executioner_mantle")&&defender.executionerMantleUsedWindowKey!==combatWindowKey){penalty=5;markKey="executionerMantleUsedWindowKey";label="Manto del Ejecutor";}
+  if(!penalty&&hasUnitEquipment(defender,"skirmisher_cloak")&&dist(attacker,defender)<=1&&defender.skirmisherCloakUsedWindowKey!==combatWindowKey){penalty=5;markKey="skirmisherCloakUsedWindowKey";label="Capa de Escaramuza";}
+  if(!penalty&&hasUnitEquipment(defender,"light_barding")&&dist(attacker,defender)>=2&&defender.lightBardingUsedWindowKey!==combatWindowKey){penalty=5;markKey="lightBardingUsedWindowKey";label="Barda Ligera";}
   if(!penalty)return{defender,units,mods,consumed:false};
   const nextMods={...mods,attackerPrecisionPenalty:(mods.attackerPrecisionPenalty||0)+penalty,notes:[...(mods.notes||[]),`${attacker.name} -${penalty} PREC por ${label}.`]};
-  const nextUnits=(units||[]).map(u=>u.id===defender.id?{...u,[markKey]:turnKey}:u);
-  return{defender:nextUnits.find(u=>u.id===defender.id)||{...defender,[markKey]:turnKey},units:nextUnits,mods:nextMods,consumed:true};
+  const nextUnits=(units||[]).map(u=>u.id===defender.id?{...u,[markKey]:combatWindowKey}:u);
+  return{defender:nextUnits.find(u=>u.id===defender.id)||{...defender,[markKey]:combatWindowKey},units:nextUnits,mods:nextMods,consumed:true};
 }
 function applyCombatPrecisionPercentPenalty(score,mods={}){
   const raw=Math.max(0,Number(score)||0);
@@ -961,8 +961,8 @@ function canLanceFirstStrike(attacker,defender,mods={}){
   if(!attacker||!defender||attacker.leader||defender.leader)return false;
   if(mods&&mods.falconDive)return false;
   if(!isLanceUnitCardLike(defender))return false;
-  if(defender.lanceFirstStrikeUsedTurn)return false;
-  if((defender.noCounterTurnKey&&defender.noCounterTurnKey===publicState?.turnKey)||isRtTrapLocked(defender,"counter"))return false;
+  if(defender.lanceFirstStrikeUsedWindow)return false;
+  if((defender.noCounterWindowKey&&defender.noCounterWindowKey===publicState?.combatWindowKey)||isRtTrapLocked(defender,"counter"))return false;
 
   // Formación de picas / regla de lanza solo responde a combatientes puramente
   // cuerpo a cuerpo: RG 1 y ataque declarado desde una casilla adyacente.
@@ -1007,7 +1007,7 @@ function resolveLanceFirstStrike(attacker,defender,units){
         guardLoss=damaged.lastGuardLoss||0;
         hpLoss=damaged.lastHpLoss||0;
         warriorShieldBlocked=warriorShieldBlocked||warriorShield.blocked;
-        damaged.damagedThisTurn=(hpLoss>0)||!!damaged.damagedThisTurn;
+        damaged.damagedThisWindow=(hpLoss>0)||!!damaged.damagedThisWindow;
         delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
         return damaged;
       }
@@ -1023,7 +1023,7 @@ function resolveLanceFirstStrike(attacker,defender,units){
   }
 
   // Atacar Primero ES el Contraataque de Lanza. Se marcan ambos flags legacy para registrar una sola reacción gastada y evitar un segundo golpe posterior.
-  units=(units||[]).map(u=>u.id===currentDefender.id?{...u,lanceFirstStrikeUsedTurn:true,counterUsedTurn:true}:u);
+  units=(units||[]).map(u=>u.id===currentDefender.id?{...u,lanceFirstStrikeUsedWindow:true,counterUsedWindow:true}:u);
   currentAttacker=(units||[]).find(u=>u.id===currentAttacker.id)||currentAttacker;
   currentDefender=(units||[]).find(u=>u.id===currentDefender.id)||currentDefender;
   const attackerFell=!(units||[]).some(u=>u.id===attacker.id);
@@ -1054,10 +1054,10 @@ function resolveLanceFirstStrike(attacker,defender,units){
 function applyEquipmentHpDamageReduction(unit,damage){
   const incoming=Math.max(0,Number(damage)||0);
   if(!unit||incoming<=0||!hasUnitEquipment(unit,"tanned_hide_harness"))return{unit,damage:incoming,reduced:0};
-  const turnKey=publicState?.turnKey||"";
-  if(unit.tannedHideHarnessUsedTurnKey===turnKey)return{unit,damage:incoming,reduced:0};
+  const combatWindowKey=publicState?.combatWindowKey||"";
+  if(unit.tannedHideHarnessUsedWindowKey===combatWindowKey)return{unit,damage:incoming,reduced:0};
   const reduced=Math.min(5,incoming);
-  return{unit:{...unit,tannedHideHarnessUsedTurnKey:turnKey},damage:Math.max(0,incoming-reduced),reduced};
+  return{unit:{...unit,tannedHideHarnessUsedWindowKey:combatWindowKey},damage:Math.max(0,incoming-reduced),reduced};
 }
 const HALLVALLA_MAGIC_DAMAGE_TYPES=Object.freeze(["fire","ice","lightning","nature","arcane","sand","dark","light"]);
 function normalizeMagicDamageType(type){
@@ -1115,14 +1115,14 @@ function applyMagicHpDamage(unit,damage,damageType="arcane"){
   // no Guardia. Se conserva; la GD nunca participa en esta resolución mágica.
   scaled=Math.max(0,Number(reduceDamageForHoneyBadger(unit,scaled))||0);
   scaled=applyHallvallaRtLeaderShieldDamage(unit,scaled).damage;
-  const damaged=resolveBlessedArmorTransition(unit,{...unit,hp:Number(unit?.hp||0)-scaled,lastGuardLoss:0,lastHpLoss:scaled,damagedThisTurn:scaled>0||!!unit?.damagedThisTurn});
+  const damaged=resolveBlessedArmorTransition(unit,{...unit,hp:Number(unit?.hp||0)-scaled,lastGuardLoss:0,lastHpLoss:scaled,damagedThisWindow:scaled>0||!!unit?.damagedThisWindow});
   return{unit:damaged,damage:scaled,rawDamage:raw,damageType:type,multiplier,immune:multiplier===0,weak:multiplier>1,resistant:multiplier>0&&multiplier<1};
 }
 
 function applyDirectHpDamageWithEquipment(unit,damage){
   const shield=applyHallvallaRtLeaderShieldDamage(unit,damage);
   const prep=applyEquipmentHpDamageReduction(unit,shield.damage);
-  const damaged=resolveBlessedArmorTransition(prep.unit,{...prep.unit,hp:Number(prep.unit?.hp||0)-prep.damage,lastGuardLoss:0,lastHpLoss:prep.damage,damagedThisTurn:prep.damage>0||!!prep.unit?.damagedThisTurn});
+  const damaged=resolveBlessedArmorTransition(prep.unit,{...prep.unit,hp:Number(prep.unit?.hp||0)-prep.damage,lastGuardLoss:0,lastHpLoss:prep.damage,damagedThisWindow:prep.damage>0||!!prep.unit?.damagedThisWindow});
   return{unit:damaged,damage:prep.damage,reduced:prep.reduced};
 }
 function applyGuardDamage(defender,damage,guardMod=0,minHpDamage=0){
@@ -1272,7 +1272,7 @@ function resolveAfricanElephantCharge(units,attacker,defender,hit,mods={}){
         const shield=applyWarriorLeaderUnitShield(side,attacker,damaged,out);
         damaged=shield.unit;warriorBlocked=shield.blocked;
         sideGuardLoss=Number(damaged.lastGuardLoss||0);sideHpLoss=Number(damaged.lastHpLoss||0);
-        damaged.damagedThisTurn=(sideHpLoss>0)||!!damaged.damagedThisTurn;
+        damaged.damagedThisWindow=(sideHpLoss>0)||!!damaged.damagedThisWindow;
         delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
         return damaged;
       });
@@ -1350,7 +1350,7 @@ function getActiveLegendaryTraps(state=publicState){return Array.isArray(state?.
 
 function removeTrapById(traps,id){return (traps||[]).filter(t=>t.id!==id);}
 function makeTrapMark(card,target,owner){
-  return {id:uid8(),owner,cardKey:card.key,cardName:card.name,trapKey:card.legendaryTrap,targetId:target.id,targetName:target.name,createdTurnKey:publicState?.turnKey||"",createdAt:Date.now()};
+  return {id:uid8(),owner,cardKey:card.key,cardName:card.name,trapKey:card.legendaryTrap,targetId:target.id,targetName:target.name,createdWindowKey:publicState?.combatWindowKey||"",createdAt:Date.now()};
 }
 function canMarkLegendaryTrapForOwner(card,target,owner){
   if(!card||card.trap!=="legendary_mark")return false;
@@ -1400,7 +1400,7 @@ function applyHeroicEdgeStartHealing(units,owner){
   });
   return {units:out,logs:healed?[`Filo de mando: ${healed} unidad${healed===1?" aliada recupera":"es aliadas recuperan"} 1 HP sin superar su máximo.`]:[]};
 }
-function resolveStartTurnLegendaryTraps(units,turnOwner,turnKey){
+function resolveWindowStartLegendaryTraps(units,turnOwner,combatWindowKey){
   let out=[...(units||[])],traps=[...getActiveLegendaryTraps()],logs=[],statusFxEvent=null,floatFxEvent=null;
   // Poison ticks first.
   out=out.map(u=>{
@@ -1433,7 +1433,7 @@ function resolveStartTurnLegendaryTraps(units,turnOwner,turnKey){
         logs.push(`${trap.cardName} se revela sobre ${target.name}, pero ${target.name} ignora el Veneno.`);
       }else{
         if((n.poisonTurns||0)>0||(n.poisonDamage||0)>0){
-          n={...n,hp:0,damagedThisTurn:true};
+          n={...n,hp:0,damagedThisWindow:true};
           logs.push(`${trap.cardName} se revela sobre ${target.name}: ya tenía Veneno y muere por doble veneno.`);
         }else{
           n.poisonDamage=2;n.poisonTurns=3;n.poisonStage=1;n.poisonBaseDamage=2;n.poisonMaxDamage=8;n.poisonPersistent=true;
@@ -1447,8 +1447,8 @@ function resolveStartTurnLegendaryTraps(units,turnOwner,turnKey){
       triggered=true;
       const trapMs=getTrapTimedDurationMs(n,"hard");
       n=withRtTrapLock(withRtTrapLock(withRtTrapLock(n,"move",trapMs,trap.cardName),"attack",trapMs,trap.cardName),"counter",trapMs,trap.cardName);
-      if(tier==="special")n.ignoreGuardNextDamageTurnKey=turnKey;
-      if(tier==="legendary"){n.doubleNextDamageTurnKey=turnKey;n.ignoreGuardNextDamageTurnKey=turnKey;}
+      if(tier==="special")n.ignoreGuardNextDamageWindowKey=combatWindowKey;
+      if(tier==="legendary"){n.doubleNextDamageWindowKey=combatWindowKey;n.ignoreGuardNextDamageWindowKey=combatWindowKey;}
       logs.push(`${trap.cardName} se revela: ${target.name} queda Dormida durante ${Math.round(trapMs/1000)} s.`);
     }
     if(trap.trapKey==="ash_banquet"){
@@ -1579,8 +1579,8 @@ function applyDamageTrapModifiers(defender,damage,trapList=null){
       logs.push(`${trap.cardName} se revela: si ${defender.name} queda con menos de la mitad de su Vida máxima después de este daño, muere.`);
       traps=removeTrapById(traps,trap.id);
     }
-    if((defender.doubleNextDamageTurnKey&&defender.doubleNextDamageTurnKey===publicState.turnKey)){nextDamage*=2;logs.push(`${defender.name} recibe daño duplicado por Expuesta.`);}
-    if((defender.ignoreGuardNextDamageTurnKey&&defender.ignoreGuardNextDamageTurnKey===publicState.turnKey)){ignoreGuard=true;logs.push(`${defender.name} no puede usar Guardia contra este daño.`);}
+    if((defender.doubleNextDamageWindowKey&&defender.doubleNextDamageWindowKey===publicState.combatWindowKey)){nextDamage*=2;logs.push(`${defender.name} recibe daño duplicado por Expuesta.`);}
+    if((defender.ignoreGuardNextDamageWindowKey&&defender.ignoreGuardNextDamageWindowKey===publicState.combatWindowKey)){ignoreGuard=true;logs.push(`${defender.name} no puede usar Guardia contra este daño.`);}
   }
   return {damage:nextDamage,traps,logs,forceKill,shadowCut,ignoreGuard};
 }
@@ -1597,7 +1597,7 @@ function resolveAfterKillLegendaryTraps(attacker,defender,units,trapList=null){
     n.rtExiledUntil=Date.now()+exileMs;
     if(tier==="basic"){n.hp=Math.max(1,(n.hp||1)-1);}
     else{n.hp=Math.max(1,Math.ceil(effectiveMaxHp(n)/2));n.buffAtk=0;n.tempAtkBuff=0;n.tempGuardBuff=0;}
-    n.x=ownerLeader?ownerLeader.x:n.x;n.y=ownerLeader?Math.min(ROWS-1,ownerLeader.y+1):n.y;n.noAttackTurnKey=publicState.turnKey;n.noMoveTurnKey=publicState.turnKey;
+    n.x=ownerLeader?ownerLeader.x:n.x;n.y=ownerLeader?Math.min(ROWS-1,ownerLeader.y+1):n.y;n.noAttackWindowKey=publicState.combatWindowKey;n.noMoveWindowKey=publicState.combatWindowKey;
     out=out.map(u=>u.id===liveAttacker.id?n:u);
     logs.push(`${trap.cardName} se revela: ${liveAttacker.name} es retirado al Exilio y volverá debilitado.`);
     traps=removeTrapById(traps,trap.id);

@@ -28,8 +28,8 @@ function getUnitStatusEntries(u){
   if(getHannibalAtkDebuff(u)>0)add(`-${getHannibalAtkDebuff(u)} AT`,`Trampa de Cannas`,`Ataque reducido por Hannibal Barca mientras permanezca activo el efecto.${u.hannibalAtkDebuffSource?` Origen: ${u.hannibalAtkDebuffSource}.`:""}`,"debuff atk-debuff","debuff");
   if(getKhalidAttackPenalty(u)>0)add(`-${getKhalidAttackPenalty(u)} AT`,`Espada Invicta`,`Penalización acumulada de Khalid por ataques encadenados. Se limpia en la siguiente restauración periódica de combate.`,"debuff atk-debuff","debuff");
   if(n(u.tempDexBuff)>0)add(`+${n(u.tempDexBuff)} DX`,`Destreza aumentada`,n(u.coverFireBuffs)>0?`Destreza aumentada por Fuego de cobertura (${n(u.coverFireBuffs)} acumulación${n(u.coverFireBuffs)===1?"":"es"}). Se limpia automáticamente cuando expire el efecto.`:`Destreza aumentada por efecto temporal.`,"buff dex-buff","buff");
-  const igaDexForced=!!(u.saboteadorDexZeroTurnKey&&u.saboteadorDexZeroTurnKey===publicState?.turnKey);
-  const legacyIgaDexHack=!!(u.saboteadorDexZeroTurnKey&&n(u.tempDexDebuff)>=90);
+  const igaDexForced=!!(u.saboteadorDexZeroWindowKey&&u.saboteadorDexZeroWindowKey===publicState?.combatWindowKey);
+  const legacyIgaDexHack=!!(u.saboteadorDexZeroWindowKey&&n(u.tempDexDebuff)>=90);
   if(igaDexForced)add(`DX 0`,`Escape Forzado`,`La Destreza de esta unidad está forzada a 0 temporalmente.${u.saboteadorDexZeroSource?` Origen: ${u.saboteadorDexZeroSource}.`:""}`,"debuff dex-debuff","debuff");
   if(n(u.tempDexDebuff)>0&&!legacyIgaDexHack)add(`-${n(u.tempDexDebuff)} DX`,`Destreza reducida`,`Destreza reducida por presión, trampa o efecto temporal.`,"debuff dex-debuff","debuff");
   if(n(u.tempAgiBuff)>0)add(`+${n(u.tempAgiBuff)} AGI`,`Agilidad aumentada`,`Agilidad aumentada por efecto temporal.`,"buff agi-buff","buff");
@@ -54,19 +54,19 @@ function getUnitStatusEntries(u){
   if((n(u.poisonTurns)>0||u.poisonPersistent)&&n(u.poisonDamage)>0)add(`Veneno ${n(u.poisonDamage)}`,`Veneno`,`Veneno persistente: pierde Vida en cada ciclo táctico. El daño progresa hasta su máximo y después continúa hasta que sea curado o la unidad muera.`,"debuff poison","poison");
   if((n(u.burnTurns)>0||u.burnPersistent)&&n(u.burnDamage)>0)add(`Quemadura ${n(u.burnDamage)}`,`Quemadura`,`Quemadura persistente: pierde ${n(u.burnDamage)} Vida directa por ciclo, ignora Guardia y no afecta líderes. No desaparece sola y mientras arde su Destreza es 0.`,"debuff burn","burn");
   if(isRhinoStunnedNow(u))add(`Aturdido`,`Aturdido por Impacto`,`No puede moverse, defenderse ni atacar mientras siga Aturdido. Su Guardia se mantiene igual y su Destreza/Agilidad quedan a la mitad.`,"debuff lock","lock");
-  if(u.noMoveTurnKey&&u.noMoveTurnKey===publicState?.turnKey)add(`No mover`,`Movimiento bloqueado`,`No puede moverse mientras el bloqueo esté activo.`,"debuff lock","lock");
-  if(u.noAttackTurnKey&&u.noAttackTurnKey===publicState?.turnKey)add(`No atacar`,`Ataque bloqueado`,`No puede atacar mientras el bloqueo esté activo.`,"debuff lock","lock");
-  if(u.noDefTurnKey&&u.noDefTurnKey===publicState?.turnKey)add(`No DEF`,`Defensa bloqueada`,`No puede usar defensa mientras el bloqueo esté activo.`,"debuff lock","lock");
-  if(u.noCounterTurnKey&&u.noCounterTurnKey===publicState?.turnKey)add(`No contraataque`,`Contraataque bloqueado`,`No puede contraatacar mientras el bloqueo esté activo.`,"debuff lock","lock");
-  if(u.silencedTurnKey&&u.silencedTurnKey===publicState?.turnKey)add(`Silencio`,`Silencio`,`Silenciada: no puede activar efectos mientras el bloqueo esté activo.`,"debuff silence","silence");
-  if(u.noHealTurnKey&&u.noHealTurnKey===publicState?.turnKey)add(`No cura`,`Curación bloqueada`,`No puede recibir curación mientras el bloqueo esté activo.`,"debuff curse","curse");
-  if(u.noReductionTurnKey&&u.noReductionTurnKey===publicState?.turnKey)add(`Sin reducción`,`Reducción bloqueada`,`No puede usar reducciones especiales de daño mientras el bloqueo esté activo.`,"debuff curse","curse");
-  if(u.ignoreGuardNextDamageTurnKey&&u.ignoreGuardNextDamageTurnKey===publicState?.turnKey)add(`Sin guardia`,`Guardia ignorada`,`El próximo daño contra esta unidad ignora Guardia.`,"debuff guard-debuff","debuff");
-  if(u.doubleNextDamageTurnKey&&u.doubleNextDamageTurnKey===publicState?.turnKey)add(`Daño x2`,`Daño duplicado`,`El próximo daño recibido se duplica.`,"debuff curse","curse");
+  if(u.noMoveWindowKey&&u.noMoveWindowKey===publicState?.combatWindowKey)add(`No mover`,`Movimiento bloqueado`,`No puede moverse mientras el bloqueo esté activo.`,"debuff lock","lock");
+  if(u.noAttackWindowKey&&u.noAttackWindowKey===publicState?.combatWindowKey)add(`No atacar`,`Ataque bloqueado`,`No puede atacar mientras el bloqueo esté activo.`,"debuff lock","lock");
+  if(u.noDefWindowKey&&u.noDefWindowKey===publicState?.combatWindowKey)add(`No DEF`,`Defensa bloqueada`,`No puede usar defensa mientras el bloqueo esté activo.`,"debuff lock","lock");
+  if(u.noCounterWindowKey&&u.noCounterWindowKey===publicState?.combatWindowKey)add(`No contraataque`,`Contraataque bloqueado`,`No puede contraatacar mientras el bloqueo esté activo.`,"debuff lock","lock");
+  if(u.silencedWindowKey&&u.silencedWindowKey===publicState?.combatWindowKey)add(`Silencio`,`Silencio`,`Silenciada: no puede activar efectos mientras el bloqueo esté activo.`,"debuff silence","silence");
+  if(u.noHealWindowKey&&u.noHealWindowKey===publicState?.combatWindowKey)add(`No cura`,`Curación bloqueada`,`No puede recibir curación mientras el bloqueo esté activo.`,"debuff curse","curse");
+  if(u.noReductionWindowKey&&u.noReductionWindowKey===publicState?.combatWindowKey)add(`Sin reducción`,`Reducción bloqueada`,`No puede usar reducciones especiales de daño mientras el bloqueo esté activo.`,"debuff curse","curse");
+  if(u.ignoreGuardNextDamageWindowKey&&u.ignoreGuardNextDamageWindowKey===publicState?.combatWindowKey)add(`Sin guardia`,`Guardia ignorada`,`El próximo daño contra esta unidad ignora Guardia.`,"debuff guard-debuff","debuff");
+  if(u.doubleNextDamageWindowKey&&u.doubleNextDamageWindowKey===publicState?.combatWindowKey)add(`Daño x2`,`Daño duplicado`,`El próximo daño recibido se duplica.`,"debuff curse","curse");
   if(u.noHealWhilePoisoned)add(`No cura`,`Curación bloqueada`,`No puede curarse mientras dure el veneno.`,"debuff poison","poison");
   if(u.richardBuffSource)add(`+2 Vida`,`Vida aumentada`,`Vida máxima y actual aumentada mientras Richard siga en campo.`,"buff hp-buff","hp");
   if(u.convertedByTrap)add(`Control`,`Control alterado`,`Unidad convertida temporalmente por trampa legendaria.`,"debuff curse","control");
-  if(hasVeilCurse(u)){const count=Math.max(1,Number(u.veilCurseTurnsRemaining||1));add(`Cuenta ${count}`,`Cuenta regresiva mortal`,`El contador baja periódicamente. Cuando llegue a 0, esta unidad caerá derrotada. Puede eliminarse con Purificación. Fuente: ${u.veilCurseSourceName||"Morgana"}.`,"debuff curse","curse",{hiddenOnBoard:true});}
+  if(hasVeilCurse(u)){const count=Math.max(1,Number(u.veilCurseCyclesRemaining||1));add(`Cuenta ${count}`,`Cuenta regresiva mortal`,`El contador baja periódicamente. Cuando llegue a 0, esta unidad caerá derrotada. Puede eliminarse con Purificación. Fuente: ${u.veilCurseSourceName||"Morgana"}.`,"debuff curse","curse",{hiddenOnBoard:true});}
   return applyHallvallaValueHooks("unit.statusEntries",entries,{unit:u});
 }
 

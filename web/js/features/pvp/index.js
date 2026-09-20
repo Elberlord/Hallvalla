@@ -424,9 +424,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       playedKeys:[],
       honor:0,
       maxHonor:0,
-      lastTurnStarted:"",
-      skipFirstTurnDraw:true,
-      initialPlayableCount:drawPool.length,
+            initialPlayableCount:drawPool.length,
       resourceSeq:0,
       testOpeningFireball:false,
       testInjectedFireball:false
@@ -652,10 +650,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         if(fresh?.pvpBotMatch!==true||fresh?.startConfig?.resolved!==true)return;
         if(String(fresh?.phase||"")!=="active"){
           detachRoomListener();
-          await update(publicRef,{
-            "phase":"active",
-            "currentPlayer":0,"turn":1,"turnPhase":"realtime","turnKey":"RT-1","turnStartedAt":serverTimestamp()
-          });
+          await update(publicRef,expandHallvallaLegacyRuntimePatch({
+            phase:"active",combatWindowIndex:1,runtimeMode:"continuous",combatWindowKey:"RT-1",combatWindowStartedAt:serverTimestamp()
+          }));
         }else detachRoomListener();
         detachOwnPrivateListener();
         $("onlineLobby")?.classList.add("hidden");
@@ -1055,8 +1052,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         adventureAiStyle:`Rival PvP · ${String(profile.style||"balanced")} · Liga ${String(league?.name||"Piedra")} · IA ${botAiLevel}`,
         adventureEnemyUnitMasteryRank:botMasteryRank,realtimeEnabled:true,
         adventurePrincipalKeys:{1:[],2:[]},principalSlots:{1:0,2:0},pvpPrincipalKeys:{1:[],2:[]},
-        adventureAiState:{deck:[],hand:botDraw.hand,honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),lastTurnStarted:"RT",skipFirstTurnDraw:true,principalSlots:0,principalKeys:[],principalKey:""},
-        createdAt:Date.now(),currentPlayer:0,turn:1,phase:"active",turnPhase:"realtime",turnKey:"RT-1",
+        adventureAiState:{deck:[],hand:botDraw.hand,honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),principalSlots:0,principalKeys:[],principalKey:""},
+        createdAt:Date.now(),combatWindowIndex:1,phase:"active",runtimeMode:"continuous",combatWindowKey:"RT-1",
         playerSlots:{player1Uid:myUid,player2Uid:botUid},
         playerNames:{1:getProfileNameSafe(1),2:botName},playerLevels:{1:getProfileLevelSafe(),2:botLevel},
         playerShowcase:publicShowcase,playerPrepared:{1:true,2:true},lobbyReady:{1:true,2:true},
@@ -1074,7 +1071,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
         combat6c:humanBuilt.combat6c,
         engine6e:{schema:"hallvalla-pvp-bot-private-v1",ready:true,preparedAt:Date.now()},
         leaderType:human.leaderType,leaderLevel:human.leaderLevel,leaderAbility:human.leaderAbility,
-        deck:[],hand:human.hand,honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),lastTurnStarted:"RT",skipFirstTurnDraw:true,
+        deck:[],hand:human.hand,honor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),maxHonor:(typeof HALLVALLA_RT_CFG!=="undefined"?HALLVALLA_RT_CFG.initialMana:2),
         principalSlots:0,principalKeys:[],principalKey:"",ownerUid:myUid
       };
 
@@ -1088,7 +1085,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       botPublicRef=ref(db,`games/${botCode}/public`);
       botPrivateRef=ref(db,`games/${botCode}/private/player1`);
       setMatchmakingSearchText("BUSCANDO RIVAL...");
-      await withTimeout(set(botPublicRef,pub),`Crear duelo BOT PvP ${botCode}`,7000);
+      await withTimeout(set(botPublicRef,expandHallvallaLegacyRuntimePatch(pub)),`Crear duelo BOT PvP ${botCode}`,7000);
       await withTimeout(set(botPrivateRef,privatePayload),`Preparar privado BOT PvP ${botCode}`,6000);
       const confirm=await withTimeout(get(botPublicRef),`Confirmar duelo BOT PvP ${botCode}`,5000);
       if(!confirm.exists()||confirm.val()?.pvpBotMatch!==true||String(confirm.val()?.playerSlots?.player2Uid||"")!==botUid)throw new Error("Firebase no confirmó el duelo contra BOT.");

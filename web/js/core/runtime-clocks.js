@@ -199,9 +199,10 @@ function battleSleep(ms,label="ai-delay"){return hallvallaBattleLifecycle.delay(
 function getHallvallaLifecycleSnapshot(){return {battle:hallvallaBattleLifecycle.snapshot()};}
 globalThis.__HALLVALLA_LIFECYCLE_SNAPSHOT__=getHallvallaLifecycleSnapshot;
 
-/* v216 · TR canónico
+/* v240 · Motor continuo canónico
    El reloj por turno, handoff de jugador, expiración de fases y End Phase fueron
-   eliminados físicamente. El combate activo no depende de currentPlayer/fases. */
+   eliminados físicamente. Los aliases legacy solo sobreviven en la frontera de
+   compatibilidad y no gobiernan el combate activo. */
 
 const AI_THINK_DELAY_MS=1400;
 const AI_ACTION_DELAY_MS=2200;
@@ -287,6 +288,5 @@ async function ensureFirebaseAuthReady(surface="online"){
   else setText("lobbyStatus",message);
   return false;
 }
-function getTurnPhase(){return "realtime"}
 function isMobileBattleViewport(){return typeof window!=="undefined"&&window.matchMedia&&window.matchMedia("(max-width:980px), (pointer:coarse)").matches}
 

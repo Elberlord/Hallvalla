@@ -133,7 +133,7 @@ function render(reason="direct"){
   // Se conserva la proyección heredada de bonus de líder para no mezclar Stage 7 con reglas de gameplay.
   if(Array.isArray(publicState.units))publicState={...publicState,units:syncLeaderHpBonuses(publicState.units)};
   syncHandAutoClose();
-  hallvallaRecordRenderDomain("hud",()=>{renderHud();renderTurnHonorHud();renderRivalHonorHud();});
+  hallvallaRecordRenderDomain("hud",()=>{renderHud();renderResourceHud();renderRivalHonorHud();});
   hallvallaRecordRenderDomain("board",renderBoard);
   hallvallaRecordRenderDomain("context",renderUnitContextMenu);
   hallvallaRecordRenderDomain("hand",renderHand);
@@ -174,7 +174,7 @@ function getRivalHonorState(){
   const rivalOwner=localOwner===1?2:1;
   return getHonorStateForOwner(rivalOwner,{preferPrivate:false});
 }
-function renderTurnHonorHud(){
+function renderResourceHud(){
   const hud=$("turnHonorHud"),value=$("turnHonorHudValue"),labelEl=hud?hud.querySelector(".turn-honor-label"):null;
   if(!hud||!value)return;
   const st=getVisibleHonorState();
@@ -194,7 +194,7 @@ function renderRivalHonorHud(){
   hud.setAttribute("aria-label",`${st.label||"Honor"} de ${rivalName}: ${st.honor} de ${st.maxHonor}`);
   hud.title=`${rivalName} · ${st.label||"HONOR"} ${st.honor}/${st.maxHonor}`;
 }
-function pulseTurnHonorHud(){
+function pulseResourceHud(){
   const hud=$("turnHonorHud");
   if(!hud)return;
   hud.classList.remove("pulse");
@@ -213,9 +213,9 @@ function maybeShowHonorRecharge(){
   modal.classList.remove("show");
   void modal.offsetWidth;
   modal.classList.add("show");
-  pulseTurnHonorHud();
+  pulseResourceHud();
   if(honorRechargeTimer)battleClearTimeout(honorRechargeTimer);
-  honorRechargeTimer=battleSetTimeout(()=>{modal.classList.remove("show");pulseTurnHonorHud();},2550,"honor-recharge-modal");
+  honorRechargeTimer=battleSetTimeout(()=>{modal.classList.remove("show");pulseResourceHud();},2550,"honor-recharge-modal");
 }
 function renderHud(){
   [1,2].forEach(p=>{
@@ -383,7 +383,7 @@ function getUnitBottomFrameHtml(u){
 
 function getVeilCurseCountdownHtml(u){
   if(!hasVeilCurse(u))return "";
-  const count=Math.max(1,Number(u.veilCurseTurnsRemaining||1));
+  const count=Math.max(1,Number(u.veilCurseCyclesRemaining||1));
   const critical=count===1?" critical":"";
   const title=escapeHtml(`Cuenta regresiva mortal: ${count}. Al llegar a 0, ${u.name||"la unidad"} caerá derrotada. Purificación puede eliminarla.`);
   return `<span class="veil-curse-countdown${critical}" title="${title}" aria-label="${title}"><span class="veil-curse-countdown-aura" aria-hidden="true"></span><span class="veil-curse-countdown-number">${count}</span></span>`;
@@ -393,9 +393,9 @@ function getVeilCurseCountdownHtml(u){
 function getPersistentUnitElementFxHtml(u){
   if(!u||u.leader)return "";
   const frostTurns=Math.max(0,Number(u.dragonFrostTurns||0));
-  const hardFrozen=!!u.frozenSource&&u.noAttackTurnKey===publicState?.turnKey;
+  const hardFrozen=!!u.frozenSource&&u.noAttackWindowKey===publicState?.combatWindowKey;
   const frozen=hardFrozen||frostTurns>0;
-  const cursed=typeof hasVeilCurse==="function"?hasVeilCurse(u):Number(u.veilCurseTurnsRemaining||0)>0;
+  const cursed=typeof hasVeilCurse==="function"?hasVeilCurse(u):Number(u.veilCurseCyclesRemaining||0)>0;
   const html=[];
   if(frozen)html.push(`<span class="unit-persistent-element-fx frozen${hardFrozen?" hard-frozen":" frost"}" aria-hidden="true"><img src="assets/effects/status/frozen/frozen_aura_01.webp" alt="" draggable="false"></span>`);
   if(cursed)html.push('<span class="unit-persistent-element-fx curse" aria-hidden="true"><img src="assets/effects/status/curse/curse_aura_01.webp" alt="" draggable="false"></span>');
@@ -592,7 +592,7 @@ function syncBattleBoardTrap(record,trap){
   hallvallaBattleRenderPerf.board.trapUpdates+=1;
 }
 function syncBattleBoardUndeadRemains(record,remain){
-  const remainsKey=remain?`${remain.id||""}|${remain.owner||0}|${remain.turnsRemaining||0}|${remain.frozenDelayed?1:0}`:"";
+  const remainsKey=remain?`${remain.id||""}|${remain.owner||0}|${remain.cyclesRemaining||0}|${remain.frozenDelayed?1:0}`:"";
   if(record.remainsKey===remainsKey&&(!remain||record.remainsEl?.isConnected))return;
   if(!remain){
     if(record.remainsEl)record.remainsEl.remove();
@@ -604,8 +604,8 @@ function syncBattleBoardUndeadRemains(record,remain){
     record.cell.insertBefore(marker,record.unitEl&&record.unitEl.parentElement===record.cell?record.unitEl:null);
   }
   marker.className=`undead-remains-marker ${Number(remain.owner)===1?"p1":"p2"} ${remain.frozenDelayed?"frozen":""}`;
-  marker.title=`Restos Persistentes · ${remain.name||"No Muerto"} · REANIMACIÓN: ${Math.max(0,Number(remain.turnsRemaining||0))*10} s`;
-  marker.innerHTML=`<span class="undead-remains-icon" aria-hidden="true">${remain.frozenDelayed?"❄️":"☠️"}</span><b>${Math.max(0,Number(remain.turnsRemaining||0))*10}s</b>`;
+  marker.title=`Restos Persistentes · ${remain.name||"No Muerto"} · REANIMACIÓN: ${Math.max(0,Number(remain.cyclesRemaining||0))*10} s`;
+  marker.innerHTML=`<span class="undead-remains-icon" aria-hidden="true">${remain.frozenDelayed?"❄️":"☠️"}</span><b>${Math.max(0,Number(remain.cyclesRemaining||0))*10}s</b>`;
   record.remainsKey=remainsKey;
 }
 function getBattleBoardUnitSpec(u,x,y){

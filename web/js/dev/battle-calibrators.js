@@ -194,10 +194,6 @@ async function changeFieldBoardDimensions(rowDelta=0,colDelta=0,{reset=false}={}
     await hvAlert("En duelos online, solo el Jugador 1 puede modificar filas y columnas.","Campo protegido");
     return;
   }
-  if(publicState?.currentPlayer&&publicState.currentPlayer!==myPlayer&&!isBattleEnded()){
-    await hvAlert("Espera a tu turno para modificar la estructura del campo y evitar que la IA o el rival actúen durante el ajuste.","Espera tu turno");
-    return;
-  }
   const targetRows=reset?FIELD_BOARD_DEFAULTS.rows:clampFieldBoardNumber(ROWS+rowDelta,...FIELD_BOARD_LIMITS.rows,ROWS);
   const targetCols=reset?FIELD_BOARD_DEFAULTS.cols:clampFieldBoardNumber(COLS+colDelta,...FIELD_BOARD_LIMITS.cols,COLS);
   if(targetRows===ROWS&&targetCols===COLS){

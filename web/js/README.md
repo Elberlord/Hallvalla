@@ -7,7 +7,7 @@ The canonical runtime is loaded by `bootstrap-loader.js`. Do not add direct `<sc
 - `core/`: boot state, assets, clocks, audio/profile foundation.
 - `game/`: card data, unit profiles, deck/combat rules.
 - `network/`: Firebase battle state and synchronization.
-- `battle/`: battle actions, AI turn flow, board interaction and battle rendering.
+- `battle/`: battle actions, autonomous combat AI, board interaction and battle rendering.
 - `account/`: profile, packs, auth, friends.
 - `forge/`: Collection / Deck Builder runtime.
 - `adventure/`: shared adventure engine UI.
