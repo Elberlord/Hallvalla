@@ -1,0 +1,14 @@
+HALLVALLA — PENDIENTES DESPUÉS DE v226
+Build: 20260920.226
+
+COMPLETADO EN v226
+- Paquete de bienvenida extraído de system/settings-events.js a account/rewards.js.
+- Cadena mensual de recompensas diarias extraída completa al mismo módulo de cuenta.
+- settings-events.js queda enfocado en configuración, navegación y bindings generales.
+
+SIGUIENTE
+1. Auditar game/decks-units-combat-rules.js: separar factories, validación de mazos/líderes y reglas compartidas.
+2. Dividir PvP: ranking/resultados, lobby/matchmaking, BOT y sincronización.
+3. Modularizar realtime/experimental.js y retirar el nombre histórico "experimental".
+4. Revisar nombres/contratos heredados: turnsRemaining, damagedThisTurn, *TurnKey y equivalentes.
+5. Cierre final: código muerto/assets huérfanos + Aventura completa + PvP BOT + PvP concurrente real + gamepad Windows/Android + Mina/Forja/colección/tutorial + hashes/cache/Firebase finales.
