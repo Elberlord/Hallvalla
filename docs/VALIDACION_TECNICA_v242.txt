@@ -1,0 +1,30 @@
+HallValla v242 — VALIDACIÓN TÉCNICA FINAL
+Build: 20260920.242
+Fecha: 2026-09-20
+
+RESULTADOS AUTOMATIZADOS
+- Sintaxis JavaScript completa: PASS.
+- Checker Android/web vigente: 14/14 PASS.
+- Build shell/stage/loader/Service Worker: 20260920.242 en los cuatro puntos.
+- RESOURCE_HASHES: 62/62 verificados contra SHA-256 actual.
+- ASSET_HASHES del Service Worker: 702/702 verificados.
+- Manifiesto Android: 638/638 assets; 151965682 bytes; hash y tamaño verificados.
+- Material de firma/keystore dentro del repo: ninguno.
+- Firebase Rules: JSON válido; SHA-256 fac6bf50338e85475050345bc30e0355f243c8317ec40184470ca2510d0543d2.
+- Reglas Firebase v242: byte por byte iguales a v241.
+- Strings activas de build v241 en web/manifest Android: 0.
+- Gameplay/UI/IA/economía: ningún archivo modificado respecto a v241.
+
+DIFERENCIAS INTENCIONALES RESPECTO A v241
+Modificados únicamente:
+- README.md
+- web/index.html
+- web/hallvalla-stage.html
+- web/js/bootstrap-loader.js
+- web/service-worker.js
+- android/app/src/main/assets/hallvalla_assets_current.json
+
+Añadidos únicamente documentos de cierre v242.
+
+PENDIENTE FUNCIONAL
+- Aventura completa end-to-end (victoria/derrota/recompensas/progresión), pospuesta por dificultad actual.

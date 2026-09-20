@@ -1,0 +1,8 @@
+HallValla v242 — Estado final de auditoría
+
+AUDITORÍA ESTRUCTURAL: CERRADA
+
+Validación funcional pendiente:
+- Aventura completa end-to-end (victoria/derrota/recompensas/progresión), pospuesta por dificultad actual.
+
+No quedan bloques estructurales de auditoría abiertos. Bugs futuros deben registrarse como incidencias concretas sobre la base v242 o versiones posteriores.

@@ -1,20 +1,24 @@
-# HallValla v241 — Cierre: código muerto y assets huérfanos
+# HallValla v242 — Cierre técnico de auditoría
 
-Build: `20260920.241`
+Build: `20260920.242`
 
-Base: v240.
+Base: v241.
 
-## Auditoría v241
-- Eliminación conservadora de código sin consumidores reales.
-- 29 funciones top-level muertas eliminadas tras análisis iterativo de referencias.
-- 8 declaraciones/variables sin lectura eliminadas.
-- Eliminados assets huérfanos confirmados y duplicados exactos de la Mina.
-- Saneado el checker Android histórico v180: ahora valida las rutas, viewport, gamepad, build y manifiesto vigentes.
-- El manifiesto Android pasa a `hallvalla_assets_current.json`.
-- No se eliminaron recursos detectados únicamente como candidatos cuando podían cargarse mediante rutas dinámicas (audio, secuencias FX, badges, branding).
+## Alcance
+Esta versión no modifica gameplay, balance, economía, IA ni diseño. Consolida el cierre técnico de la auditoría iniciada en las versiones anteriores.
+
+## Estado de auditoría
+- `settings-events`: responsabilidades separadas.
+- Decks/unidades/reglas: factories, validación y reglas compartidas separadas.
+- PvP: ranking/resultados, lobby/matchmaking, BOT y sincronización/protocolo separados.
+- Motor automático: runtime canónico dividido; `realtime/experimental.js` retirado.
+- Contratos heredados: auditados y migrados.
+- Código muerto/assets huérfanos: auditados y limpiados.
+- Android/web checker: alineado con la arquitectura vigente.
+- Hashes, Service Worker, cache-busting y manifiesto Android: consolidados en v242.
 
 ## Firebase
-Las reglas de Firebase permanecen iguales a v240.
+`backend/firebase/database.rules.json` es la regla final de referencia de este cierre técnico y permanece byte por byte igual a v241. Su SHA-256 está documentado en `docs/FIREBASE_RULES_FINAL_v242.sha256`.
 
-## Próximo bloque
-Prueba funcional completa de Aventura.
+## Validación funcional pendiente
+La única validación funcional expresamente pendiente del cierre es completar Aventura de extremo a extremo (victoria/derrota/progresión), que se pospone por balance/dificultad y no bloquea el cierre estructural.

@@ -1,0 +1,10 @@
+HALLVALLA BUILD 20260920.242
+VERSIÓN: v242
+
+- Cierre técnico de auditoría.
+- Sin cambios de gameplay/balance/IA/economía/UI.
+- Versionado shell/stage/loader/SW alineado.
+- Cache runtime renovada a v242.
+- Manifiesto Android actualizado al build actual.
+- Firebase Rules congeladas como referencia final; SHA-256 documentado.
+- Checksums completos del repositorio regenerados.

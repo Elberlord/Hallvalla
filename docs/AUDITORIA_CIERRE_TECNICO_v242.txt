@@ -1,0 +1,36 @@
+HallValla v242 — CIERRE TÉCNICO DE AUDITORÍA
+Build: 20260920.242
+Fecha: 2026-09-20
+
+OBJETIVO
+Consolidar técnicamente el estado auditado de HallValla sin modificar gameplay, balance, IA, economía ni UI.
+
+BLOQUES CERRADOS
+1. settings-events: configuración/navegación separadas de tutoriales, misiones y recompensas.
+2. decks-units-combat-rules: factories, validación de mazos/líderes y reglas compartidas separadas.
+3. PvP: ranking/resultados, lobby/matchmaking, BOT y sincronización/protocolo separados.
+4. Motor automático: runtime canónico dividido; nomenclatura experimental retirada.
+5. Contratos heredados: turnKey/turnPhase y familia migrados/encapsulados en frontera de compatibilidad.
+6. Código muerto/assets huérfanos: limpieza conservadora completada en v241.
+7. Cierre técnico: build/cache/hashes/Android/Firebase/documentación consolidados en v242.
+
+FIREBASE
+- Reglas finales de referencia: backend/firebase/database.rules.json
+- SHA-256: fac6bf50338e85475050345bc30e0355f243c8317ec40184470ca2510d0543d2
+- v242 no modifica las reglas respecto a v241.
+
+ANDROID
+- Manifiesto vigente: android/app/src/main/assets/hallvalla_assets_current.json
+- Checker vigente: scripts/check-android-virtual-layout.py
+- El manifiesto enumera los assets web reales y valida tamaño + SHA-256.
+
+CACHE / VERSIONADO
+- Shell, stage, bootstrap-loader y Service Worker declaran exactamente 20260920.242.
+- Cache runtime: hallvalla-runtime-v242.
+- Los módulos JS conservan hash individual + build en URL.
+
+PENDIENTE FUNCIONAL NO ESTRUCTURAL
+- Completar Aventura end-to-end: victoria, derrota, recompensa, progresión y continuidad de mapas.
+- Esta prueba queda pospuesta por dificultad/balance del contenido; no hay una incidencia estructural conocida asociada.
+
+A partir de v242, nuevos cambios deben tratarse como desarrollo normal, balance, contenido o bugs concretos; la auditoría estructural principal queda cerrada.
