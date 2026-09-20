@@ -1,18 +1,17 @@
-# HallValla v226 — recompensas separadas de settings-events
+# HallValla v232 — PvP sync/protocol split
 
-Build: `20260920.226`
+Build: `20260920.232`
 
-Esta entrega continúa la auditoría estructural sin cambiar reglas de juego. El paquete de bienvenida y la cadena mensual de recompensas diarias salen de `system/settings-events.js` y viven ahora en `account/rewards.js`.
+Esta entrega cierra el corte de sincronización/protocolo de la auditoría PvP.
 
 Cambios principales:
-- `system/settings-events.js`: 669 -> 266 líneas.
-- Nuevo `account/rewards.js`: paquete de bienvenida PayPal Sandbox + cadena diaria completa.
-- Se conservan precio Sandbox, contenido mostrado, cooldown de 24 h, premio final mítico y `hallvalla_daily_reward_chain_v1`.
-- El loader coloca Recompensas después de perfil/auth/Forja para conservar disponibles sus dependencias históricas.
-- Misiones/Tutoriales siguen aislados en `system/missions-tutorials.js`.
-- Hashes de loader y Service Worker actualizados a v226.
-- Firebase rules sin cambios.
+- Nuevo `features/pvp/sync-protocol.js`: listeners público/privado, cleanup, reconciliación de fases y rematch.
+- Nuevo `features/pvp/sync-engine-bridge.js`: handshake de arena, preparación privada J1/J2, `enginePrep`, prebattle y handoff concurrente al motor real.
+- `features/pvp/index.js`: 2069 → 1475 líneas.
+- Se mantienen separados `ranking-results.js`, `lobby-matchmaking.js` y `bot.js`.
+- Firebase Rules no cambian.
+- Build/cache/hashes actualizados a v232.
 
-Auditoría: `docs/AUDITORIA_SETTINGS_REWARDS_v226.md`.
-Pruebas: `docs/SMOKE_TEST_v226.md`.
-Pendientes: `docs/PENDIENTES_AUDITORIA_v226.txt`.
+Pruebas: `docs/SMOKE_TEST_v232.md`.
+Auditoría: `docs/AUDITORIA_v232_PVP_SYNC_PROTOCOL.txt`.
+Pendientes: `docs/PENDIENTES_AUDITORIA_v232.txt`.

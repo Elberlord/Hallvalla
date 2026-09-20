@@ -1,0 +1,32 @@
+HallValla — Pendientes de auditoría después de v232
+Fecha: 2026-09-20
+
+COMPLETADO
+- settings-events: configuración/navegación aisladas; tutoriales/misiones y recompensas fuera.
+- decks-units-combat-rules: factories, validación/leader runtime y shared combat rules separados.
+- PvP ranking/resultados separado.
+- PvP lobby/matchmaking separado como capa propia.
+- PvP BOT separado en features/pvp/bot.js.
+- PvP sincronización/protocolo concurrente separado:
+  * sync-protocol.js: listeners, cleanup, reconciliación de fases y rematch.
+  * sync-engine-bridge.js: arena handshake, private engine prep, dual readiness, prebattle y entrada al motor.
+
+SIGUIENTE
+1. Motor automático canónico:
+   - dividir realtime/experimental.js;
+   - separar runtime, recursos, casting/arsenal y automatización movimiento/targeting/ataque;
+   - retirar el nombre histórico experimental.
+2. Contratos heredados:
+   - turnsRemaining;
+   - damagedThisTurn;
+   - *TurnKey;
+   - turnKey/turnPhase y equivalentes: conservar/documentar solo los sentinels realmente necesarios.
+3. Cierre final:
+   - código muerto y assets huérfanos;
+   - Aventura completa;
+   - PvP BOT;
+   - PvP concurrente con dos clientes reales;
+   - gamepad Windows/Android;
+   - Mina/Forja/Colección/Tutorial;
+   - checker Android histórico;
+   - hashes/cache/Firebase finales.

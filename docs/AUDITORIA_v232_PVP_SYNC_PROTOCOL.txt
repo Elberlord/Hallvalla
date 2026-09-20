@@ -1,0 +1,70 @@
+HallValla v232 — Auditoría PvP · sincronización/protocolo concurrente
+Fecha: 2026-09-20
+Base: v231 PVP_BOT_SPLIT
+
+CORTE REALIZADO
+
+1. Nuevo módulo: web/js/features/pvp/sync-protocol.js
+Responsabilidad:
+- listener de games/{code}/public;
+- listener exclusivo de private/playerN del cliente local;
+- invalidación por token al reconectar/cambiar de sala;
+- cleanup seguro de private/playerN;
+- reconciliación waiting -> configured;
+- recuperación a waiting si el rival abandona antes del combate;
+- reset de arena/combat/enginePrep al invalidarse el arranque;
+- reinicio de rematch cuando ambos clientes confirman;
+- puente de los snapshots públicos hacia render/engine sin duplicar listeners.
+
+2. Nuevo módulo: web/js/features/pvp/sync-engine-bridge.js
+Responsabilidad:
+- bootstrap de arena;
+- validación del handshake de ambos slots;
+- preparación privada engine6e de J1/J2;
+- publicación pública de enginePrep sin revelar el arsenal rival;
+- espera hasta que ambos clientes estén preparados;
+- creación única del estado público canónico del motor;
+- fase prebattle y VS sincronizado;
+- transición a active;
+- handoff final a enterGame() y cierre de listeners de lobby.
+
+3. features/pvp/index.js
+- v231: 2069 líneas.
+- v232: 1475 líneas.
+- Ya no posee directamente los listeners Firebase ni el estado/timers del handshake concurrente.
+- Mantiene orquestación de entrada, reglas, creación/unión de sala, matchmaking y acciones de UI.
+
+CONTRATOS CONSERVADOS
+- public/playerSlots y private/playerN conservan sus rutas Firebase.
+- playerPrepared, lobbyReady, enginePrep, arenaBootstrap y startConfig conservan nombres/rutas.
+- El cliente solamente escucha su rama private/playerN.
+- La rama pública sigue siendo la fuente compartida para fase, unidades y estado visible.
+- No se modificaron backend/firebase/database.rules.json.
+
+PRUEBA DE CONCURRENCIA SIMULADA
+PASS:
+- J1 prepara private/player1 y publica enginePrep/1.
+- J2 prepara private/player2 y publica enginePrep/2.
+- Con ambos enginePrep válidos, J1 publica una única sala hallvalla-pvp-real-engine-step6f.
+- La sala entra en prebattle con mode=online.
+- Una sala waiting con J1/J2 prepared+ready se reconcilia a configured con startConfig resuelto.
+
+CACHÉ / CARGA
+Orden PvP del loader:
+1. ranking-results.js
+2. lobby-matchmaking.js
+3. bot.js
+4. sync-engine-bridge.js
+5. sync-protocol.js
+6. index.js
+
+Service Worker:
+- BUILD 20260920.232
+- cache hallvalla-runtime-v232
+- hashes del loader y módulos recalculados.
+
+SIGUIENTE BLOQUE DE AUDITORÍA
+Motor automático canónico:
+- dividir realtime/experimental.js por responsabilidades;
+- retirar finalmente el nombre histórico experimental del código activo/loader;
+- conservar compatibilidad de datos solamente donde todavía sea necesaria.
