@@ -57,7 +57,12 @@
       console.warn('[HallValla] No se pudo sincronizar el Service Worker del shell:',error);
     }
   }
-  await ensureCurrentServiceWorker();
+  const isHallVallaAndroid=/\bHallVallaAndroid\//.test(navigator.userAgent||'');
+  // En la APK el frontend canónico se sirve desde el propio paquete Android.
+  // No esperamos registro/actualización del Service Worker: esa espera añadía
+  // varios segundos antes de mostrar la portada de Google. La web normal
+  // conserva su estrategia de Service Worker sin cambios.
+  if(!isHallVallaAndroid) await ensureCurrentServiceWorker();
 
   const childUrl=new URL('hallvalla-stage.html',location.href);
   for(const [key,value] of query){

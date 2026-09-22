@@ -28,17 +28,44 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Build public distribution only
+      - name: Build public distribution
         shell: bash
         run: |
           set -euo pipefail
           rm -rf dist
           mkdir -p dist/downloads
           cp -a web/. dist/
-          cp releases/android/HallValla-Android-v136.apk dist/downloads/HallValla-Android.apk
-          cp releases/android/latest.json dist/downloads/latest.json
-          cp releases/android/SHA256SUMS.txt dist/downloads/SHA256SUMS.txt
-          printf '%s\n' 'Private source repository. Public artifact contains only the HallValla web runtime and stable Android APK.' > dist/DEPLOYMENT_INFO.txt
+
+          # The signed APK is intentionally not required to live in the source ZIP/repo.
+          # If releases/android/latest.json points to an APK that is present, publish it.
+          # If the APK is absent, publish the web runtime only instead of failing Pages.
+          if [[ -f releases/android/latest.json ]]; then
+            APK_FILE="$(python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('releases/android/latest.json')
+          try:
+              data = json.loads(p.read_text(encoding='utf-8'))
+              print(data.get('file', ''))
+          except Exception:
+              print('')
+          PY
+            )"
+          else
+            APK_FILE=""
+          fi
+
+          if [[ -n "$APK_FILE" && -f "releases/android/$APK_FILE" ]]; then
+            cp "releases/android/$APK_FILE" dist/downloads/HallValla-Android.apk
+            cp releases/android/latest.json dist/downloads/latest.json
+            if [[ -f releases/android/SHA256SUMS.txt ]]; then
+              cp releases/android/SHA256SUMS.txt dist/downloads/SHA256SUMS.txt
+            fi
+            printf '%s\n' "Web runtime + signed Android APK published from releases/android/$APK_FILE." > dist/DEPLOYMENT_INFO.txt
+          else
+            printf '%s\n' 'Web runtime published. Signed Android APK is not present in this source checkout, so APK publication was skipped safely.' > dist/DEPLOYMENT_INFO.txt
+            echo "Signed APK not present; publishing web only. latest.json requested: ${APK_FILE:-<none>}"
+          fi
 
       - name: Upload public Pages artifact
         uses: actions/upload-pages-artifact@v4

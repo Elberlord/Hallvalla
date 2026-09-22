@@ -44,6 +44,34 @@
   <button id="googleLoginSplashBtn" class="hv-google-login-splash-btn" type="button" aria-label="Continuar con Google" title="Continuar con Google">
     <img class="hv-google-login-splash-btn-art" src="assets/home/continuar_con_google_boton.webp" alt="Continuar con Google">
   </button>
+  <script>
+  // Android: el botón debe poder abrir el selector nativo incluso antes de que
+  // Firebase y el resto del runtime terminen de cargar. addJavascriptInterface
+  // está disponible también dentro de este frame de mismo origen.
+  (()=>{
+    if(window.__hallvallaNativeGoogleEarlyBound)return;
+    window.__hallvallaNativeGoogleEarlyBound=true;
+    const modes=new Map([
+      ['googleLoginSplashBtn','splash'],
+      ['accountGoogleMigrateBtn','migrate'],
+      ['accountGoogleLoginBtn','login'],
+      ['accountLinkGoogleBtn','link']
+    ]);
+    document.addEventListener('click',event=>{
+      const target=event.target?.closest?.('button,[role="button"]');
+      const mode=target?modes.get(target.id):null;
+      if(!mode)return;
+      let bridge=null;
+      try{bridge=window.HallVallaAndroid||(window.parent!==window?window.parent.HallVallaAndroid:null);}catch(_){bridge=window.HallVallaAndroid||null;}
+      if(!bridge||typeof bridge.requestGoogleSignIn!=='function')return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      try{target.disabled=true;}catch(_){}
+      bridge.requestGoogleSignIn(mode);
+    },true);
+  })();
+  </script>
 </div>
 
 <div id="mainMenu" class="asset-home">

@@ -1,0 +1,27 @@
+HallValla v244 — Android v139 fullscreen startup crash fix
+Date: 2026-09-21
+
+Root cause observed on physical HONOR / Android 15
+- java.lang.NullPointerException while obtaining WindowInsetsController during MainActivity startup.
+- The failing fullscreen request happened before the DecorView/insets controller was ready.
+
+Fix
+- No immersive-mode call before setContentView().
+- Fullscreen configuration begins after content is mounted.
+- Immersive-mode work is deferred through View.post().
+- Window, DecorView and WindowInsetsController are null-checked.
+- Safe reapplication on resume/focus.
+- sensorLandscape retained: horizontal only, either landscape side.
+
+Android
+- applicationId: com.hallvalla.game
+- versionCode: 139
+- versionName: 1.0.139
+- compileSdk/targetSdk: 35
+
+Scope
+- No gameplay changes.
+- No Firebase Rules changes.
+- No frontend layout changes.
+- No asset changes.
+- Private signing material must remain outside the repository.

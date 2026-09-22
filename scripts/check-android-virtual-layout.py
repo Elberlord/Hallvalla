@@ -36,14 +36,20 @@ require('dataset?.hvVirtualViewport' in mobile_js and 'return false' in mobile_j
         'web: responsive móvil protege viewport virtual','web: exact-guides-mobile no protege viewport virtual')
 require('android:name=".MainActivity"' in manifest,
         'android: launcher usa MainActivity','android: launcher no usa MainActivity')
-require("'../../web/assets'" in gradle,
-        'android: Gradle empaqueta web/assets directamente','android: sourceSets no incluye ../../web/assets')
+require("'../../web'" in gradle,
+        'android: Gradle empaqueta el frontend web completo','android: sourceSets no incluye ../../web')
 require('hvfit=1' in main_java and 'applyContainedGameViewport' in main_java,
         'android: contenedor nativo + hvfit presentes','android: falta contenedor nativo o hvfit')
-require('shouldInterceptRequest' in main_java and 'tryOpenBundledAsset' in main_java,
-        'android: interceptor de assets locales presente','android: falta interceptor de assets')
-require('Bundled asset missing' in main_java and "localAssets:'strict'" in main_java and 'WebView continúa hacia GitHub Pages' not in main_java,
-        'android: /assets es local estricto sin fallback de red','android: /assets todavía permite fallback remoto')
+require('shouldInterceptRequest' in main_java and 'tryOpenBundledWebResource' in main_java,
+        'android: interceptor de frontend local presente','android: falta interceptor de frontend local')
+require('Bundled resource missing' in main_java and "localAssets:'strict'" in main_java and 'localFrontend:true' in main_java,
+        'android: frontend local estricto sin mezcla remota','android: frontend Android no quedó local/atómico')
+require('STARTUP_CACHED_ASSETS' in main_java and 'hallvalla-startup-assets/' in main_java and 'getFilesDir()' in main_java,
+        'android: imágenes de portada persistidas en filesDir','android: falta caché persistente de portada')
+require('__hallvallaNativeGoogleEarlyBound' in stage and 'requestGoogleSignIn' in stage and 'frame.contentWindow.eval' in main_java,
+        'android: Google nativo puenteado dentro del stage iframe','android: bridge Google nativo no cubre el stage iframe')
+require('isHallVallaAndroid' in index and 'if(!isHallVallaAndroid) await ensureCurrentServiceWorker()' in index,
+        'android: arranque no espera Service Worker','android: shell Android todavía espera Service Worker')
 require('dispatchKeyEvent' in main_java and 'dispatchGenericMotionEvent' in main_java and '__hallvallaNativeGamepadUpdate' in main_java,
         'android: bridge nativo de gamepad presente','android: bridge nativo de gamepad incompleto')
 require('__hallvallaNativeGamepadUpdate' in gamepad_js and 'HV_NATIVE_GAMEPAD_INDEX' in gamepad_js,

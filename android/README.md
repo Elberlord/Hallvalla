@@ -1,9 +1,9 @@
-# HallValla Android v136 — viewport virtual 1366×636 + assets locales + gamepad nativo
+# HallValla Android v140 — Google nativo + frontend local rápido + fullscreen seguro + 1366×636
 
 - applicationId: `com.hallvalla.game`
-- versionCode: `136`
-- versionName: `1.0.136`
-- Sitio cargado: `https://elberlord.github.io/Hallvalla/?apk=136&hvfit=1`
+- versionCode: `140`
+- versionName: `1.0.140`
+- Sitio cargado: `https://elberlord.github.io/Hallvalla/?apk=140&hvfit=1`
 - Firma: debe usar exactamente el mismo `hallvalla-release.p12` de v130.
 - OAuth Web Client usado por Firebase: `496903032464-mcru6mkdr99pgos2fdegarg08eb55ujf.apps.googleusercontent.com`
 
@@ -55,8 +55,31 @@ Si falta esa asociación, Google Play Services devuelve `DEVELOPER_ERROR (10)` y
 - Los taps siguen llegando al WebView real, sin `transform` del DOM ni coordenadas reescritas.
 
 
-## v136 — assets 100% dentro del APK
-- Todo `web/assets/` se empaqueta físicamente dentro del APK mediante `assets.srcDirs`.
-- Las solicitudes `https://elberlord.github.io/Hallvalla/assets/*` se resuelven desde `AssetManager`.
-- No existe fallback a GitHub Pages/Firebase Storage para assets: si el APK y el manifiesto se desalinean, la solicitud responde 404 localmente y el checker debe impedir la entrega.
-- HTML/JS, autenticación y Firebase pueden seguir usando red; imágenes, audio y demás recursos de `web/assets` no dependen de almacenamiento remoto.
+## v140 — frontend canónico completo dentro del APK
+- Todo `web/` se empaqueta físicamente dentro del APK mediante `assets.srcDirs`.
+- `index.html`, `hallvalla-stage.html`, JS, CSS e imágenes del origen `https://elberlord.github.io/Hallvalla/` se resuelven desde `AssetManager`.
+- Firebase/Google siguen usando red para autenticación y datos; el frontend visual ya no depende de descargar GitHub Pages para arrancar.
+- Las dos imágenes de la portada Google se copian además a `filesDir/hallvalla-startup-assets/v140` en el primer arranque y se reutilizan mientras no se borren los datos de la app o se desinstale.
+- Los recursos visuales llevan cabecera `Cache-Control: max-age=31536000, immutable`; HTML/JS/CSS locales usan `no-cache` para no heredar código viejo tras actualizar la APK.
+
+
+## v139 — reparación de crash de arranque Android 15
+- Se eliminó la entrada inmediata a modo inmersivo antes de `setContentView()`.
+- `configureFullscreenWindow()` se ejecuta después de montar el contenido.
+- `scheduleImmersiveMode()` difiere la operación a la cola UI.
+- `enterImmersiveMode()` valida nulos y usa `WindowInsetsController` solo cuando está disponible.
+- Para API anteriores a 30 se conserva la ruta `SYSTEM_UI_FLAG_*`.
+- `sensorLandscape` sigue obligando orientación horizontal permitiendo ambas rotaciones landscape.
+
+## v139 / repo v245 — build release sin lintVital
+- `lint { checkReleaseBuilds false }` desactiva únicamente el chequeo Lint de la variante release.
+- Se añadió porque `lintVitalAnalyzeRelease` fallaba en Android Studio pese a que `compileReleaseJavaWithJavac` terminaba correctamente.
+- No afecta el runtime de HallValla ni cambia el contenido funcional de la APK.
+
+
+
+## v140 / repo v246 — acceso Google Android y arranque
+- El shell detecta `HallVallaAndroid/*` y no espera registro/actualización del Service Worker antes de abrir el stage.
+- Se corrigió la causa del botón Google inerte: la UI real vive dentro de `hvStageFrame`, mientras el bridge v139 se instalaba únicamente en el documento superior.
+- El stage instala desde el primer HTML una delegación de clic nativa para Google; `MainActivity` instala las funciones de recepción/error directamente dentro del iframe de mismo origen.
+- El selector de cuenta sigue siendo Google Sign-In nativo mediante Play Services; el token se entrega después a Firebase Auth JS.

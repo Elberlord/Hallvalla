@@ -1,0 +1,21 @@
+HallValla repo v247 — GitHub Pages APK publication fix
+Date: 2026-09-22
+
+Problem observed in GitHub Actions:
+  cp: cannot stat 'releases/android/HallValla-Android-v136.apk': No such file or directory
+
+Cause:
+- The Pages workflow and public-build scripts had the APK filename hard-coded to v136.
+- The canonical repo intentionally does not embed the large signed APK in every source ZIP.
+- Therefore a normal source-only push could fail the entire Pages build even when the web runtime was valid.
+
+Fix:
+- Remove the hard-coded v136 APK dependency.
+- Read the intended APK filename dynamically from releases/android/latest.json.
+- Publish the APK only when that signed file is actually present.
+- If the signed APK is absent, publish the HallValla web runtime normally and skip APK publication without failing the job.
+- Apply the same behavior to GitHub Actions, scripts/build-public-dist.sh, and scripts/build-public-dist.ps1.
+
+Important:
+- This change does NOT alter Android gameplay/runtime code, Firebase, Google login, assets, signing, or app versionCode.
+- latest.json remains the release pointer; update it together with SHA256SUMS.txt when a newly signed APK is intentionally added to releases/android/.

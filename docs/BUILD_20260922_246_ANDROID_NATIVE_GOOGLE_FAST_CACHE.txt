@@ -1,0 +1,34 @@
+HallValla v246 — Android v140 native Google + fast persistent startup
+Date: 2026-09-22
+
+BASE
+- v245 / Android v139.
+- Gameplay, Firebase data model, 1366x636 geometry, gamepad and fullscreen fix remain unchanged.
+
+ROOT CAUSE 1 — GOOGLE BUTTON
+- index.html hosts the game in hvStageFrame.
+- The v139 Java bridge injected its click listener/functions only into the top document.
+- googleLoginSplashBtn exists inside hallvalla-stage.html (the iframe), so native interception never reached the actual button.
+
+FIX
+- hallvalla-stage.html binds native Google delegation immediately, before Firebase/bootstrap completes.
+- MainActivity installs the native Google receive/error bridge inside hvStageFrame, while index.html keeps forwarding Java callbacks to the stage.
+- Google account chooser remains native Google Play Services.
+
+ROOT CAUSE 2 — SLOW LOGIN ART
+- Android still loaded the top shell/stage over GitHub and index waited for Service Worker registration/update before assigning the stage URL.
+- This delayed first visual display even though web/assets were bundled.
+
+FIX
+- Android Gradle now packages all web/, not only web/assets/.
+- MainActivity intercepts the HallValla same-origin frontend atomically from the APK: HTML, JS, CSS and assets.
+- Native Android shell skips waiting for Service Worker activation/update.
+- The two login images are additionally persisted under filesDir/hallvalla-startup-assets/v140 and reused across launches until app data is cleared/uninstall (cache version changes on app update when required).
+
+VERSION
+- versionCode 140
+- versionName 1.0.140
+- HOME_URL apk=140
+
+SECURITY
+- No keystore/private signing material is included.

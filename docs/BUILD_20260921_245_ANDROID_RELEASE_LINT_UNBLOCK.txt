@@ -1,0 +1,28 @@
+HallValla v245 — Android v139 release build lint unblock
+Date: 2026-09-21
+
+Observed build failure
+- Signed release generation reached :app:compileReleaseJavaWithJavac successfully.
+- Build then failed inside :app:lintVitalAnalyzeRelease / LintClassLoaderBuildService.
+- The failure persisted after switching Gradle JDK to JetBrains Runtime 21 and resyncing.
+
+Change
+- android/app/build.gradle now includes:
+    lint {
+        checkReleaseBuilds false
+    }
+
+Effect
+- Skips Android Lint's release-gating task only.
+- Does not alter runtime bytecode intentionally beyond normal build mechanics.
+- Does not change gameplay, Firebase, web assets, layout, OAuth, package ID or signing identity.
+
+Android target remains
+- applicationId: com.hallvalla.game
+- versionCode: 139
+- versionName: 1.0.139
+- compileSdk/targetSdk: 35
+
+Canonical base
+- v244 fullscreen startup fix remains intact.
+- v245 adds only the release-build unblock and documentation.

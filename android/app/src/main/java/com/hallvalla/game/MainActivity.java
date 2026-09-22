@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.hardware.input.InputManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Build;
 import android.view.Gravity;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -14,6 +15,8 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
@@ -35,19 +38,26 @@ import org.json.JSONObject;
 import org.json.JSONArray;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 public class MainActivity extends Activity {
-    private static final String HOME_URL = "https://elberlord.github.io/Hallvalla/?apk=136&hvfit=1";
+    private static final String HOME_URL = "https://elberlord.github.io/Hallvalla/?apk=140&hvfit=1";
     private static final String TRUSTED_HOST = "elberlord.github.io";
     private static final String WEB_CLIENT_ID = "496903032464-mcru6mkdr99pgos2fdegarg08eb55ujf.apps.googleusercontent.com";
     private static final int RC_GOOGLE_SIGN_IN = 7311;
     private static final int VIRTUAL_WIDTH = 1366;
     private static final int VIRTUAL_HEIGHT = 636;
     private static final float VIRTUAL_ASPECT = (float) VIRTUAL_WIDTH / (float) VIRTUAL_HEIGHT;
-    private static final String LOCAL_ASSET_PATH_PREFIX = "/Hallvalla/assets/";
-    private static final String LOCAL_ASSET_DIR = "";
+    private static final String LOCAL_WEB_PATH_PREFIX = "/Hallvalla/";
+    private static final String STARTUP_CACHE_VERSION = "v140";
+    private static final String[] STARTUP_CACHED_ASSETS = new String[]{
+        "assets/home/hallvalla_login_google.webp",
+        "assets/home/continuar_con_google_boton.webp"
+    };
     private static final int NATIVE_GAMEPAD_BUTTON_COUNT = 17;
 
     private FrameLayout viewportRoot;
@@ -61,6 +71,7 @@ public class MainActivity extends Activity {
     private final float[] nativeGamepadAxes = new float[]{0f, 0f, 0f, 0f};
     private long lastNativeGamepadEmitMs = 0L;
     private boolean hallVallaPageReady = false;
+    private File startupAssetCacheDir;
 
     private final InputManager.InputDeviceListener inputDeviceListener = new InputManager.InputDeviceListener() {
         @Override public void onInputDeviceAdded(int deviceId) { refreshNativeGamepadDevice(deviceId); }
@@ -80,7 +91,6 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        enterImmersiveMode();
 
         GoogleSignInOptions googleOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(WEB_CLIENT_ID)
@@ -89,6 +99,7 @@ public class MainActivity extends Activity {
             .build();
         googleSignInClient = GoogleSignIn.getClient(this, googleOptions);
         inputManager = (InputManager) getSystemService(INPUT_SERVICE);
+        prepareStartupAssetCache();
 
         // v136: el teléfono deja de decidir la relación de aspecto del juego.
         // Creamos un escenario nativo 1366:636 tipo `contain`: el rectángulo mayor
@@ -118,6 +129,7 @@ public class MainActivity extends Activity {
         );
         viewportRoot.addView(webView, initialWebViewParams);
         setContentView(viewportRoot);
+        configureFullscreenWindow();
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
             WindowManager.LayoutParams params = getWindow().getAttributes();
@@ -155,7 +167,7 @@ public class MainActivity extends Activity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-                WebResourceResponse local = tryOpenBundledAsset(request);
+                WebResourceResponse local = tryOpenBundledWebResource(request);
                 return local != null ? local : super.shouldInterceptRequest(view, request);
             }
 
@@ -224,36 +236,95 @@ public class MainActivity extends Activity {
         webView.setVisibility(View.VISIBLE);
     }
 
-    private WebResourceResponse tryOpenBundledAsset(WebResourceRequest request) {
+    private void prepareStartupAssetCache() {
+        try {
+            startupAssetCacheDir = new File(getFilesDir(), "hallvalla-startup-assets/" + STARTUP_CACHE_VERSION);
+            if (!startupAssetCacheDir.exists() && !startupAssetCacheDir.mkdirs()) return;
+            for (String relative : STARTUP_CACHED_ASSETS) {
+                File target = new File(startupAssetCacheDir, relative.substring(relative.lastIndexOf('/') + 1));
+                if (target.isFile() && target.length() > 0L) continue;
+                File temp = new File(target.getAbsolutePath() + ".tmp");
+                try (InputStream input = getAssets().open(relative, android.content.res.AssetManager.ACCESS_STREAMING);
+                     FileOutputStream output = new FileOutputStream(temp)) {
+                    byte[] buffer = new byte[64 * 1024];
+                    int read;
+                    while ((read = input.read(buffer)) >= 0) output.write(buffer, 0, read);
+                    output.flush();
+                }
+                if (!temp.renameTo(target)) {
+                    try (InputStream input = new FileInputStream(temp);
+                         FileOutputStream output = new FileOutputStream(target)) {
+                        byte[] buffer = new byte[64 * 1024];
+                        int read;
+                        while ((read = input.read(buffer)) >= 0) output.write(buffer, 0, read);
+                    }
+                    //noinspection ResultOfMethodCallIgnored
+                    temp.delete();
+                }
+            }
+        } catch (Exception ignored) { }
+    }
+
+    private InputStream openBundledWebResource(String relative) throws IOException {
+        if (startupAssetCacheDir != null) {
+            for (String cached : STARTUP_CACHED_ASSETS) {
+                if (cached.equals(relative)) {
+                    File file = new File(startupAssetCacheDir, relative.substring(relative.lastIndexOf('/') + 1));
+                    if (file.isFile() && file.length() > 0L) return new FileInputStream(file);
+                    break;
+                }
+            }
+        }
+        return getAssets().open(relative, android.content.res.AssetManager.ACCESS_STREAMING);
+    }
+
+    private WebResourceResponse tryOpenBundledWebResource(WebResourceRequest request) {
         if (request == null || !"GET".equalsIgnoreCase(request.getMethod())) return null;
         try {
             Uri uri = request.getUrl();
             if (uri == null || !"https".equalsIgnoreCase(uri.getScheme()) || !TRUSTED_HOST.equalsIgnoreCase(uri.getHost())) return null;
             String path = uri.getPath() == null ? "" : uri.getPath();
-            if (!path.startsWith(LOCAL_ASSET_PATH_PREFIX)) return null;
-            String relative = path.substring(LOCAL_ASSET_PATH_PREFIX.length());
-            if (relative.isEmpty() || relative.contains("..") || relative.startsWith("/")) return null;
-            InputStream input = getAssets().open(LOCAL_ASSET_DIR + relative, android.content.res.AssetManager.ACCESS_STREAMING);
+            if (!path.startsWith(LOCAL_WEB_PATH_PREFIX)) return null;
+
+            String relative = path.substring(LOCAL_WEB_PATH_PREFIX.length());
+            if (relative.isEmpty()) relative = "index.html";
+            if (relative.endsWith("/")) relative += "index.html";
+            if (relative.contains("..") || relative.startsWith("/")) return null;
+
+            InputStream input = openBundledWebResource(relative);
             String extension = MimeTypeMap.getFileExtensionFromUrl(relative);
             String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension == null ? "" : extension.toLowerCase());
             if (mime == null) {
-                if (relative.endsWith(".webp")) mime = "image/webp";
+                if (relative.endsWith(".html")) mime = "text/html";
+                else if (relative.endsWith(".js")) mime = "application/javascript";
+                else if (relative.endsWith(".css")) mime = "text/css";
+                else if (relative.endsWith(".webp")) mime = "image/webp";
                 else if (relative.endsWith(".ico")) mime = "image/x-icon";
                 else if (relative.endsWith(".json")) mime = "application/json";
                 else mime = "application/octet-stream";
             }
-            WebResourceResponse response = new WebResourceResponse(mime, null, input);
-            response.setResponseHeaders(java.util.Collections.singletonMap("Cache-Control", "public, max-age=31536000, immutable"));
+            String encoding = mime.startsWith("text/") || mime.contains("javascript") || mime.contains("json") ? "UTF-8" : null;
+            WebResourceResponse response = new WebResourceResponse(mime, encoding, input);
+            java.util.Map<String, String> headers = new java.util.HashMap<>();
+            headers.put("Access-Control-Allow-Origin", "https://" + TRUSTED_HOST);
+            if (relative.matches(".*\\.(?:webp|png|jpe?g|gif|svg|avif|ico|mp3|ogg|wav|m4a|aac|woff2?|ttf)$")) {
+                headers.put("Cache-Control", "public, max-age=31536000, immutable");
+            } else {
+                // HTML/JS/CSS también son locales, pero no los hacemos immutable para
+                // evitar que una actualización de APK herede código viejo de WebView.
+                headers.put("Cache-Control", "no-cache");
+            }
+            response.setResponseHeaders(headers);
             return response;
         } catch (IOException ignored) {
-            // Contrato v136: /Hallvalla/assets/* NUNCA cae a red. El APK debe
-            // contener el asset; el checker/Gradle valida el manifiesto antes de compilar.
-            byte[] body = "HallValla bundled asset missing".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            // En Android el frontend HallValla es atómico: si falta un recurso del
+            // paquete no mezclamos silenciosamente archivos de otra versión de la web.
+            byte[] body = "HallValla bundled resource missing".getBytes(java.nio.charset.StandardCharsets.UTF_8);
             return new WebResourceResponse(
                 "text/plain",
                 "UTF-8",
                 404,
-                "Bundled asset missing",
+                "Bundled resource missing",
                 java.util.Collections.singletonMap("Cache-Control", "no-store"),
                 new ByteArrayInputStream(body)
             );
@@ -263,7 +334,7 @@ public class MainActivity extends Activity {
     }
 
     private void installNativeContainerMarker() {
-        evaluateOnHallValla("window.__HALLVALLA_NATIVE_CONTAINER__=Object.freeze({version:136,virtualWidth:1366,virtualHeight:636,mode:'contain',localAssets:'strict',nativeGamepad:true});document.documentElement.dataset.hvNativeContainer='136';");
+        evaluateOnHallValla("window.__HALLVALLA_NATIVE_CONTAINER__=Object.freeze({version:140,virtualWidth:1366,virtualHeight:636,mode:'contain',localAssets:'strict',localFrontend:true,nativeGoogle:true,nativeGamepad:true});document.documentElement.dataset.hvNativeContainer='140';");
     }
 
     private boolean isGamepadDevice(InputDevice device) {
@@ -505,7 +576,14 @@ public class MainActivity extends Activity {
 
     private void installNativeGoogleBridge() {
         if (webView == null) return;
-        webView.evaluateJavascript(NATIVE_GOOGLE_BRIDGE_SCRIPT, null);
+        String quoted = JSONObject.quote(NATIVE_GOOGLE_BRIDGE_SCRIPT);
+        String installer = "(() => {" +
+            "const frame=document.getElementById('hvStageFrame');" +
+            "const install=()=>{try{if(frame&&frame.contentWindow){frame.contentWindow.eval(" + quoted + ");}}catch(e){console.warn('[HallValla Android] No se pudo instalar bridge Google en stage',e);}};" +
+            "install();" +
+            "if(frame&&!frame.__hvNativeGoogleLoadHook){frame.__hvNativeGoogleLoadHook=true;frame.addEventListener('load',install);}" +
+            "})();";
+        webView.evaluateJavascript(installer, null);
     }
 
     private static final String NATIVE_GOOGLE_BRIDGE_SCRIPT = """
@@ -634,7 +712,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        enterImmersiveMode();
+        scheduleImmersiveMode();
         if (inputManager != null) {
             try { inputManager.registerInputDeviceListener(inputDeviceListener, null); } catch (Exception ignored) { }
             findAnyNativeGamepad();
@@ -658,7 +736,7 @@ public class MainActivity extends Activity {
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) enterImmersiveMode();
+        if (hasFocus) scheduleImmersiveMode();
     }
 
     @Override
@@ -670,8 +748,49 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void configureFullscreenWindow() {
+        Window window = getWindow();
+        if (window == null) return;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false);
+        }
+        scheduleImmersiveMode();
+    }
+
+    /**
+     * Android 15 / API 35 may create the Activity before the DecorView is attached.
+     * Defer immersive-mode work to the UI queue instead of touching the insets
+     * controller synchronously from onCreate().
+     */
+    private void scheduleImmersiveMode() {
+        Window window = getWindow();
+        if (window == null) return;
+
+        View decorView = window.getDecorView();
+        if (decorView == null) return;
+        decorView.post(this::enterImmersiveMode);
+    }
+
     private void enterImmersiveMode() {
-        getWindow().getDecorView().setSystemUiVisibility(
+        Window window = getWindow();
+        if (window == null) return;
+
+        View decorView = window.getDecorView();
+        if (decorView == null) return;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowInsetsController controller = decorView.getWindowInsetsController();
+            if (controller == null) return;
+
+            controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+            controller.setSystemBarsBehavior(
+                WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            );
+            return;
+        }
+
+        decorView.setSystemUiVisibility(
             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY |
             View.SYSTEM_UI_FLAG_FULLSCREEN |
             View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
