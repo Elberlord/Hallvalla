@@ -505,6 +505,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function renderStep5ArenaPreview(room){return ensurePvpSyncEngineBridgeApi().renderStep5ArenaPreview(room);}
   function scheduleArenaBootstrap(room,code){return ensurePvpSyncEngineBridgeApi().scheduleArenaBootstrap(room,code);}
   function buildRealCard6e(key,role,leaderType){return ensurePvpSyncEngineBridgeApi().buildRealCard6e(key,role,leaderType);}
+  function countHiddenKeys6e(keys=[]){return ensurePvpSyncEngineBridgeApi().countHiddenKeys6e(keys);}
   function buildRealPrivateState6e(payload,code,role){return ensurePvpSyncEngineBridgeApi().buildRealPrivateState6e(payload,code,role);}
   function ensureOwnRealEnginePrep6e(room,code){return ensurePvpSyncEngineBridgeApi().ensureOwnRealEnginePrep6e(room,code);}
   function isRealEnginePayload6e(room){return ensurePvpSyncEngineBridgeApi().isRealEnginePayload6e(room);}
