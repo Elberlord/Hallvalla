@@ -56,3 +56,10 @@ El cierre estructural/técnico v242 se mantiene. No se cambió gameplay, balance
 
 ## Repo v247 — GitHub Pages no longer depends on a hard-coded APK
 The Pages/public-distribution build now reads the APK filename from `releases/android/latest.json` and treats the signed APK as optional in the source checkout. A source-only push therefore publishes the web runtime instead of failing because an old `HallValla-Android-v136.apk` is absent.
+
+## Repo v248 — hotfix PvP fallback BOT
+- Corrige `ReferenceError: buildRealCard6e is not defined` al iniciar el rival BOT.
+- `buildRealCard6e` vuelve a exponerse mediante `sync-engine-bridge.js`, siguiendo el mismo contrato modular usado para `buildRealPrivateState6e`.
+- No se duplica lógica de cartas: BOT y PvP real comparten la factoría canónica.
+- Se actualizan los hashes de caché de los JS modificados.
+- No cambia código nativo Android; la APK v140 sí debe recompilarse para incorporar el `web/` corregido porque su frontend está empaquetado localmente.

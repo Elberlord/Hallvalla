@@ -1,0 +1,40 @@
+HallValla repo v248 — PVP BOT card factory export hotfix
+Fecha: 2026-09-28
+Base: v247
+
+SÍNTOMA
+El fallback BOT de matchmaking se detenía antes de iniciar la batalla con:
+ReferenceError: buildRealCard6e is not defined
+Origen: web/js/features/pvp/index.js, startPvpBotFallback().
+
+CAUSA
+Durante la modularización/auditoría, buildRealCard6e quedó encapsulada en
+features/pvp/sync-engine-bridge.js. v234 ya había corregido el mismo tipo de
+rotura para buildRealPrivateState6e exportándolo mediante la API del bridge,
+pero buildRealCard6e no quedó expuesta. El fallback BOT seguía invocándola
+como si fuera un símbolo local de index.js.
+
+CORRECCIÓN
+1. sync-engine-bridge.js exporta buildRealCard6e en su API Object.freeze.
+2. index.js añade un wrapper explícito buildRealCard6e(...) que delega al bridge.
+3. El fallback BOT usa exactamente la misma factoría canónica de cartas que
+   usa la preparación del motor PvP real; no se duplicó ni reinventó lógica.
+4. Se actualizaron RESOURCE_HASHES y ASSET_HASHES solo para los JS cambiados,
+   de modo que GitHub Pages invalide la copia antigua del Service Worker.
+
+NO CAMBIA
+- Balance, stats, costes, cartas o habilidades.
+- Firebase schema/rules.
+- Matchmaking humano.
+- Android Java/Kotlin, Google Sign-In, fullscreen, gamepad o layout.
+
+ANDROID
+La APK Android v140 empaqueta todo web/ localmente. Por ello, desplegar v248
+a GitHub Pages repara la web de navegador, pero la APK v140 instalada conserva
+el JS roto. Para que el móvil reciba este hotfix hay que recompilar la APK con
+este web/ actualizado. No hace falta cambiar código nativo Android.
+
+Hashes nuevos (12 hex):
+- features/pvp/index.js: b1be06a90544
+- features/pvp/sync-engine-bridge.js: 6df10e1f7da9
+- bootstrap-loader.js: c5b6142610f7

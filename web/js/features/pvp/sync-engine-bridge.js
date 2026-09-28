@@ -317,7 +317,7 @@ canónico cuando ambos clientes están preparados.
     return Object.freeze({
       buildArenaBootstrap,validateArenaBootstrap,clearArenaLaunchTimer,clearCombatLaunchTimer,clearRealEngineStartTimer6e,
       clearStep5ArenaPreview,renderStep5ArenaPreview,scheduleArenaBootstrap,
-      buildRealPrivateState6e,ensureOwnRealEnginePrep6e,isRealEnginePayload6e,launchRealEngine6e,scheduleCanonicalCombatStart,reset
+      buildRealCard6e,buildRealPrivateState6e,ensureOwnRealEnginePrep6e,isRealEnginePayload6e,launchRealEngine6e,scheduleCanonicalCombatStart,reset
     });
   }
   globalThis.createHallvallaPvpSyncEngineBridgeApi=createHallvallaPvpSyncEngineBridgeApi;
