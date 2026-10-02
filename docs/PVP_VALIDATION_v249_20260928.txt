@@ -1,0 +1,15 @@
+HallValla v249 — VALIDACIÓN PvP
+Fecha: 2026-09-28
+
+Estado aprobado para congelar como base Android:
+- Matchmaking con fallback BOT: PASS manual.
+- Entrada y combate contra BOT: PASS manual.
+- Matchmaking/entrada PvP humano J1 vs J2: PASS manual.
+- Combate humano J1 vs J2: PASS manual.
+
+Hotfixes mínimos incorporados:
+1. buildRealCard6e exportado por sync-engine-bridge y consumido por index.js.
+2. countHiddenKeys6e exportado por sync-engine-bridge y consumido por index.js.
+
+Decisión de mantenimiento:
+No realizar nuevas limpiezas/reorganizaciones estructurales del PvP antes de la APK v141. Cualquier corrección futura debe partir de un error concreto reproducible y preservar esta base validada.

@@ -1,11 +1,19 @@
-# HallValla Android v140 — Google nativo + frontend local rápido + fullscreen seguro + 1366×636
+# HallValla Android v143 — PayPal LIVE manual + Comunidad + PvP validado + frontend local + Google nativo + 1366×636
 
 - applicationId: `com.hallvalla.game`
-- versionCode: `140`
-- versionName: `1.0.140`
-- Sitio cargado: `https://elberlord.github.io/Hallvalla/?apk=140&hvfit=1`
+- versionCode: `142`
+- versionName: `1.0.142`
+- Sitio cargado: `https://elberlord.github.io/Hallvalla/?apk=143&hvfit=1`
 - Firma: debe usar exactamente el mismo `hallvalla-release.p12` de v130.
 - OAuth Web Client usado por Firebase: `496903032464-mcru6mkdr99pgos2fdegarg08eb55ujf.apps.googleusercontent.com`
+
+
+## Historial · v141 / repo v250 — APK desde la base PvP validada
+- Parte exactamente de repo v249, validado manualmente en navegador contra BOT y J1 vs J2 humano.
+- Incorpora dentro de la APK el `web/` de v249, incluyendo los hotfix mínimos `buildRealCard6e` y `countHiddenKeys6e`.
+- Esa versión subió únicamente la identidad Android a `versionCode 141` / `versionName 1.0.141` y sus marcadores nativos/cache.
+- No cambia balance, Firebase, matchmaking, IA, cartas, reglas, layout, gamepad ni Google Sign-In.
+- Debe firmarse con el mismo `hallvalla-release.p12` canónico; la clave privada no forma parte del repo.
 
 ## Base de autenticación Android
 
@@ -83,3 +91,12 @@ Si falta esa asociación, Google Play Services devuelve `DEVELOPER_ERROR (10)` y
 - Se corrigió la causa del botón Google inerte: la UI real vive dentro de `hvStageFrame`, mientras el bridge v139 se instalaba únicamente en el documento superior.
 - El stage instala desde el primer HTML una delegación de clic nativa para Google; `MainActivity` instala las funciones de recepción/error directamente dentro del iframe de mismo origen.
 - El selector de cuenta sigue siendo Google Sign-In nativo mediante Play Services; el token se entrega después a Firebase Auth JS.
+
+
+## v143 / repo v252 — PayPal LIVE manual + Comunidad y seguridad
+- Empaqueta el build web `20261002.251`.
+- Añade Chat General, panel maestro, eventos globales y premios administrativos.
+- Silencio/baneo temporal configurable en horas, días, semanas o meses.
+- El UID maestro se valida también en Firebase Rules; ocultar/mostrar el botón no es la medida de seguridad.
+- El antiguo modo de pruebas que desbloqueaba cartas/progresión fue retirado del frontend público.
+- Requiere publicar `backend/firebase/database.rules.json` v252 antes de probar Comunidad/Admin.

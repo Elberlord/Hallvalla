@@ -22,15 +22,15 @@
 </script>
 <script>
   // v181: esta página ES el juego lógico. index.html es el shell físico.
-  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20260920.242"});
+  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20261002.252"});
   document.documentElement.dataset.hvDesignStage="1366x636";
 </script>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20260920.242">
-<meta name="hallvalla-build" content="v8_MODULAR_20260920.242">
+<meta name="hallvalla-version" content="20261002.252">
+<meta name="hallvalla-build" content="v8_MODULAR_20261002.252">
 <meta name="hallvalla-build-name" content="Design Stage fijo 1366×636 · v192 arquitectura modular · canon v191 preservado">
-<link rel="stylesheet" href="styles.css?h=0116c75a00ac"/>
+<link rel="stylesheet" href="styles.css?h=e934da5ab4b4"/>
 
 <link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.90">
 <link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.90">
@@ -112,6 +112,9 @@
       </button>
       <button id="friendsBtn" class="asset-small-icon" type="button" aria-label="Amigos">
         <img src="assets/home/icon_friends.webp" alt="">
+      </button>
+      <button id="communityBtn" class="asset-small-icon hv-community-home-btn" type="button" aria-label="Chat general" title="Chat general">
+        <span class="hv-community-home-icon" aria-hidden="true">💬</span>
       </button>
       <button id="notificationsBtn" class="asset-small-icon notification-btn" type="button" aria-label="Notificaciones">
         <span class="notification-icon">🔔</span>
@@ -246,6 +249,83 @@
   </footer>
 </div>
 
+
+
+<div id="communityPanel" class="overlay-panel hidden hv-community-overlay">
+  <section class="modal-card hv-community-card" role="dialog" aria-modal="true" aria-labelledby="communityTitle">
+    <button id="communityCloseBtn" class="adventure-result-close" type="button" aria-label="Cerrar">×</button>
+    <header class="hv-community-head">
+      <div><span>HALLVALLA</span><h2 id="communityTitle">CHAT GENERAL</h2></div>
+      <button id="communityAdminBtn" class="btn ghost hidden" type="button">ADMIN</button>
+    </header>
+    <div id="communityEventFeed" class="hv-community-events" aria-label="Eventos globales"></div>
+    <div id="communityMessageList" class="hv-community-message-list" aria-live="polite"></div>
+    <footer class="hv-community-compose">
+      <input id="communityChatInput" type="text" maxlength="280" autocomplete="off" placeholder="Escribe un mensaje..." aria-label="Mensaje para el chat general">
+      <button id="communitySendBtn" class="btn primary" type="button">Enviar</button>
+    </footer>
+    <p id="communityChatStatus" class="hv-community-status" aria-live="polite"></p>
+  </section>
+</div>
+
+<div id="communityAdminPanel" class="overlay-panel hidden hv-community-admin-overlay">
+  <section class="modal-card hv-community-admin-card" role="dialog" aria-modal="true" aria-labelledby="communityAdminTitle">
+    <button id="communityAdminCloseBtn" class="adventure-result-close" type="button" aria-label="Cerrar">×</button>
+    <header class="hv-community-head"><div><span>CONTROL MAESTRO</span><h2 id="communityAdminTitle">ADMINISTRACIÓN</h2></div></header>
+    <div class="hv-admin-grid">
+      <section class="hv-admin-box">
+        <h3>Jugador</h3>
+        <small id="adminTargetName">Selecciona un jugador desde el chat o pega su UID.</small>
+        <input id="adminTargetUid" type="text" autocomplete="off" placeholder="UID del jugador">
+        <input id="adminModerationReason" type="text" maxlength="180" autocomplete="off" placeholder="Motivo (opcional)">
+        <div class="hv-admin-duration">
+          <input id="adminDurationValue" type="number" min="1" max="999" value="1" aria-label="Duración">
+          <select id="adminDurationUnit" aria-label="Unidad de duración">
+            <option value="hours">Horas</option><option value="days">Días</option><option value="weeks">Semanas</option><option value="months">Meses</option>
+          </select>
+        </div>
+        <div class="hv-admin-actions">
+          <button id="adminMuteBtn" class="btn primary" type="button">Silenciar</button>
+          <button id="adminUnmuteBtn" class="btn ghost" type="button">Quitar silencio</button>
+          <button id="adminBanBtn" class="btn danger" type="button">Banear</button>
+          <button id="adminUnbanBtn" class="btn ghost" type="button">Quitar ban</button>
+        </div>
+      </section>
+      <section class="hv-admin-box">
+        <h3>Entregar premio</h3>
+        <select id="adminRewardType"><option value="gems">Gemas</option><option value="gold">Oro</option><option value="fragments">Fragmentos</option><option value="pack">Pack</option></select>
+        <input id="adminRewardAmount" type="number" min="1" max="1000000" value="100" aria-label="Cantidad">
+        <select id="adminRewardPackTier"><option value="basic">Pack básico</option><option value="rare">Pack raro</option><option value="epic">Pack épico</option><option value="mythic">Pack mítico</option><option value="legendary">Pack legendario</option></select>
+        <input id="adminRewardNote" type="text" maxlength="180" autocomplete="off" placeholder="Mensaje del premio (opcional)">
+        <button id="adminGrantRewardBtn" class="btn primary full" type="button">Entregar premio</button>
+      </section>
+      <section class="hv-admin-box hv-admin-event-box">
+        <h3>Crear evento global</h3>
+        <input id="adminEventTitle" type="text" maxlength="60" autocomplete="off" placeholder="Título del evento">
+        <textarea id="adminEventBody" maxlength="400" placeholder="Descripción, reglas, premios, horario..."></textarea>
+        <div class="hv-admin-duration">
+          <input id="adminEventDurationValue" type="number" min="1" max="999" value="1" aria-label="Duración del evento">
+          <select id="adminEventDurationUnit" aria-label="Unidad de duración del evento"><option value="hours">Horas</option><option value="days" selected>Días</option><option value="weeks">Semanas</option><option value="months">Meses</option></select>
+        </div>
+        <button id="adminPublishEventBtn" class="btn primary full" type="button">Publicar evento</button>
+      </section>
+      <section class="hv-admin-box hv-admin-support-box">
+        <h3>Solicitudes PayPal</h3>
+        <small>Verifica el Order ID directamente en tu cuenta PayPal antes de aprobar. HallValla nunca acredita el regalo automáticamente.</small>
+        <div id="adminSupportRequestList" class="hv-admin-support-list"><div class="hv-community-empty">Cargando solicitudes...</div></div>
+      </section>
+    </div>
+    <p id="communityAdminStatus" class="hv-community-status" aria-live="polite"></p>
+  </section>
+</div>
+
+<div id="accountBanOverlay" class="hv-account-ban-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="accountBanTitle">
+  <section class="hv-account-ban-card">
+    <span>HALLVALLA</span><h2 id="accountBanTitle">CUENTA SUSPENDIDA</h2>
+    <p id="accountBanCopy"></p>
+    <button id="accountBanSignOutBtn" class="btn ghost" type="button">Cerrar sesión</button>
+  </section>
+</div>
 
 <div id="mineScreen" class="mine-screen hidden">
   <header class="mine-topbar">
@@ -1025,14 +1105,6 @@ Para abrir tu camino en HallValla, tendrás que derrotarlo con estrategia, Honor
       <span>Gemas disponibles</span>
       <b id="profileGemsValue">0</b>
     </div>
-    <section class="profile-promo-box profile-promo-box--dev-compact" data-hv-dev-tool aria-label="Herramienta interna de pruebas">
-      <div class="profile-promo-controls">
-        <input id="profilePromoInput" class="profile-name-input profile-promo-input" type="text" inputmode="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Código interno">
-        <button id="activateProfilePromoBtn" class="btn primary" type="button">Activar</button>
-        <button id="deactivateProfilePromoBtn" class="btn ghost hidden" type="button">Desactivar</button>
-      </div>
-      <small id="profilePromoStatus" class="profile-promo-status" aria-live="polite">Inactivo.</small>
-    </section>
     <p id="profileRenameMessage" class="profile-message" aria-live="polite"></p>
     <div class="adventure-actions">
       <button id="saveProfileNameBtn" class="btn primary" type="button">Guardar nombre</button>

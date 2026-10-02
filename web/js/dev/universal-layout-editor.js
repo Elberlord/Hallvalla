@@ -748,11 +748,6 @@
   function adoptInlineDevTools(){
     const host=$("hvDevHubInlineTools");
     if(!host)return;
-    const promo=document.querySelector(".profile-promo-box[data-hv-dev-tool]");
-    if(promo&&!host.contains(promo)){
-      promo.classList.add("hv-dev-hub-inline-tool");
-      host.appendChild(promo);
-    }
   }
   function createHub(){
     if($("hvDevToolsHub"))return;

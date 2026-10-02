@@ -45,7 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class MainActivity extends Activity {
-    private static final String HOME_URL = "https://elberlord.github.io/Hallvalla/?apk=140&hvfit=1";
+    private static final String HOME_URL = "https://elberlord.github.io/Hallvalla/?apk=143&hvfit=1";
     private static final String TRUSTED_HOST = "elberlord.github.io";
     private static final String WEB_CLIENT_ID = "496903032464-mcru6mkdr99pgos2fdegarg08eb55ujf.apps.googleusercontent.com";
     private static final int RC_GOOGLE_SIGN_IN = 7311;
@@ -53,7 +53,7 @@ public class MainActivity extends Activity {
     private static final int VIRTUAL_HEIGHT = 636;
     private static final float VIRTUAL_ASPECT = (float) VIRTUAL_WIDTH / (float) VIRTUAL_HEIGHT;
     private static final String LOCAL_WEB_PATH_PREFIX = "/Hallvalla/";
-    private static final String STARTUP_CACHE_VERSION = "v140";
+    private static final String STARTUP_CACHE_VERSION = "v143";
     private static final String[] STARTUP_CACHED_ASSETS = new String[]{
         "assets/home/hallvalla_login_google.webp",
         "assets/home/continuar_con_google_boton.webp"
@@ -334,7 +334,7 @@ public class MainActivity extends Activity {
     }
 
     private void installNativeContainerMarker() {
-        evaluateOnHallValla("window.__HALLVALLA_NATIVE_CONTAINER__=Object.freeze({version:140,virtualWidth:1366,virtualHeight:636,mode:'contain',localAssets:'strict',localFrontend:true,nativeGoogle:true,nativeGamepad:true});document.documentElement.dataset.hvNativeContainer='140';");
+        evaluateOnHallValla("window.__HALLVALLA_NATIVE_CONTAINER__=Object.freeze({version:143,virtualWidth:1366,virtualHeight:636,mode:'contain',localAssets:'strict',localFrontend:true,nativeGoogle:true,nativeGamepad:true});document.documentElement.dataset.hvNativeContainer='143';");
     }
 
     private boolean isGamepadDevice(InputDevice device) {

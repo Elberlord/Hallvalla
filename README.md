@@ -1,6 +1,8 @@
-# HallValla v246 — Android v140 · Google nativo + frontend local rápido
+# HallValla v252 — Android v143 · comunidad/admin + retiro del modo promo
 
-Android: `versionCode 140` · `versionName 1.0.140`
+Android: `versionCode 143` · `versionName 1.0.143`
+
+Base funcional: repo v249 validado manualmente en PvP contra BOT y PvP humano J1 vs J2; Android v141 quedó validado en dispositivo. v252 conserva ese motor PvP y añade Comunidad/Admin, retira por completo el antiguo modo promocional de pruebas y prepara Android v143 con el nuevo frontend local.
 
 Esta versión parte de v245 y conserva gameplay, Firebase, layout 1366×636, fullscreen seguro, gamepad y el workaround de `lintVital`. Los cambios nuevos se concentran en el contenedor Android:
 
@@ -63,3 +65,36 @@ The Pages/public-distribution build now reads the APK filename from `releases/an
 - No se duplica lógica de cartas: BOT y PvP real comparten la factoría canónica.
 - Se actualizan los hashes de caché de los JS modificados.
 - No cambia código nativo Android; la APK v140 sí debe recompilarse para incorporar el `web/` corregido porque su frontend está empaquetado localmente.
+
+## Repo v249 — PvP BOT + humano validados
+- Hotfix directo del contrato modular de PvP: `buildRealCard6e` y `countHiddenKeys6e` quedan accesibles desde `features/pvp/index.js` mediante `sync-engine-bridge.js`.
+- Validación manual completada: fallback BOT inicia combate y PvP humano J1 vs J2 inicia/funciona correctamente.
+- Esta es la base funcional congelada para Android v141.
+
+## Repo v250 — Android v141
+- `versionCode 141` / `versionName 1.0.141`.
+- `MainActivity` usa `apk=141`, cache de arranque `v141` y marcador nativo `version:141`.
+- `web/` y `backend/` se conservan byte por byte respecto a la base v249 validada.
+- Firma release: usar la identidad canónica HallValla; nunca incluir el keystore en GitHub/repo.
+
+
+
+## v252 — Comunidad y control administrativo
+- UID maestro inicial: `5V3mDjSyeNbI7W0qI16cEz5PbsN2`.
+- Chat general autenticado.
+- Silencio y baneo temporal por horas, días, semanas o meses.
+- Entrega manual de premios por UID.
+- Eventos globales administrables.
+- Eliminado del build público el antiguo modo promocional que desbloqueaba todas las cartas/progresión.
+- Android v143 empaqueta este frontend; PvP base v249 se conserva sin refactor.
+
+
+## v252 · PayPal LIVE con aprobación manual
+
+- PayPal LIVE usa el Client ID público de producción de HallValla.
+- Los apoyos de gemas conservan los precios definidos: 100/$0.99, 250/$1.99, 500/$2.99, 1.000/$4.99, 2.500/$9.99, 5.000/$14.99, 10.000/$24.99 y 25.000/$39.99.
+- Después de capturar el pago, HallValla registra una solicitud PENDIENTE con PayPal Order ID y Capture ID.
+- El UID maestro ve las solicitudes en ADMIN y debe verificar el pago directamente en PayPal antes de aprobar.
+- Aprobar una solicitud crea el premio correspondiente. Un PayPal Order ID aprobado no puede aprobarse nuevamente.
+- El paquete de bienvenida ($0.99) entrega, tras aprobación: 3 sobres básicos, 300 oro y 10 gemas, una sola vez por UID.
+- No se almacena Client Secret de PayPal en el frontend ni en el repositorio.

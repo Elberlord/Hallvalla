@@ -1,0 +1,39 @@
+HallValla repo v250 — Android v141 desde base PvP v249 validada
+Fecha: 2026-09-28
+Base: v249_PVP_COUNT_HIDDEN_DIRECT_FIX
+
+VALIDACIÓN FUNCIONAL DE BASE
+- PvP fallback contra BOT: VALIDADO manualmente; el combate inicia.
+- PvP humano J1 vs J2: VALIDADO manualmente; el combate inicia y funciona.
+- Los fallos modulares corregidos antes de esta versión fueron:
+  * buildRealCard6e is not defined
+  * countHiddenKeys6e is not defined
+
+OBJETIVO v250
+Crear la fuente Android de la siguiente actualización instalable sin volver a tocar el gameplay PvP ya validado.
+
+CAMBIOS ANDROID
+- versionCode: 141
+- versionName: 1.0.141
+- MainActivity HOME_URL: apk=141&hvfit=1
+- STARTUP_CACHE_VERSION: v141
+- __HALLVALLA_NATIVE_CONTAINER__.version: 141
+- dataset hvNativeContainer: 141
+
+CONSERVADO SIN CAMBIOS FUNCIONALES
+- Todo web/ de v249.
+- Firebase/backend.
+- PvP BOT y PvP humano.
+- Balance, cartas, IA, economía, reglas.
+- Plano 1366x636, fullscreen, gamepad y Google Sign-In nativo.
+- Workaround lintVital: checkReleaseBuilds false.
+
+FIRMA
+La APK release debe usar exactamente la identidad canónica hallvalla-release.p12 usada desde v130.
+La firma privada NO se incluye en este repositorio ni en el ZIP de fuente.
+Fingerprint certificado esperado SHA-256:
+9F:2C:07:B9:E8:BA:00:BB:87:66:A7:6B:EF:76:0A:5B:C0:FE:8D:BD:E5:28:E3:4C:2E:E4:AE:33:7E:7A:1C:3B
+
+PUBLICACIÓN
+No actualizar releases/android/latest.json ni SHA256SUMS.txt hasta disponer del APK v141 realmente compilado y firmado.
+Después de compilar, verificar firma, versionCode/versionName, SHA-256 e instalación/actualización sobre la app existente antes de marcar el APK como estable.

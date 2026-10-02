@@ -1,5 +1,5 @@
 /* HallValla Stage 10 · Shop bundle
-   UI, PayPal sandbox y flujo de compra de la Tienda. Solo se descarga al abrir Tienda. */
+   UI, PayPal LIVE y flujo de apoyo/compra interna de la Tienda. Solo se descarga al abrir Tienda. */
 
 const SHOP_ARTBOARD_WIDTH=1672;
 const SHOP_ARTBOARD_HEIGHT=941;
@@ -17,7 +17,7 @@ const SHOP_PACK_VISUALS=Object.freeze({
   legendary:"assets/shop/v6/packs/legendary.webp" // Legendaria -> legendary -> púrpura
 });
 
-/* Precios definidos para la tienda de gemas. El cobro real todavía no está conectado en esta vista. */
+/* Aportes PayPal LIVE. Las gemas se entregan como agradecimiento después de aprobación manual. */
 const SHOP_GEM_BUNDLES=Object.freeze([
   Object.freeze({gems:100,usd:0.99}),
   Object.freeze({gems:250,usd:1.99}),
@@ -142,7 +142,7 @@ async function buyGoldWithGems(index){
   await hvAlert(`Recibiste ${gold.toLocaleString("es-CR")} de oro.`,"Compra realizada");
   renderShopView("gold");
 }
-const HALLVALLA_SHOP_PAYPAL_CLIENT_ID="AUXfqsZc5G7J1XLXdnys3uFIuVpt4wwPUN8ipJqfJ44fufokMo3rUXJsMH2VCaMrTupgFTlHshmznJ-y";
+const HALLVALLA_SHOP_PAYPAL_CLIENT_ID="BAAxtgtvIqauIKFjqhOKQs6EfF5UW4NnyImbSbxwLRV0hVIZ1NswqSwlLsWbMp-un966O5drctiq7wtP98";
 let hallvallaShopPayPalSdkPromise=null;
 
 function getShopGemBundle(amount,price){
@@ -162,14 +162,14 @@ function ensureHallvallaShopPayPalModal(){
   modal.innerHTML=`
     <section class="welcome-paypal-card">
       <button id="shopGemPayPalCloseBtn" class="welcome-paypal-close" type="button" aria-label="Cerrar">×</button>
-      <span class="welcome-paypal-kicker">TIENDA DE GEMAS</span>
-      <h2 id="shopGemPayPalTitle">COMPRAR GEMAS</h2>
+      <span class="welcome-paypal-kicker">APOYAR HALLVALLA</span>
+      <h2 id="shopGemPayPalTitle">GRACIAS POR APOYAR</h2>
       <div id="shopGemPayPalAmount" class="welcome-paypal-price"></div>
       <p id="shopGemPayPalPrice" class="welcome-paypal-once"></p>
-      <div class="welcome-paypal-sandbox">SANDBOX · PAGO DE PRUEBA</div>
+      <div class="welcome-paypal-sandbox">PAYPAL LIVE · REVISIÓN MANUAL</div>
       <div id="shopGemPayPalButtonContainer" class="welcome-paypal-button"></div>
       <p id="shopGemPayPalStatus" class="welcome-paypal-status" aria-live="polite"></p>
-      <small class="welcome-paypal-note">Esta prueba procesa el checkout en PayPal Sandbox. Las gemas todavía no se acreditan automáticamente hasta conectar la verificación segura en Firebase.</small>
+      <small class="welcome-paypal-note">Las gemas son un agradecimiento por apoyar HallValla. Tras pagar, la solicitud queda pendiente hasta que el administrador verifique el Order ID directamente en PayPal.</small>
     </section>`;
   document.body.appendChild(modal);
   const close=()=>modal.classList.add("hidden");
@@ -207,40 +207,43 @@ async function renderHallvallaShopGemPayPalButton(offer){
   const amount=Math.max(0,Number(offer.gems||0));
   const price=Math.max(0,Number(offer.usd||0)).toFixed(2);
   container.innerHTML="";
-  if(status)status.textContent="Cargando PayPal Sandbox...";
+  if(status)status.textContent="Cargando PayPal...";
   try{
     const paypalSdk=await loadHallvallaShopPayPalSdk();
     if(status)status.textContent="";
     await paypalSdk.Buttons({
       style:{layout:"vertical",shape:"rect",label:"paypal",height:42},
       createOrder(_data,actions){
-        if(status)status.textContent="Abriendo PayPal Sandbox...";
+        if(status)status.textContent="Abriendo PayPal...";
         return actions.order.create({
           purchase_units:[{
-            description:`Hallvalla - ${amount} gemas`,
-            custom_id:`hallvalla_gems_${amount}`,
+            description:`HallValla - Apoyo · regalo ${amount} gemas`,
+            custom_id:`support_gems_${amount}:${String(auth?.currentUser?.uid||"").slice(0,48)}`,
             amount:{currency_code:"USD",value:price}
           }]
         });
       },
       onApprove(_data,actions){
-        if(status)status.textContent="Confirmando pago de prueba...";
-        return actions.order.capture().then(details=>{
+        if(status)status.textContent="Confirmando pago con PayPal...";
+        return actions.order.capture().then(async details=>{
           const orderId=String(details?.id||"");
-          if(status)status.textContent=`Pago Sandbox completado${orderId?` · Orden ${orderId}`:""}. Las gemas todavía no se acreditan automáticamente.`;
+          if(!globalThis.hallvallaCreateSupportRequest)throw new Error("El registro de solicitudes no está disponible.");
+          const request=await globalThis.hallvallaCreateSupportRequest({offerId:`support_gems_${amount}`,paypalDetails:details});
+          container.innerHTML="";
+          if(status)status.textContent=`Pago recibido · Orden ${orderId}. Solicitud ${request.requestId} PENDIENTE. Las ${amount.toLocaleString("es-CR")} gemas se entregarán cuando el administrador verifique el pago.`;
         });
       },
       onCancel(){
-        if(status)status.textContent="Pago de prueba cancelado.";
+        if(status)status.textContent="Pago cancelado.";
       },
       onError(error){
-        console.error("[HallValla][Shop PayPal Sandbox]",error);
-        if(status)status.textContent="No se pudo completar el pago de prueba. Revisa la consola o vuelve a intentarlo.";
+        console.error("[HallValla][Shop PayPal LIVE]",error);
+        if(status)status.textContent="No se pudo completar el pago. No se creó ninguna solicitud.";
       }
     }).render(container);
   }catch(error){
-    console.error("[HallValla][Shop PayPal Sandbox] No se pudo iniciar PayPal:",error);
-    if(status)status.textContent="No se pudo cargar PayPal Sandbox. Comprueba la conexión y el Client ID.";
+    console.error("[HallValla][Shop PayPal LIVE] No se pudo iniciar PayPal:",error);
+    if(status)status.textContent="No se pudo cargar PayPal. Comprueba la conexión.";
   }
 }
 async function openGemBundlePayPal(amount,price){

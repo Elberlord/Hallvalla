@@ -1,0 +1,65 @@
+HallValla v251 — Comunidad / Administración / seguridad
+Fecha: 2026-10-02
+Android preparado: versionCode 142 · versionName 1.0.142
+Web build: 20261002.251
+
+BASE PRESERVADA
+- PvP BOT validado en v249/v141.
+- PvP humano J1 vs J2 validado en v249/v141.
+- No se refactorizó el motor de combate PvP.
+- En features/pvp/index.js solo se retiró el bypass del antiguo modo promocional.
+
+COMUNIDAD
+- Botón Chat General en Home.
+- Hasta 100 mensajes recientes cargados mediante query/limitToLast.
+- Mensaje máximo: 280 caracteres.
+- Los mensajes del UID maestro muestran insignia ADMIN.
+- El administrador puede seleccionar un jugador desde su mensaje y borrar mensajes.
+
+ADMINISTRACIÓN
+- Panel visible únicamente para el UID maestro configurado.
+- Seguridad real también aplicada en Realtime Database Rules; manipular el DOM no otorga permisos.
+- Silencio temporal con duración exacta elegida por el administrador: horas, días, semanas o meses.
+- Baneo temporal con las mismas unidades.
+- Acciones para quitar silencio y quitar ban.
+- Motivo opcional de moderación.
+- El ban bloquea Chat, matchmaking, salas PvP privadas/públicas y resultados PvP mediante Rules.
+- El cliente normal muestra un splash de CUENTA SUSPENDIDA mientras el ban esté vigente.
+- Sin un backend Admin privilegiado no es posible impedir de forma criptográfica que un APK modificado ejecute contenido totalmente local/offline; sí queda bloqueado el acceso online protegido por Firebase Rules.
+
+PREMIOS ADMINISTRATIVOS
+- El administrador puede entregar por UID: Gemas, Oro, Fragmentos o Packs.
+- Las órdenes de premio solo pueden ser creadas por el UID maestro.
+- Cada cuenta solo puede leer sus propias órdenes y registrar un claim único.
+- Los rewards usan IDs únicos para evitar reaplicaciones normales entre sesiones/dispositivos.
+- La economía histórica de HallValla todavía conserva componentes client-authoritative; esta versión no pretende sustituir todavía el backend autoritativo futuro.
+
+EVENTOS
+- El administrador puede publicar eventos globales con título, descripción y duración.
+- Duración seleccionable en horas, días, semanas o meses.
+- Eventos activos aparecen en Chat General.
+- El administrador puede eliminarlos.
+
+RETIRO DEL CÓDIGO PROMOCIONAL
+Se eliminó completamente del build público:
+- full_test_access_v1
+- TEST_PROMO_SHA256 / TEST_PROMO_FNV1A
+- isTestPromoActive()
+- activateTestPromoCode() / deactivateTestPromoMode()
+- getTestPromoCollectionCards()
+- UI profilePromo / estilos / handlers / bypass Beast Master / bypass PvP.
+Búsqueda final: 0 referencias a esas rutas.
+
+FIREBASE
+Archivo a publicar antes de probar Comunidad/Admin:
+backend/firebase/database.rules.json
+No requiere Blaze para publicar reglas de Realtime Database.
+
+ANDROID
+- versionCode 142
+- versionName 1.0.142
+- HOME_URL apk=142&hvfit=1
+- STARTUP_CACHE_VERSION=v142
+- __HALLVALLA_NATIVE_CONTAINER__.version=142
+- Google Sign-In nativo preservado.
+- web/ continúa empaquetado directamente como assets locales mediante Gradle; no se añadió carpeta www.

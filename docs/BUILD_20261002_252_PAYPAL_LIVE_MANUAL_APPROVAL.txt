@@ -1,0 +1,47 @@
+HallValla v252 — PayPal LIVE + aprobación manual
+Fecha: 2026-10-02
+Android preparado: versionCode 143 · versionName 1.0.143
+Web build: 20261002.252
+
+BASE PRESERVADA
+- Parte de v251 comunidad/admin segura.
+- PvP validado no se refactoriza.
+- El antiguo código full_test_access_v1 continúa eliminado.
+
+PAYPAL LIVE
+- Client ID LIVE público configurado en bienvenida y apoyos de gemas.
+- NO se incluye Client Secret.
+- Después de capture(), el cliente registra una solicitud PENDIENTE en Realtime Database.
+- La solicitud contiene UID, jugador, oferta canónica, monto, PayPal Order ID, Capture ID y estado.
+- El cliente no acredita recompensas por sí mismo después del pago.
+
+APROBACIÓN ADMINISTRATIVA
+- Solo el UID maestro 5V3mDjSyeNbI7W0qI16cEz5PbsN2 puede aprobar/rechazar.
+- ADMIN muestra solicitudes recientes con Order ID y Capture ID.
+- El administrador verifica el Order ID directamente en su cuenta PayPal.
+- Al aprobar se genera el premio administrativo correspondiente.
+- community/paypalApprovedOrders impide reutilizar normalmente un Order ID ya aprobado.
+
+PAQUETE DE BIENVENIDA
+- Precio: $0.99 USD.
+- Regalo tras aprobación: 3 packs básicos + 300 oro + 10 gemas.
+- community/welcomeClaims limita la aprobación a una sola vez por UID.
+
+APOYOS / GEMAS
+- $0.99 -> 100 gemas
+- $1.99 -> 250 gemas
+- $2.99 -> 500 gemas
+- $4.99 -> 1.000 gemas
+- $9.99 -> 2.500 gemas
+- $14.99 -> 5.000 gemas
+- $24.99 -> 10.000 gemas
+- $39.99 -> 25.000 gemas
+
+FIREBASE
+Publicar antes de probar:
+backend/firebase/database.rules.json
+No requiere Blaze.
+
+LIMITACIÓN INTENCIONAL
+La verificación de PayPal es HUMANA. Un cliente modificado puede intentar crear una solicitud falsa,
+pero no puede aprobarla mediante las Rules; el administrador debe comprobar el Order ID en PayPal.

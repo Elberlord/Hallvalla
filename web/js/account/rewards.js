@@ -3,10 +3,10 @@
    Extraído de system/settings-events.js sin cambiar contratos persistidos ni reglas. */
 
 /* ============================================================
-   PAQUETE DE BIENVENIDA · PAYPAL SANDBOX
-   Etapa 1: checkout de prueba únicamente. No entrega recompensas.
+   PAQUETE DE BIENVENIDA · PAYPAL LIVE
+   El pago queda PENDIENTE hasta que el administrador lo verifique manualmente en PayPal.
    ============================================================ */
-const HALLVALLA_WELCOME_PACK_PAYPAL_CLIENT_ID="AUXfqsZc5G7J1XLXdnys3uFIuVpt4wwPUN8ipJqfJ44fufokMo3rUXJsMH2VCaMrTupgFTlHshmznJ-y";
+const HALLVALLA_WELCOME_PACK_PAYPAL_CLIENT_ID="BAAxtgtvIqauIKFjqhOKQs6EfF5UW4NnyImbSbxwLRV0hVIZ1NswqSwlLsWbMp-un966O5drctiq7wtP98";
 const HALLVALLA_WELCOME_PACK_PRICE_USD="0.99";
 let hallvallaWelcomePayPalSdkPromise=null;
 
@@ -31,10 +31,10 @@ function ensureHallvallaWelcomePayPalModal(){
         <div><strong>10</strong><span>Gemas</span></div>
       </div>
       <p class="welcome-paypal-once">Oferta prevista como compra única por cuenta.</p>
-      <div class="welcome-paypal-sandbox">SANDBOX · PAGO DE PRUEBA</div>
+      <div class="welcome-paypal-sandbox">PAYPAL LIVE · REVISIÓN MANUAL</div>
       <div id="welcomePayPalButtonContainer" class="welcome-paypal-button"></div>
       <p id="welcomePayPalStatus" class="welcome-paypal-status" aria-live="polite"></p>
-      <small class="welcome-paypal-note">Esta etapa solo valida PayPal. Todavía no entrega sobres, oro ni gemas.</small>
+      <small class="welcome-paypal-note">Después del pago se crea una solicitud. El administrador verifica el Order ID en PayPal y luego acredita 3 sobres básicos, 300 de oro y 10 gemas.</small>
     </section>`;
   document.body.appendChild(modal);
   const close=()=>modal.classList.add("hidden");
@@ -47,7 +47,7 @@ function loadHallvallaWelcomePayPalSdk(){
   if(globalThis.paypal?.Buttons)return Promise.resolve(globalThis.paypal);
   if(hallvallaWelcomePayPalSdkPromise)return hallvallaWelcomePayPalSdkPromise;
   hallvallaWelcomePayPalSdkPromise=new Promise((resolve,reject)=>{
-    const existing=document.getElementById("hallvallaWelcomePayPalSdk");
+    const existing=document.getElementById("hallvallaWelcomePayPalSdk")||document.getElementById("hallvallaShopPayPalSdk");
     if(existing){
       existing.addEventListener("load",()=>globalThis.paypal?.Buttons?resolve(globalThis.paypal):reject(new Error("PayPal SDK no disponible.")),{once:true});
       existing.addEventListener("error",()=>reject(new Error("No se pudo cargar PayPal SDK.")),{once:true});
@@ -72,45 +72,56 @@ async function renderHallvallaWelcomePayPalButton(){
   const status=$("welcomePayPalStatus");
   if(!container)return;
   container.innerHTML="";
-  if(status)status.textContent="Cargando PayPal Sandbox...";
+  if(status)status.textContent="Cargando PayPal...";
   try{
     const paypalSdk=await loadHallvallaWelcomePayPalSdk();
     if(status)status.textContent="";
     await paypalSdk.Buttons({
       style:{layout:"vertical",shape:"rect",label:"paypal",height:42},
       createOrder(_data,actions){
-        if(status)status.textContent="Abriendo PayPal Sandbox...";
+        if(status)status.textContent="Abriendo PayPal...";
         return actions.order.create({
           purchase_units:[{
-            description:"Hallvalla - Paquete de bienvenida",
+            description:"HallValla - Paquete de bienvenida",
+            custom_id:`welcome_pack_v1:${String(auth?.currentUser?.uid||"").slice(0,48)}`,
             amount:{currency_code:"USD",value:HALLVALLA_WELCOME_PACK_PRICE_USD}
           }]
         });
       },
       onApprove(_data,actions){
-        if(status)status.textContent="Confirmando pago de prueba...";
-        return actions.order.capture().then(details=>{
+        if(status)status.textContent="Confirmando pago con PayPal...";
+        return actions.order.capture().then(async details=>{
           const orderId=String(details?.id||"");
-          if(status)status.textContent=`Pago Sandbox completado${orderId?` · Orden ${orderId}`:""}. No se entregaron recompensas.`;
+          if(!globalThis.hallvallaCreateSupportRequest)throw new Error("El registro de solicitudes no está disponible.");
+          const request=await globalThis.hallvallaCreateSupportRequest({offerId:"welcome_pack_v1",paypalDetails:details});
+          container.innerHTML="";
+          if(status)status.textContent=`Pago recibido · Orden ${orderId}. Solicitud ${request.requestId} PENDIENTE. El administrador verificará el pago antes de entregar el paquete.`;
         });
       },
       onCancel(){
-        if(status)status.textContent="Pago de prueba cancelado.";
+        if(status)status.textContent="Pago cancelado.";
       },
       onError(error){
-        console.error("[HallValla][PayPal Sandbox]",error);
-        if(status)status.textContent="No se pudo completar el pago de prueba. Revisa la consola o vuelve a intentarlo.";
+        console.error("[HallValla][PayPal LIVE]",error);
+        if(status)status.textContent="No se pudo completar el pago. No se creó ninguna solicitud.";
       }
     }).render(container);
   }catch(error){
-    console.error("[HallValla][PayPal Sandbox] No se pudo iniciar PayPal:",error);
-    if(status)status.textContent="No se pudo cargar PayPal Sandbox. Comprueba la conexión y el Client ID.";
+    console.error("[HallValla][PayPal LIVE] No se pudo iniciar PayPal:",error);
+    if(status)status.textContent="No se pudo cargar PayPal. Comprueba la conexión.";
   }
 }
 
-function openHallvallaWelcomePack(){
+async function openHallvallaWelcomePack(){
   const modal=ensureHallvallaWelcomePayPalModal();
   modal.classList.remove("hidden");
+  const container=$("welcomePayPalButtonContainer"),status=$("welcomePayPalStatus");
+  if(container)container.innerHTML="";
+  try{
+    const state=await globalThis.hallvallaGetWelcomeSupportState?.(auth?.currentUser);
+    if(state?.state==="approved"){if(status)status.textContent="El paquete de bienvenida ya fue aprobado para esta cuenta.";return;}
+    if(state?.state==="pending"){if(status)status.textContent=`Ya tienes una solicitud de bienvenida PENDIENTE${state.request?.paypalOrderId?` · Orden ${state.request.paypalOrderId}`:""}. No vuelvas a pagar.`;return;}
+  }catch(_){ }
   void renderHallvallaWelcomePayPalButton();
 }
 

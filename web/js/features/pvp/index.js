@@ -278,7 +278,6 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   }
   function getProfileLevelSafe(){ try{ if(typeof getPlayerProfile==="function") return Math.max(1,Number(getPlayerProfile()?.level||1)||1);}catch(_){ } return 1; }
   function getAdventureUnlockState(){
-    try{ if(typeof globalThis.isTestPromoActive==="function"&&globalThis.isTestPromoActive()) return {guardianDefeated:true}; }catch(_){ }
     try{ if(typeof getAdventureProgress==="function"){ const p=getAdventureProgress()||{}; return {guardianDefeated:p.guardianDefeated===true}; } }catch(_){ }
     try{ const key=typeof globalThis.ADVENTURE_PROGRESS_KEY!=="undefined"?globalThis.ADVENTURE_PROGRESS_KEY:"hallvalla_adventure_progress"; const p=JSON.parse(localStorage.getItem(key)||"null")||{}; return {guardianDefeated:p.guardianDefeated===true}; }catch(_){ return {guardianDefeated:false}; }
   }

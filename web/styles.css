@@ -15828,26 +15828,6 @@ body.field-figure-editing .grid .cell > .unit-card.figure-editor-selected{
 .battle-fx-spear-projectile.fx-mythic img,.battle-fx-spear-impact.fx-mythic img,.battle-fx-melee-thrust.fx-mythic img{filter:brightness(1.11) saturate(1.14) drop-shadow(0 0 8px rgba(255,123,217,.22))}
 .battle-fx-spear-projectile.fx-demigod img,.battle-fx-spear-impact.fx-demigod img,.battle-fx-melee-thrust.fx-demigod img{filter:brightness(1.15) saturate(1.18) drop-shadow(0 0 10px rgba(255,247,167,.25))}
 
-/* === 7BOARDCTRL8BF · Código promocional temporal de pruebas === */
-.profile-promo-box{margin:16px 0 10px;padding:16px;border-radius:18px;background:linear-gradient(145deg,rgba(27,25,57,.92),rgba(9,12,28,.94));border:1px solid rgba(129,113,255,.38);box-shadow:inset 0 0 28px rgba(92,70,255,.08),0 12px 32px rgba(0,0,0,.24)}
-.profile-promo-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
-.profile-promo-head h3{margin:2px 0 0;color:#fff;font-size:18px}
-.profile-promo-kicker{display:block;color:#a99dff;font-size:10px;font-weight:900;letter-spacing:.14em}
-.profile-promo-badge{flex:0 0 auto;padding:5px 8px;border-radius:999px;background:rgba(255,209,102,.12);border:1px solid rgba(255,209,102,.38);color:#ffe39a;font-size:9px;font-weight:900;letter-spacing:.1em}
-.profile-promo-box>p{margin:0 0 12px;color:var(--muted);font-size:13px;line-height:1.45}
-.profile-promo-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center}
-.profile-promo-controls .btn{min-height:44px;white-space:nowrap}
-.profile-promo-input{min-width:0}
-.profile-promo-status{display:block;margin-top:10px;color:#c9c3ff;line-height:1.4}
-.profile-promo-status.active{color:#8bffb8;font-weight:800}
-/* Herramienta exclusivamente interna: oculta por defecto para evitar cualquier destello en usuarios normales. */
-.profile-promo-box[data-hv-dev-tool]{display:none!important}
-html[data-hv-dev-tools="on"] .profile-promo-box[data-hv-dev-tool]{display:block!important}
-.profile-promo-box--dev-compact{margin:10px 0 6px;padding:10px 12px}
-.profile-promo-box--dev-compact .profile-promo-status{margin-top:6px;font-size:11px}
-@media(max-width:620px){.profile-promo-controls{grid-template-columns:1fr}.profile-promo-controls .btn{width:100%}}
-
-
 /* =====================================================================
    7BOARDCTRL8BI · DET visible y editor visual persistente
    ===================================================================== */
@@ -24602,17 +24582,6 @@ html[data-hv-dev-tools="on"] #hvForgeDirectTuner.hv-dev-hub-tool-open #hvForgeTu
 #hvDevHubCloseEditors{width:100%;min-height:34px;}
 #hvDevToolsHubStatus{min-height:24px;margin:7px 2px 0;color:#c8b48a;font-size:10px;line-height:1.3;}
 #hvDevHubInlineTools:empty::before{content:"Sin controles internos adicionales activos.";display:block;color:#887b62;font-size:10px;padding:4px 2px;}
-#hvDevToolsHub .profile-promo-box[data-hv-dev-tool]{
-  display:block!important;
-  margin:0!important;
-  padding:8px!important;
-  border-radius:10px!important;
-  max-width:none!important;
-}
-#hvDevToolsHub .profile-promo-controls{gap:6px!important;}
-#hvDevToolsHub .profile-promo-input{min-width:0!important;font-size:11px!important;}
-#hvDevToolsHub .profile-promo-controls .btn{min-height:34px!important;padding:6px 8px!important;font-size:10px!important;}
-#hvDevToolsHub .profile-promo-status{font-size:10px!important;line-height:1.25!important;}
 
 @media(max-width:720px){
   #hvDevToolsHubLauncher{right:7px;bottom:7px;height:38px;min-width:78px;padding:0 11px;}
@@ -28869,7 +28838,6 @@ html.hv-universal-dragging-enabled .hv-universal-selected{cursor:grabbing!import
   .hv-match-league-label{bottom:17.6% !important;padding:5px 12px !important;}
 }
 
-#profilePromoInput{-webkit-text-security:disc;}
 
 
 /* v224 · Cartas recién obtenidas en creación de mazo */
@@ -28889,3 +28857,38 @@ html.hv-universal-dragging-enabled .hv-universal-selected{cursor:grabbing!import
 .mine-panel[data-mine-panel="rewards"] .mine-wheel-result:empty{display:none !important;}
 .mine-panel[data-mine-panel="rewards"] .mine-wheel-result b{display:block;font-size:13px !important;line-height:1.1 !important;}
 .mine-panel[data-mine-panel="rewards"] .mine-wheel-result span{display:none !important;}
+
+
+/* COMMUNITY / ADMIN v251 -------------------------------------------------- */
+.hv-community-home-btn{font-size:18px}.hv-community-home-icon{filter:drop-shadow(0 2px 3px rgba(0,0,0,.8));line-height:1}
+.hv-community-overlay,.hv-community-admin-overlay{z-index:14500!important;background:rgba(3,7,14,.82)!important;backdrop-filter:blur(4px)}
+.hv-community-card,.hv-community-admin-card{position:relative;width:min(1120px,92vw);height:min(570px,90vh);margin:auto;padding:18px 22px;border:1px solid rgba(225,189,105,.48);background:linear-gradient(180deg,rgba(12,22,36,.98),rgba(6,11,20,.98));box-shadow:0 24px 70px rgba(0,0,0,.72),inset 0 0 50px rgba(47,79,147,.12);color:#f5f7fb;overflow:hidden}
+.hv-community-admin-card{width:min(1180px,94vw)}
+.hv-community-head{display:flex;align-items:center;justify-content:space-between;padding:2px 40px 10px 2px;border-bottom:1px solid rgba(225,189,105,.28)}
+.hv-community-head span{display:block;color:#e1bd69;font-size:11px;letter-spacing:.18em}.hv-community-head h2{margin:2px 0 0;font-size:24px;letter-spacing:.08em}
+.hv-community-events{display:flex;gap:8px;min-height:60px;padding:9px 0;overflow-x:auto}.hv-community-event{min-width:240px;max-width:340px;padding:8px 10px;border:1px solid rgba(225,189,105,.25);border-radius:8px;background:rgba(225,189,105,.07)}
+.hv-community-event b{display:block;color:#e1bd69}.hv-community-event span,.hv-community-event small{display:block;font-size:11px;line-height:1.25}.hv-community-event small{margin-top:4px;color:#aeb8c8}.hv-community-event-empty{font-size:12px;color:#8a8fa3;padding:8px}
+.hv-community-message-list{height:355px;overflow:auto;padding:8px 4px 12px;scrollbar-width:thin}.hv-community-message{position:relative;padding:8px 10px;margin:0 0 6px;border-radius:8px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07)}
+.hv-community-message.is-mine{background:rgba(47,79,147,.14)}.hv-community-message.is-admin{border-color:rgba(225,189,105,.38);background:rgba(225,189,105,.08)}
+.hv-community-message header{display:flex;align-items:center;gap:7px}.hv-community-message header b{font-size:12px}.hv-community-message time{margin-left:auto;color:#8a8fa3;font-size:9px}.hv-community-message p{margin:5px 0 0;font-size:13px;line-height:1.35;white-space:pre-wrap;word-break:break-word}
+.hv-admin-badge{padding:2px 5px;border-radius:4px;background:#e1bd69;color:#121821;font-size:8px;font-weight:900}.hv-community-admin-inline{display:flex;gap:5px;margin-top:6px}.hv-community-admin-inline button{border:1px solid rgba(225,189,105,.35);border-radius:5px;background:rgba(0,0,0,.25);color:#e1bd69;font-size:9px;padding:3px 6px;cursor:pointer}
+.hv-community-empty{padding:35px;text-align:center;color:#8a8fa3}.hv-community-compose{display:flex;gap:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08)}.hv-community-compose input{flex:1;min-width:0;padding:10px 12px;border:1px solid rgba(225,189,105,.28);border-radius:7px;background:rgba(0,0,0,.28);color:#fff}.hv-community-status{min-height:16px;margin:5px 0 0;color:#c9d3e3;font-size:10px}.hv-community-status[data-state="error"]{color:#ff9c9c}.hv-community-status[data-state="success"]{color:#9ce7b1}
+.hv-admin-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:12px;padding-top:12px;height:465px;overflow:auto}.hv-admin-box{display:flex;flex-direction:column;gap:7px;padding:12px;border:1px solid rgba(255,255,255,.09);border-radius:9px;background:rgba(255,255,255,.035)}.hv-admin-box h3{margin:0;color:#e1bd69;font-size:14px}.hv-admin-box small{color:#9aa8bb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hv-admin-box input,.hv-admin-box select,.hv-admin-box textarea{width:100%;padding:8px;border:1px solid rgba(225,189,105,.24);border-radius:6px;background:#0b1320;color:#f5f7fb}.hv-admin-box textarea{min-height:70px;resize:vertical}.hv-admin-duration{display:grid;grid-template-columns:110px 1fr;gap:6px}.hv-admin-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.hv-admin-event-box{grid-column:1/-1}.btn.danger{background:#7d2323!important;border-color:#b94b4b!important;color:#fff!important}
+.hv-account-ban-overlay{position:fixed;inset:0;z-index:30000;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 45%,rgba(70,16,16,.96),rgba(2,5,10,.99) 70%);color:#f5f7fb}.hv-account-ban-overlay.hidden{display:none!important}.hv-account-ban-card{width:min(680px,88vw);padding:32px;text-align:center;border:1px solid rgba(225,189,105,.45);border-radius:14px;background:rgba(7,10,17,.94);box-shadow:0 30px 90px rgba(0,0,0,.8)}.hv-account-ban-card>span{color:#e1bd69;letter-spacing:.24em}.hv-account-ban-card h2{font-size:32px;margin:6px 0 16px}.hv-account-ban-card p{line-height:1.55;color:#d6dce7}.hv-account-ban-card p span{display:inline-block;margin-top:10px;color:#ffb0b0}
+.hv-community-event-delete{margin-top:5px;border:1px solid rgba(185,75,75,.55);border-radius:5px;background:rgba(125,35,35,.22);color:#ffb6b6;font-size:9px;padding:3px 6px;cursor:pointer}
+
+
+/* === v252 · PayPal LIVE con aprobación administrativa manual === */
+.hv-admin-support-box{grid-column:1/-1;min-height:180px}
+.hv-admin-support-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:300px;overflow:auto;padding-right:3px}
+.hv-admin-support-row{display:flex;flex-direction:column;gap:5px;padding:9px;border:1px solid rgba(255,255,255,.09);border-radius:8px;background:rgba(7,13,23,.74)}
+.hv-admin-support-row.is-pending{border-color:rgba(225,189,105,.5);box-shadow:inset 0 0 20px rgba(225,189,105,.06)}
+.hv-admin-support-row header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hv-admin-support-row header b{font-size:13px;color:#f5f7fb}
+.hv-admin-support-meta{display:grid;grid-template-columns:1fr auto;gap:3px 8px;align-items:center}
+.hv-admin-support-meta span{font-size:12px;color:#d8e1f0}.hv-admin-support-meta strong{font-size:13px;color:#e1bd69}.hv-admin-support-meta small{grid-column:1/-1;color:#8390a3}
+.hv-admin-support-row code{display:block;padding:4px 6px;border-radius:5px;background:#050a12;color:#b9c9e5;font:10px/1.25 monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hv-support-status{padding:3px 6px;border-radius:999px;font-size:9px;font-weight:800;letter-spacing:.08em}
+.hv-support-status-pending{background:rgba(225,189,105,.16);color:#e1bd69}.hv-support-status-approved{background:rgba(65,180,110,.16);color:#74d99c}.hv-support-status-rejected{background:rgba(190,70,70,.18);color:#ef8b8b}
+.hv-admin-support-row .hv-admin-actions{grid-template-columns:1fr 1fr 1fr;margin-top:3px}
+@media(max-width:900px){.hv-admin-support-list{grid-template-columns:1fr}}

@@ -2,10 +2,9 @@
 /* HallValla · selección de líder, construcción y validación runtime de mazos */
 
 function isInitialLeaderAllowed(type){
-  const promoActive=typeof isTestPromoActive==="function"&&isTestPromoActive();
   let campaignUnlocked=false;
   try{campaignUnlocked=!!getPlayerProfile?.()?.adventureUnlockedLeaders?.[type];}catch(_){campaignUnlocked=false;}
-  return !!LEADER_DATA[type]&&(type!=="beastmaster"||promoActive||campaignUnlocked);
+  return !!LEADER_DATA[type]&&(type!=="beastmaster"||campaignUnlocked);
 }
 
 function getSelectedLeaderType(){
