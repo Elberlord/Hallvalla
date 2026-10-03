@@ -104,6 +104,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function mark(message){
     const text=`[${STEP}] ${message}`;
     try{ sessionStorage.setItem("hallvalla_pvp_rebuild_last_marker",text); }catch(_){ }
+    try{ globalThis.hallvallaDiagnosticEvent?.("pvp",String(message||"").slice(0,180)); }catch(_){ }
     setText("lobbyStatus",text);
     console.info(text);
   }
@@ -1578,6 +1579,25 @@ La partida termina sin victoria para ti. El jugador que salió recibe -2 puntos 
   }
   function backToMain(){ void leaveRoom(); }
 
+  function getPvpReportContext(){
+    const room=roomCache&&typeof roomCache==="object"?roomCache:{};
+    const role=Number(activeRole||0);
+    const otherRole=role===1?2:(role===2?1:0);
+    const gameCode=normalizeCode(activeCode||room?.code||"");
+    const targetUid=otherRole?String(room?.playerSlots?.[`player${otherRole}Uid`]||""):"";
+    const targetName=otherRole?getPlayerName(room,otherRole):"";
+    const bot=room?.pvpBotMatch===true||!targetUid||targetUid==="ADVENTURE_AI"||/^HVBOT/i.test(targetUid);
+    return {
+      gameCode,
+      targetUid:bot?"":targetUid,
+      targetName:bot?"":targetName,
+      humanOpponent:!!gameCode&&!bot&&!!targetUid,
+      bot,
+      phase:String(room?.phase||""),
+      role
+    };
+  }
+  globalThis.hvPvpGetReportContext=getPvpReportContext;
   globalThis.hvPvpBattleResultRematch=prepareBattleResultRematch;
   globalThis.hvPvpBattleResultHome=leaveBattleResultToHome;
   globalThis.pvpRebuildStep6eOpen=openCleanRoom;

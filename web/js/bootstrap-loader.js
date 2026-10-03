@@ -289,6 +289,7 @@ const CORE_PARTS = [
   "account/profile-shop-packs.js",
   "account/auth.js",
   "account/community-admin.js",
+  "account/security-gems-shadow.js",
   "account/friends.js",
   "forge/deck-builder.js",
   "account/rewards.js",

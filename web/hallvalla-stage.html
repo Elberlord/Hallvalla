@@ -115,6 +115,7 @@
       </button>
       <button id="communityBtn" class="asset-small-icon hv-community-home-btn" type="button" aria-label="Chat general" title="Chat general">
         <span class="hv-community-home-icon" aria-hidden="true">💬</span>
+        <b id="communitySecurityBadge" class="notification-badge hidden" aria-label="Alertas de seguridad pendientes">0</b>
       </button>
       <button id="notificationsBtn" class="asset-small-icon notification-btn" type="button" aria-label="Notificaciones">
         <span class="notification-icon">🔔</span>
@@ -251,12 +252,368 @@
 
 
 
+<button id="hallvallaSupportBeacon" class="hv-support-beacon" type="button" aria-label="Emergencia y soporte" title="Emergencia y soporte">
+  <img src="assets/support/support_cross_128.png" alt="" aria-hidden="true">
+</button>
+<script>
+(()=>{
+  if(window.__hallvallaSupportEarlyBound)return;
+  window.__hallvallaSupportEarlyBound=true;
+  document.addEventListener("click",event=>{
+    const beacon=event.target?.closest?.("#hallvallaSupportBeacon");
+    if(!beacon)return;
+    if(typeof globalThis.hallvallaSupportOpen==="function")return;
+    const panel=document.getElementById("supportPanel");
+    if(panel){
+      event.preventDefault();
+      event.stopPropagation();
+      panel.classList.remove("hidden");
+    }
+  },true);
+})();
+</script>
+
+<style id="hallvallaSupportReportStyles">
+  .hv-support-beacon{
+    position:fixed;
+    right:14px;
+    bottom:72px;
+    z-index:2147483646;
+    width:42px;
+    height:42px;
+    padding:0;
+    border:0;
+    border-radius:50%;
+    background:transparent;
+    cursor:pointer;
+    filter:drop-shadow(0 3px 5px rgba(0,0,0,.72));
+    transition:transform .16s ease,filter .16s ease;
+    pointer-events:auto!important;
+    visibility:visible!important;
+  }
+  .hv-support-beacon img{width:100%;height:100%;display:block;object-fit:contain;pointer-events:none;}
+  .hv-support-beacon:hover{transform:scale(1.07);filter:drop-shadow(0 3px 5px rgba(0,0,0,.72)) drop-shadow(0 0 7px rgba(73,255,111,.55));}
+  .hv-support-beacon:focus-visible{outline:2px solid #e1bd69;outline-offset:2px;}
+
+  /* La cruz debe seguir funcionando incluso sobre la portada obligatoria de Google. */
+  body.hv-google-auth-required #hallvallaSupportBeacon{
+    display:block!important;
+    opacity:1!important;
+    visibility:visible!important;
+    pointer-events:auto!important;
+    z-index:2147483646!important;
+  }
+  body.hv-google-auth-required #supportPanel:not(.hidden){
+    display:flex!important;
+    opacity:1!important;
+    visibility:visible!important;
+    pointer-events:auto!important;
+    z-index:2147483647!important;
+  }
+  body.hv-google-auth-required #supportPanel:not(.hidden) *{pointer-events:auto;}
+
+  #supportPanel{
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    z-index:2147483647;
+  }
+  #supportPanel .hv-support-art-stage{
+    /*
+      CALIBRACIÓN CANÓNICA DEL ARTE FINAL:
+      1672 × 941 px.
+      Los controles se mueven SOLO desde estas variables.
+    */
+    --cat-x:47.85%;
+    --cat-y:36.98%;
+    --cat-w:31.16%;
+    --cat-h:4.15%;
+
+    --ctx-x:47.85%;
+    --ctx-y:45.38%;
+    --ctx-w:31.22%;
+    --ctx-h:4.15%;
+
+    --desc-x:47.85%;
+    --desc-y:53.99%;
+    --desc-w:31.58%;
+    --desc-h:7.76%;
+
+    --evidence-x:47.85%;
+    --evidence-y:66.42%;
+    --evidence-w:31.52%;
+    --evidence-h:8.29%;
+
+    --attach-x:67.95%;
+    --attach-y:67.35%;
+    --attach-w:9.75%;
+    --attach-h:5.45%;
+
+    --register-x:46.17%;
+    --register-y:81%;
+    --register-w:15.80%;
+    --register-h:5.50%;
+
+    --whatsapp-x:64.18%;
+    --whatsapp-y:81%;
+    --whatsapp-w:17.50%;
+    --whatsapp-h:5.50%;
+
+    --close-x:80%;
+    --close-y:13.25%;
+    --close-w:4.60%;
+    --close-h:7.10%;
+
+    position:relative;
+    width:min(96vw,calc(96vh * 1672 / 941));
+    max-width:1672px;
+    aspect-ratio:1672/941;
+    flex:0 0 auto;
+    background:transparent;
+    overflow:visible;
+  }
+  #supportPanel .hv-support-art{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    pointer-events:none;
+    user-select:none;
+    -webkit-user-drag:none;
+  }
+  #supportPanel .hv-support-control{
+    position:absolute;
+    box-sizing:border-box;
+    z-index:2;
+  }
+
+  #supportKind{
+    left:var(--cat-x);
+    top:var(--cat-y);
+    width:var(--cat-w);
+    height:var(--cat-h);
+    appearance:none;
+    -webkit-appearance:none;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:#171d25;
+    font-family:Georgia,"Times New Roman",serif;
+    font-weight:700;
+    font-size:clamp(10px,1.05vw,16px);
+    padding:0 9% 0 3%;
+    cursor:pointer;
+  }
+
+  #supportContextSummary{
+    left:var(--ctx-x);
+    top:var(--ctx-y);
+    width:var(--ctx-w);
+    height:var(--ctx-h);
+    display:flex;
+    align-items:center;
+    padding:0 3%;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    color:#17212d;
+    font-family:Georgia,"Times New Roman",serif;
+    font-weight:700;
+    font-size:clamp(9px,.95vw,14px);
+    background:transparent;
+    border:0;
+    margin:0;
+  }
+
+  #supportDescription{
+    left:var(--desc-x);
+    top:var(--desc-y);
+    width:var(--desc-w);
+    height:var(--desc-h);
+    resize:none;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:#111923;
+    font:600 clamp(9px,.92vw,14px)/1.25 Arial,sans-serif;
+    padding:1.4% 2%;
+    overflow:auto;
+  }
+  #supportDescription::placeholder{color:rgba(17,25,35,.58);}
+
+  /* Evidencia: sin sopa de letras. Solo preview + botón Adjuntar a la derecha. */
+  #supportEvidenceBox{
+    left:var(--evidence-x);
+    top:var(--evidence-y);
+    width:var(--evidence-w);
+    height:var(--evidence-h);
+    border:0;
+    background:transparent;
+    overflow:hidden;
+    padding:0;
+  }
+  #supportDiagnosticsMeta,
+  #supportEvidenceMeta{
+    display:none!important;
+  }
+  #supportEvidenceInput{display:none;}
+  #supportEvidencePick{
+    position:absolute;
+    right:3.0%;
+    top:16%;
+    width:31%;
+    height:68%;
+    display:block;
+    box-sizing:border-box;
+    padding:0;
+    margin:0;
+    border:0;
+    background:transparent;
+    color:transparent;
+    font-size:0;
+    cursor:pointer;
+  }
+  #supportEvidencePreview{
+    position:absolute;
+    left:2%;
+    top:8%;
+    width:58%;
+    height:84%;
+    object-fit:contain;
+    border-radius:6px;
+    background:rgba(0,0,0,.08);
+  }
+
+  #supportSubmitBtn,
+  #supportWhatsAppBtn,
+  #supportCloseBtn{
+    border:0;
+    outline:0;
+    padding:0;
+    margin:0;
+    color:transparent;
+    font-size:0;
+    background:transparent;
+    cursor:pointer;
+  }
+  #supportSubmitBtn{
+    left:var(--register-x);
+    top:var(--register-y);
+    width:var(--register-w);
+    height:var(--register-h);
+  }
+  #supportWhatsAppBtn{
+    left:var(--whatsapp-x);
+    top:var(--whatsapp-y);
+    width:var(--whatsapp-w);
+    height:var(--whatsapp-h);
+  }
+  #supportCloseBtn{
+    left:var(--close-x);
+    top:var(--close-y);
+    width:var(--close-w);
+    height:var(--close-h);
+    border-radius:50%;
+  }
+  #supportSubmitBtn:hover,
+  #supportWhatsAppBtn:not(:disabled):hover,
+  #supportCloseBtn:hover,
+  #supportEvidencePick:hover{
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.28),0 0 10px rgba(225,189,105,.25);
+    border-radius:8px;
+  }
+  #supportWhatsAppBtn:disabled{
+    cursor:not-allowed;
+    background:rgba(0,0,0,.38);
+    border-radius:11px;
+  }
+
+  #supportStatus{
+    position:absolute;
+    z-index:4;
+    left:48.5%;
+    top:76.1%;
+    width:31%;
+    min-height:1.8%;
+    margin:0;
+    padding:2px 7px;
+    box-sizing:border-box;
+    border-radius:5px;
+    background:rgba(4,10,18,.76);
+    color:#f5f7fb;
+    text-align:center;
+    font:700 clamp(8px,.70vw,10px)/1.15 Arial,sans-serif;
+    pointer-events:none!important;
+  }
+  #supportStatus:empty{display:none;}
+  #supportStatus[data-state="error"]{color:#ffb4b4;}
+  #supportStatus[data-state="success"]{color:#bdf9c9;}
+
+  #supportPanel.is-layout-dev .hv-support-control{
+    outline:2px dashed #ff2d2d!important;
+    background:rgba(255,0,0,.08)!important;
+  }
+
+  #communityAdminPanel .hv-report-evidence{margin:8px 0;}
+  #communityAdminPanel .hv-report-evidence img{max-width:100%;max-height:260px;object-fit:contain;border-radius:8px;border:1px solid rgba(225,189,105,.22);}
+  #communityAdminPanel .hv-report-evidence figcaption{font-size:11px;color:#aeb8c8;margin-top:4px;}
+  #communityAdminPanel .hv-report-diagnostics{margin:8px 0;}
+  #communityAdminPanel .hv-report-diagnostics pre{white-space:pre-wrap;word-break:break-word;font-size:11px;color:#c7d0df;background:rgba(0,0,0,.22);padding:8px;border-radius:8px;}
+
+  @media(max-width:760px){
+    .hv-support-beacon{width:40px;height:40px;right:10px;bottom:62px;}
+    #supportPanel .hv-support-art-stage{width:min(98vw,calc(97vh * 1672 / 941));}
+  }
+</style>
+
+<div id="supportPanel" class="overlay-panel hidden hv-community-overlay">
+  <section class="hv-support-art-stage" role="dialog" aria-modal="true" aria-label="Emergencia y soporte">
+    <img class="hv-support-art" src="assets/support/support_modal_acolyte_final.png" alt="" aria-hidden="true">
+
+    <button id="supportCloseBtn" class="hv-support-control" type="button" aria-label="Cerrar soporte">Cerrar</button>
+
+    <select id="supportKind" class="hv-support-control" aria-label="Categoría del problema">
+      <option value="help">Ayuda</option>
+      <option value="player">Reportar jugador</option>
+      <option value="bug">Reportar bug</option>
+      <option value="purchase">Problema con compra</option>
+      <option value="other">Otro</option>
+    </select>
+
+    <input id="supportReportedName" type="hidden">
+    <input id="supportReportedUid" type="hidden">
+    <input id="supportGameCode" type="hidden">
+    <input id="supportReason" type="hidden" value="Ayuda">
+
+    <div id="supportContextSummary" class="hv-support-control" aria-live="polite">Reporte general.</div>
+
+    <textarea id="supportDescription" class="hv-support-control" maxlength="700" placeholder="Describe el problema..." aria-label="Describe brevemente lo ocurrido"></textarea>
+
+    <div id="supportEvidenceBox" class="hv-support-control">
+      <strong id="supportDiagnosticsMeta" class="hv-sr-only">Diagnóstico adjunto automáticamente.</strong>
+      <small id="supportEvidenceMeta" class="hv-sr-only">Sin captura adjunta.</small>
+      <label id="supportEvidencePick" for="supportEvidenceInput" aria-label="Adjuntar captura"><span class="hv-sr-only">Adjuntar captura</span></label>
+      <input id="supportEvidenceInput" type="file" accept="image/png,image/jpeg,image/webp">
+      <img id="supportEvidencePreview" class="hidden" alt="Vista previa de la captura adjunta">
+    </div>
+
+    <button id="supportSubmitBtn" class="hv-support-control" type="button" aria-label="Registrar reporte">Registrar reporte</button>
+    <button id="supportWhatsAppBtn" class="hv-support-control" type="button" aria-label="Abrir WhatsApp" disabled>Abrir WhatsApp</button>
+
+    <p id="supportStatus" aria-live="polite"></p>
+  </section>
+</div>
+
 <div id="communityPanel" class="overlay-panel hidden hv-community-overlay">
   <section class="modal-card hv-community-card" role="dialog" aria-modal="true" aria-labelledby="communityTitle">
     <button id="communityCloseBtn" class="adventure-result-close" type="button" aria-label="Cerrar">×</button>
     <header class="hv-community-head">
       <div><span>HALLVALLA</span><h2 id="communityTitle">CHAT GENERAL</h2></div>
-      <button id="communityAdminBtn" class="btn ghost hidden" type="button">ADMIN</button>
+      <div class="hv-community-head-actions">
+        <button id="communitySupportBtn" class="btn ghost" type="button">🆘 SOPORTE</button>
+        <button id="communityAdminBtn" class="btn ghost hidden" type="button">ADMIN</button>
+      </div>
     </header>
     <div id="communityEventFeed" class="hv-community-events" aria-label="Eventos globales"></div>
     <div id="communityMessageList" class="hv-community-message-list" aria-live="polite"></div>
@@ -268,12 +625,212 @@
   </section>
 </div>
 
+<style id="hallvallaAdminModalNavStyles">
+  #communityAdminPanel.hv-community-admin-overlay{
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+  }
+  #communityAdminPanel .hv-admin-root-card,
+  #communityAdminPanel .hv-admin-section-card{
+    width:min(920px,94vw);
+    max-width:920px;
+    max-height:88vh;
+    box-sizing:border-box;
+  }
+  #communityAdminPanel .hv-admin-root-card{
+    overflow:visible;
+  }
+  #communityAdminPanel .hv-admin-section-card{
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  #communityAdminPanel .hv-admin-root-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:14px;
+    margin-top:18px;
+  }
+  #communityAdminPanel .hv-admin-root-btn{
+    position:relative;
+    min-height:122px;
+    border:1px solid rgba(225,189,105,.38);
+    border-radius:16px;
+    background:linear-gradient(180deg,rgba(34,45,62,.92),rgba(18,27,40,.96));
+    color:#f5f7fb;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    gap:6px;
+    padding:18px 20px;
+    text-align:left;
+    cursor:pointer;
+  }
+  #communityAdminPanel .hv-admin-root-btn:hover{
+    border-color:#e1bd69;
+    transform:translateY(-1px);
+  }
+  #communityAdminPanel .hv-admin-root-icon{
+    font-size:24px;
+    line-height:1;
+  }
+  #communityAdminPanel .hv-admin-root-btn strong{
+    font-size:17px;
+    color:#e1bd69;
+  }
+  #communityAdminPanel .hv-admin-root-btn small{
+    color:#aeb8c8;
+    line-height:1.25;
+  }
+  #communityAdminPanel .hv-admin-root-badge{
+    position:absolute;
+    top:12px;
+    right:12px;
+    min-width:24px;
+    height:24px;
+    padding:0 7px;
+    border-radius:999px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background:#922929;
+    color:#fff;
+    font-size:12px;
+    font-weight:800;
+  }
+  #communityAdminPanel .hv-admin-root-badge.hidden{display:none!important;}
+  #communityAdminPanel .hv-admin-section-toolbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:0 42px 8px 0;
+  }
+  #communityAdminPanel .hv-admin-section-back{
+    min-height:38px;
+    padding:7px 14px;
+  }
+  #communityAdminPanel .hv-admin-section-host{
+    flex:1 1 auto;
+    min-height:0;
+    overflow:auto;
+    padding:4px 4px 8px 0;
+  }
+  #communityAdminPanel .hv-admin-modal-section{
+    width:100%;
+    max-width:none;
+    box-sizing:border-box;
+    margin:0;
+  }
+  #communityAdminPanel .hv-admin-modal-section.hidden{display:none!important;}
+  #communityAdminPanel .hv-admin-modal-section .hv-admin-support-list{
+    max-height:52vh;
+    overflow:auto;
+  }
+  #communityAdminPanel .hv-admin-modal-section input,
+  #communityAdminPanel .hv-admin-modal-section select,
+  #communityAdminPanel .hv-admin-modal-section textarea{
+    width:100%;
+    box-sizing:border-box;
+  }
+  #communityAdminPanel #communityAdminStatus{
+    flex:0 0 auto;
+    margin-top:8px;
+  }
+  #communityAdminPanel .hv-admin-permission-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+    margin:10px 0;
+  }
+  #communityAdminPanel .hv-admin-check{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 10px;
+    border:1px solid rgba(225,189,105,.22);
+    border-radius:10px;
+    color:#dbe3ef;
+  }
+  #communityAdminPanel .hv-admin-check input{width:auto!important;margin:0;}
+  #communityAdminPanel .hv-admin-preset-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    margin:8px 0;
+  }
+  #communityAdminPanel .hv-admin-preset-row .btn{
+    min-height:34px;
+    padding:6px 10px;
+  }
+  @media (max-width:760px){
+    #communityAdminPanel .hv-admin-root-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+  }
+</style>
+
 <div id="communityAdminPanel" class="overlay-panel hidden hv-community-admin-overlay">
-  <section class="modal-card hv-community-admin-card" role="dialog" aria-modal="true" aria-labelledby="communityAdminTitle">
+  <section id="communityAdminRootCard" class="modal-card hv-community-admin-card hv-admin-root-card" role="dialog" aria-modal="true" aria-labelledby="communityAdminTitle">
     <button id="communityAdminCloseBtn" class="adventure-result-close" type="button" aria-label="Cerrar">×</button>
-    <header class="hv-community-head"><div><span>CONTROL MAESTRO</span><h2 id="communityAdminTitle">ADMINISTRACIÓN</h2></div></header>
-    <div class="hv-admin-grid">
-      <section class="hv-admin-box">
+    <header class="hv-community-head">
+      <div><span id="communityAdminRootKicker">CONTROL MAESTRO</span><h2 id="communityAdminTitle">ADMINISTRACIÓN</h2></div>
+    </header>
+
+    <div class="hv-admin-root-grid" aria-label="Áreas de administración">
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="player">
+        <span class="hv-admin-root-icon" aria-hidden="true">👤</span>
+        <strong>Jugador</strong>
+        <small>Silenciar, banear o retirar sanciones.</small>
+      </button>
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="reward" data-hv-master-only="1">
+        <span class="hv-admin-root-icon" aria-hidden="true">🎁</span>
+        <strong>Premios</strong>
+        <small>Entregar gemas, oro, fragmentos o packs.</small>
+      </button>
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="event" data-hv-master-only="1">
+        <span class="hv-admin-root-icon" aria-hidden="true">📣</span>
+        <strong>Eventos</strong>
+        <small>Crear y publicar eventos globales.</small>
+      </button>
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="security" data-hv-master-only="1">
+        <span class="hv-admin-root-icon" aria-hidden="true">🛡</span>
+        <strong>Seguridad</strong>
+        <small>Revisar alertas e investigar cuentas.</small>
+        <b id="adminSecurityRootBadge" class="hv-admin-root-badge hidden">0</b>
+      </button>
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="paypal" data-hv-master-only="1">
+        <span class="hv-admin-root-icon" aria-hidden="true">💳</span>
+        <strong>PayPal</strong>
+        <small>Revisar y aprobar solicitudes pendientes.</small>
+        <b id="adminSupportRootBadge" class="hv-admin-root-badge hidden">0</b>
+      </button>
+      <button class="hv-admin-root-btn hidden" type="button" data-hv-admin-open-section="reports">
+        <span class="hv-admin-root-icon" aria-hidden="true">🚨</span>
+        <strong>Reportes</strong>
+        <small>Revisar denuncias y solicitudes de soporte.</small>
+        <b id="adminReportsRootBadge" class="hv-admin-root-badge hidden">0</b>
+      </button>
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="moderators" data-hv-master-only="1">
+        <span class="hv-admin-root-icon" aria-hidden="true">🧭</span>
+        <strong>Moderadores</strong>
+        <small>Asignar permisos de chat y sanciones.</small>
+      </button>
+    </div>
+  </section>
+
+  <section id="communityAdminSectionCard" class="modal-card hv-community-admin-card hv-admin-section-card hidden" role="dialog" aria-modal="true" aria-labelledby="communityAdminSectionTitle">
+    <button id="communityAdminSectionCloseBtn" class="adventure-result-close" type="button" aria-label="Cerrar">×</button>
+    <div class="hv-admin-section-toolbar">
+      <button id="communityAdminBackBtn" class="btn ghost hv-admin-section-back" type="button">← Administración</button>
+    </div>
+    <header class="hv-community-head">
+      <div><span id="communityAdminSectionKicker">CONTROL MAESTRO</span><h2 id="communityAdminSectionTitle">ADMINISTRACIÓN</h2></div>
+    </header>
+
+    <div class="hv-admin-section-host">
+      <section class="hv-admin-box hv-admin-modal-section hidden" data-hv-admin-section="player">
         <h3>Jugador</h3>
         <small id="adminTargetName">Selecciona un jugador desde el chat o pega su UID.</small>
         <input id="adminTargetUid" type="text" autocomplete="off" placeholder="UID del jugador">
@@ -284,6 +841,12 @@
             <option value="hours">Horas</option><option value="days">Días</option><option value="weeks">Semanas</option><option value="months">Meses</option>
           </select>
         </div>
+        <div class="hv-admin-preset-row" aria-label="Duraciones rápidas">
+          <button class="btn ghost" type="button" data-hv-moderation-preset="1h" data-hv-preset-value="1" data-hv-preset-unit="hours">1 h</button>
+          <button class="btn ghost" type="button" data-hv-moderation-preset="24h" data-hv-preset-value="24" data-hv-preset-unit="hours">24 h</button>
+          <button class="btn ghost" type="button" data-hv-moderation-preset="7d" data-hv-preset-value="7" data-hv-preset-unit="days">7 días</button>
+          <button class="btn ghost" type="button" data-hv-moderation-preset="30d" data-hv-preset-value="30" data-hv-preset-unit="days">30 días</button>
+        </div>
         <div class="hv-admin-actions">
           <button id="adminMuteBtn" class="btn primary" type="button">Silenciar</button>
           <button id="adminUnmuteBtn" class="btn ghost" type="button">Quitar silencio</button>
@@ -291,7 +854,8 @@
           <button id="adminUnbanBtn" class="btn ghost" type="button">Quitar ban</button>
         </div>
       </section>
-      <section class="hv-admin-box">
+
+      <section class="hv-admin-box hv-admin-modal-section hidden" data-hv-admin-section="reward">
         <h3>Entregar premio</h3>
         <select id="adminRewardType"><option value="gems">Gemas</option><option value="gold">Oro</option><option value="fragments">Fragmentos</option><option value="pack">Pack</option></select>
         <input id="adminRewardAmount" type="number" min="1" max="1000000" value="100" aria-label="Cantidad">
@@ -299,7 +863,8 @@
         <input id="adminRewardNote" type="text" maxlength="180" autocomplete="off" placeholder="Mensaje del premio (opcional)">
         <button id="adminGrantRewardBtn" class="btn primary full" type="button">Entregar premio</button>
       </section>
-      <section class="hv-admin-box hv-admin-event-box">
+
+      <section class="hv-admin-box hv-admin-event-box hv-admin-modal-section hidden" data-hv-admin-section="event">
         <h3>Crear evento global</h3>
         <input id="adminEventTitle" type="text" maxlength="60" autocomplete="off" placeholder="Título del evento">
         <textarea id="adminEventBody" maxlength="400" placeholder="Descripción, reglas, premios, horario..."></textarea>
@@ -309,15 +874,57 @@
         </div>
         <button id="adminPublishEventBtn" class="btn primary full" type="button">Publicar evento</button>
       </section>
-      <section class="hv-admin-box hv-admin-support-box">
+
+      <section class="hv-admin-box hv-admin-security-box hv-admin-modal-section hidden" data-hv-admin-section="security">
+        <h3>Seguridad · <span id="adminSecurityCount">0 pendientes</span></h3>
+        <small>Alertas de seguridad de cuentas. Esta sección no modifica combate, cartas ni economía.</small>
+        <button id="adminCreateSecurityTestBtn" class="btn ghost full" type="button">Crear alerta de prueba para el UID seleccionado</button>
+        <div id="adminSecurityAlertList" class="hv-admin-support-list"><div class="hv-community-empty">No hay alertas de seguridad.</div></div>
+        <hr style="border:0;border-top:1px solid rgba(225,189,105,.22);margin:18px 0;">
+        <h4>Vigilancia de gemas · <span id="adminGemShadowCount">0 señales abiertas</span></h4>
+        <small>SHADOW: detecta alteraciones locales sin bloquear ni cambiar el saldo del jugador.</small>
+        <button id="adminGemShadowTestBtn" class="btn ghost full" type="button">Probar vigilancia de gemas (sin modificar saldo)</button>
+        <div id="adminGemShadowList" class="hv-admin-support-list"><div class="hv-community-empty">No hay señales de vigilancia de gemas.</div></div>
+      </section>
+
+      <section class="hv-admin-box hv-admin-modal-section hidden" data-hv-admin-section="reports">
+        <h3>Reportes · <span id="adminReportCount">0 pendientes</span></h3>
+        <small>Los reportes no aplican sanciones automáticamente. Revisa la evidencia antes de moderar.</small>
+        <div id="adminReportList" class="hv-admin-support-list"><div class="hv-community-empty">No hay reportes registrados.</div></div>
+      </section>
+
+      <section class="hv-admin-box hv-admin-modal-section hidden" data-hv-admin-section="moderators" data-hv-master-only="1">
+        <h3>Moderadores</h3>
+        <small>Solo la cuenta maestra puede crear, editar o retirar moderadores.</small>
+        <button id="adminModeratorUseSelectedBtn" class="btn ghost full" type="button">Usar jugador seleccionado</button>
+        <input id="adminModeratorUid" type="text" autocomplete="off" placeholder="UID del moderador">
+        <input id="adminModeratorName" type="text" maxlength="24" autocomplete="off" placeholder="Nombre visible">
+        <div class="hv-admin-permission-grid">
+          <label class="hv-admin-check"><input id="adminModeratorPermChat" type="checkbox" checked> Borrar mensajes</label>
+          <label class="hv-admin-check"><input id="adminModeratorPermMute" type="checkbox" checked> Silenciar</label>
+          <label class="hv-admin-check"><input id="adminModeratorPermBan" type="checkbox" checked> Banear</label>
+          <label class="hv-admin-check"><input id="adminModeratorPermReports" type="checkbox" checked> Reportes</label>
+        </div>
+        <button id="adminSaveModeratorBtn" class="btn primary full" type="button">Guardar moderador</button>
+        <h4>Moderadores configurados</h4>
+        <div id="adminModeratorList" class="hv-admin-support-list"><div class="hv-community-empty">No hay moderadores configurados.</div></div>
+        <hr style="border:0;border-top:1px solid rgba(225,189,105,.22);margin:18px 0;">
+        <h4>Auditoría de moderación</h4>
+        <small>Historial de silencios, baneos y retiro de sanciones. Solo visible para la cuenta maestra.</small>
+        <div id="adminModerationLogList" class="hv-admin-support-list"><div class="hv-community-empty">Todavía no hay acciones de moderación registradas.</div></div>
+      </section>
+
+      <section class="hv-admin-box hv-admin-support-box hv-admin-modal-section hidden" data-hv-admin-section="paypal">
         <h3>Solicitudes PayPal</h3>
         <small>Verifica el Order ID directamente en tu cuenta PayPal antes de aprobar. HallValla nunca acredita el regalo automáticamente.</small>
         <div id="adminSupportRequestList" class="hv-admin-support-list"><div class="hv-community-empty">Cargando solicitudes...</div></div>
       </section>
     </div>
+
     <p id="communityAdminStatus" class="hv-community-status" aria-live="polite"></p>
   </section>
 </div>
+
 
 <div id="accountBanOverlay" class="hv-account-ban-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="accountBanTitle">
   <section class="hv-account-ban-card">

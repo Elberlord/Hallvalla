@@ -493,7 +493,7 @@
       "chat": {
         ".read": "auth != null && (!root.child('community').child('moderation').child(auth.uid).child('banUntil').exists() || root.child('community').child('moderation').child(auth.uid).child('banUntil').val() <= now)",
         "$messageId": {
-          ".write": "auth != null && (((!data.exists() && newData.exists()) && (!root.child('community').child('moderation').child(auth.uid).child('banUntil').exists() || root.child('community').child('moderation').child(auth.uid).child('banUntil').val() <= now) && (!root.child('community').child('moderation').child(auth.uid).child('muteUntil').exists() || root.child('community').child('moderation').child(auth.uid).child('muteUntil').val() <= now) && newData.child('uid').val() === auth.uid) || (auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' && data.exists() && !newData.exists()))",
+          ".write": "auth != null && (((!data.exists() && newData.exists()) && (!root.child('community').child('moderation').child(auth.uid).child('banUntil').exists() || root.child('community').child('moderation').child(auth.uid).child('banUntil').val() <= now) && (!root.child('community').child('moderation').child(auth.uid).child('muteUntil').exists() || root.child('community').child('moderation').child(auth.uid).child('muteUntil').val() <= now) && newData.child('uid').val() === auth.uid) || ((auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' || (root.child('community').child('moderators').child(auth.uid).child('active').val() === true && root.child('community').child('moderators').child(auth.uid).child('permissions').child('chat').val() === true)) && data.exists() && !newData.exists()))",
           ".validate": "!newData.exists() || (newData.hasChildren(['uid','name','text','createdAt']) && newData.child('uid').isString() && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 24 && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 280 && newData.child('createdAt').isNumber() && newData.child('createdAt').val() > 0 && newData.child('createdAt').val() <= now + 60000)",
           "$other": {
             ".validate": false
@@ -545,8 +545,8 @@
       },
       "moderation": {
         "$uid": {
-          ".read": "auth != null && (auth.uid === $uid || auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2')",
-          ".write": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
+          ".read": "auth != null && (auth.uid === $uid || auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' || root.child('community').child('moderators').child(auth.uid).child('active').val() === true)",
+          ".write": "auth != null && (auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' || (root.child('community').child('moderators').child(auth.uid).child('active').val() === true && $uid !== '5V3mDjSyeNbI7W0qI16cEz5PbsN2' && root.child('community').child('moderators').child($uid).child('active').val() !== true && ((root.child('community').child('moderators').child(auth.uid).child('permissions').child('mute').val() === true && newData.child('banUntil').val() === data.child('banUntil').val() && newData.child('banReason').val() === data.child('banReason').val()) || (root.child('community').child('moderators').child(auth.uid).child('permissions').child('ban').val() === true && newData.child('muteUntil').val() === data.child('muteUntil').val() && newData.child('muteReason').val() === data.child('muteReason').val()))))",
           "muteUntil": {
             ".validate": "newData.isNumber() && newData.val() >= 0"
           },
@@ -563,10 +563,128 @@
             ".validate": "newData.isNumber() && newData.val() > 0"
           },
           "updatedBy": {
-            ".validate": "newData.isString() && newData.val() === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'"
+            ".validate": "newData.isString() && newData.val() === auth.uid"
           },
           "$other": {
             ".validate": false
+          }
+        }
+      },
+      "securityAlerts": {
+        ".read": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
+        "$alertId": {
+          ".write": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
+          ".validate": "!newData.exists() || (newData.hasChildren(['alertId','uid','playerName','severity','code','summary','evidence','attempts','client','build','createdAt','status','resolvedAt','resolvedBy','adminNote']) && newData.child('alertId').val() === $alertId && newData.child('uid').isString() && newData.child('uid').val().length > 0 && newData.child('uid').val().length <= 160 && newData.child('playerName').isString() && newData.child('playerName').val().length <= 24 && newData.child('severity').isString() && (newData.child('severity').val() === 'low' || newData.child('severity').val() === 'medium' || newData.child('severity').val() === 'high' || newData.child('severity').val() === 'critical') && newData.child('code').isString() && newData.child('code').val().length > 0 && newData.child('code').val().length <= 64 && newData.child('summary').isString() && newData.child('summary').val().length > 0 && newData.child('summary').val().length <= 180 && newData.child('evidence').isString() && newData.child('evidence').val().length <= 700 && newData.child('attempts').isNumber() && newData.child('attempts').val() >= 1 && newData.child('attempts').val() <= 1000000 && newData.child('client').isString() && newData.child('client').val().length <= 32 && newData.child('build').isString() && newData.child('build').val().length <= 64 && newData.child('createdAt').isNumber() && newData.child('createdAt').val() > 0 && newData.child('status').isString() && (newData.child('status').val() === 'open' || newData.child('status').val() === 'resolved' || newData.child('status').val() === 'ignored') && newData.child('resolvedAt').isNumber() && newData.child('resolvedAt').val() >= 0 && newData.child('resolvedBy').isString() && newData.child('adminNote').isString() && newData.child('adminNote').val().length <= 180 && ((newData.child('status').val() === 'open' && newData.child('resolvedAt').val() === 0 && newData.child('resolvedBy').val() === '') || ((newData.child('status').val() === 'resolved' || newData.child('status').val() === 'ignored') && newData.child('resolvedAt').val() > 0 && newData.child('resolvedBy').val() === '5V3mDjSyeNbI7W0qI16cEz5PbsN2')))",
+          "alertId": {
+            ".validate": "newData.isString() && newData.val() === $alertId"
+          },
+          "uid": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 160"
+          },
+          "playerName": {
+            ".validate": "newData.isString() && newData.val().length <= 24"
+          },
+          "severity": {
+            ".validate": "newData.isString() && (newData.val() === 'low' || newData.val() === 'medium' || newData.val() === 'high' || newData.val() === 'critical')"
+          },
+          "code": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 64"
+          },
+          "summary": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 180"
+          },
+          "evidence": {
+            ".validate": "newData.isString() && newData.val().length <= 700"
+          },
+          "attempts": {
+            ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 1000000"
+          },
+          "client": {
+            ".validate": "newData.isString() && newData.val().length <= 32"
+          },
+          "build": {
+            ".validate": "newData.isString() && newData.val().length <= 64"
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "status": {
+            ".validate": "newData.isString() && (newData.val() === 'open' || newData.val() === 'resolved' || newData.val() === 'ignored')"
+          },
+          "resolvedAt": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "resolvedBy": {
+            ".validate": "newData.isString() && (newData.val() === '' || newData.val() === '5V3mDjSyeNbI7W0qI16cEz5PbsN2')"
+          },
+          "adminNote": {
+            ".validate": "newData.isString() && newData.val().length <= 180"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "securitySignals": {
+        ".read": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
+        "$uid": {
+          "$signalId": {
+            ".write": "auth != null && ((auth.uid === $uid && !data.exists() && newData.exists()) || (auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' && data.exists() && newData.exists()))",
+            ".validate": "!newData.exists() || (newData.hasChildren(['signalId','uid','playerName','code','severity','expectedGems','observedGems','delta','source','client','build','evidence','createdAt','status','reviewedAt','reviewedBy','adminNote']) && newData.child('signalId').val() === $signalId && newData.child('uid').val() === $uid && ((auth.uid === $uid && !data.exists() && newData.child('status').val() === 'open' && newData.child('reviewedAt').val() === 0 && newData.child('reviewedBy').val() === '') || (auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' && data.exists() && (newData.child('status').val() === 'resolved' || newData.child('status').val() === 'ignored') && newData.child('reviewedAt').val() > 0 && newData.child('reviewedBy').val() === '5V3mDjSyeNbI7W0qI16cEz5PbsN2')))",
+            "signalId": {
+              ".validate": "newData.isString() && newData.val() === $signalId"
+            },
+            "uid": {
+              ".validate": "newData.isString() && newData.val() === $uid && newData.val().length > 0 && newData.val().length <= 160"
+            },
+            "playerName": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 24"
+            },
+            "code": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 64"
+            },
+            "severity": {
+              ".validate": "newData.isString() && (newData.val() === 'low' || newData.val() === 'medium' || newData.val() === 'high' || newData.val() === 'critical')"
+            },
+            "expectedGems": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+            },
+            "observedGems": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+            },
+            "delta": {
+              ".validate": "newData.isNumber() && newData.val() >= -1000000000 && newData.val() <= 1000000000"
+            },
+            "source": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 48"
+            },
+            "client": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 32"
+            },
+            "build": {
+              ".validate": "newData.isString() && newData.val().length <= 64"
+            },
+            "evidence": {
+              ".validate": "newData.isString() && newData.val().length <= 500"
+            },
+            "createdAt": {
+              ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now + 60000"
+            },
+            "status": {
+              ".validate": "newData.isString() && (newData.val() === 'open' || newData.val() === 'resolved' || newData.val() === 'ignored')"
+            },
+            "reviewedAt": {
+              ".validate": "newData.isNumber() && newData.val() >= 0"
+            },
+            "reviewedBy": {
+              ".validate": "newData.isString() && newData.val().length <= 160"
+            },
+            "adminNote": {
+              ".validate": "newData.isString() && newData.val().length <= 180"
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         }
       },
@@ -735,6 +853,166 @@
           },
           "approvedBy": {
             ".validate": "newData.isString() && newData.val() === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "moderators": {
+        ".read": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
+        "$uid": {
+          ".read": "auth != null && (auth.uid === $uid || auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' || root.child('community').child('moderators').child(auth.uid).child('active').val() === true)",
+          ".write": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
+          ".validate": "!newData.exists() || (newData.hasChildren(['uid','name','active','permissions','createdAt','createdBy','updatedAt']) && newData.child('uid').val() === $uid && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 24 && newData.child('active').isBoolean() && newData.child('permissions').hasChildren(['chat','mute','ban','reports']) && newData.child('permissions').child('chat').isBoolean() && newData.child('permissions').child('mute').isBoolean() && newData.child('permissions').child('ban').isBoolean() && newData.child('permissions').child('reports').isBoolean() && newData.child('createdAt').isNumber() && newData.child('createdAt').val() > 0 && newData.child('createdBy').val() === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' && newData.child('updatedAt').isNumber() && newData.child('updatedAt').val() > 0)",
+          "uid": {
+            ".validate": "newData.isString() && newData.val() === $uid && newData.val().length > 0 && newData.val().length <= 160"
+          },
+          "name": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 24"
+          },
+          "active": {
+            ".validate": "newData.isBoolean()"
+          },
+          "permissions": {
+            "chat": {
+              ".validate": "newData.isBoolean()"
+            },
+            "mute": {
+              ".validate": "newData.isBoolean()"
+            },
+            "ban": {
+              ".validate": "newData.isBoolean()"
+            },
+            "reports": {
+              ".validate": "newData.isBoolean()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "createdBy": {
+            ".validate": "newData.isString() && newData.val() === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'"
+          },
+          "updatedAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "moderationLog": {
+        ".read": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
+        "$actionId": {
+          ".write": "auth != null && !data.exists() && newData.exists() && newData.child('moderatorUid').val() === auth.uid && (auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' || (root.child('community').child('moderators').child(auth.uid).child('active').val() === true && newData.child('targetUid').val() !== '5V3mDjSyeNbI7W0qI16cEz5PbsN2' && root.child('community').child('moderators').child(newData.child('targetUid').val()).child('active').val() !== true && (((newData.child('action').val() === 'mute' || newData.child('action').val() === 'unmute') && root.child('community').child('moderators').child(auth.uid).child('permissions').child('mute').val() === true) || ((newData.child('action').val() === 'ban' || newData.child('action').val() === 'unban') && root.child('community').child('moderators').child(auth.uid).child('permissions').child('ban').val() === true))))",
+          ".validate": "newData.hasChildren(['actionId','moderatorUid','moderatorName','targetUid','targetName','action','reason','until','createdAt','role']) && newData.child('actionId').val() === $actionId && newData.child('moderatorUid').val() === auth.uid && newData.child('moderatorName').isString() && newData.child('moderatorName').val().length > 0 && newData.child('moderatorName').val().length <= 24 && newData.child('targetUid').isString() && newData.child('targetUid').val().length > 0 && newData.child('targetUid').val().length <= 160 && newData.child('targetName').isString() && newData.child('targetName').val().length > 0 && newData.child('targetName').val().length <= 24 && newData.child('action').isString() && (newData.child('action').val() === 'mute' || newData.child('action').val() === 'unmute' || newData.child('action').val() === 'ban' || newData.child('action').val() === 'unban') && newData.child('reason').isString() && newData.child('reason').val().length <= 180 && newData.child('until').isNumber() && newData.child('until').val() >= 0 && newData.child('createdAt').isNumber() && newData.child('createdAt').val() > 0 && newData.child('createdAt').val() <= now + 60000 && newData.child('role').isString() && (newData.child('role').val() === 'master' || newData.child('role').val() === 'moderator')",
+          "actionId": {
+            ".validate": "newData.isString() && newData.val() === $actionId"
+          },
+          "moderatorUid": {
+            ".validate": "newData.isString() && newData.val() === auth.uid"
+          },
+          "moderatorName": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 24"
+          },
+          "targetUid": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 160"
+          },
+          "targetName": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 24"
+          },
+          "action": {
+            ".validate": "newData.isString() && (newData.val() === 'mute' || newData.val() === 'unmute' || newData.val() === 'ban' || newData.val() === 'unban')"
+          },
+          "reason": {
+            ".validate": "newData.isString() && newData.val().length <= 180"
+          },
+          "until": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now + 60000"
+          },
+          "role": {
+            ".validate": "newData.isString() && (newData.val() === 'master' || newData.val() === 'moderator')"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "reports": {
+        ".read": "auth != null && (auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' || (root.child('community').child('moderators').child(auth.uid).child('active').val() === true && root.child('community').child('moderators').child(auth.uid).child('permissions').child('reports').val() === true))",
+        "$reportId": {
+          ".read": "auth != null && (data.child('reporterUid').val() === auth.uid || (auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' || (root.child('community').child('moderators').child(auth.uid).child('active').val() === true && root.child('community').child('moderators').child(auth.uid).child('permissions').child('reports').val() === true)))",
+          ".write": "auth != null && ((!data.exists() && newData.exists() && newData.child('reporterUid').val() === auth.uid && newData.child('status').val() === 'pending') || (data.exists() && newData.exists() && (auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' || (root.child('community').child('moderators').child(auth.uid).child('active').val() === true && root.child('community').child('moderators').child(auth.uid).child('permissions').child('reports').val() === true)) && data.child('status').val() === 'pending' && (newData.child('status').val() === 'resolved' || newData.child('status').val() === 'ignored') && newData.child('reviewedBy').val() === auth.uid))",
+          ".validate": "newData.exists() && newData.hasChildren(['reportId','reporterUid','reporterName','kind','reportedUid','reportedName','gameCode','reason','description','client','build','createdAt','status','reviewedAt','reviewedBy','adminNote','diagnostics','evidenceName','evidenceType','evidenceSize','evidenceDataUrl']) && newData.child('reportId').val() === $reportId && newData.child('reporterUid').isString() && newData.child('reporterUid').val().length > 0 && newData.child('reporterUid').val().length <= 160 && newData.child('reporterName').isString() && newData.child('reporterName').val().length > 0 && newData.child('reporterName').val().length <= 24 && newData.child('kind').isString() && (newData.child('kind').val() === 'help' || newData.child('kind').val() === 'player' || newData.child('kind').val() === 'bug' || newData.child('kind').val() === 'purchase' || newData.child('kind').val() === 'other') && newData.child('reportedUid').isString() && newData.child('reportedUid').val().length <= 160 && newData.child('reportedName').isString() && newData.child('reportedName').val().length <= 24 && ((newData.child('kind').val() === 'player' && newData.child('reportedUid').val().length > 0 && newData.child('reportedUid').val() !== newData.child('reporterUid').val() && newData.child('reportedName').val().length > 0) || (newData.child('kind').val() !== 'player' && newData.child('reportedUid').val() === '' && newData.child('reportedName').val() === '')) && newData.child('gameCode').isString() && newData.child('gameCode').val().length <= 80 && newData.child('reason').isString() && newData.child('reason').val().length > 0 && newData.child('reason').val().length <= 60 && newData.child('description').isString() && newData.child('description').val().length > 0 && newData.child('description').val().length <= 700 && newData.child('client').isString() && newData.child('client').val().length > 0 && newData.child('client').val().length <= 32 && newData.child('build').isString() && newData.child('build').val().length <= 64 && newData.child('diagnostics').isString() && newData.child('diagnostics').val().length <= 2600 && newData.child('evidenceName').isString() && newData.child('evidenceName').val().length <= 120 && newData.child('evidenceType').isString() && (newData.child('evidenceType').val() === '' || newData.child('evidenceType').val() === 'image/jpeg') && newData.child('evidenceSize').isNumber() && newData.child('evidenceSize').val() >= 0 && newData.child('evidenceSize').val() <= 450000 && newData.child('evidenceDataUrl').isString() && newData.child('evidenceDataUrl').val().length <= 520000 && (newData.child('evidenceDataUrl').val() === '' || newData.child('evidenceDataUrl').val().beginsWith('data:image/jpeg;base64,')) && newData.child('createdAt').isNumber() && newData.child('createdAt').val() > 0 && newData.child('createdAt').val() <= now + 60000 && newData.child('status').isString() && (newData.child('status').val() === 'pending' || newData.child('status').val() === 'resolved' || newData.child('status').val() === 'ignored') && newData.child('reviewedAt').isNumber() && newData.child('reviewedAt').val() >= 0 && newData.child('reviewedBy').isString() && newData.child('reviewedBy').val().length <= 160 && newData.child('adminNote').isString() && newData.child('adminNote').val().length <= 180 && ((!data.exists() && newData.child('reporterUid').val() === auth.uid && newData.child('status').val() === 'pending' && newData.child('reviewedAt').val() === 0 && newData.child('reviewedBy').val() === '' && newData.child('adminNote').val() === '') || (data.exists() && newData.child('reportId').val() === data.child('reportId').val() && newData.child('reporterUid').val() === data.child('reporterUid').val() && newData.child('reporterName').val() === data.child('reporterName').val() && newData.child('kind').val() === data.child('kind').val() && newData.child('reportedUid').val() === data.child('reportedUid').val() && newData.child('reportedName').val() === data.child('reportedName').val() && newData.child('gameCode').val() === data.child('gameCode').val() && newData.child('reason').val() === data.child('reason').val() && newData.child('description').val() === data.child('description').val() && newData.child('client').val() === data.child('client').val() && newData.child('build').val() === data.child('build').val() && newData.child('diagnostics').val() === data.child('diagnostics').val() && newData.child('evidenceName').val() === data.child('evidenceName').val() && newData.child('evidenceType').val() === data.child('evidenceType').val() && newData.child('evidenceSize').val() === data.child('evidenceSize').val() && newData.child('evidenceDataUrl').val() === data.child('evidenceDataUrl').val() && newData.child('createdAt').val() === data.child('createdAt').val() && data.child('status').val() === 'pending' && (newData.child('status').val() === 'resolved' || newData.child('status').val() === 'ignored') && newData.child('reviewedAt').val() > 0 && newData.child('reviewedAt').val() <= now + 60000 && newData.child('reviewedBy').val() === auth.uid))",
+          "reportId": {
+            ".validate": "newData.isString() && newData.val() === $reportId"
+          },
+          "reporterUid": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 160"
+          },
+          "reporterName": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 24"
+          },
+          "kind": {
+            ".validate": "newData.isString() && (newData.val() === 'help' || newData.val() === 'player' || newData.val() === 'bug' || newData.val() === 'purchase' || newData.val() === 'other')"
+          },
+          "reportedUid": {
+            ".validate": "newData.isString() && newData.val().length <= 160"
+          },
+          "reportedName": {
+            ".validate": "newData.isString() && newData.val().length <= 24"
+          },
+          "gameCode": {
+            ".validate": "newData.isString() && newData.val().length <= 80"
+          },
+          "reason": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+          },
+          "description": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 700"
+          },
+          "client": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 32"
+          },
+          "build": {
+            ".validate": "newData.isString() && newData.val().length <= 64"
+          },
+          "diagnostics": {
+            ".validate": "newData.isString() && newData.val().length <= 2600"
+          },
+          "evidenceName": {
+            ".validate": "newData.isString() && newData.val().length <= 120"
+          },
+          "evidenceType": {
+            ".validate": "newData.isString() && (newData.val() === '' || newData.val() === 'image/jpeg')"
+          },
+          "evidenceSize": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 450000"
+          },
+          "evidenceDataUrl": {
+            ".validate": "newData.isString() && newData.val().length <= 520000 && (newData.val() === '' || newData.val().beginsWith('data:image/jpeg;base64,'))"
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now + 60000"
+          },
+          "status": {
+            ".validate": "newData.isString() && (newData.val() === 'pending' || newData.val() === 'resolved' || newData.val() === 'ignored')"
+          },
+          "reviewedAt": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "reviewedBy": {
+            ".validate": "newData.isString() && newData.val().length <= 160"
+          },
+          "adminNote": {
+            ".validate": "newData.isString() && newData.val().length <= 180"
           },
           "$other": {
             ".validate": false

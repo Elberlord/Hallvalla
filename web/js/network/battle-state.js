@@ -506,7 +506,7 @@ function getBattleOutcomeSplashElement(){
   overlay.setAttribute("aria-modal","true");
   overlay.setAttribute("aria-live","assertive");
   overlay.setAttribute("aria-atomic","true");
-  overlay.innerHTML='<img class="battle-outcome-splash-art" alt=""><div class="battle-outcome-draw-text" aria-hidden="true">EMPATE</div><div class="battle-outcome-rewards" aria-hidden="true"></div><div class="battle-outcome-actions" aria-hidden="true"><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="map">Ir al mapa</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="retry">Volver a intentarlo</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="rematch">Rematch</button><button class="battle-outcome-action ghost" type="button" data-battle-outcome-action="home">SALIR A HOME</button></div>';
+  overlay.innerHTML='<img class="battle-outcome-splash-art" alt=""><div class="battle-outcome-draw-text" aria-hidden="true">EMPATE</div><div class="battle-outcome-rewards" aria-hidden="true"></div><div class="battle-outcome-actions" aria-hidden="true"><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="map">Ir al mapa</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="retry">Volver a intentarlo</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="rematch">Rematch</button><button class="battle-outcome-action ghost" type="button" data-battle-outcome-action="report">Reportar rival</button><button class="battle-outcome-action ghost" type="button" data-battle-outcome-action="home">SALIR A HOME</button></div>';
   const actions=overlay.querySelector(".battle-outcome-actions");
   if(actions){
     actions.addEventListener("click",ev=>{
@@ -520,6 +520,13 @@ function getBattleOutcomeSplashElement(){
         const rematch=globalThis.hvPvpBattleResultRematch;
         if(typeof rematch==="function")void rematch();
         else{btn.disabled=false;void hvAlert("La revancha online no está disponible en esta sesión.","Rematch");}
+      }
+      else if(action==="report"){
+        btn.disabled=false;
+        const openSupport=globalThis.hallvallaSupportOpen;
+        const context=typeof globalThis.hvPvpGetReportContext==="function"?globalThis.hvPvpGetReportContext():{};
+        if(typeof openSupport==="function")openSupport({kind:"player",targetUid:context?.targetUid||"",targetName:context?.targetName||"",gameCode:context?.gameCode||"",reason:"Conducta/abuso"});
+        else void hvAlert("El módulo de reportes todavía no está disponible.","Reportar rival");
       }
       else if(action==="home"){
         const onlineHome=globalThis.hvPvpBattleResultHome;
@@ -648,10 +655,12 @@ function showBattleOutcomeSplash(result,{adventure=false,online=false,botPvp=fal
     const mapBtn=actions.querySelector('[data-battle-outcome-action="map"]');
     const retryBtn=actions.querySelector('[data-battle-outcome-action="retry"]');
     const rematchBtn=actions.querySelector('[data-battle-outcome-action="rematch"]');
+    const reportBtn=actions.querySelector('[data-battle-outcome-action="report"]');
     const homeBtn=actions.querySelector('[data-battle-outcome-action="home"]');
     if(mapBtn)mapBtn.hidden=!adventure||result!=="victory";
     if(retryBtn)retryBtn.hidden=!adventure||result==="victory";
     if(rematchBtn)rematchBtn.hidden=!online||botPvp;
+    if(reportBtn)reportBtn.hidden=!online||botPvp;
     if(homeBtn){homeBtn.hidden=false;homeBtn.disabled=false;homeBtn.textContent=online?"SALIR A HOME":"Ir a Home";}
     if(adventure)renderBattleOutcomeRewards(result,adventure);
     actions.setAttribute("aria-hidden","false");
