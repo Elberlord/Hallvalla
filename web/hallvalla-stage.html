@@ -115,6 +115,7 @@
       </button>
       <button id="communityBtn" class="asset-small-icon hv-community-home-btn" type="button" aria-label="Chat general" title="Chat general">
         <span class="hv-community-home-icon" aria-hidden="true">💬</span>
+        <b id="communitySecurityBadge" class="notification-badge hidden" aria-label="Alertas de seguridad pendientes">0</b>
       </button>
       <button id="notificationsBtn" class="asset-small-icon notification-btn" type="button" aria-label="Notificaciones">
         <span class="notification-icon">🔔</span>
@@ -308,6 +309,12 @@
           <select id="adminEventDurationUnit" aria-label="Unidad de duración del evento"><option value="hours">Horas</option><option value="days" selected>Días</option><option value="weeks">Semanas</option><option value="months">Meses</option></select>
         </div>
         <button id="adminPublishEventBtn" class="btn primary full" type="button">Publicar evento</button>
+      </section>
+      <section class="hv-admin-box hv-admin-security-box">
+        <h3>Seguridad · <span id="adminSecurityCount">0 pendientes</span></h3>
+        <small>Alertas de seguridad de cuentas. Esta sección no modifica combate, cartas ni economía.</small>
+        <button id="adminCreateSecurityTestBtn" class="btn ghost full" type="button">Crear alerta de prueba para el UID seleccionado</button>
+        <div id="adminSecurityAlertList" class="hv-admin-support-list"><div class="hv-community-empty">No hay alertas de seguridad.</div></div>
       </section>
       <section class="hv-admin-box hv-admin-support-box">
         <h3>Solicitudes PayPal</h3>

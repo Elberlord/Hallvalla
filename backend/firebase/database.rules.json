@@ -570,6 +570,16 @@
           }
         }
       },
+      "securityAlerts": {
+        ".read": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
+        "$alertId": {
+          ".write": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
+          ".validate": "!newData.exists() || (newData.hasChildren(['alertId','uid','playerName','severity','code','summary','evidence','attempts','client','build','createdAt','status','resolvedAt','resolvedBy','adminNote']) && newData.child('alertId').val() === $alertId && newData.child('uid').isString() && newData.child('uid').val().length > 0 && newData.child('uid').val().length <= 160 && newData.child('playerName').isString() && newData.child('playerName').val().length <= 24 && newData.child('severity').isString() && (newData.child('severity').val() === 'low' || newData.child('severity').val() === 'medium' || newData.child('severity').val() === 'high' || newData.child('severity').val() === 'critical') && newData.child('code').isString() && newData.child('code').val().length > 0 && newData.child('code').val().length <= 64 && newData.child('summary').isString() && newData.child('summary').val().length > 0 && newData.child('summary').val().length <= 180 && newData.child('evidence').isString() && newData.child('evidence').val().length <= 700 && newData.child('attempts').isNumber() && newData.child('attempts').val() >= 1 && newData.child('attempts').val() <= 1000000 && newData.child('client').isString() && newData.child('client').val().length <= 32 && newData.child('build').isString() && newData.child('build').val().length <= 64 && newData.child('createdAt').isNumber() && newData.child('createdAt').val() > 0 && newData.child('status').isString() && (newData.child('status').val() === 'open' || newData.child('status').val() === 'resolved' || newData.child('status').val() === 'ignored') && newData.child('resolvedAt').isNumber() && newData.child('resolvedAt').val() >= 0 && newData.child('resolvedBy').isString() && newData.child('adminNote').isString() && newData.child('adminNote').val().length <= 180 && ((newData.child('status').val() === 'open' && newData.child('resolvedAt').val() === 0 && newData.child('resolvedBy').val() === '') || ((newData.child('status').val() === 'resolved' || newData.child('status').val() === 'ignored') && newData.child('resolvedAt').val() > 0 && newData.child('resolvedBy').val() === '5V3mDjSyeNbI7W0qI16cEz5PbsN2')))",
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
       "adminRewards": {
         "$uid": {
           ".read": "auth != null && (auth.uid === $uid || auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2')",
