@@ -382,6 +382,22 @@
     flex:0 0 auto;
     margin-top:8px;
   }
+  #communityAdminPanel .hv-admin-permission-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+    margin:10px 0;
+  }
+  #communityAdminPanel .hv-admin-check{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 10px;
+    border:1px solid rgba(225,189,105,.22);
+    border-radius:10px;
+    color:#dbe3ef;
+  }
+  #communityAdminPanel .hv-admin-check input{width:auto!important;margin:0;}
   @media (max-width:760px){
     #communityAdminPanel .hv-admin-root-grid{
       grid-template-columns:repeat(2,minmax(0,1fr));
@@ -393,7 +409,7 @@
   <section id="communityAdminRootCard" class="modal-card hv-community-admin-card hv-admin-root-card" role="dialog" aria-modal="true" aria-labelledby="communityAdminTitle">
     <button id="communityAdminCloseBtn" class="adventure-result-close" type="button" aria-label="Cerrar">×</button>
     <header class="hv-community-head">
-      <div><span>CONTROL MAESTRO</span><h2 id="communityAdminTitle">ADMINISTRACIÓN</h2></div>
+      <div><span id="communityAdminRootKicker">CONTROL MAESTRO</span><h2 id="communityAdminTitle">ADMINISTRACIÓN</h2></div>
     </header>
 
     <div class="hv-admin-root-grid" aria-label="Áreas de administración">
@@ -402,27 +418,32 @@
         <strong>Jugador</strong>
         <small>Silenciar, banear o retirar sanciones.</small>
       </button>
-      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="reward">
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="reward" data-hv-master-only="1">
         <span class="hv-admin-root-icon" aria-hidden="true">🎁</span>
         <strong>Premios</strong>
         <small>Entregar gemas, oro, fragmentos o packs.</small>
       </button>
-      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="event">
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="event" data-hv-master-only="1">
         <span class="hv-admin-root-icon" aria-hidden="true">📣</span>
         <strong>Eventos</strong>
         <small>Crear y publicar eventos globales.</small>
       </button>
-      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="security">
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="security" data-hv-master-only="1">
         <span class="hv-admin-root-icon" aria-hidden="true">🛡</span>
         <strong>Seguridad</strong>
         <small>Revisar alertas e investigar cuentas.</small>
         <b id="adminSecurityRootBadge" class="hv-admin-root-badge hidden">0</b>
       </button>
-      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="paypal">
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="paypal" data-hv-master-only="1">
         <span class="hv-admin-root-icon" aria-hidden="true">💳</span>
         <strong>PayPal</strong>
         <small>Revisar y aprobar solicitudes pendientes.</small>
         <b id="adminSupportRootBadge" class="hv-admin-root-badge hidden">0</b>
+      </button>
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="moderators" data-hv-master-only="1">
+        <span class="hv-admin-root-icon" aria-hidden="true">🧭</span>
+        <strong>Moderadores</strong>
+        <small>Asignar permisos de chat y sanciones.</small>
       </button>
     </div>
   </section>
@@ -433,7 +454,7 @@
       <button id="communityAdminBackBtn" class="btn ghost hv-admin-section-back" type="button">← Administración</button>
     </div>
     <header class="hv-community-head">
-      <div><span>CONTROL MAESTRO</span><h2 id="communityAdminSectionTitle">ADMINISTRACIÓN</h2></div>
+      <div><span id="communityAdminSectionKicker">CONTROL MAESTRO</span><h2 id="communityAdminSectionTitle">ADMINISTRACIÓN</h2></div>
     </header>
 
     <div class="hv-admin-section-host">
@@ -486,6 +507,23 @@
         <small>SHADOW: detecta alteraciones locales sin bloquear ni cambiar el saldo del jugador.</small>
         <button id="adminGemShadowTestBtn" class="btn ghost full" type="button">Probar vigilancia de gemas (sin modificar saldo)</button>
         <div id="adminGemShadowList" class="hv-admin-support-list"><div class="hv-community-empty">No hay señales de vigilancia de gemas.</div></div>
+      </section>
+
+      <section class="hv-admin-box hv-admin-modal-section hidden" data-hv-admin-section="moderators" data-hv-master-only="1">
+        <h3>Moderadores</h3>
+        <small>Solo la cuenta maestra puede crear, editar o retirar moderadores.</small>
+        <button id="adminModeratorUseSelectedBtn" class="btn ghost full" type="button">Usar jugador seleccionado</button>
+        <input id="adminModeratorUid" type="text" autocomplete="off" placeholder="UID del moderador">
+        <input id="adminModeratorName" type="text" maxlength="24" autocomplete="off" placeholder="Nombre visible">
+        <div class="hv-admin-permission-grid">
+          <label class="hv-admin-check"><input id="adminModeratorPermChat" type="checkbox" checked> Borrar mensajes</label>
+          <label class="hv-admin-check"><input id="adminModeratorPermMute" type="checkbox" checked> Silenciar</label>
+          <label class="hv-admin-check"><input id="adminModeratorPermBan" type="checkbox" checked> Banear</label>
+          <label class="hv-admin-check"><input id="adminModeratorPermReports" type="checkbox" checked> Reportes</label>
+        </div>
+        <button id="adminSaveModeratorBtn" class="btn primary full" type="button">Guardar moderador</button>
+        <h4>Moderadores configurados</h4>
+        <div id="adminModeratorList" class="hv-admin-support-list"><div class="hv-community-empty">No hay moderadores configurados.</div></div>
       </section>
 
       <section class="hv-admin-box hv-admin-support-box hv-admin-modal-section hidden" data-hv-admin-section="paypal">

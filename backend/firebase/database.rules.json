@@ -493,7 +493,7 @@
       "chat": {
         ".read": "auth != null && (!root.child('community').child('moderation').child(auth.uid).child('banUntil').exists() || root.child('community').child('moderation').child(auth.uid).child('banUntil').val() <= now)",
         "$messageId": {
-          ".write": "auth != null && (((!data.exists() && newData.exists()) && (!root.child('community').child('moderation').child(auth.uid).child('banUntil').exists() || root.child('community').child('moderation').child(auth.uid).child('banUntil').val() <= now) && (!root.child('community').child('moderation').child(auth.uid).child('muteUntil').exists() || root.child('community').child('moderation').child(auth.uid).child('muteUntil').val() <= now) && newData.child('uid').val() === auth.uid) || (auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' && data.exists() && !newData.exists()))",
+          ".write": "auth != null && (((!data.exists() && newData.exists()) && (!root.child('community').child('moderation').child(auth.uid).child('banUntil').exists() || root.child('community').child('moderation').child(auth.uid).child('banUntil').val() <= now) && (!root.child('community').child('moderation').child(auth.uid).child('muteUntil').exists() || root.child('community').child('moderation').child(auth.uid).child('muteUntil').val() <= now) && newData.child('uid').val() === auth.uid) || ((auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' || (root.child('community').child('moderators').child(auth.uid).child('active').val() === true && root.child('community').child('moderators').child(auth.uid).child('permissions').child('chat').val() === true)) && data.exists() && !newData.exists()))",
           ".validate": "!newData.exists() || (newData.hasChildren(['uid','name','text','createdAt']) && newData.child('uid').isString() && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 24 && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 280 && newData.child('createdAt').isNumber() && newData.child('createdAt').val() > 0 && newData.child('createdAt').val() <= now + 60000)",
           "$other": {
             ".validate": false
@@ -545,8 +545,8 @@
       },
       "moderation": {
         "$uid": {
-          ".read": "auth != null && (auth.uid === $uid || auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2')",
-          ".write": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
+          ".read": "auth != null && (auth.uid === $uid || auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' || root.child('community').child('moderators').child(auth.uid).child('active').val() === true)",
+          ".write": "auth != null && (auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' || (root.child('community').child('moderators').child(auth.uid).child('active').val() === true && $uid !== '5V3mDjSyeNbI7W0qI16cEz5PbsN2' && root.child('community').child('moderators').child($uid).child('active').val() !== true && ((root.child('community').child('moderators').child(auth.uid).child('permissions').child('mute').val() === true && newData.child('banUntil').val() === data.child('banUntil').val() && newData.child('banReason').val() === data.child('banReason').val()) || (root.child('community').child('moderators').child(auth.uid).child('permissions').child('ban').val() === true && newData.child('muteUntil').val() === data.child('muteUntil').val() && newData.child('muteReason').val() === data.child('muteReason').val()))))",
           "muteUntil": {
             ".validate": "newData.isNumber() && newData.val() >= 0"
           },
@@ -563,7 +563,7 @@
             ".validate": "newData.isNumber() && newData.val() > 0"
           },
           "updatedBy": {
-            ".validate": "newData.isString() && newData.val() === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'"
+            ".validate": "newData.isString() && newData.val() === auth.uid"
           },
           "$other": {
             ".validate": false
@@ -853,6 +853,52 @@
           },
           "approvedBy": {
             ".validate": "newData.isString() && newData.val() === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "moderators": {
+        ".read": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
+        "$uid": {
+          ".read": "auth != null && (auth.uid === $uid || auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' || root.child('community').child('moderators').child(auth.uid).child('active').val() === true)",
+          ".write": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
+          ".validate": "!newData.exists() || (newData.hasChildren(['uid','name','active','permissions','createdAt','createdBy','updatedAt']) && newData.child('uid').val() === $uid && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 24 && newData.child('active').isBoolean() && newData.child('permissions').hasChildren(['chat','mute','ban','reports']) && newData.child('permissions').child('chat').isBoolean() && newData.child('permissions').child('mute').isBoolean() && newData.child('permissions').child('ban').isBoolean() && newData.child('permissions').child('reports').isBoolean() && newData.child('createdAt').isNumber() && newData.child('createdAt').val() > 0 && newData.child('createdBy').val() === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' && newData.child('updatedAt').isNumber() && newData.child('updatedAt').val() > 0)",
+          "uid": {
+            ".validate": "newData.isString() && newData.val() === $uid && newData.val().length > 0 && newData.val().length <= 160"
+          },
+          "name": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 24"
+          },
+          "active": {
+            ".validate": "newData.isBoolean()"
+          },
+          "permissions": {
+            "chat": {
+              ".validate": "newData.isBoolean()"
+            },
+            "mute": {
+              ".validate": "newData.isBoolean()"
+            },
+            "ban": {
+              ".validate": "newData.isBoolean()"
+            },
+            "reports": {
+              ".validate": "newData.isBoolean()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "createdBy": {
+            ".validate": "newData.isString() && newData.val() === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'"
+          },
+          "updatedAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
           },
           "$other": {
             ".validate": false
