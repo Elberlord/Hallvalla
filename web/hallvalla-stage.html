@@ -398,6 +398,16 @@
     color:#dbe3ef;
   }
   #communityAdminPanel .hv-admin-check input{width:auto!important;margin:0;}
+  #communityAdminPanel .hv-admin-preset-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    margin:8px 0;
+  }
+  #communityAdminPanel .hv-admin-preset-row .btn{
+    min-height:34px;
+    padding:6px 10px;
+  }
   @media (max-width:760px){
     #communityAdminPanel .hv-admin-root-grid{
       grid-template-columns:repeat(2,minmax(0,1fr));
@@ -469,6 +479,12 @@
             <option value="hours">Horas</option><option value="days">Días</option><option value="weeks">Semanas</option><option value="months">Meses</option>
           </select>
         </div>
+        <div class="hv-admin-preset-row" aria-label="Duraciones rápidas">
+          <button class="btn ghost" type="button" data-hv-moderation-preset="1h" data-hv-preset-value="1" data-hv-preset-unit="hours">1 h</button>
+          <button class="btn ghost" type="button" data-hv-moderation-preset="24h" data-hv-preset-value="24" data-hv-preset-unit="hours">24 h</button>
+          <button class="btn ghost" type="button" data-hv-moderation-preset="7d" data-hv-preset-value="7" data-hv-preset-unit="days">7 días</button>
+          <button class="btn ghost" type="button" data-hv-moderation-preset="30d" data-hv-preset-value="30" data-hv-preset-unit="days">30 días</button>
+        </div>
         <div class="hv-admin-actions">
           <button id="adminMuteBtn" class="btn primary" type="button">Silenciar</button>
           <button id="adminUnmuteBtn" class="btn ghost" type="button">Quitar silencio</button>
@@ -524,6 +540,10 @@
         <button id="adminSaveModeratorBtn" class="btn primary full" type="button">Guardar moderador</button>
         <h4>Moderadores configurados</h4>
         <div id="adminModeratorList" class="hv-admin-support-list"><div class="hv-community-empty">No hay moderadores configurados.</div></div>
+        <hr style="border:0;border-top:1px solid rgba(225,189,105,.22);margin:18px 0;">
+        <h4>Auditoría de moderación</h4>
+        <small>Historial de silencios, baneos y retiro de sanciones. Solo visible para la cuenta maestra.</small>
+        <div id="adminModerationLogList" class="hv-admin-support-list"><div class="hv-community-empty">Todavía no hay acciones de moderación registradas.</div></div>
       </section>
 
       <section class="hv-admin-box hv-admin-support-box hv-admin-modal-section hidden" data-hv-admin-section="paypal">

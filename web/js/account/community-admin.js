@@ -47,6 +47,8 @@ let hallvallaCommunityModerator={};
 let hallvallaCommunityModeratorUnsub=null;
 let hallvallaCommunityModeratorsUnsub=null;
 let hallvallaCommunityModeratorsBook={};
+let hallvallaModerationLogUnsub=null;
+let hallvallaModerationLogBook={};
 
 function hallvallaCommunityNode(id){return document.getElementById(id);}
 function hallvallaCommunityIsAdmin(user=auth?.currentUser){return String(user?.uid||"")===HALLVALLA_MASTER_ADMIN_UID;}
@@ -335,26 +337,52 @@ async function hallvallaAdminModerate(kind){
       if(targetModSnap.val()?.active===true){hallvallaAdminStatus("Un moderador no puede sancionar a otro moderador.","error");return;}
     }catch(error){hallvallaAdminStatus("No se pudo validar el rol del jugador objetivo.","error");return;}
   }
+  const now=Date.now();
   const actorUid=String(auth?.currentUser?.uid||"");
-  const reason=hallvallaAdminReason();
-  try{
-    if(action==="unmute"){
-      await update(ref(db,`community/moderation/${target}`),{muteUntil:0,muteReason:"",updatedAt:Date.now(),updatedBy:actorUid});
-      hallvallaAdminStatus("Silencio retirado.","success");return;
-    }
-    if(action==="unban"){
-      await update(ref(db,`community/moderation/${target}`),{banUntil:0,banReason:"",updatedAt:Date.now(),updatedBy:actorUid});
-      hallvallaAdminStatus("Baneo retirado.","success");return;
-    }
+  const actorName=hallvallaCommunityName();
+  const targetName=String(hallvallaCommunityNode("adminTargetName")?.textContent||"Jugador").trim().slice(0,24)||"Jugador";
+  const typedReason=hallvallaAdminReason();
+  let until=0;
+  let reason=typedReason;
+  const moderationPatch={updatedAt:now,updatedBy:actorUid};
+  let statusText="";
+  if(action==="unmute"){
+    moderationPatch.muteUntil=0;moderationPatch.muteReason="";
+    reason=typedReason||"Silencio retirado.";
+    statusText="Silencio retirado.";
+  }else if(action==="unban"){
+    moderationPatch.banUntil=0;moderationPatch.banReason="";
+    reason=typedReason||"Baneo retirado.";
+    statusText="Baneo retirado.";
+  }else{
     const duration=hallvallaAdminModerationDuration();
+    until=duration.until;
     if(action==="mute"){
-      await update(ref(db,`community/moderation/${target}`),{muteUntil:duration.until,muteReason:reason,updatedAt:Date.now(),updatedBy:actorUid});
-      hallvallaAdminStatus(`Jugador silenciado por ${hallvallaCommunityDurationLabel(duration.value,duration.unit)}.`,"success");return;
-    }
-    if(action==="ban"){
-      await update(ref(db,`community/moderation/${target}`),{banUntil:duration.until,banReason:reason,updatedAt:Date.now(),updatedBy:actorUid});
-      hallvallaAdminStatus(`Jugador baneado por ${hallvallaCommunityDurationLabel(duration.value,duration.unit)}.`,"success");return;
-    }
+      moderationPatch.muteUntil=until;moderationPatch.muteReason=typedReason;
+      statusText=`Jugador silenciado por ${hallvallaCommunityDurationLabel(duration.value,duration.unit)}.`;
+    }else if(action==="ban"){
+      moderationPatch.banUntil=until;moderationPatch.banReason=typedReason;
+      statusText=`Jugador baneado por ${hallvallaCommunityDurationLabel(duration.value,duration.unit)}.`;
+    }else return;
+  }
+  try{
+    const actionId=hallvallaCommunityId("modlog");
+    const patch={};
+    for(const [key,value] of Object.entries(moderationPatch))patch[`community/moderation/${target}/${key}`]=value;
+    patch[`community/moderationLog/${actionId}`]={
+      actionId,
+      moderatorUid:actorUid,
+      moderatorName:actorName,
+      targetUid:target,
+      targetName,
+      action,
+      reason:String(reason||"").slice(0,HALLVALLA_COMMUNITY_MAX_REASON),
+      until:Number(until||0),
+      createdAt:now,
+      role:hallvallaCommunityIsAdmin()?"master":"moderator"
+    };
+    await update(ref(db),patch);
+    hallvallaAdminStatus(statusText,"success");
   }catch(error){console.error(error);hallvallaAdminStatus(String(error?.message||error),"error");}
 }
 
@@ -476,6 +504,24 @@ async function hallvallaAdminRemoveModerator(uid){
   try{await remove(ref(db,`community/moderators/${safeUid}`));hallvallaAdminStatus("Rol de moderador eliminado.","success");}
   catch(error){console.error(error);hallvallaAdminStatus(String(error?.message||error),"error");}
 }
+function hallvallaAdminRenderModerationLog(raw){
+  const host=hallvallaCommunityNode("adminModerationLogList");if(!host)return;
+  const rows=Object.entries(raw&&typeof raw==="object"?raw:{}).map(([id,item])=>({id,...(item||{})}))
+    .sort((a,b)=>Number(b.createdAt||0)-Number(a.createdAt||0))
+    .slice(0,100);
+  host.innerHTML=rows.length?rows.map(item=>{
+    const actionLabel=({mute:"SILENCIO",unmute:"QUITAR SILENCIO",ban:"BAN",unban:"QUITAR BAN"})[String(item.action||"")]||String(item.action||"").toUpperCase();
+    return `<article class="hv-admin-support-row">
+      <header><b>${hallvallaCommunityEscape(item.moderatorName||"Moderador")}</b><span class="hv-support-status">${hallvallaCommunityEscape(actionLabel)}</span></header>
+      <div class="hv-admin-support-meta"><span>${hallvallaCommunityEscape(item.targetName||"Jugador")}</span><strong>${hallvallaCommunityEscape(item.role==="master"?"MASTER":"MOD")}</strong><small>${hallvallaCommunityEscape(hallvallaCommunityFormatDate(item.createdAt))}</small></div>
+      <code>Actor: ${hallvallaCommunityEscape(item.moderatorUid||"—")}</code>
+      <code>Objetivo: ${hallvallaCommunityEscape(item.targetUid||"—")}</code>
+      ${Number(item.until||0)>0?`<small>Hasta: ${hallvallaCommunityEscape(hallvallaCommunityFormatDate(item.until))}</small>`:""}
+      ${item.reason?`<small>Motivo: ${hallvallaCommunityEscape(item.reason)}</small>`:""}
+    </article>`;
+  }).join(""):'<div class="hv-community-empty">Todavía no hay acciones de moderación registradas.</div>';
+}
+
 function hallvallaAdminRenderSupportRequests(raw){
   const host=hallvallaCommunityNode("adminSupportRequestList");if(!host)return;
   const rows=[];
@@ -607,7 +653,7 @@ function hallvallaAdminRenderSecurityAlerts(raw){
       ${item.evidence?`<small>${hallvallaCommunityEscape(item.evidence)}</small>`:""}
       ${open?`<div class="hv-admin-actions">
         <button type="button" class="btn ghost" data-hv-security-target="${hallvallaCommunityEscape(item.uid||"")}" data-hv-security-name="${hallvallaCommunityEscape(item.playerName||"Jugador")}">Revisar jugador</button>
-        <button type="button" class="btn danger" data-hv-security-ban="${hallvallaCommunityEscape(item.uid||"")}" data-hv-security-alert="${hallvallaCommunityEscape(item.id)}">Banear 24 h</button>
+        <button type="button" class="btn danger" data-hv-security-moderate="${hallvallaCommunityEscape(item.uid||"")}" data-hv-security-name="${hallvallaCommunityEscape(item.playerName||"Jugador")}" data-hv-security-summary="${hallvallaCommunityEscape(item.summary||item.code||"Alerta de seguridad")}">Moderar jugador</button>
         <button type="button" class="btn primary" data-hv-security-resolve="${hallvallaCommunityEscape(item.id)}">Resolver</button>
         <button type="button" class="btn ghost" data-hv-security-ignore="${hallvallaCommunityEscape(item.id)}">Ignorar</button>
       </div>`:`<small>Estado: ${hallvallaCommunityEscape(String(item.status||"").toUpperCase())} · ${hallvallaCommunityEscape(hallvallaCommunityFormatDate(item.resolvedAt))}${item.adminNote?` · ${hallvallaCommunityEscape(item.adminNote)}`:""}</small>`}
@@ -631,26 +677,18 @@ async function hallvallaAdminResolveSecurityAlert(alertId,status="resolved",admi
     hallvallaAdminStatus(String(error?.message||error),"error");
   }
 }
-async function hallvallaAdminBanFromSecurity(uid,alertId){
+function hallvallaAdminOpenModerationFromSecurity(uid,name,summary){
   if(!hallvallaCommunityIsAdmin())return;
   const target=String(uid||"").trim();
-  const id=String(alertId||"").trim();
-  if(!target||!id)return;
-  if(target===HALLVALLA_MASTER_ADMIN_UID){hallvallaAdminStatus("La cuenta maestra no puede banearse.","error");return;}
-  const alert=hallvallaSecurityAlertBook?.[id]||{};
-  const summary=String(alert?.summary||alert?.code||"actividad de seguridad").slice(0,120);
-  let confirmed=true;
-  if(typeof hvConfirm==="function")confirmed=await hvConfirm(`¿Banear por 24 horas a ${alert?.playerName||target}?\n\nMotivo: ${summary}`,"Alerta de seguridad","Banear 24 h","Cancelar");
-  if(!confirmed)return;
-  try{
-    const now=Date.now(),until=now+86400000;
-    await update(ref(db,`community/moderation/${target}`),{banUntil:until,banReason:`Seguridad: ${summary}`.slice(0,180),updatedAt:now,updatedBy:HALLVALLA_MASTER_ADMIN_UID});
-    await hallvallaAdminResolveSecurityAlert(id,"resolved","Baneo de 24 h aplicado desde Seguridad.");
-    hallvallaAdminStatus(`Cuenta ${target} baneada por 24 horas.`,"success");
-  }catch(error){
-    console.error("[HallValla][Security] No se pudo aplicar el baneo:",error);
-    hallvallaAdminStatus(String(error?.message||error),"error");
-  }
+  if(!target)return;
+  if(target===HALLVALLA_MASTER_ADMIN_UID){hallvallaAdminStatus("La cuenta maestra no puede moderarse.","error");return;}
+  hallvallaCommunityOpenAdmin(target,String(name||"Jugador").slice(0,24));
+  const reason=hallvallaCommunityNode("adminModerationReason");
+  if(reason)reason.value=`Seguridad: ${String(summary||"actividad de seguridad")}`.slice(0,HALLVALLA_COMMUNITY_MAX_REASON);
+  const duration=hallvallaCommunityNode("adminDurationValue"),unit=hallvallaCommunityNode("adminDurationUnit");
+  if(duration)duration.value="24";
+  if(unit)unit.value="hours";
+  hallvallaAdminStatus("Jugador seleccionado desde Seguridad. Elige la duración o usa un acceso rápido y aplica la sanción.","success");
 }
 async function hallvallaAdminCreateSecurityTestAlert(){
   if(!hallvallaCommunityIsAdmin())return;
@@ -794,17 +832,17 @@ async function hallvallaCommunityProcessRewards(){
 }
 
 function hallvallaCommunityDetach(){
-  for(const key of ["hallvallaCommunityChatUnsub","hallvallaCommunityEventsUnsub","hallvallaCommunityModerationUnsub","hallvallaCommunityRewardsUnsub","hallvallaCommunityClaimsUnsub","hallvallaSupportRequestsUnsub","hallvallaSecurityAlertsUnsub","hallvallaGemShadowSignalsUnsub","hallvallaCommunityModeratorUnsub","hallvallaCommunityModeratorsUnsub"]){
-    const fn=({hallvallaCommunityChatUnsub,hallvallaCommunityEventsUnsub,hallvallaCommunityModerationUnsub,hallvallaCommunityRewardsUnsub,hallvallaCommunityClaimsUnsub,hallvallaSupportRequestsUnsub,hallvallaSecurityAlertsUnsub,hallvallaGemShadowSignalsUnsub,hallvallaCommunityModeratorUnsub,hallvallaCommunityModeratorsUnsub})[key];
+  for(const key of ["hallvallaCommunityChatUnsub","hallvallaCommunityEventsUnsub","hallvallaCommunityModerationUnsub","hallvallaCommunityRewardsUnsub","hallvallaCommunityClaimsUnsub","hallvallaSupportRequestsUnsub","hallvallaSecurityAlertsUnsub","hallvallaGemShadowSignalsUnsub","hallvallaCommunityModeratorUnsub","hallvallaCommunityModeratorsUnsub","hallvallaModerationLogUnsub"]){
+    const fn=({hallvallaCommunityChatUnsub,hallvallaCommunityEventsUnsub,hallvallaCommunityModerationUnsub,hallvallaCommunityRewardsUnsub,hallvallaCommunityClaimsUnsub,hallvallaSupportRequestsUnsub,hallvallaSecurityAlertsUnsub,hallvallaGemShadowSignalsUnsub,hallvallaCommunityModeratorUnsub,hallvallaCommunityModeratorsUnsub,hallvallaModerationLogUnsub})[key];
     if(typeof fn==="function"){try{fn();}catch(_){ }}
   }
-  hallvallaCommunityChatUnsub=hallvallaCommunityEventsUnsub=hallvallaCommunityModerationUnsub=hallvallaCommunityRewardsUnsub=hallvallaCommunityClaimsUnsub=hallvallaSupportRequestsUnsub=hallvallaSecurityAlertsUnsub=hallvallaGemShadowSignalsUnsub=hallvallaCommunityModeratorUnsub=hallvallaCommunityModeratorsUnsub=null;
+  hallvallaCommunityChatUnsub=hallvallaCommunityEventsUnsub=hallvallaCommunityModerationUnsub=hallvallaCommunityRewardsUnsub=hallvallaCommunityClaimsUnsub=hallvallaSupportRequestsUnsub=hallvallaSecurityAlertsUnsub=hallvallaGemShadowSignalsUnsub=hallvallaCommunityModeratorUnsub=hallvallaCommunityModeratorsUnsub=hallvallaModerationLogUnsub=null;
 }
 function hallvallaCommunityAttach(user){
   hallvallaCommunityDetach();
   hallvallaCommunityUser=user||null;
   if(!user||String(user.uid||"")!==hallvallaCommunitySettledUid)hallvallaCommunitySettledUid="";
-  hallvallaCommunityModeration={};hallvallaCommunityRewardBook={};hallvallaCommunityClaimBook={};hallvallaSecurityAlertBook={};hallvallaGemShadowSignalBook={};hallvallaCommunityChatBook={};hallvallaCommunityModerator={};hallvallaCommunityModeratorsBook={};
+  hallvallaCommunityModeration={};hallvallaCommunityRewardBook={};hallvallaCommunityClaimBook={};hallvallaSecurityAlertBook={};hallvallaGemShadowSignalBook={};hallvallaCommunityChatBook={};hallvallaCommunityModerator={};hallvallaCommunityModeratorsBook={};hallvallaModerationLogBook={};
   hallvallaCommunitySyncAdminVisibility();
   if(!user){hallvallaCommunitySyncModerationUi();hallvallaCommunityRenderChat({});return;}
   const chatRef=typeof query==="function"?query(ref(db,"community/chat"),orderByChild("createdAt"),limitToLast(HALLVALLA_COMMUNITY_CHAT_LIMIT)):ref(db,"community/chat");
@@ -816,12 +854,13 @@ function hallvallaCommunityAttach(user){
   hallvallaCommunityClaimsUnsub=onValue(ref(db,`community/rewardClaims/${user.uid}`),snap=>{hallvallaCommunityClaimBook=snap.val()||{};void hallvallaCommunityProcessRewards();},error=>console.warn("[HallValla][Community] Claims:",error));
   if(hallvallaCommunityIsAdmin(user)){
     hallvallaCommunityModeratorsUnsub=onValue(ref(db,"community/moderators"),snap=>{hallvallaCommunityModeratorsBook=snap.val()||{};hallvallaAdminRenderModerators(hallvallaCommunityModeratorsBook);},error=>console.warn("[HallValla][Community] Moderadores:",error));
+    hallvallaModerationLogUnsub=onValue(ref(db,"community/moderationLog"),snap=>{hallvallaModerationLogBook=snap.val()||{};hallvallaAdminRenderModerationLog(hallvallaModerationLogBook);},error=>console.warn("[HallValla][Community] Auditoría:",error));
     hallvallaSupportRequestsUnsub=onValue(ref(db,"community/supportRequests"),snap=>{hallvallaSupportRequestBook=snap.val()||{};hallvallaAdminRenderSupportRequests(hallvallaSupportRequestBook);},error=>console.warn("[HallValla][Support] Solicitudes:",error));
     hallvallaSecurityAlertsUnsub=onValue(ref(db,"community/securityAlerts"),snap=>{hallvallaSecurityAlertBook=snap.val()||{};hallvallaAdminRenderSecurityAlerts(hallvallaSecurityAlertBook);},error=>{console.warn("[HallValla][Security] Alertas:",error);hallvallaAdminRenderSecurityAlerts({});});
     hallvallaGemShadowSignalsUnsub=onValue(ref(db,"community/securitySignals"),snap=>{hallvallaGemShadowSignalBook=snap.val()||{};hallvallaAdminRenderGemShadowSignals(hallvallaGemShadowSignalBook);},error=>{console.warn("[HallValla][GemShadow] Señales:",error);hallvallaAdminRenderGemShadowSignals({});});
   }else{
-    hallvallaSupportRequestBook={};hallvallaSecurityAlertBook={};hallvallaGemShadowSignalBook={};hallvallaCommunityModeratorsBook={};
-    hallvallaAdminRenderGemShadowSignals({});hallvallaAdminRenderSecurityAlerts({});hallvallaAdminRenderSupportRequests({});hallvallaAdminRenderModerators({});
+    hallvallaSupportRequestBook={};hallvallaSecurityAlertBook={};hallvallaGemShadowSignalBook={};hallvallaCommunityModeratorsBook={};hallvallaModerationLogBook={};
+    hallvallaAdminRenderGemShadowSignals({});hallvallaAdminRenderSecurityAlerts({});hallvallaAdminRenderSupportRequests({});hallvallaAdminRenderModerators({});hallvallaAdminRenderModerationLog({});
   }
 }
 
@@ -867,6 +906,14 @@ function hallvallaCommunityBind(){
     if(approve&&hallvallaCommunityIsAdmin())void hallvallaAdminResolveSupportRequest(approve.dataset.hvSupportApprove||"",approve.dataset.hvSupportRequest||"","approve");
     const reject=event.target?.closest?.("[data-hv-support-reject]");
     if(reject&&hallvallaCommunityIsAdmin())void hallvallaAdminResolveSupportRequest(reject.dataset.hvSupportReject||"",reject.dataset.hvSupportRequest||"","reject");
+    const preset=event.target?.closest?.("[data-hv-moderation-preset]");
+    if(preset&&hallvallaCommunityHasModerationPanel()){
+      const value=Math.max(1,Number(preset.dataset.hvPresetValue||1));
+      const unit=String(preset.dataset.hvPresetUnit||"hours");
+      const input=hallvallaCommunityNode("adminDurationValue"),select=hallvallaCommunityNode("adminDurationUnit");
+      if(input)input.value=String(value);
+      if(select)select.value=unit;
+    }
     const moderatorEdit=event.target?.closest?.("[data-hv-moderator-edit]");
     if(moderatorEdit&&hallvallaCommunityIsAdmin())hallvallaAdminLoadModeratorForm(moderatorEdit.dataset.hvModeratorEdit||"");
     const moderatorActive=event.target?.closest?.("[data-hv-moderator-active]");
@@ -880,8 +927,12 @@ function hallvallaCommunityBind(){
       hallvallaCommunityOpenAdmin(uid,name);
       hallvallaAdminStatus(`Jugador ${name} seleccionado desde Seguridad.`,"success");
     }
-    const securityBan=event.target?.closest?.("[data-hv-security-ban]");
-    if(securityBan&&hallvallaCommunityIsAdmin())void hallvallaAdminBanFromSecurity(securityBan.dataset.hvSecurityBan||"",securityBan.dataset.hvSecurityAlert||"");
+    const securityModerate=event.target?.closest?.("[data-hv-security-moderate]");
+    if(securityModerate&&hallvallaCommunityIsAdmin())hallvallaAdminOpenModerationFromSecurity(
+      securityModerate.dataset.hvSecurityModerate||"",
+      securityModerate.dataset.hvSecurityName||"Jugador",
+      securityModerate.dataset.hvSecuritySummary||"Alerta de seguridad"
+    );
     const securityResolve=event.target?.closest?.("[data-hv-security-resolve]");
     if(securityResolve&&hallvallaCommunityIsAdmin())void hallvallaAdminResolveSecurityAlert(securityResolve.dataset.hvSecurityResolve||"","resolved","Revisada por el administrador.");
     const securityIgnore=event.target?.closest?.("[data-hv-security-ignore]");
