@@ -1,0 +1,54 @@
+name: Build HallValla Windows Installer
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "windows/**"
+      - "web/**"
+      - ".github/workflows/build-hallvalla-windows.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        working-directory: windows
+        run: npm install --no-audit --no-fund
+
+      - name: Build NSIS installer
+        working-directory: windows
+        run: npm run build:win
+
+      - name: Create SHA-256
+        shell: pwsh
+        run: |
+          $file = "windows/dist/HallValla-Setup-v143.exe"
+          if (!(Test-Path $file)) { throw "No se genero $file" }
+          $hash = (Get-FileHash $file -Algorithm SHA256).Hash.ToLower()
+          "$hash  HallValla-Setup-v143.exe" | Set-Content -Encoding ascii "windows/dist/SHA256SUMS-Windows.txt"
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: HallValla-Windows-v143
+          path: |
+            windows/dist/HallValla-Setup-v143.exe
+            windows/dist/SHA256SUMS-Windows.txt
+          if-no-files-found: error
+          retention-days: 30

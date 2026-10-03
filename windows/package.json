@@ -1,0 +1,66 @@
+{
+  "name": "hallvalla-windows",
+  "version": "1.0.143",
+  "private": true,
+  "description": "HallValla Windows desktop shell using the canonical web game.",
+  "main": "main.js",
+  "author": "HallValla",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "node security/generate-web-integrity.cjs && electron .",
+    "prepare:integrity": "node security/generate-web-integrity.cjs",
+    "build:win": "npm run prepare:integrity && electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "@electron/fuses": "1.8.0",
+    "electron": "44.4.5",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.hallvalla.game.windows",
+    "productName": "HallValla",
+    "asar": true,
+    "afterPack": "security/after-pack.cjs",
+    "directories": {
+      "output": "dist",
+      "buildResources": "../web/assets/branding"
+    },
+    "files": [
+      "main.js",
+      "package.json",
+      "web-integrity.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../web",
+        "to": "web",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "hallvalla_logo_512.png",
+      "artifactName": "HallValla-Setup-v143.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "HallValla",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}
