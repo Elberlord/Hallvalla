@@ -11,6 +11,11 @@ const HALLVALLA_MASTER_ADMIN_UID="5V3mDjSyeNbI7W0qI16cEz5PbsN2";
 const HALLVALLA_COMMUNITY_CHAT_LIMIT=100;
 const HALLVALLA_COMMUNITY_MAX_MESSAGE=280;
 const HALLVALLA_COMMUNITY_MAX_REASON=180;
+const HALLVALLA_REPORT_MAX_DESCRIPTION=700;
+const HALLVALLA_SUPPORT_WHATSAPP_DIGITS="50664305227";
+const HALLVALLA_DIAGNOSTIC_STORAGE_KEY="hallvallaDiagnosticBlackboxV1";
+const HALLVALLA_DIAGNOSTIC_LIMIT=10;
+const HALLVALLA_REPORT_EVIDENCE_MAX_DATA_URL=520000;
 
 const HALLVALLA_SUPPORT_OFFERS=Object.freeze({
   support_gems_100:Object.freeze({offerId:"support_gems_100",kind:"gems",amountUsd:"0.99",gems:100,gold:0,basicPacks:0,label:"100 gemas"}),
@@ -49,6 +54,13 @@ let hallvallaCommunityModeratorsUnsub=null;
 let hallvallaCommunityModeratorsBook={};
 let hallvallaModerationLogUnsub=null;
 let hallvallaModerationLogBook={};
+let hallvallaReportsUnsub=null;
+let hallvallaReportBook={};
+let hallvallaLastCreatedReport=null;
+let hallvallaSupportDiagnosticSnapshot=[];
+let hallvallaSupportEvidence=null;
+let hallvallaDiagnosticBuffer=[];
+let hallvallaDiagnosticsInstalled=false;
 
 function hallvallaCommunityNode(id){return document.getElementById(id);}
 function hallvallaCommunityIsAdmin(user=auth?.currentUser){return String(user?.uid||"")===HALLVALLA_MASTER_ADMIN_UID;}
@@ -59,7 +71,8 @@ function hallvallaCommunityCan(permission){
 }
 function hallvallaCommunityCanModeratePlayer(){return hallvallaCommunityCan("mute")||hallvallaCommunityCan("ban");}
 function hallvallaCommunityCanDeleteChat(){return hallvallaCommunityCan("chat");}
-function hallvallaCommunityHasModerationPanel(){return hallvallaCommunityIsAdmin()||hallvallaCommunityCanModeratePlayer();}
+function hallvallaCommunityCanReviewReports(){return hallvallaCommunityCan("reports");}
+function hallvallaCommunityHasModerationPanel(){return hallvallaCommunityIsAdmin()||hallvallaCommunityCanModeratePlayer()||hallvallaCommunityCanReviewReports();}
 function hallvallaCommunityEscape(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));}
 function hallvallaCommunityName(){
   try{const n=String(getLocalProfileName?.()||"").trim();if(n)return n.slice(0,24);}catch(_){ }
@@ -191,6 +204,8 @@ function hallvallaCommunitySyncAdminVisibility(){
   document.querySelectorAll("[data-hv-master-only]").forEach(node=>node.classList.toggle("hidden",!master));
   const playerRoot=document.querySelector('[data-hv-admin-open-section="player"]');
   playerRoot?.classList.toggle("hidden",!hallvallaCommunityCanModeratePlayer());
+  const reportsRoot=document.querySelector('[data-hv-admin-open-section="reports"]');
+  reportsRoot?.classList.toggle("hidden",!hallvallaCommunityCanReviewReports());
   const rootKicker=hallvallaCommunityNode("communityAdminRootKicker");
   const rootTitle=hallvallaCommunityNode("communityAdminTitle");
   const sectionKicker=hallvallaCommunityNode("communityAdminSectionKicker");
@@ -235,7 +250,10 @@ function hallvallaCommunityRenderChat(raw){
   host.innerHTML=entries.length?entries.map(msg=>{
     const isAdmin=String(msg.uid||"")===HALLVALLA_MASTER_ADMIN_UID;
     const mine=String(msg.uid||"")===String(auth?.currentUser?.uid||"");
-    const tools=!isAdmin&&(canPlayer||canDelete)?`<div class="hv-community-admin-inline">${canPlayer?`<button type="button" data-hv-admin-target="${hallvallaCommunityEscape(msg.uid)}" data-hv-admin-name="${hallvallaCommunityEscape(msg.name||"Jugador")}">Moderar</button>`:""}${canDelete?`<button type="button" data-hv-admin-delete-message="${hallvallaCommunityEscape(msg.id)}">Borrar</button>`:""}</div>`:"";
+    const canReport=!mine;
+    const moderationButtons=!isAdmin?`${canPlayer?`<button type="button" data-hv-admin-target="${hallvallaCommunityEscape(msg.uid)}" data-hv-admin-name="${hallvallaCommunityEscape(msg.name||"Jugador")}">Moderar</button>`:""}${canDelete?`<button type="button" data-hv-admin-delete-message="${hallvallaCommunityEscape(msg.id)}">Borrar</button>`:""}`:"";
+    const reportButton=canReport?`<button type="button" data-hv-report-target="${hallvallaCommunityEscape(msg.uid)}" data-hv-report-name="${hallvallaCommunityEscape(msg.name||"Jugador")}">Reportar</button>`:"";
+    const tools=(moderationButtons||reportButton)?`<div class="hv-community-admin-inline">${moderationButtons}${reportButton}</div>`:"";
     return `<article class="hv-community-message ${isAdmin?"is-admin":""} ${mine?"is-mine":""}" data-message-id="${hallvallaCommunityEscape(msg.id)}">
       <header><b>${hallvallaCommunityEscape(msg.name||"Jugador")}</b>${isAdmin?'<span class="hv-admin-badge">ADMIN</span>':""}<time>${hallvallaCommunityEscape(hallvallaCommunityFormatDate(msg.createdAt))}</time></header>
       <p>${hallvallaCommunityEscape(msg.text)}</p>
@@ -279,7 +297,8 @@ const HALLVALLA_ADMIN_SECTION_TITLES=Object.freeze({
   event:"EVENTOS GLOBALES",
   security:"SEGURIDAD",
   paypal:"SOLICITUDES PAYPAL",
-  moderators:"MODERADORES"
+  moderators:"MODERADORES",
+  reports:"REPORTES"
 });
 function hallvallaCommunityShowAdminRoot(){
   if(!hallvallaCommunityHasModerationPanel())return;
@@ -292,6 +311,7 @@ function hallvallaCommunityOpenAdminSection(sectionName){
   const section=String(sectionName||"").trim();
   if(!Object.prototype.hasOwnProperty.call(HALLVALLA_ADMIN_SECTION_TITLES,section))return;
   if(section==="player"){if(!hallvallaCommunityCanModeratePlayer())return;}
+  else if(section==="reports"){if(!hallvallaCommunityCanReviewReports())return;}
   else if(!hallvallaCommunityIsAdmin())return;
   hallvallaCommunityNode("communityAdminPanel")?.classList.remove("hidden");
   hallvallaCommunityNode("communityAdminRootCard")?.classList.add("hidden");
@@ -313,6 +333,277 @@ function hallvallaCommunityCloseAdmin(){
   if(hallvallaCommunityHasModerationPanel())hallvallaCommunityShowAdminRoot();
 }
 
+function hallvallaDiagnosticSanitize(value,max=180){
+  return String(value??"").replace(/[\r\n\t]+/g," ").replace(/\s+/g," ").trim().slice(0,max);
+}
+function hallvallaDiagnosticLoad(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(HALLVALLA_DIAGNOSTIC_STORAGE_KEY)||"[]");
+    hallvallaDiagnosticBuffer=Array.isArray(raw)?raw.slice(-HALLVALLA_DIAGNOSTIC_LIMIT).filter(Boolean):[];
+  }catch(_){hallvallaDiagnosticBuffer=[];}
+  return hallvallaDiagnosticBuffer;
+}
+function hallvallaDiagnosticSave(){
+  try{localStorage.setItem(HALLVALLA_DIAGNOSTIC_STORAGE_KEY,JSON.stringify(hallvallaDiagnosticBuffer.slice(-HALLVALLA_DIAGNOSTIC_LIMIT)));}catch(_){ }
+}
+function hallvallaDiagnosticPush(type,detail=""){
+  const entry={at:Date.now(),type:hallvallaDiagnosticSanitize(type,40)||"event",detail:hallvallaDiagnosticSanitize(detail,180)};
+  hallvallaDiagnosticBuffer.push(entry);
+  if(hallvallaDiagnosticBuffer.length>HALLVALLA_DIAGNOSTIC_LIMIT)hallvallaDiagnosticBuffer.splice(0,hallvallaDiagnosticBuffer.length-HALLVALLA_DIAGNOSTIC_LIMIT);
+  hallvallaDiagnosticSave();
+  return entry;
+}
+function hallvallaDiagnosticSnapshot(){
+  return hallvallaDiagnosticBuffer.slice(-HALLVALLA_DIAGNOSTIC_LIMIT).map(item=>({...item}));
+}
+function hallvallaDiagnosticFormat(snapshot=hallvallaDiagnosticSnapshot()){
+  return (Array.isArray(snapshot)?snapshot:[]).slice(-HALLVALLA_DIAGNOSTIC_LIMIT).map((item,index)=>{
+    const stamp=new Date(Number(item?.at||0));
+    const time=Number.isFinite(stamp.getTime())?stamp.toLocaleTimeString("es-CR",{hour12:false}):"--:--:--";
+    const type=hallvallaDiagnosticSanitize(item?.type,40);
+    const detail=hallvallaDiagnosticSanitize(item?.detail,180);
+    return `${index+1}. [${time}] ${type}${detail?` · ${detail}`:""}`;
+  }).join("\n").slice(0,2600);
+}
+function hallvallaDiagnosticInstall(){
+  if(hallvallaDiagnosticsInstalled)return;
+  hallvallaDiagnosticsInstalled=true;
+  hallvallaDiagnosticLoad();
+  window.addEventListener("online",()=>hallvallaDiagnosticPush("network","Conexión restaurada"));
+  window.addEventListener("offline",()=>hallvallaDiagnosticPush("network","Conexión perdida"));
+  window.addEventListener("error",event=>hallvallaDiagnosticPush("error",event?.message||"Error de interfaz"));
+  window.addEventListener("unhandledrejection",event=>hallvallaDiagnosticPush("promise",event?.reason?.message||event?.reason||"Promesa rechazada"));
+  document.addEventListener("visibilitychange",()=>hallvallaDiagnosticPush("visibility",document.hidden?"Aplicación en segundo plano":"Aplicación visible"));
+  document.addEventListener("click",event=>{
+    const node=event.target?.closest?.("button,[data-battle-outcome-action],[data-hv-admin-open-section]");
+    if(!node)return;
+    if(node.id==="hallvallaSupportBeacon"||node.dataset?.battleOutcomeAction==="report")return;
+    const label=node.id||node.dataset?.battleOutcomeAction||node.dataset?.hvAdminOpenSection||node.getAttribute("aria-label")||node.getAttribute("title")||"button";
+    hallvallaDiagnosticPush("ui",hallvallaDiagnosticSanitize(label,80));
+  },true);
+  hallvallaDiagnosticPush("session","Diagnóstico activo");
+}
+function hallvallaSupportContext(){
+  try{
+    const fn=globalThis.hvPvpGetReportContext;
+    const value=typeof fn==="function"?fn():null;
+    if(value&&typeof value==="object")return value;
+  }catch(_){ }
+  return {};
+}
+function hallvallaSupportEvidenceReset(){
+  hallvallaSupportEvidence=null;
+  const input=hallvallaCommunityNode("supportEvidenceInput");if(input)input.value="";
+  const preview=hallvallaCommunityNode("supportEvidencePreview");
+  if(preview){preview.removeAttribute("src");preview.classList.add("hidden");}
+  const meta=hallvallaCommunityNode("supportEvidenceMeta");if(meta)meta.textContent="Sin captura adjunta.";
+  hallvallaSupportUpdateDiagnosticsMeta();
+}
+function hallvallaSupportFileToDataUrl(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onerror=()=>reject(reader.error||new Error("No se pudo leer la captura."));
+    reader.onload=()=>resolve(String(reader.result||""));
+    reader.readAsDataURL(file);
+  });
+}
+function hallvallaSupportLoadImage(dataUrl){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>resolve(img);
+    img.onerror=()=>reject(new Error("La imagen seleccionada no es válida."));
+    img.src=dataUrl;
+  });
+}
+async function hallvallaSupportCompressEvidence(file){
+  if(!file||!String(file.type||"").startsWith("image/"))throw new Error("Selecciona una imagen.");
+  if(Number(file.size||0)>12*1024*1024)throw new Error("La captura original es demasiado grande.");
+  const original=await hallvallaSupportFileToDataUrl(file);
+  const img=await hallvallaSupportLoadImage(original);
+  let width=Math.max(1,Number(img.naturalWidth||img.width||1));
+  let height=Math.max(1,Number(img.naturalHeight||img.height||1));
+  const maxSide=1280;
+  if(Math.max(width,height)>maxSide){const ratio=maxSide/Math.max(width,height);width=Math.max(1,Math.round(width*ratio));height=Math.max(1,Math.round(height*ratio));}
+  const canvas=document.createElement("canvas");
+  const ctx=canvas.getContext("2d",{alpha:false});
+  if(!ctx)throw new Error("No se pudo preparar la captura.");
+  let dataUrl="";
+  for(let attempt=0;attempt<6;attempt++){
+    canvas.width=width;canvas.height=height;
+    ctx.fillStyle="#000";ctx.fillRect(0,0,width,height);ctx.drawImage(img,0,0,width,height);
+    const quality=Math.max(.42,.78-(attempt*.08));
+    dataUrl=canvas.toDataURL("image/jpeg",quality);
+    if(dataUrl.length<=HALLVALLA_REPORT_EVIDENCE_MAX_DATA_URL)break;
+    width=Math.max(480,Math.round(width*.82));height=Math.max(270,Math.round(height*.82));
+  }
+  if(!dataUrl||dataUrl.length>HALLVALLA_REPORT_EVIDENCE_MAX_DATA_URL)throw new Error("No se pudo comprimir la captura al tamaño permitido.");
+  return {dataUrl,name:`hallvalla_${Date.now()}.jpg`,type:"image/jpeg",size:Math.round(dataUrl.length*.75),width,height};
+}
+async function hallvallaSupportHandleEvidence(file){
+  const status=hallvallaCommunityNode("supportStatus");
+  try{
+    hallvallaSupportEvidence=await hallvallaSupportCompressEvidence(file);
+    const preview=hallvallaCommunityNode("supportEvidencePreview");
+    if(preview){preview.src=hallvallaSupportEvidence.dataUrl;preview.classList.remove("hidden");}
+    const meta=hallvallaCommunityNode("supportEvidenceMeta");
+    if(meta)meta.textContent=`Captura adjunta · ${hallvallaSupportEvidence.width}×${hallvallaSupportEvidence.height}`;
+    hallvallaSupportUpdateDiagnosticsMeta();
+    if(status){status.textContent="Captura preparada y se adjuntará al reporte.";status.dataset.state="success";}
+  }catch(error){
+    hallvallaSupportEvidenceReset();
+    if(status){status.textContent=String(error?.message||error);status.dataset.state="error";}
+  }
+}
+function hallvallaSupportRefreshContext(){
+  const kind=String(hallvallaCommunityNode("supportKind")?.value||"help");
+  const targetUid=String(hallvallaCommunityNode("supportReportedUid")?.value||"").trim();
+  const targetName=String(hallvallaCommunityNode("supportReportedName")?.value||"").trim();
+  const gameCode=String(hallvallaCommunityNode("supportGameCode")?.value||"").trim();
+  const node=hallvallaCommunityNode("supportContextSummary");
+  if(!node)return;
+  if(gameCode){node.textContent=targetName?`${gameCode} · ${targetName}`:gameCode;return;}
+  if(kind==="player"&&targetName){node.textContent=targetName;return;}
+  if(kind==="player"&&!targetUid){node.textContent="Selecciona al jugador desde Chat o PvP.";return;}
+  node.textContent="Sin duelo asociado.";
+}
+function hallvallaReportKindLabel(kind){
+  return ({help:"Ayuda",player:"Reportar jugador",bug:"Reportar bug",purchase:"Problema con compra",other:"Otro"})[String(kind||"")]||"Soporte";
+}
+function hallvallaReportStatusLabel(status){
+  return ({pending:"PENDIENTE",resolved:"RESUELTO",ignored:"IGNORADO"})[String(status||"")]||String(status||"").toUpperCase();
+}
+function hallvallaSupportSyncKindDefaults(){
+  const kind=String(hallvallaCommunityNode("supportKind")?.value||"help");
+  const reason=hallvallaCommunityNode("supportReason");
+  if(reason)reason.value=({help:"Ayuda",player:"Conducta/abuso",bug:"Problema técnico",purchase:"Compra/PayPal",other:"Otro"})[kind]||"Otro";
+  hallvallaSupportRefreshContext();
+}
+function hallvallaSupportUpdateDiagnosticsMeta(){
+  const node=hallvallaCommunityNode("supportDiagnosticsMeta");
+  if(!node)return;
+  const count=Array.isArray(hallvallaSupportDiagnosticSnapshot)?hallvallaSupportDiagnosticSnapshot.length:0;
+  node.textContent=`${count} acción${count===1?"":"es"} previa${count===1?"":"s"} se adjuntará${count===1?"":"n"} automáticamente.`;
+}
+function hallvallaSupportSyncTargetUi(){
+  hallvallaSupportRefreshContext();
+}
+function hallvallaSupportOpen(options={}){
+  const user=auth?.currentUser||null;
+  const beforePress=hallvallaDiagnosticSnapshot();
+  const pvpContext=hallvallaSupportContext();
+  hallvallaSupportDiagnosticSnapshot=beforePress;
+  hallvallaDiagnosticPush("support","Baliza de soporte abierta");
+  const explicitKind=String(options.kind||"");
+  const autoPlayer=!explicitKind&&pvpContext?.targetUid&&pvpContext?.humanOpponent===true;
+  const kind=["help","player","bug","purchase","other"].includes(explicitKind)?explicitKind:(autoPlayer?"player":"help");
+  const setValue=(id,value)=>{const el=hallvallaCommunityNode(id);if(el)el.value=String(value??"");};
+  const targetUid=options.targetUid||pvpContext?.targetUid||"";
+  const targetName=options.targetName||pvpContext?.targetName||"";
+  const gameCode=options.gameCode||pvpContext?.gameCode||"";
+  setValue("supportKind",kind);
+  setValue("supportReportedUid",targetUid);
+  setValue("supportReportedName",targetName);
+  setValue("supportGameCode",gameCode);
+  setValue("supportReason",options.reason||(kind==="player"?"Conducta/abuso":kind==="bug"?"Problema técnico":kind==="purchase"?"Compra/PayPal":kind==="help"?"Ayuda":"Otro"));
+  setValue("supportDescription","");
+  hallvallaLastCreatedReport=null;
+  hallvallaSupportEvidenceReset();
+  const waBtn=hallvallaCommunityNode("supportWhatsAppBtn");if(waBtn){waBtn.classList.remove("hidden");waBtn.disabled=true;}
+  hallvallaSupportUpdateDiagnosticsMeta();
+  const status=hallvallaCommunityNode("supportStatus");if(status){status.textContent="";status.dataset.state="";}
+  hallvallaSupportSyncTargetUi();
+  const panel=hallvallaCommunityNode("supportPanel");
+  if(panel){
+    panel.classList.toggle("is-layout-dev",localStorage.getItem("hallvalla_support_layout_dev")==="1");
+    panel.classList.remove("hidden");
+  }
+}
+function hallvallaSupportClose(){hallvallaCommunityNode("supportPanel")?.classList.add("hidden");}
+function hallvallaSupportBuildWhatsAppText(report){
+  const r=report||{};
+  const lines=["SOPORTE HALLVALLA",`ID: ${r.reportId||"—"}`,`Tipo: ${hallvallaReportKindLabel(r.kind)}`];
+  if(r.reportedName)lines.push(`Jugador reportado: ${r.reportedName}`);
+  if(r.reportedUid)lines.push(`UID reportado: ${r.reportedUid}`);
+  if(r.gameCode)lines.push(`Duelo: ${r.gameCode}`);
+  if(r.reason)lines.push(`Motivo: ${r.reason}`);
+  if(r.description)lines.push(`Detalle: ${String(r.description).slice(0,400)}`);
+  lines.push("Adjunto capturas o video como evidencia.");
+  return lines.join("\n");
+}
+async function hallvallaSupportOpenWhatsApp(report=hallvallaLastCreatedReport){
+  if(!report?.reportId)return;
+  const text=hallvallaSupportBuildWhatsAppText(report);
+  try{
+    if(report.evidenceDataUrl&&typeof navigator.share==="function"){
+      const blob=await (await fetch(report.evidenceDataUrl)).blob();
+      const file=new File([blob],report.evidenceName||"hallvalla-evidencia.jpg",{type:blob.type||report.evidenceType||"image/jpeg"});
+      if(!navigator.canShare||navigator.canShare({files:[file]})){
+        await navigator.share({title:"HallValla · Evidencia",text,files:[file]});
+        return;
+      }
+    }
+  }catch(error){
+    if(error?.name==="AbortError")return;
+    console.warn("[HallValla][Support] Compartir evidencia no disponible:",error);
+  }
+  const url=`https://wa.me/${HALLVALLA_SUPPORT_WHATSAPP_DIGITS}?text=${encodeURIComponent(text)}`;
+  try{window.open(url,"_blank","noopener,noreferrer");}catch(error){console.warn("[HallValla][Support] No se pudo abrir WhatsApp:",error);}
+}
+async function hallvallaSupportSubmitReport(){
+  const user=auth?.currentUser||null;
+  const kind=String(hallvallaCommunityNode("supportKind")?.value||"help");
+  if(!["help","player","bug","purchase","other"].includes(kind))return;
+  const reportedUid=String(hallvallaCommunityNode("supportReportedUid")?.value||"").trim().slice(0,160);
+  const reportedName=String(hallvallaCommunityNode("supportReportedName")?.value||"").replace(/\s+/g," ").trim().slice(0,24);
+  const gameCode=String(hallvallaCommunityNode("supportGameCode")?.value||"").replace(/\s+/g," ").trim().slice(0,80);
+  const reason=String(hallvallaCommunityNode("supportReason")?.value||"Otro").replace(/\s+/g," ").trim().slice(0,60);
+  const description=String(hallvallaCommunityNode("supportDescription")?.value||"").replace(/\s+/g," ").trim().slice(0,HALLVALLA_REPORT_MAX_DESCRIPTION);
+  const status=hallvallaCommunityNode("supportStatus");
+  if(kind==="player"&&!reportedUid){if(status){status.textContent="Para reportar un jugador, usa Reportar desde Chat o la baliza durante/después de un PvP.";status.dataset.state="error";}return;}
+  if(kind==="player"&&reportedUid===String(user.uid)){if(status){status.textContent="No puedes reportarte a ti mismo.";status.dataset.state="error";}return;}
+  if(kind==="player"&&!reportedName){if(status){status.textContent="No se pudo identificar el nombre del jugador.";status.dataset.state="error";}return;}
+  if(!description){if(status){status.textContent="Describe brevemente lo ocurrido.";status.dataset.state="error";}return;}
+  const reportId=user?hallvallaCommunityId("report"):`local_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+  const client=globalThis.__HALLVALLA_DESKTOP__==="windows"?"windows":(/Android/i.test(navigator.userAgent||"")?"android":"web");
+  const build=String(document.querySelector('meta[name="hallvalla-version"]')?.content||globalThis.__HALLVALLA_DESKTOP_VERSION__||"unknown").slice(0,64);
+  const diagnostics=hallvallaDiagnosticFormat(hallvallaSupportDiagnosticSnapshot);
+  const evidence=hallvallaSupportEvidence||{};
+  const payload={
+    reportId,reporterUid:String(user?.uid||"signed_out"),reporterName:user?hallvallaCommunityName():"Sin sesión",kind,
+    reportedUid:kind==="player"?reportedUid:"",reportedName:kind==="player"?reportedName:"",
+    gameCode,reason,description,client,build,createdAt:Date.now(),status:"pending",reviewedAt:0,reviewedBy:"",adminNote:"",
+    diagnostics,
+    evidenceName:String(evidence.name||"").slice(0,120),
+    evidenceType:String(evidence.type||"").slice(0,40),
+    evidenceSize:Math.max(0,Number(evidence.size||0)),
+    evidenceDataUrl:String(evidence.dataUrl||"").slice(0,HALLVALLA_REPORT_EVIDENCE_MAX_DATA_URL)
+  };
+  try{
+    if(user)await set(ref(db,`community/reports/${reportId}`),payload);
+    else try{localStorage.setItem(`hallvalla_local_support_${reportId}`,JSON.stringify(payload));}catch(_){ }
+    hallvallaLastCreatedReport=payload;
+    hallvallaDiagnosticPush("report",`${kind} · ${reportId}`);
+    if(status){
+      status.textContent=user
+        ?`Reporte ${reportId} registrado.`
+        :"Soporte listo para enviar por WhatsApp.";
+      status.dataset.state="success";
+    }
+    const waBtn=hallvallaCommunityNode("supportWhatsAppBtn");if(waBtn){waBtn.classList.remove("hidden");waBtn.disabled=false;}
+  }catch(error){console.error("[HallValla][Reports] No se pudo crear reporte:",error);if(status){status.textContent=String(error?.message||error);status.dataset.state="error";}}
+}
+function hallvallaCommunitySyncReportsSubscription(){
+  const allowed=Boolean(auth?.currentUser)&&hallvallaCommunityCanReviewReports();
+  if(!allowed){
+    if(typeof hallvallaReportsUnsub==="function"){try{hallvallaReportsUnsub();}catch(_){ }}
+    hallvallaReportsUnsub=null;
+    hallvallaReportBook={};
+    hallvallaAdminRenderReports({});
+    return;
+  }
+  if(typeof hallvallaReportsUnsub==="function")return;
+  hallvallaReportsUnsub=onValue(ref(db,"community/reports"),snap=>{hallvallaReportBook=snap.val()||{};hallvallaAdminRenderReports(hallvallaReportBook);},error=>{console.warn("[HallValla][Reports] Reportes:",error);hallvallaAdminRenderReports({});});
+}
 function hallvallaAdminTargetUid(){return String(hallvallaCommunityNode("adminTargetUid")?.value||"").trim();}
 function hallvallaAdminModerationDuration(){
   const value=Math.max(1,Math.floor(Number(hallvallaCommunityNode("adminDurationValue")?.value)||1));
@@ -429,6 +720,50 @@ async function hallvallaAdminDeleteEvent(eventId){
 }
 
 
+function hallvallaAdminRenderReports(raw){
+  const host=hallvallaCommunityNode("adminReportList");
+  const rows=Object.entries(raw&&typeof raw==="object"?raw:{}).map(([id,item])=>({id,...(item||{})}));
+  const statusRank={pending:0,resolved:1,ignored:2};
+  rows.sort((a,b)=>(statusRank[a.status]??9)-(statusRank[b.status]??9)||Number(b.createdAt||0)-Number(a.createdAt||0));
+  const pendingCount=rows.filter(item=>item.status==="pending").length;
+  const count=hallvallaCommunityNode("adminReportCount");if(count)count.textContent=`${pendingCount} pendiente${pendingCount===1?"":"s"}`;
+  const badge=hallvallaCommunityNode("adminReportsRootBadge");if(badge){badge.textContent=String(Math.min(99,pendingCount));badge.classList.toggle("hidden",pendingCount===0);}
+  if(!host)return;
+  host.innerHTML=rows.slice(0,100).map(item=>{
+    const pending=item.status==="pending";
+    return `<article class="hv-admin-support-row ${pending?"is-pending":""}">
+      <header><b>${hallvallaCommunityEscape(item.reporterName||"Jugador")}</b><span class="hv-support-status">${hallvallaCommunityEscape(hallvallaReportStatusLabel(item.status))}</span></header>
+      <div class="hv-admin-support-meta"><span>${hallvallaCommunityEscape(hallvallaReportKindLabel(item.kind))}</span><strong>${hallvallaCommunityEscape(item.reason||"—")}</strong><small>${hallvallaCommunityEscape(hallvallaCommunityFormatDate(item.createdAt))}</small></div>
+      <code>ID: ${hallvallaCommunityEscape(item.reportId||item.id)}</code>
+      <code>Reporta: ${hallvallaCommunityEscape(item.reporterUid||"—")}</code>
+      ${item.reportedUid?`<code>Reportado: ${hallvallaCommunityEscape(item.reportedName||"Jugador")} · ${hallvallaCommunityEscape(item.reportedUid)}</code>`:""}
+      ${item.gameCode?`<code>Duelo: ${hallvallaCommunityEscape(item.gameCode)}</code>`:""}
+      <small>${hallvallaCommunityEscape(item.description||"")}</small>
+      <small>${hallvallaCommunityEscape(item.client||"")} · ${hallvallaCommunityEscape(item.build||"")}</small>
+      ${item.evidenceDataUrl?`<figure class="hv-report-evidence"><img src="${hallvallaCommunityEscape(item.evidenceDataUrl)}" alt="Captura adjunta al reporte"><figcaption>${hallvallaCommunityEscape(item.evidenceName||"Captura adjunta")}</figcaption></figure>`:""}
+      ${item.diagnostics?`<details class="hv-report-diagnostics"><summary>Últimas 10 acciones antes de abrir soporte</summary><pre>${hallvallaCommunityEscape(item.diagnostics)}</pre></details>`:""}
+      ${pending?`<div class="hv-admin-actions">
+        ${item.reportedUid?`<button type="button" class="btn ghost" data-hv-report-review-target="${hallvallaCommunityEscape(item.reportedUid)}" data-hv-report-review-name="${hallvallaCommunityEscape(item.reportedName||"Jugador")}">Moderar jugador</button>`:""}
+        ${item.gameCode?`<button type="button" class="btn ghost" data-hv-report-copy-duel="${hallvallaCommunityEscape(item.gameCode)}">Copiar duelo</button>`:""}
+        <button type="button" class="btn primary" data-hv-report-resolve="${hallvallaCommunityEscape(item.reportId||item.id)}">Resolver</button>
+        <button type="button" class="btn ghost" data-hv-report-ignore="${hallvallaCommunityEscape(item.reportId||item.id)}">Ignorar</button>
+      </div>`:`<small>Revisado: ${hallvallaCommunityEscape(hallvallaCommunityFormatDate(item.reviewedAt))}${item.adminNote?` · ${hallvallaCommunityEscape(item.adminNote)}`:""}</small>`}
+    </article>`;
+  }).join("")||'<div class="hv-community-empty">No hay reportes registrados.</div>';
+}
+async function hallvallaAdminResolveReport(reportId,status="resolved"){
+  if(!hallvallaCommunityCanReviewReports())return;
+  const id=String(reportId||"").trim();if(!id||!["resolved","ignored"].includes(status))return;
+  try{
+    const reportRef=ref(db,`community/reports/${id}`);
+    const snap=await get(reportRef);
+    if(!snap.exists())throw new Error("El reporte ya no existe.");
+    const item=snap.val()||{};
+    if(item.status!=="pending")throw new Error("El reporte ya fue revisado.");
+    await update(reportRef,{status,reviewedAt:Date.now(),reviewedBy:String(auth?.currentUser?.uid||""),adminNote:status==="ignored"?"Ignorado por moderación.":"Resuelto por moderación."});
+    hallvallaAdminStatus(status==="ignored"?"Reporte ignorado.":"Reporte resuelto.","success");
+  }catch(error){console.error("[HallValla][Reports] No se pudo resolver reporte:",error);hallvallaAdminStatus(String(error?.message||error),"error");}
+}
 function hallvallaAdminRenderModerators(raw){
   const host=hallvallaCommunityNode("adminModeratorList");if(!host)return;
   const rows=Object.entries(raw&&typeof raw==="object"?raw:{}).map(([uid,item])=>({uid,...(item||{})})).sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"es"));
@@ -832,24 +1167,24 @@ async function hallvallaCommunityProcessRewards(){
 }
 
 function hallvallaCommunityDetach(){
-  for(const key of ["hallvallaCommunityChatUnsub","hallvallaCommunityEventsUnsub","hallvallaCommunityModerationUnsub","hallvallaCommunityRewardsUnsub","hallvallaCommunityClaimsUnsub","hallvallaSupportRequestsUnsub","hallvallaSecurityAlertsUnsub","hallvallaGemShadowSignalsUnsub","hallvallaCommunityModeratorUnsub","hallvallaCommunityModeratorsUnsub","hallvallaModerationLogUnsub"]){
-    const fn=({hallvallaCommunityChatUnsub,hallvallaCommunityEventsUnsub,hallvallaCommunityModerationUnsub,hallvallaCommunityRewardsUnsub,hallvallaCommunityClaimsUnsub,hallvallaSupportRequestsUnsub,hallvallaSecurityAlertsUnsub,hallvallaGemShadowSignalsUnsub,hallvallaCommunityModeratorUnsub,hallvallaCommunityModeratorsUnsub,hallvallaModerationLogUnsub})[key];
+  for(const key of ["hallvallaCommunityChatUnsub","hallvallaCommunityEventsUnsub","hallvallaCommunityModerationUnsub","hallvallaCommunityRewardsUnsub","hallvallaCommunityClaimsUnsub","hallvallaSupportRequestsUnsub","hallvallaSecurityAlertsUnsub","hallvallaGemShadowSignalsUnsub","hallvallaCommunityModeratorUnsub","hallvallaCommunityModeratorsUnsub","hallvallaModerationLogUnsub","hallvallaReportsUnsub"]){
+    const fn=({hallvallaCommunityChatUnsub,hallvallaCommunityEventsUnsub,hallvallaCommunityModerationUnsub,hallvallaCommunityRewardsUnsub,hallvallaCommunityClaimsUnsub,hallvallaSupportRequestsUnsub,hallvallaSecurityAlertsUnsub,hallvallaGemShadowSignalsUnsub,hallvallaCommunityModeratorUnsub,hallvallaCommunityModeratorsUnsub,hallvallaModerationLogUnsub,hallvallaReportsUnsub})[key];
     if(typeof fn==="function"){try{fn();}catch(_){ }}
   }
-  hallvallaCommunityChatUnsub=hallvallaCommunityEventsUnsub=hallvallaCommunityModerationUnsub=hallvallaCommunityRewardsUnsub=hallvallaCommunityClaimsUnsub=hallvallaSupportRequestsUnsub=hallvallaSecurityAlertsUnsub=hallvallaGemShadowSignalsUnsub=hallvallaCommunityModeratorUnsub=hallvallaCommunityModeratorsUnsub=hallvallaModerationLogUnsub=null;
+  hallvallaCommunityChatUnsub=hallvallaCommunityEventsUnsub=hallvallaCommunityModerationUnsub=hallvallaCommunityRewardsUnsub=hallvallaCommunityClaimsUnsub=hallvallaSupportRequestsUnsub=hallvallaSecurityAlertsUnsub=hallvallaGemShadowSignalsUnsub=hallvallaCommunityModeratorUnsub=hallvallaCommunityModeratorsUnsub=hallvallaModerationLogUnsub=hallvallaReportsUnsub=null;
 }
 function hallvallaCommunityAttach(user){
   hallvallaCommunityDetach();
   hallvallaCommunityUser=user||null;
   if(!user||String(user.uid||"")!==hallvallaCommunitySettledUid)hallvallaCommunitySettledUid="";
-  hallvallaCommunityModeration={};hallvallaCommunityRewardBook={};hallvallaCommunityClaimBook={};hallvallaSecurityAlertBook={};hallvallaGemShadowSignalBook={};hallvallaCommunityChatBook={};hallvallaCommunityModerator={};hallvallaCommunityModeratorsBook={};hallvallaModerationLogBook={};
+  hallvallaCommunityModeration={};hallvallaCommunityRewardBook={};hallvallaCommunityClaimBook={};hallvallaSecurityAlertBook={};hallvallaGemShadowSignalBook={};hallvallaCommunityChatBook={};hallvallaCommunityModerator={};hallvallaCommunityModeratorsBook={};hallvallaModerationLogBook={};hallvallaReportBook={};hallvallaLastCreatedReport=null;
   hallvallaCommunitySyncAdminVisibility();
   if(!user){hallvallaCommunitySyncModerationUi();hallvallaCommunityRenderChat({});return;}
   const chatRef=typeof query==="function"?query(ref(db,"community/chat"),orderByChild("createdAt"),limitToLast(HALLVALLA_COMMUNITY_CHAT_LIMIT)):ref(db,"community/chat");
   hallvallaCommunityChatUnsub=onValue(chatRef,snap=>hallvallaCommunityRenderChat(snap.val()||{}),error=>console.warn("[HallValla][Community] Chat:",error));
   hallvallaCommunityEventsUnsub=onValue(ref(db,"community/events"),snap=>hallvallaCommunityRenderEvents(snap.val()||{}),error=>console.warn("[HallValla][Community] Eventos:",error));
   hallvallaCommunityModerationUnsub=onValue(ref(db,`community/moderation/${user.uid}`),snap=>{hallvallaCommunityModeration=snap.val()||{};hallvallaCommunitySyncModerationUi();},error=>console.warn("[HallValla][Community] Moderación:",error));
-  hallvallaCommunityModeratorUnsub=onValue(ref(db,`community/moderators/${user.uid}`),snap=>{hallvallaCommunityModerator=snap.val()||{};hallvallaCommunitySyncAdminVisibility();hallvallaCommunityRenderChat(hallvallaCommunityChatBook);},error=>{hallvallaCommunityModerator={};hallvallaCommunitySyncAdminVisibility();console.warn("[HallValla][Community] Rol moderador:",error);});
+  hallvallaCommunityModeratorUnsub=onValue(ref(db,`community/moderators/${user.uid}`),snap=>{hallvallaCommunityModerator=snap.val()||{};hallvallaCommunitySyncAdminVisibility();hallvallaCommunityRenderChat(hallvallaCommunityChatBook);hallvallaCommunitySyncReportsSubscription();},error=>{hallvallaCommunityModerator={};hallvallaCommunitySyncAdminVisibility();hallvallaCommunitySyncReportsSubscription();console.warn("[HallValla][Community] Rol moderador:",error);});
   hallvallaCommunityRewardsUnsub=onValue(ref(db,`community/adminRewards/${user.uid}`),snap=>{hallvallaCommunityRewardBook=snap.val()||{};void hallvallaCommunityProcessRewards();},error=>console.warn("[HallValla][Community] Premios:",error));
   hallvallaCommunityClaimsUnsub=onValue(ref(db,`community/rewardClaims/${user.uid}`),snap=>{hallvallaCommunityClaimBook=snap.val()||{};void hallvallaCommunityProcessRewards();},error=>console.warn("[HallValla][Community] Claims:",error));
   if(hallvallaCommunityIsAdmin(user)){
@@ -858,15 +1193,23 @@ function hallvallaCommunityAttach(user){
     hallvallaSupportRequestsUnsub=onValue(ref(db,"community/supportRequests"),snap=>{hallvallaSupportRequestBook=snap.val()||{};hallvallaAdminRenderSupportRequests(hallvallaSupportRequestBook);},error=>console.warn("[HallValla][Support] Solicitudes:",error));
     hallvallaSecurityAlertsUnsub=onValue(ref(db,"community/securityAlerts"),snap=>{hallvallaSecurityAlertBook=snap.val()||{};hallvallaAdminRenderSecurityAlerts(hallvallaSecurityAlertBook);},error=>{console.warn("[HallValla][Security] Alertas:",error);hallvallaAdminRenderSecurityAlerts({});});
     hallvallaGemShadowSignalsUnsub=onValue(ref(db,"community/securitySignals"),snap=>{hallvallaGemShadowSignalBook=snap.val()||{};hallvallaAdminRenderGemShadowSignals(hallvallaGemShadowSignalBook);},error=>{console.warn("[HallValla][GemShadow] Señales:",error);hallvallaAdminRenderGemShadowSignals({});});
+    hallvallaCommunitySyncReportsSubscription();
   }else{
-    hallvallaSupportRequestBook={};hallvallaSecurityAlertBook={};hallvallaGemShadowSignalBook={};hallvallaCommunityModeratorsBook={};hallvallaModerationLogBook={};
-    hallvallaAdminRenderGemShadowSignals({});hallvallaAdminRenderSecurityAlerts({});hallvallaAdminRenderSupportRequests({});hallvallaAdminRenderModerators({});hallvallaAdminRenderModerationLog({});
+    hallvallaSupportRequestBook={};hallvallaSecurityAlertBook={};hallvallaGemShadowSignalBook={};hallvallaCommunityModeratorsBook={};hallvallaModerationLogBook={};hallvallaReportBook={};
+    hallvallaAdminRenderGemShadowSignals({});hallvallaAdminRenderSecurityAlerts({});hallvallaAdminRenderSupportRequests({});hallvallaAdminRenderModerators({});hallvallaAdminRenderModerationLog({});hallvallaCommunitySyncReportsSubscription();
   }
 }
 
 function hallvallaCommunityBind(){
   const bind=(id,event,handler)=>{const el=hallvallaCommunityNode(id);if(el&&el.dataset.hvCommunityBound!=="1"){el.dataset.hvCommunityBound="1";el.addEventListener(event,handler);}};
   bind("communityBtn","click",hallvallaCommunityOpen);
+  bind("hallvallaSupportBeacon","click",()=>hallvallaSupportOpen({source:"beacon"}));
+  bind("communitySupportBtn","click",()=>hallvallaSupportOpen({source:"chat"}));
+  bind("supportCloseBtn","click",hallvallaSupportClose);
+  bind("supportKind","change",()=>{hallvallaSupportSyncKindDefaults();hallvallaSupportSyncTargetUi();});
+  bind("supportEvidenceInput","change",event=>{const file=event.target?.files?.[0];if(file)void hallvallaSupportHandleEvidence(file);});
+  bind("supportSubmitBtn","click",()=>void hallvallaSupportSubmitReport());
+  bind("supportWhatsAppBtn","click",()=>hallvallaSupportOpenWhatsApp());
   bind("communityCloseBtn","click",hallvallaCommunityClose);
   bind("communitySendBtn","click",()=>void hallvallaCommunitySendMessage());
   bind("communityChatInput","keydown",event=>{if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();void hallvallaCommunitySendMessage();}});
@@ -906,6 +1249,16 @@ function hallvallaCommunityBind(){
     if(approve&&hallvallaCommunityIsAdmin())void hallvallaAdminResolveSupportRequest(approve.dataset.hvSupportApprove||"",approve.dataset.hvSupportRequest||"","approve");
     const reject=event.target?.closest?.("[data-hv-support-reject]");
     if(reject&&hallvallaCommunityIsAdmin())void hallvallaAdminResolveSupportRequest(reject.dataset.hvSupportReject||"",reject.dataset.hvSupportRequest||"","reject");
+    const reportTarget=event.target?.closest?.("[data-hv-report-target]");
+    if(reportTarget){hallvallaSupportOpen({kind:"player",targetUid:reportTarget.dataset.hvReportTarget||"",targetName:reportTarget.dataset.hvReportName||"Jugador",reason:"Conducta/abuso"});return;}
+    const reportReview=event.target?.closest?.("[data-hv-report-review-target]");
+    if(reportReview&&hallvallaCommunityCanModeratePlayer())hallvallaCommunityOpenAdmin(reportReview.dataset.hvReportReviewTarget||"",reportReview.dataset.hvReportReviewName||"Jugador");
+    const reportDuel=event.target?.closest?.("[data-hv-report-copy-duel]");
+    if(reportDuel&&hallvallaCommunityCanReviewReports()){const value=String(reportDuel.dataset.hvReportCopyDuel||"");if(value){try{void navigator.clipboard?.writeText?.(value);}catch(_){ }hallvallaAdminStatus(`Duelo copiado: ${value}`,"success");}}
+    const reportResolve=event.target?.closest?.("[data-hv-report-resolve]");
+    if(reportResolve&&hallvallaCommunityCanReviewReports())void hallvallaAdminResolveReport(reportResolve.dataset.hvReportResolve||"","resolved");
+    const reportIgnore=event.target?.closest?.("[data-hv-report-ignore]");
+    if(reportIgnore&&hallvallaCommunityCanReviewReports())void hallvallaAdminResolveReport(reportIgnore.dataset.hvReportIgnore||"","ignored");
     const preset=event.target?.closest?.("[data-hv-moderation-preset]");
     if(preset&&hallvallaCommunityHasModerationPanel()){
       const value=Math.max(1,Number(preset.dataset.hvPresetValue||1));
@@ -950,8 +1303,9 @@ function hallvallaCommunityBind(){
     if(shadowIgnore&&hallvallaCommunityIsAdmin())void hallvallaAdminResolveGemShadowSignal(shadowIgnore.dataset.hvShadowUid||"",shadowIgnore.dataset.hvShadowIgnore||"","ignored","Ignorada por el administrador.");
   });
   if(hallvallaCommunityClockTimer===null)hallvallaCommunityClockTimer=setInterval(hallvallaCommunitySyncModerationUi,30000);
+  hallvallaDiagnosticInstall();
 }
 
 hallvallaCommunityBind();
 onAuthStateChanged(auth,user=>hallvallaCommunityAttach(user||null));
-Object.assign(globalThis,{hallvallaCommunityOpen,hallvallaCommunityClose,hallvallaCommunityIsAdmin,hallvallaCreateSupportRequest,hallvallaGetWelcomeSupportState,hallvallaSupportOffer});
+Object.assign(globalThis,{hallvallaCommunityOpen,hallvallaCommunityClose,hallvallaCommunityIsAdmin,hallvallaSupportOpen,hallvallaDiagnosticEvent:hallvallaDiagnosticPush,hallvallaCreateSupportRequest,hallvallaGetWelcomeSupportState,hallvallaSupportOffer});

@@ -944,6 +944,80 @@
             ".validate": false
           }
         }
+      },
+      "reports": {
+        ".read": "auth != null && (auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' || (root.child('community').child('moderators').child(auth.uid).child('active').val() === true && root.child('community').child('moderators').child(auth.uid).child('permissions').child('reports').val() === true))",
+        "$reportId": {
+          ".read": "auth != null && (data.child('reporterUid').val() === auth.uid || (auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' || (root.child('community').child('moderators').child(auth.uid).child('active').val() === true && root.child('community').child('moderators').child(auth.uid).child('permissions').child('reports').val() === true)))",
+          ".write": "auth != null && ((!data.exists() && newData.exists() && newData.child('reporterUid').val() === auth.uid && newData.child('status').val() === 'pending') || (data.exists() && newData.exists() && (auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' || (root.child('community').child('moderators').child(auth.uid).child('active').val() === true && root.child('community').child('moderators').child(auth.uid).child('permissions').child('reports').val() === true)) && data.child('status').val() === 'pending' && (newData.child('status').val() === 'resolved' || newData.child('status').val() === 'ignored') && newData.child('reviewedBy').val() === auth.uid))",
+          ".validate": "newData.exists() && newData.hasChildren(['reportId','reporterUid','reporterName','kind','reportedUid','reportedName','gameCode','reason','description','client','build','createdAt','status','reviewedAt','reviewedBy','adminNote','diagnostics','evidenceName','evidenceType','evidenceSize','evidenceDataUrl']) && newData.child('reportId').val() === $reportId && newData.child('reporterUid').isString() && newData.child('reporterUid').val().length > 0 && newData.child('reporterUid').val().length <= 160 && newData.child('reporterName').isString() && newData.child('reporterName').val().length > 0 && newData.child('reporterName').val().length <= 24 && newData.child('kind').isString() && (newData.child('kind').val() === 'help' || newData.child('kind').val() === 'player' || newData.child('kind').val() === 'bug' || newData.child('kind').val() === 'purchase' || newData.child('kind').val() === 'other') && newData.child('reportedUid').isString() && newData.child('reportedUid').val().length <= 160 && newData.child('reportedName').isString() && newData.child('reportedName').val().length <= 24 && ((newData.child('kind').val() === 'player' && newData.child('reportedUid').val().length > 0 && newData.child('reportedUid').val() !== newData.child('reporterUid').val() && newData.child('reportedName').val().length > 0) || (newData.child('kind').val() !== 'player' && newData.child('reportedUid').val() === '' && newData.child('reportedName').val() === '')) && newData.child('gameCode').isString() && newData.child('gameCode').val().length <= 80 && newData.child('reason').isString() && newData.child('reason').val().length > 0 && newData.child('reason').val().length <= 60 && newData.child('description').isString() && newData.child('description').val().length > 0 && newData.child('description').val().length <= 700 && newData.child('client').isString() && newData.child('client').val().length > 0 && newData.child('client').val().length <= 32 && newData.child('build').isString() && newData.child('build').val().length <= 64 && newData.child('diagnostics').isString() && newData.child('diagnostics').val().length <= 2600 && newData.child('evidenceName').isString() && newData.child('evidenceName').val().length <= 120 && newData.child('evidenceType').isString() && (newData.child('evidenceType').val() === '' || newData.child('evidenceType').val() === 'image/jpeg') && newData.child('evidenceSize').isNumber() && newData.child('evidenceSize').val() >= 0 && newData.child('evidenceSize').val() <= 450000 && newData.child('evidenceDataUrl').isString() && newData.child('evidenceDataUrl').val().length <= 520000 && (newData.child('evidenceDataUrl').val() === '' || newData.child('evidenceDataUrl').val().beginsWith('data:image/jpeg;base64,')) && newData.child('createdAt').isNumber() && newData.child('createdAt').val() > 0 && newData.child('createdAt').val() <= now + 60000 && newData.child('status').isString() && (newData.child('status').val() === 'pending' || newData.child('status').val() === 'resolved' || newData.child('status').val() === 'ignored') && newData.child('reviewedAt').isNumber() && newData.child('reviewedAt').val() >= 0 && newData.child('reviewedBy').isString() && newData.child('reviewedBy').val().length <= 160 && newData.child('adminNote').isString() && newData.child('adminNote').val().length <= 180 && ((!data.exists() && newData.child('reporterUid').val() === auth.uid && newData.child('status').val() === 'pending' && newData.child('reviewedAt').val() === 0 && newData.child('reviewedBy').val() === '' && newData.child('adminNote').val() === '') || (data.exists() && newData.child('reportId').val() === data.child('reportId').val() && newData.child('reporterUid').val() === data.child('reporterUid').val() && newData.child('reporterName').val() === data.child('reporterName').val() && newData.child('kind').val() === data.child('kind').val() && newData.child('reportedUid').val() === data.child('reportedUid').val() && newData.child('reportedName').val() === data.child('reportedName').val() && newData.child('gameCode').val() === data.child('gameCode').val() && newData.child('reason').val() === data.child('reason').val() && newData.child('description').val() === data.child('description').val() && newData.child('client').val() === data.child('client').val() && newData.child('build').val() === data.child('build').val() && newData.child('diagnostics').val() === data.child('diagnostics').val() && newData.child('evidenceName').val() === data.child('evidenceName').val() && newData.child('evidenceType').val() === data.child('evidenceType').val() && newData.child('evidenceSize').val() === data.child('evidenceSize').val() && newData.child('evidenceDataUrl').val() === data.child('evidenceDataUrl').val() && newData.child('createdAt').val() === data.child('createdAt').val() && data.child('status').val() === 'pending' && (newData.child('status').val() === 'resolved' || newData.child('status').val() === 'ignored') && newData.child('reviewedAt').val() > 0 && newData.child('reviewedAt').val() <= now + 60000 && newData.child('reviewedBy').val() === auth.uid))",
+          "reportId": {
+            ".validate": "newData.isString() && newData.val() === $reportId"
+          },
+          "reporterUid": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 160"
+          },
+          "reporterName": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 24"
+          },
+          "kind": {
+            ".validate": "newData.isString() && (newData.val() === 'help' || newData.val() === 'player' || newData.val() === 'bug' || newData.val() === 'purchase' || newData.val() === 'other')"
+          },
+          "reportedUid": {
+            ".validate": "newData.isString() && newData.val().length <= 160"
+          },
+          "reportedName": {
+            ".validate": "newData.isString() && newData.val().length <= 24"
+          },
+          "gameCode": {
+            ".validate": "newData.isString() && newData.val().length <= 80"
+          },
+          "reason": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+          },
+          "description": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 700"
+          },
+          "client": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 32"
+          },
+          "build": {
+            ".validate": "newData.isString() && newData.val().length <= 64"
+          },
+          "diagnostics": {
+            ".validate": "newData.isString() && newData.val().length <= 2600"
+          },
+          "evidenceName": {
+            ".validate": "newData.isString() && newData.val().length <= 120"
+          },
+          "evidenceType": {
+            ".validate": "newData.isString() && (newData.val() === '' || newData.val() === 'image/jpeg')"
+          },
+          "evidenceSize": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 450000"
+          },
+          "evidenceDataUrl": {
+            ".validate": "newData.isString() && newData.val().length <= 520000 && (newData.val() === '' || newData.val().beginsWith('data:image/jpeg;base64,'))"
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now + 60000"
+          },
+          "status": {
+            ".validate": "newData.isString() && (newData.val() === 'pending' || newData.val() === 'resolved' || newData.val() === 'ignored')"
+          },
+          "reviewedAt": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "reviewedBy": {
+            ".validate": "newData.isString() && newData.val().length <= 160"
+          },
+          "adminNote": {
+            ".validate": "newData.isString() && newData.val().length <= 180"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
       }
     }
   }
