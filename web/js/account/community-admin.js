@@ -240,13 +240,42 @@ async function hallvallaCommunitySendMessage(){
 }
 function hallvallaCommunityOpen(){hallvallaCommunityNode("communityPanel")?.classList.remove("hidden");hallvallaCommunitySyncModerationUi();}
 function hallvallaCommunityClose(){hallvallaCommunityNode("communityPanel")?.classList.add("hidden");}
+const HALLVALLA_ADMIN_SECTION_TITLES=Object.freeze({
+  player:"JUGADOR",
+  reward:"ENTREGAR PREMIO",
+  event:"EVENTOS GLOBALES",
+  security:"SEGURIDAD",
+  paypal:"SOLICITUDES PAYPAL"
+});
+function hallvallaCommunityShowAdminRoot(){
+  hallvallaCommunityNode("communityAdminRootCard")?.classList.remove("hidden");
+  hallvallaCommunityNode("communityAdminSectionCard")?.classList.add("hidden");
+  document.querySelectorAll("[data-hv-admin-section]").forEach(section=>section.classList.add("hidden"));
+}
+function hallvallaCommunityOpenAdminSection(sectionName){
+  if(!hallvallaCommunityIsAdmin())return;
+  const section=String(sectionName||"").trim();
+  if(!Object.prototype.hasOwnProperty.call(HALLVALLA_ADMIN_SECTION_TITLES,section))return;
+  hallvallaCommunityNode("communityAdminPanel")?.classList.remove("hidden");
+  hallvallaCommunityNode("communityAdminRootCard")?.classList.add("hidden");
+  hallvallaCommunityNode("communityAdminSectionCard")?.classList.remove("hidden");
+  document.querySelectorAll("[data-hv-admin-section]").forEach(node=>node.classList.toggle("hidden",node.dataset.hvAdminSection!==section));
+  const title=hallvallaCommunityNode("communityAdminSectionTitle");
+  if(title)title.textContent=HALLVALLA_ADMIN_SECTION_TITLES[section];
+  hallvallaAdminStatus("");
+}
 function hallvallaCommunityOpenAdmin(uid="",name=""){
   if(!hallvallaCommunityIsAdmin())return;
   hallvallaCommunityNode("communityAdminPanel")?.classList.remove("hidden");
   if(uid)hallvallaCommunityNode("adminTargetUid").value=String(uid);
   if(name)hallvallaCommunityNode("adminTargetName").textContent=String(name);
+  if(uid)hallvallaCommunityOpenAdminSection("player");
+  else hallvallaCommunityShowAdminRoot();
 }
-function hallvallaCommunityCloseAdmin(){hallvallaCommunityNode("communityAdminPanel")?.classList.add("hidden");}
+function hallvallaCommunityCloseAdmin(){
+  hallvallaCommunityNode("communityAdminPanel")?.classList.add("hidden");
+  hallvallaCommunityShowAdminRoot();
+}
 
 function hallvallaAdminTargetUid(){return String(hallvallaCommunityNode("adminTargetUid")?.value||"").trim();}
 function hallvallaAdminModerationDuration(){
@@ -340,6 +369,12 @@ function hallvallaAdminRenderSupportRequests(raw){
   }
   const statusRank={pending:0,approved:1,rejected:2};
   rows.sort((a,b)=>(statusRank[a.status]??9)-(statusRank[b.status]??9)||Number(b.createdAt||0)-Number(a.createdAt||0));
+  const pendingCount=rows.filter(item=>item.status==="pending").length;
+  const supportRootBadge=hallvallaCommunityNode("adminSupportRootBadge");
+  if(supportRootBadge){
+    supportRootBadge.textContent=String(Math.min(99,pendingCount));
+    supportRootBadge.classList.toggle("hidden",pendingCount===0);
+  }
   const visible=rows.slice(0,60);
   host.innerHTML=visible.length?visible.map(item=>{
     const offer=hallvallaSupportOffer(item.offerId);
@@ -420,6 +455,11 @@ function hallvallaAdminRenderSecurityAlerts(raw){
   const openCount=rows.filter(item=>item.status==="open").length;
   const count=hallvallaCommunityNode("adminSecurityCount");
   if(count)count.textContent=`${openCount} pendiente${openCount===1?"":"s"}`;
+  const securityRootBadge=hallvallaCommunityNode("adminSecurityRootBadge");
+  if(securityRootBadge){
+    securityRootBadge.textContent=String(Math.min(99,openCount));
+    securityRootBadge.classList.toggle("hidden",openCount===0);
+  }
   const homeBadge=hallvallaCommunityNode("communitySecurityBadge");
   if(homeBadge){
     homeBadge.textContent=String(Math.min(99,openCount));
@@ -604,6 +644,8 @@ function hallvallaCommunityBind(){
   bind("communityChatInput","keydown",event=>{if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();void hallvallaCommunitySendMessage();}});
   bind("communityAdminBtn","click",()=>hallvallaCommunityOpenAdmin());
   bind("communityAdminCloseBtn","click",hallvallaCommunityCloseAdmin);
+  bind("communityAdminSectionCloseBtn","click",hallvallaCommunityCloseAdmin);
+  bind("communityAdminBackBtn","click",hallvallaCommunityShowAdminRoot);
   bind("adminMuteBtn","click",()=>void hallvallaAdminModerate("mute"));
   bind("adminUnmuteBtn","click",()=>void hallvallaAdminModerate("unmute"));
   bind("adminBanBtn","click",()=>void hallvallaAdminModerate("ban"));
@@ -613,6 +655,11 @@ function hallvallaCommunityBind(){
   bind("adminCreateSecurityTestBtn","click",()=>void hallvallaAdminCreateSecurityTestAlert());
   bind("accountBanSignOutBtn","click",()=>{try{void signOut(auth);}catch(_){ }});
   document.addEventListener("click",event=>{
+    const adminSectionButton=event.target?.closest?.("[data-hv-admin-open-section]");
+    if(adminSectionButton&&hallvallaCommunityIsAdmin()){
+      hallvallaCommunityOpenAdminSection(adminSectionButton.dataset.hvAdminOpenSection||"");
+      return;
+    }
     const target=event.target?.closest?.("[data-hv-admin-target]");
     if(target&&hallvallaCommunityIsAdmin())hallvallaCommunityOpenAdmin(target.dataset.hvAdminTarget||"",target.dataset.hvAdminName||"");
     const del=event.target?.closest?.("[data-hv-admin-delete-message]");

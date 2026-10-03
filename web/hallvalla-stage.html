@@ -269,12 +269,175 @@
   </section>
 </div>
 
+<style id="hallvallaAdminModalNavStyles">
+  #communityAdminPanel.hv-community-admin-overlay{
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+  }
+  #communityAdminPanel .hv-admin-root-card,
+  #communityAdminPanel .hv-admin-section-card{
+    width:min(920px,94vw);
+    max-width:920px;
+    max-height:88vh;
+    box-sizing:border-box;
+  }
+  #communityAdminPanel .hv-admin-root-card{
+    overflow:visible;
+  }
+  #communityAdminPanel .hv-admin-section-card{
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  #communityAdminPanel .hv-admin-root-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:14px;
+    margin-top:18px;
+  }
+  #communityAdminPanel .hv-admin-root-btn{
+    position:relative;
+    min-height:122px;
+    border:1px solid rgba(225,189,105,.38);
+    border-radius:16px;
+    background:linear-gradient(180deg,rgba(34,45,62,.92),rgba(18,27,40,.96));
+    color:#f5f7fb;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    gap:6px;
+    padding:18px 20px;
+    text-align:left;
+    cursor:pointer;
+  }
+  #communityAdminPanel .hv-admin-root-btn:hover{
+    border-color:#e1bd69;
+    transform:translateY(-1px);
+  }
+  #communityAdminPanel .hv-admin-root-icon{
+    font-size:24px;
+    line-height:1;
+  }
+  #communityAdminPanel .hv-admin-root-btn strong{
+    font-size:17px;
+    color:#e1bd69;
+  }
+  #communityAdminPanel .hv-admin-root-btn small{
+    color:#aeb8c8;
+    line-height:1.25;
+  }
+  #communityAdminPanel .hv-admin-root-badge{
+    position:absolute;
+    top:12px;
+    right:12px;
+    min-width:24px;
+    height:24px;
+    padding:0 7px;
+    border-radius:999px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background:#922929;
+    color:#fff;
+    font-size:12px;
+    font-weight:800;
+  }
+  #communityAdminPanel .hv-admin-root-badge.hidden{display:none!important;}
+  #communityAdminPanel .hv-admin-section-toolbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:0 42px 8px 0;
+  }
+  #communityAdminPanel .hv-admin-section-back{
+    min-height:38px;
+    padding:7px 14px;
+  }
+  #communityAdminPanel .hv-admin-section-host{
+    flex:1 1 auto;
+    min-height:0;
+    overflow:auto;
+    padding:4px 4px 8px 0;
+  }
+  #communityAdminPanel .hv-admin-modal-section{
+    width:100%;
+    max-width:none;
+    box-sizing:border-box;
+    margin:0;
+  }
+  #communityAdminPanel .hv-admin-modal-section.hidden{display:none!important;}
+  #communityAdminPanel .hv-admin-modal-section .hv-admin-support-list{
+    max-height:52vh;
+    overflow:auto;
+  }
+  #communityAdminPanel .hv-admin-modal-section input,
+  #communityAdminPanel .hv-admin-modal-section select,
+  #communityAdminPanel .hv-admin-modal-section textarea{
+    width:100%;
+    box-sizing:border-box;
+  }
+  #communityAdminPanel #communityAdminStatus{
+    flex:0 0 auto;
+    margin-top:8px;
+  }
+  @media (max-width:760px){
+    #communityAdminPanel .hv-admin-root-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+  }
+</style>
+
 <div id="communityAdminPanel" class="overlay-panel hidden hv-community-admin-overlay">
-  <section class="modal-card hv-community-admin-card" role="dialog" aria-modal="true" aria-labelledby="communityAdminTitle">
+  <section id="communityAdminRootCard" class="modal-card hv-community-admin-card hv-admin-root-card" role="dialog" aria-modal="true" aria-labelledby="communityAdminTitle">
     <button id="communityAdminCloseBtn" class="adventure-result-close" type="button" aria-label="Cerrar">×</button>
-    <header class="hv-community-head"><div><span>CONTROL MAESTRO</span><h2 id="communityAdminTitle">ADMINISTRACIÓN</h2></div></header>
-    <div class="hv-admin-grid">
-      <section class="hv-admin-box">
+    <header class="hv-community-head">
+      <div><span>CONTROL MAESTRO</span><h2 id="communityAdminTitle">ADMINISTRACIÓN</h2></div>
+    </header>
+
+    <div class="hv-admin-root-grid" aria-label="Áreas de administración">
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="player">
+        <span class="hv-admin-root-icon" aria-hidden="true">👤</span>
+        <strong>Jugador</strong>
+        <small>Silenciar, banear o retirar sanciones.</small>
+      </button>
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="reward">
+        <span class="hv-admin-root-icon" aria-hidden="true">🎁</span>
+        <strong>Premios</strong>
+        <small>Entregar gemas, oro, fragmentos o packs.</small>
+      </button>
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="event">
+        <span class="hv-admin-root-icon" aria-hidden="true">📣</span>
+        <strong>Eventos</strong>
+        <small>Crear y publicar eventos globales.</small>
+      </button>
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="security">
+        <span class="hv-admin-root-icon" aria-hidden="true">🛡</span>
+        <strong>Seguridad</strong>
+        <small>Revisar alertas e investigar cuentas.</small>
+        <b id="adminSecurityRootBadge" class="hv-admin-root-badge hidden">0</b>
+      </button>
+      <button class="hv-admin-root-btn" type="button" data-hv-admin-open-section="paypal">
+        <span class="hv-admin-root-icon" aria-hidden="true">💳</span>
+        <strong>PayPal</strong>
+        <small>Revisar y aprobar solicitudes pendientes.</small>
+        <b id="adminSupportRootBadge" class="hv-admin-root-badge hidden">0</b>
+      </button>
+    </div>
+  </section>
+
+  <section id="communityAdminSectionCard" class="modal-card hv-community-admin-card hv-admin-section-card hidden" role="dialog" aria-modal="true" aria-labelledby="communityAdminSectionTitle">
+    <button id="communityAdminSectionCloseBtn" class="adventure-result-close" type="button" aria-label="Cerrar">×</button>
+    <div class="hv-admin-section-toolbar">
+      <button id="communityAdminBackBtn" class="btn ghost hv-admin-section-back" type="button">← Administración</button>
+    </div>
+    <header class="hv-community-head">
+      <div><span>CONTROL MAESTRO</span><h2 id="communityAdminSectionTitle">ADMINISTRACIÓN</h2></div>
+    </header>
+
+    <div class="hv-admin-section-host">
+      <section class="hv-admin-box hv-admin-modal-section hidden" data-hv-admin-section="player">
         <h3>Jugador</h3>
         <small id="adminTargetName">Selecciona un jugador desde el chat o pega su UID.</small>
         <input id="adminTargetUid" type="text" autocomplete="off" placeholder="UID del jugador">
@@ -292,7 +455,8 @@
           <button id="adminUnbanBtn" class="btn ghost" type="button">Quitar ban</button>
         </div>
       </section>
-      <section class="hv-admin-box">
+
+      <section class="hv-admin-box hv-admin-modal-section hidden" data-hv-admin-section="reward">
         <h3>Entregar premio</h3>
         <select id="adminRewardType"><option value="gems">Gemas</option><option value="gold">Oro</option><option value="fragments">Fragmentos</option><option value="pack">Pack</option></select>
         <input id="adminRewardAmount" type="number" min="1" max="1000000" value="100" aria-label="Cantidad">
@@ -300,7 +464,8 @@
         <input id="adminRewardNote" type="text" maxlength="180" autocomplete="off" placeholder="Mensaje del premio (opcional)">
         <button id="adminGrantRewardBtn" class="btn primary full" type="button">Entregar premio</button>
       </section>
-      <section class="hv-admin-box hv-admin-event-box">
+
+      <section class="hv-admin-box hv-admin-event-box hv-admin-modal-section hidden" data-hv-admin-section="event">
         <h3>Crear evento global</h3>
         <input id="adminEventTitle" type="text" maxlength="60" autocomplete="off" placeholder="Título del evento">
         <textarea id="adminEventBody" maxlength="400" placeholder="Descripción, reglas, premios, horario..."></textarea>
@@ -310,21 +475,25 @@
         </div>
         <button id="adminPublishEventBtn" class="btn primary full" type="button">Publicar evento</button>
       </section>
-      <section class="hv-admin-box hv-admin-security-box">
+
+      <section class="hv-admin-box hv-admin-security-box hv-admin-modal-section hidden" data-hv-admin-section="security">
         <h3>Seguridad · <span id="adminSecurityCount">0 pendientes</span></h3>
         <small>Alertas de seguridad de cuentas. Esta sección no modifica combate, cartas ni economía.</small>
         <button id="adminCreateSecurityTestBtn" class="btn ghost full" type="button">Crear alerta de prueba para el UID seleccionado</button>
         <div id="adminSecurityAlertList" class="hv-admin-support-list"><div class="hv-community-empty">No hay alertas de seguridad.</div></div>
       </section>
-      <section class="hv-admin-box hv-admin-support-box">
+
+      <section class="hv-admin-box hv-admin-support-box hv-admin-modal-section hidden" data-hv-admin-section="paypal">
         <h3>Solicitudes PayPal</h3>
         <small>Verifica el Order ID directamente en tu cuenta PayPal antes de aprobar. HallValla nunca acredita el regalo automáticamente.</small>
         <div id="adminSupportRequestList" class="hv-admin-support-list"><div class="hv-community-empty">Cargando solicitudes...</div></div>
       </section>
     </div>
+
     <p id="communityAdminStatus" class="hv-community-status" aria-live="polite"></p>
   </section>
 </div>
+
 
 <div id="accountBanOverlay" class="hv-account-ban-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="accountBanTitle">
   <section class="hv-account-ban-card">
