@@ -448,6 +448,26 @@ async function hallvallaAdminResolveSupportRequest(uid,requestId,action){
 function hallvallaSecuritySeverityLabel(value){
   return ({low:"BAJA",medium:"MEDIA",high:"ALTA",critical:"CRÍTICA"})[String(value||"")]||"DESCONOCIDA";
 }
+function hallvallaAdminSyncCombinedSecurityBadge(){
+  const normalOpen=Object.values(hallvallaSecurityAlertBook&&typeof hallvallaSecurityAlertBook==="object"?hallvallaSecurityAlertBook:{}).filter(item=>item?.status==="open").length;
+  const shadowOpen=hallvallaAdminFlattenGemShadowSignals(hallvallaGemShadowSignalBook).filter(item=>item.status==="open").length;
+  const totalOpen=normalOpen+shadowOpen;
+
+  const securityRootBadge=hallvallaCommunityNode("adminSecurityRootBadge");
+  if(securityRootBadge){
+    securityRootBadge.textContent=String(Math.min(99,totalOpen));
+    securityRootBadge.classList.toggle("hidden",totalOpen===0);
+  }
+
+  const homeBadge=hallvallaCommunityNode("communitySecurityBadge");
+  if(homeBadge){
+    homeBadge.textContent=String(Math.min(99,totalOpen));
+    homeBadge.classList.toggle("hidden",totalOpen===0||!hallvallaCommunityIsAdmin());
+  }
+
+  const adminBtn=hallvallaCommunityNode("communityAdminBtn");
+  if(adminBtn&&hallvallaCommunityIsAdmin())adminBtn.textContent=totalOpen>0?`ADMIN · ${totalOpen}`:"ADMIN";
+}
 function hallvallaAdminRenderSecurityAlerts(raw){
   const host=hallvallaCommunityNode("adminSecurityAlertList");
   const rows=Object.entries(raw&&typeof raw==="object"?raw:{}).map(([id,item])=>({id,...(item||{})}));
@@ -457,18 +477,7 @@ function hallvallaAdminRenderSecurityAlerts(raw){
   const openCount=rows.filter(item=>item.status==="open").length;
   const count=hallvallaCommunityNode("adminSecurityCount");
   if(count)count.textContent=`${openCount} pendiente${openCount===1?"":"s"}`;
-  const securityRootBadge=hallvallaCommunityNode("adminSecurityRootBadge");
-  if(securityRootBadge){
-    securityRootBadge.textContent=String(Math.min(99,openCount));
-    securityRootBadge.classList.toggle("hidden",openCount===0);
-  }
-  const homeBadge=hallvallaCommunityNode("communitySecurityBadge");
-  if(homeBadge){
-    homeBadge.textContent=String(Math.min(99,openCount));
-    homeBadge.classList.toggle("hidden",openCount===0||!hallvallaCommunityIsAdmin());
-  }
-  const adminBtn=hallvallaCommunityNode("communityAdminBtn");
-  if(adminBtn&&hallvallaCommunityIsAdmin())adminBtn.textContent=openCount>0?`ADMIN · ${openCount}`:"ADMIN";
+  hallvallaAdminSyncCombinedSecurityBadge();
   if(!host)return;
   const visible=rows.slice(0,100);
   host.innerHTML=visible.length?visible.map(item=>{
@@ -577,6 +586,7 @@ function hallvallaAdminRenderGemShadowSignals(raw){
   const openCount=rows.filter(item=>item.status==="open").length;
   const count=hallvallaCommunityNode("adminGemShadowCount");
   if(count)count.textContent=`${openCount} señal${openCount===1?"":"es"} abierta${openCount===1?"":"s"}`;
+  hallvallaAdminSyncCombinedSecurityBadge();
   if(!host)return;
   const visible=rows.slice(0,100);
   host.innerHTML=visible.length?visible.map(item=>{
