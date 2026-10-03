@@ -40,6 +40,8 @@ let hallvallaSupportRequestsUnsub=null;
 let hallvallaSupportRequestBook={};
 let hallvallaSecurityAlertsUnsub=null;
 let hallvallaSecurityAlertBook={};
+let hallvallaGemShadowSignalsUnsub=null;
+let hallvallaGemShadowSignalBook={};
 
 function hallvallaCommunityNode(id){return document.getElementById(id);}
 function hallvallaCommunityIsAdmin(user=auth?.currentUser){return String(user?.uid||"")===HALLVALLA_MASTER_ADMIN_UID;}
@@ -557,6 +559,66 @@ async function hallvallaAdminCreateSecurityTestAlert(){
   }
 }
 
+function hallvallaAdminFlattenGemShadowSignals(raw){
+  const rows=[];
+  for(const [uid,book] of Object.entries(raw&&typeof raw==="object"?raw:{})){
+    for(const [id,item] of Object.entries(book&&typeof book==="object"?book:{})){
+      rows.push({id,uid,...(item||{})});
+    }
+  }
+  return rows;
+}
+function hallvallaAdminRenderGemShadowSignals(raw){
+  const host=hallvallaCommunityNode("adminGemShadowList");
+  const rows=hallvallaAdminFlattenGemShadowSignals(raw);
+  const severityRank={critical:0,high:1,medium:2,low:3};
+  const statusRank={open:0,resolved:1,ignored:2};
+  rows.sort((a,b)=>(statusRank[a.status]??9)-(statusRank[b.status]??9)||(severityRank[a.severity]??9)-(severityRank[b.severity]??9)||Number(b.createdAt||0)-Number(a.createdAt||0));
+  const openCount=rows.filter(item=>item.status==="open").length;
+  const count=hallvallaCommunityNode("adminGemShadowCount");
+  if(count)count.textContent=`${openCount} señal${openCount===1?"":"es"} abierta${openCount===1?"":"s"}`;
+  if(!host)return;
+  const visible=rows.slice(0,100);
+  host.innerHTML=visible.length?visible.map(item=>{
+    const open=item.status==="open";
+    const severity=hallvallaSecuritySeverityLabel(item.severity);
+    const expected=Math.max(0,Number(item.expectedGems||0));
+    const observed=Math.max(0,Number(item.observedGems||0));
+    const delta=Number(item.delta||0);
+    return `<article class="hv-admin-support-row ${open?"is-pending":""}">
+      <header><b>${hallvallaCommunityEscape(item.playerName||"Jugador")}</b><span class="hv-support-status">SHADOW · ${hallvallaCommunityEscape(severity)}</span></header>
+      <div class="hv-admin-support-meta"><span>${hallvallaCommunityEscape(item.code||"gems_shadow")}</span><strong>${delta>=0?"+":""}${delta.toLocaleString("es-CR")} gemas</strong><small>${hallvallaCommunityEscape(hallvallaCommunityFormatDate(item.createdAt))}</small></div>
+      <code>UID: ${hallvallaCommunityEscape(item.uid||"—")}</code>
+      <code>Esperado: ${expected.toLocaleString("es-CR")} · Observado: ${observed.toLocaleString("es-CR")}</code>
+      <code>${hallvallaCommunityEscape(item.source||"shadow")} · ${hallvallaCommunityEscape(item.client||"")} · ${hallvallaCommunityEscape(item.build||"")}</code>
+      ${item.evidence?`<small>${hallvallaCommunityEscape(item.evidence)}</small>`:""}
+      ${open?`<div class="hv-admin-actions">
+        <button type="button" class="btn ghost" data-hv-shadow-target="${hallvallaCommunityEscape(item.uid||"")}" data-hv-shadow-name="${hallvallaCommunityEscape(item.playerName||"Jugador")}">Revisar jugador</button>
+        <button type="button" class="btn primary" data-hv-shadow-resolve="${hallvallaCommunityEscape(item.id)}" data-hv-shadow-uid="${hallvallaCommunityEscape(item.uid||"")}">Resolver</button>
+        <button type="button" class="btn ghost" data-hv-shadow-ignore="${hallvallaCommunityEscape(item.id)}" data-hv-shadow-uid="${hallvallaCommunityEscape(item.uid||"")}">Ignorar</button>
+      </div>`:`<small>Estado: ${hallvallaCommunityEscape(String(item.status||"").toUpperCase())} · ${hallvallaCommunityEscape(hallvallaCommunityFormatDate(item.reviewedAt))}${item.adminNote?` · ${hallvallaCommunityEscape(item.adminNote)}`:""}</small>`}
+    </article>`;
+  }).join(""):'<div class="hv-community-empty">No hay señales de vigilancia de gemas.</div>';
+}
+async function hallvallaAdminResolveGemShadowSignal(uid,signalId,status="resolved",adminNote=""){
+  if(!hallvallaCommunityIsAdmin())return;
+  const safeUid=String(uid||"").trim();
+  const id=String(signalId||"").trim();
+  if(!safeUid||!id||!["resolved","ignored"].includes(status))return;
+  try{
+    const signalRef=ref(db,`community/securitySignals/${safeUid}/${id}`);
+    const snap=await get(signalRef);
+    if(!snap.exists())throw new Error("La señal ya no existe.");
+    const item=snap.val()||{};
+    if(item.status!=="open")throw new Error("La señal ya fue revisada.");
+    await update(signalRef,{status,reviewedAt:Date.now(),reviewedBy:HALLVALLA_MASTER_ADMIN_UID,adminNote:String(adminNote||"").slice(0,180)});
+    hallvallaAdminStatus(status==="ignored"?"Señal shadow ignorada.":"Señal shadow resuelta.","success");
+  }catch(error){
+    console.error("[HallValla][GemShadow] No se pudo resolver señal:",error);
+    hallvallaAdminStatus(String(error?.message||error),"error");
+  }
+}
+
 function hallvallaCommunityLocalRewardDone(id){try{return localStorage.getItem(`hallvalla_admin_reward_done_${id}`)==="1";}catch(_){return false;}}
 function hallvallaCommunityMarkLocalRewardDone(id){try{localStorage.setItem(`hallvalla_admin_reward_done_${id}`,"1");}catch(_){ }}
 async function hallvallaCommunityApplyReward(reward){
@@ -606,17 +668,17 @@ async function hallvallaCommunityProcessRewards(){
 }
 
 function hallvallaCommunityDetach(){
-  for(const key of ["hallvallaCommunityChatUnsub","hallvallaCommunityEventsUnsub","hallvallaCommunityModerationUnsub","hallvallaCommunityRewardsUnsub","hallvallaCommunityClaimsUnsub","hallvallaSupportRequestsUnsub","hallvallaSecurityAlertsUnsub"]){
-    const fn=({hallvallaCommunityChatUnsub,hallvallaCommunityEventsUnsub,hallvallaCommunityModerationUnsub,hallvallaCommunityRewardsUnsub,hallvallaCommunityClaimsUnsub,hallvallaSupportRequestsUnsub,hallvallaSecurityAlertsUnsub})[key];
+  for(const key of ["hallvallaCommunityChatUnsub","hallvallaCommunityEventsUnsub","hallvallaCommunityModerationUnsub","hallvallaCommunityRewardsUnsub","hallvallaCommunityClaimsUnsub","hallvallaSupportRequestsUnsub","hallvallaSecurityAlertsUnsub","hallvallaGemShadowSignalsUnsub"]){
+    const fn=({hallvallaCommunityChatUnsub,hallvallaCommunityEventsUnsub,hallvallaCommunityModerationUnsub,hallvallaCommunityRewardsUnsub,hallvallaCommunityClaimsUnsub,hallvallaSupportRequestsUnsub,hallvallaSecurityAlertsUnsub,hallvallaGemShadowSignalsUnsub})[key];
     if(typeof fn==="function"){try{fn();}catch(_){ }}
   }
-  hallvallaCommunityChatUnsub=hallvallaCommunityEventsUnsub=hallvallaCommunityModerationUnsub=hallvallaCommunityRewardsUnsub=hallvallaCommunityClaimsUnsub=hallvallaSupportRequestsUnsub=hallvallaSecurityAlertsUnsub=null;
+  hallvallaCommunityChatUnsub=hallvallaCommunityEventsUnsub=hallvallaCommunityModerationUnsub=hallvallaCommunityRewardsUnsub=hallvallaCommunityClaimsUnsub=hallvallaSupportRequestsUnsub=hallvallaSecurityAlertsUnsub=hallvallaGemShadowSignalsUnsub=null;
 }
 function hallvallaCommunityAttach(user){
   hallvallaCommunityDetach();
   hallvallaCommunityUser=user||null;
   if(!user||String(user.uid||"")!==hallvallaCommunitySettledUid)hallvallaCommunitySettledUid="";
-  hallvallaCommunityModeration={};hallvallaCommunityRewardBook={};hallvallaCommunityClaimBook={};hallvallaSecurityAlertBook={};
+  hallvallaCommunityModeration={};hallvallaCommunityRewardBook={};hallvallaCommunityClaimBook={};hallvallaSecurityAlertBook={};hallvallaGemShadowSignalBook={};
   hallvallaCommunitySyncAdminVisibility();
   if(!user){hallvallaCommunitySyncModerationUi();return;}
   const chatRef=typeof query==="function"?query(ref(db,"community/chat"),orderByChild("createdAt"),limitToLast(HALLVALLA_COMMUNITY_CHAT_LIMIT)):ref(db,"community/chat");
@@ -628,9 +690,12 @@ function hallvallaCommunityAttach(user){
   if(hallvallaCommunityIsAdmin(user)){
     hallvallaSupportRequestsUnsub=onValue(ref(db,"community/supportRequests"),snap=>{hallvallaSupportRequestBook=snap.val()||{};hallvallaAdminRenderSupportRequests(hallvallaSupportRequestBook);},error=>console.warn("[HallValla][Support] Solicitudes:",error));
     hallvallaSecurityAlertsUnsub=onValue(ref(db,"community/securityAlerts"),snap=>{hallvallaSecurityAlertBook=snap.val()||{};hallvallaAdminRenderSecurityAlerts(hallvallaSecurityAlertBook);},error=>{console.warn("[HallValla][Security] Alertas:",error);hallvallaAdminRenderSecurityAlerts({});});
+    hallvallaGemShadowSignalsUnsub=onValue(ref(db,"community/securitySignals"),snap=>{hallvallaGemShadowSignalBook=snap.val()||{};hallvallaAdminRenderGemShadowSignals(hallvallaGemShadowSignalBook);},error=>{console.warn("[HallValla][GemShadow] Señales:",error);hallvallaAdminRenderGemShadowSignals({});});
   }else{
     hallvallaSupportRequestBook={};
     hallvallaSecurityAlertBook={};
+    hallvallaGemShadowSignalBook={};
+    hallvallaAdminRenderGemShadowSignals({});
     hallvallaAdminRenderSecurityAlerts({});
     hallvallaAdminRenderSupportRequests({});
   }
@@ -653,6 +718,7 @@ function hallvallaCommunityBind(){
   bind("adminGrantRewardBtn","click",()=>void hallvallaAdminGrantReward());
   bind("adminPublishEventBtn","click",()=>void hallvallaAdminPublishEvent());
   bind("adminCreateSecurityTestBtn","click",()=>void hallvallaAdminCreateSecurityTestAlert());
+  bind("adminGemShadowTestBtn","click",()=>{const fn=globalThis.hallvallaGemShadowSelfTest;if(typeof fn!=="function"){hallvallaAdminStatus("La vigilancia de gemas aun no esta disponible.","error");return;}void fn().then(()=>hallvallaAdminStatus("Prueba SHADOW enviada sin modificar tu saldo.","success")).catch(error=>hallvallaAdminStatus(String(error?.message||error),"error"));});
   bind("accountBanSignOutBtn","click",()=>{try{void signOut(auth);}catch(_){ }});
   document.addEventListener("click",event=>{
     const adminSectionButton=event.target?.closest?.("[data-hv-admin-open-section]");
@@ -688,6 +754,17 @@ function hallvallaCommunityBind(){
     if(securityResolve&&hallvallaCommunityIsAdmin())void hallvallaAdminResolveSecurityAlert(securityResolve.dataset.hvSecurityResolve||"","resolved","Revisada por el administrador.");
     const securityIgnore=event.target?.closest?.("[data-hv-security-ignore]");
     if(securityIgnore&&hallvallaCommunityIsAdmin())void hallvallaAdminResolveSecurityAlert(securityIgnore.dataset.hvSecurityIgnore||"","ignored","Ignorada por el administrador.");
+    const shadowTarget=event.target?.closest?.("[data-hv-shadow-target]");
+    if(shadowTarget&&hallvallaCommunityIsAdmin()){
+      const uid=String(shadowTarget.dataset.hvShadowTarget||"");
+      const name=String(shadowTarget.dataset.hvShadowName||"Jugador");
+      hallvallaCommunityOpenAdmin(uid,name);
+      hallvallaAdminStatus(`Jugador ${name} seleccionado desde Gem Shadow.`,"success");
+    }
+    const shadowResolve=event.target?.closest?.("[data-hv-shadow-resolve]");
+    if(shadowResolve&&hallvallaCommunityIsAdmin())void hallvallaAdminResolveGemShadowSignal(shadowResolve.dataset.hvShadowUid||"",shadowResolve.dataset.hvShadowResolve||"","resolved","Revisada por el administrador.");
+    const shadowIgnore=event.target?.closest?.("[data-hv-shadow-ignore]");
+    if(shadowIgnore&&hallvallaCommunityIsAdmin())void hallvallaAdminResolveGemShadowSignal(shadowIgnore.dataset.hvShadowUid||"",shadowIgnore.dataset.hvShadowIgnore||"","ignored","Ignorada por el administrador.");
   });
   if(hallvallaCommunityClockTimer===null)hallvallaCommunityClockTimer=setInterval(hallvallaCommunitySyncModerationUi,30000);
 }

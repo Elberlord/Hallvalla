@@ -625,6 +625,69 @@
           }
         }
       },
+      "securitySignals": {
+        ".read": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
+        "$uid": {
+          "$signalId": {
+            ".write": "auth != null && ((auth.uid === $uid && !data.exists() && newData.exists()) || (auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' && data.exists() && newData.exists()))",
+            ".validate": "!newData.exists() || (newData.hasChildren(['signalId','uid','playerName','code','severity','expectedGems','observedGems','delta','source','client','build','evidence','createdAt','status','reviewedAt','reviewedBy','adminNote']) && newData.child('signalId').val() === $signalId && newData.child('uid').val() === $uid && ((auth.uid === $uid && !data.exists() && newData.child('status').val() === 'open' && newData.child('reviewedAt').val() === 0 && newData.child('reviewedBy').val() === '') || (auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' && data.exists() && (newData.child('status').val() === 'resolved' || newData.child('status').val() === 'ignored') && newData.child('reviewedAt').val() > 0 && newData.child('reviewedBy').val() === '5V3mDjSyeNbI7W0qI16cEz5PbsN2')))",
+            "signalId": {
+              ".validate": "newData.isString() && newData.val() === $signalId"
+            },
+            "uid": {
+              ".validate": "newData.isString() && newData.val() === $uid && newData.val().length > 0 && newData.val().length <= 160"
+            },
+            "playerName": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 24"
+            },
+            "code": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 64"
+            },
+            "severity": {
+              ".validate": "newData.isString() && (newData.val() === 'low' || newData.val() === 'medium' || newData.val() === 'high' || newData.val() === 'critical')"
+            },
+            "expectedGems": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+            },
+            "observedGems": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+            },
+            "delta": {
+              ".validate": "newData.isNumber() && newData.val() >= -1000000000 && newData.val() <= 1000000000"
+            },
+            "source": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 48"
+            },
+            "client": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 32"
+            },
+            "build": {
+              ".validate": "newData.isString() && newData.val().length <= 64"
+            },
+            "evidence": {
+              ".validate": "newData.isString() && newData.val().length <= 500"
+            },
+            "createdAt": {
+              ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now + 60000"
+            },
+            "status": {
+              ".validate": "newData.isString() && (newData.val() === 'open' || newData.val() === 'resolved' || newData.val() === 'ignored')"
+            },
+            "reviewedAt": {
+              ".validate": "newData.isNumber() && newData.val() >= 0"
+            },
+            "reviewedBy": {
+              ".validate": "newData.isString() && newData.val().length <= 160"
+            },
+            "adminNote": {
+              ".validate": "newData.isString() && newData.val().length <= 180"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      },
       "adminRewards": {
         "$uid": {
           ".read": "auth != null && (auth.uid === $uid || auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2')",
