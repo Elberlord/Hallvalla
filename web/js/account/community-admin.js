@@ -43,6 +43,7 @@ let hallvallaCommunitySettledUid="";
 let hallvallaCommunityClockTimer=null;
 let hallvallaSupportRequestsUnsub=null;
 let hallvallaSupportRequestBook={};
+let hallvallaSupportRequestBookV146={};
 let hallvallaSecurityAlertsUnsub=null;
 let hallvallaSecurityAlertBook={};
 let hallvallaGemShadowSignalsUnsub=null;
@@ -210,17 +211,25 @@ async function hallvallaGetWelcomeSupportState(user=auth?.currentUser){
   const uid=String(user?.uid||"").trim();
   if(!uid)return {state:"signed_out"};
   try{
-    const [claimSnap,requestsSnap]=await Promise.all([
+    const [claimSnap,legacySnap,v146Snap]=await Promise.all([
       get(ref(db,`community/welcomeClaims/${uid}`)),
-      get(ref(db,`community/supportRequests/${uid}`))
+      get(ref(db,`community/supportRequests/${uid}`)),
+      get(ref(db,`community/supportRequestsV146/${uid}`))
     ]);
     if(claimSnap.exists())return {state:"approved",claim:claimSnap.val()||{}};
-    const requests=requestsSnap.val()||{};
-    const entries=Object.values(requests).filter(item=>item?.offerId==="welcome_pack_v1").sort((a,b)=>Number(b?.createdAt||0)-Number(a?.createdAt||0));
+
+    const legacy=Object.values(legacySnap.val()||{});
+    const v146=Object.values(v146Snap.val()||{});
+    const entries=[...legacy,...v146]
+      .filter(item=>item?.offerId==="welcome_pack_v1")
+      .sort((a,b)=>Number(b?.createdAt||0)-Number(a?.createdAt||0));
+
     const approved=entries.find(item=>item?.status==="approved");
     if(approved)return {state:"approved",request:approved};
+
     const pending=entries.find(item=>item?.status==="pending");
     if(pending)return {state:"pending",request:pending};
+
     return {state:"available"};
   }catch(error){
     console.warn("[HallValla][Support] No se pudo leer el estado de bienvenida:",error);
@@ -259,7 +268,7 @@ async function hallvallaCreateSupportRequest({offerId,paypalDetails}={}){
     reviewedBy:"",
     adminNote:""
   };
-  await set(ref(db,`community/supportRequests/${uid}/${requestId}`),payload);
+  await set(ref(db,`community/supportRequestsV146/${uid}/${requestId}`),payload);
   return payload;
 }
 function hallvallaSupportStatusLabel(status){
@@ -967,6 +976,37 @@ function hallvallaAdminRenderModerationLog(raw){
   }).join(""):'<div class="hv-community-empty">Todavía no hay acciones de moderación registradas.</div>';
 }
 
+function hallvallaCombinedSupportRequestBook(){
+  const merged={};
+
+  for(const [channel,book] of [
+    ["legacy",hallvallaSupportRequestBook],
+    ["v146",hallvallaSupportRequestBookV146]
+  ]){
+    for(const [uid,requests] of Object.entries(book&&typeof book==="object"?book:{})){
+      if(!merged[uid])merged[uid]={};
+
+      for(const [id,item] of Object.entries(requests&&typeof requests==="object"?requests:{})){
+        if(!item||typeof item!=="object")continue;
+
+        merged[uid][`${channel}:${id}`]={
+          ...item,
+          __channel:channel,
+          __sourceRequestId:id
+        };
+      }
+    }
+  }
+
+  return merged;
+}
+
+function hallvallaAdminRenderCombinedSupportRequests(){
+  hallvallaAdminRenderSupportRequests(
+    hallvallaCombinedSupportRequestBook()
+  );
+}
+
 function hallvallaAdminRenderSupportRequests(raw){
   const host=hallvallaCommunityNode("adminSupportRequestList");if(!host)return;
   const rows=[];
@@ -990,6 +1030,7 @@ function hallvallaAdminRenderSupportRequests(raw){
     const pending=item.status==="pending";
     const order=String(item.paypalOrderId||"");
     const capture=String(item.paypalCaptureId||"");
+    const channel=item.__channel==="v146"?"v146":"legacy";
     return `<article class="hv-admin-support-row ${pending?"is-pending":""}">
       <header><b>${hallvallaCommunityEscape(item.playerName||"Jugador")}</b><span class="hv-support-status hv-support-status-${hallvallaCommunityEscape(item.status||"unknown")}">${hallvallaCommunityEscape(hallvallaSupportStatusLabel(item.status))}</span></header>
       <div class="hv-admin-support-meta"><span>${hallvallaCommunityEscape(offer?.label||item.offerId||"Apoyo")}</span><strong>$${hallvallaCommunityEscape(item.amountUsd||"0.00")} USD</strong><small>${hallvallaCommunityEscape(hallvallaCommunityFormatDate(item.createdAt))}</small></div>
@@ -998,17 +1039,26 @@ function hallvallaAdminRenderSupportRequests(raw){
       ${capture?`<code>Capture: ${hallvallaCommunityEscape(capture)}</code>`:""}
       ${pending?`<div class="hv-admin-actions">
         <button type="button" class="btn ghost" data-hv-support-copy="${hallvallaCommunityEscape(order)}">Copiar Order ID</button>
-        <button type="button" class="btn primary" data-hv-support-approve="${hallvallaCommunityEscape(item.uid||uid)}" data-hv-support-request="${hallvallaCommunityEscape(item.requestId||id)}">Aprobar</button>
-        <button type="button" class="btn danger" data-hv-support-reject="${hallvallaCommunityEscape(item.uid||uid)}" data-hv-support-request="${hallvallaCommunityEscape(item.requestId||id)}">Rechazar</button>
+        <button type="button" class="btn primary" data-hv-support-approve="${hallvallaCommunityEscape(item.uid||uid)}" data-hv-support-request="${hallvallaCommunityEscape(item.requestId||item.__sourceRequestId||id)}" data-hv-support-channel="${hallvallaCommunityEscape(channel)}">Aprobar</button>
+        <button type="button" class="btn danger" data-hv-support-reject="${hallvallaCommunityEscape(item.uid||uid)}" data-hv-support-request="${hallvallaCommunityEscape(item.requestId||item.__sourceRequestId||id)}" data-hv-support-channel="${hallvallaCommunityEscape(channel)}">Rechazar</button>
       </div>`:`<small>Revisada: ${hallvallaCommunityEscape(hallvallaCommunityFormatDate(item.reviewedAt))}${item.adminNote?` · ${hallvallaCommunityEscape(item.adminNote)}`:""}</small>`}
     </article>`;
   }).join(""):'<div class="hv-community-empty">No hay solicitudes PayPal registradas.</div>';
 }
-async function hallvallaAdminResolveSupportRequest(uid,requestId,action){
+async function hallvallaAdminResolveSupportRequest(uid,requestId,action,channel="legacy"){
   if(!hallvallaCommunityIsAdmin())return;
   const safeUid=String(uid||"").trim(),safeRequestId=String(requestId||"").trim();
   if(!safeUid||!safeRequestId)return;
-  const requestRef=ref(db,`community/supportRequests/${safeUid}/${safeRequestId}`);
+
+  const safeChannel=String(channel||"")==="v146"?"v146":"legacy";
+  const supportCollection=safeChannel==="v146"
+    ?"supportRequestsV146"
+    :"supportRequests";
+
+  const requestRef=ref(
+    db,
+    `community/${supportCollection}/${safeUid}/${safeRequestId}`
+  );
   try{
     const snap=await get(requestRef),request=snap.val();
     if(!request)throw new Error("La solicitud ya no existe.");
@@ -1080,7 +1130,7 @@ async function hallvallaAdminResolveSupportRequest(uid,requestId,action){
         approvedBy:HALLVALLA_MASTER_ADMIN_UID
       };
     }
-    patch[`community/supportRequests/${safeUid}/${safeRequestId}`]={...request,status:"approved",reviewedAt:now,reviewedBy:HALLVALLA_MASTER_ADMIN_UID,adminNote:"Pago verificado manualmente en PayPal."};
+    patch[`community/${supportCollection}/${safeUid}/${safeRequestId}`]={...request,status:"approved",reviewedAt:now,reviewedBy:HALLVALLA_MASTER_ADMIN_UID,adminNote:"Pago verificado manualmente en PayPal."};
     await update(ref(db),patch);
     hallvallaAdminStatus(`Pago aprobado. ${offer.label} quedará entregado a ${safeUid}.`,"success");
   }catch(error){
@@ -1324,7 +1374,7 @@ function hallvallaCommunityAttach(user){
   hallvallaCommunityDetach();
   hallvallaCommunityUser=user||null;
   if(!user||String(user.uid||"")!==hallvallaCommunitySettledUid)hallvallaCommunitySettledUid="";
-  hallvallaCommunityModeration={};hallvallaCommunityRewardBook={};hallvallaCommunityClaimBook={};hallvallaSecurityAlertBook={};hallvallaGemShadowSignalBook={};hallvallaCommunityChatBook={};hallvallaCommunityModerator={};hallvallaCommunityModeratorsBook={};hallvallaModerationLogBook={};hallvallaReportBook={};hallvallaLastCreatedReport=null;
+  hallvallaCommunityModeration={};hallvallaCommunityRewardBook={};hallvallaCommunityClaimBook={};hallvallaSupportRequestBook={};hallvallaSupportRequestBookV146={};hallvallaSecurityAlertBook={};hallvallaGemShadowSignalBook={};hallvallaCommunityChatBook={};hallvallaCommunityModerator={};hallvallaCommunityModeratorsBook={};hallvallaModerationLogBook={};hallvallaReportBook={};hallvallaLastCreatedReport=null;
   hallvallaCommunitySyncAdminVisibility();
   if(!user){hallvallaCommunitySyncModerationUi();hallvallaCommunityRenderChat({});return;}
   const chatRef=typeof query==="function"?query(ref(db,"community/chat"),orderByChild("createdAt"),limitToLast(HALLVALLA_COMMUNITY_CHAT_LIMIT)):ref(db,"community/chat");
@@ -1337,12 +1387,33 @@ function hallvallaCommunityAttach(user){
   if(hallvallaCommunityIsAdmin(user)){
     hallvallaCommunityModeratorsUnsub=onValue(ref(db,"community/moderators"),snap=>{hallvallaCommunityModeratorsBook=snap.val()||{};hallvallaAdminRenderModerators(hallvallaCommunityModeratorsBook);},error=>console.warn("[HallValla][Community] Moderadores:",error));
     hallvallaModerationLogUnsub=onValue(ref(db,"community/moderationLog"),snap=>{hallvallaModerationLogBook=snap.val()||{};hallvallaAdminRenderModerationLog(hallvallaModerationLogBook);},error=>console.warn("[HallValla][Community] Auditoría:",error));
-    hallvallaSupportRequestsUnsub=onValue(ref(db,"community/supportRequests"),snap=>{hallvallaSupportRequestBook=snap.val()||{};hallvallaAdminRenderSupportRequests(hallvallaSupportRequestBook);},error=>console.warn("[HallValla][Support] Solicitudes:",error));
+    const legacySupportUnsub=onValue(
+      ref(db,"community/supportRequests"),
+      snap=>{
+        hallvallaSupportRequestBook=snap.val()||{};
+        hallvallaAdminRenderCombinedSupportRequests();
+      },
+      error=>console.warn("[HallValla][Support] Solicitudes legacy:",error)
+    );
+
+    const v146SupportUnsub=onValue(
+      ref(db,"community/supportRequestsV146"),
+      snap=>{
+        hallvallaSupportRequestBookV146=snap.val()||{};
+        hallvallaAdminRenderCombinedSupportRequests();
+      },
+      error=>console.warn("[HallValla][Support] Solicitudes v146:",error)
+    );
+
+    hallvallaSupportRequestsUnsub=()=>{
+      try{legacySupportUnsub();}catch(_){}
+      try{v146SupportUnsub();}catch(_){}
+    };
     hallvallaSecurityAlertsUnsub=onValue(ref(db,"community/securityAlerts"),snap=>{hallvallaSecurityAlertBook=snap.val()||{};hallvallaAdminRenderSecurityAlerts(hallvallaSecurityAlertBook);},error=>{console.warn("[HallValla][Security] Alertas:",error);hallvallaAdminRenderSecurityAlerts({});});
     hallvallaGemShadowSignalsUnsub=onValue(ref(db,"community/securitySignals"),snap=>{hallvallaGemShadowSignalBook=snap.val()||{};hallvallaAdminRenderGemShadowSignals(hallvallaGemShadowSignalBook);},error=>{console.warn("[HallValla][GemShadow] Señales:",error);hallvallaAdminRenderGemShadowSignals({});});
     hallvallaCommunitySyncReportsSubscription();
   }else{
-    hallvallaSupportRequestBook={};hallvallaSecurityAlertBook={};hallvallaGemShadowSignalBook={};hallvallaCommunityModeratorsBook={};hallvallaModerationLogBook={};hallvallaReportBook={};
+    hallvallaSupportRequestBook={};hallvallaSupportRequestBookV146={};hallvallaSecurityAlertBook={};hallvallaGemShadowSignalBook={};hallvallaCommunityModeratorsBook={};hallvallaModerationLogBook={};hallvallaReportBook={};
     hallvallaAdminRenderGemShadowSignals({});hallvallaAdminRenderSecurityAlerts({});hallvallaAdminRenderSupportRequests({});hallvallaAdminRenderModerators({});hallvallaAdminRenderModerationLog({});hallvallaCommunitySyncReportsSubscription();
   }
 }
@@ -1393,9 +1464,9 @@ function hallvallaCommunityBind(){
       if(value){try{void navigator.clipboard?.writeText?.(value);}catch(_){ } hallvallaAdminStatus(`Order ID copiado: ${value}`,"success");}
     }
     const approve=event.target?.closest?.("[data-hv-support-approve]");
-    if(approve&&hallvallaCommunityIsAdmin())void hallvallaAdminResolveSupportRequest(approve.dataset.hvSupportApprove||"",approve.dataset.hvSupportRequest||"","approve");
+    if(approve&&hallvallaCommunityIsAdmin())void hallvallaAdminResolveSupportRequest(approve.dataset.hvSupportApprove||"",approve.dataset.hvSupportRequest||"","approve",approve.dataset.hvSupportChannel||"legacy");
     const reject=event.target?.closest?.("[data-hv-support-reject]");
-    if(reject&&hallvallaCommunityIsAdmin())void hallvallaAdminResolveSupportRequest(reject.dataset.hvSupportReject||"",reject.dataset.hvSupportRequest||"","reject");
+    if(reject&&hallvallaCommunityIsAdmin())void hallvallaAdminResolveSupportRequest(reject.dataset.hvSupportReject||"",reject.dataset.hvSupportRequest||"","reject",reject.dataset.hvSupportChannel||"legacy");
     const reportTarget=event.target?.closest?.("[data-hv-report-target]");
     if(reportTarget){hallvallaSupportOpen({kind:"player",targetUid:reportTarget.dataset.hvReportTarget||"",targetName:reportTarget.dataset.hvReportName||"Jugador",reason:"Conducta/abuso"});return;}
     const reportReview=event.target?.closest?.("[data-hv-report-review-target]");
