@@ -88,11 +88,122 @@ function hallvallaSupportOffer(offerId){
   return HALLVALLA_SUPPORT_OFFERS[String(offerId||"").trim()]||null;
 }
 function hallvallaSupportCaptureInfo(details){
-  const capture=details?.purchase_units?.[0]?.payments?.captures?.[0]||null;
+  const unit=details?.purchase_units?.[0]||null;
+  const capture=unit?.payments?.captures?.[0]||null;
+  const amount=capture?.amount||unit?.amount||null;
   return {
     orderId:String(details?.id||"").trim().slice(0,80),
     captureId:String(capture?.id||"").trim().slice(0,80),
-    paypalStatus:String(capture?.status||details?.status||"").trim().toUpperCase().slice(0,32)
+    paypalStatus:String(capture?.status||details?.status||"").trim().toUpperCase().slice(0,32),
+    currencyCode:String(amount?.currency_code||"").trim().toUpperCase().slice(0,8),
+    amountValue:String(amount?.value||"").trim().slice(0,16),
+    customId:String(unit?.custom_id||"").trim().slice(0,120)
+  };
+}
+
+function hallvallaValidateSupportCapture(offer,details,uid){
+  if(!offer)throw new Error("Oferta PayPal desconocida.");
+
+  const safeUid=String(uid||"").trim();
+  if(!safeUid)throw new Error("La compra PayPal no tiene un UID autenticado.");
+
+  const info=hallvallaSupportCaptureInfo(details||{});
+  const expectedAmount=Number(offer.amountUsd||0).toFixed(2);
+  const receivedAmount=Number(info.amountValue);
+  const expectedCustomId=`${offer.offerId}:${safeUid.slice(0,48)}`;
+
+  if(info.orderId.length<6){
+    throw new Error("PayPal no devolvió un Order ID válido.");
+  }
+
+  if(info.captureId.length<6){
+    throw new Error("PayPal no devolvió un Capture ID válido.");
+  }
+
+  if(info.paypalStatus!=="COMPLETED"){
+    throw new Error(`El pago PayPal no está COMPLETED (${info.paypalStatus||"sin estado"}).`);
+  }
+
+  if(info.currencyCode!=="USD"){
+    throw new Error(`Moneda PayPal inesperada: ${info.currencyCode||"vacía"}.`);
+  }
+
+  if(!Number.isFinite(receivedAmount) || receivedAmount.toFixed(2)!==expectedAmount){
+    throw new Error(
+      `Importe PayPal incorrecto. Esperado $${expectedAmount}; recibido ${info.amountValue||"vacío"}.`
+    );
+  }
+
+  if(info.customId!==expectedCustomId){
+    throw new Error("La referencia PayPal no corresponde a esta oferta/cuenta.");
+  }
+
+  return info;
+}
+
+function hallvallaSupportCaptureSelfTest(){
+  const uid="TEST_UID_V146";
+  const offer=HALLVALLA_SUPPORT_OFFERS.support_gems_100;
+
+  const good={
+    id:"TEST_ORDER_123456",
+    status:"COMPLETED",
+    purchase_units:[{
+      custom_id:`${offer.offerId}:${uid}`,
+      amount:{
+        currency_code:"USD",
+        value:"0.99"
+      },
+      payments:{
+        captures:[{
+          id:"TEST_CAPTURE_123456",
+          status:"COMPLETED",
+          amount:{
+            currency_code:"USD",
+            value:"0.99"
+          }
+        }]
+      }
+    }]
+  };
+
+  const valid=hallvallaValidateSupportCapture(offer,good,uid);
+
+  let wrongAmountRejected=false;
+  try{
+    const bad=JSON.parse(JSON.stringify(good));
+    bad.purchase_units[0].payments.captures[0].amount.value="9.99";
+    hallvallaValidateSupportCapture(offer,bad,uid);
+  }catch(_){
+    wrongAmountRejected=true;
+  }
+
+  let wrongUidRejected=false;
+  try{
+    hallvallaValidateSupportCapture(offer,good,"OTRO_UID");
+  }catch(_){
+    wrongUidRejected=true;
+  }
+
+  let incompleteRejected=false;
+  try{
+    const bad=JSON.parse(JSON.stringify(good));
+    bad.purchase_units[0].payments.captures[0].status="PENDING";
+    hallvallaValidateSupportCapture(offer,bad,uid);
+  }catch(_){
+    incompleteRejected=true;
+  }
+
+  return {
+    ok:
+      valid.paypalStatus==="COMPLETED" &&
+      wrongAmountRejected &&
+      wrongUidRejected &&
+      incompleteRejected,
+    validCapture:valid,
+    wrongAmountRejected,
+    wrongUidRejected,
+    incompleteRejected
   };
 }
 async function hallvallaGetWelcomeSupportState(user=auth?.currentUser){
@@ -122,8 +233,7 @@ async function hallvallaCreateSupportRequest({offerId,paypalDetails}={}){
   if(!uid)throw new Error("Debes iniciar sesión con Google antes de registrar el apoyo.");
   const offer=hallvallaSupportOffer(offerId);
   if(!offer)throw new Error("Oferta de apoyo desconocida.");
-  const info=hallvallaSupportCaptureInfo(paypalDetails||{});
-  if(!info.orderId)throw new Error("PayPal no devolvió un Order ID válido.");
+  const info=hallvallaValidateSupportCapture(offer,paypalDetails||{},uid);
   if(offer.kind==="welcome"){
     const state=await hallvallaGetWelcomeSupportState(user);
     if(state.state==="approved")throw new Error("El paquete de bienvenida ya fue aprobado para esta cuenta.");
@@ -1308,4 +1418,4 @@ function hallvallaCommunityBind(){
 
 hallvallaCommunityBind();
 onAuthStateChanged(auth,user=>hallvallaCommunityAttach(user||null));
-Object.assign(globalThis,{hallvallaCommunityOpen,hallvallaCommunityClose,hallvallaCommunityIsAdmin,hallvallaSupportOpen,hallvallaDiagnosticEvent:hallvallaDiagnosticPush,hallvallaCreateSupportRequest,hallvallaGetWelcomeSupportState,hallvallaSupportOffer});
+Object.assign(globalThis,{hallvallaCommunityOpen,hallvallaCommunityClose,hallvallaCommunityIsAdmin,hallvallaSupportOpen,hallvallaDiagnosticEvent:hallvallaDiagnosticPush,hallvallaCreateSupportRequest,hallvallaGetWelcomeSupportState,hallvallaSupportOffer,hallvallaValidateSupportCapture,hallvallaSupportCaptureSelfTest});
