@@ -71,6 +71,12 @@ hvResolvePerformanceProfile();
 
 globalThis.__HALLVALLA_FIREBASE_CONFIG__ = hallvallaFirebaseConfig;
 
+try {
+  globalThis.__HALLVALLA_SECURITY__?.bindFirebase?.(hallvallaFirebaseConfig);
+} catch (error) {
+  console.error("[HallValla][SECURITY] No se pudo validar Firebase:", error);
+}
+
 
 /* PERF1 · Assets estáticos bajo demanda ------------------------------------
    Los <img> de sistemas ocultos arrancan con data-hv-src, sin src real.
