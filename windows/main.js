@@ -7,7 +7,7 @@ const path = require("path");
 const crypto = require("crypto");
 const { URL } = require("url");
 
-const HALLVALLA_WINDOWS_VERSION = "1.0.144";
+const HALLVALLA_WINDOWS_VERSION = "1.0.145";
 const HALLVALLA_WINDOW_TITLE = "HallValla";
 let localServer = null;
 let mainWindow = null;
@@ -298,13 +298,41 @@ async function createMainWindow(origin) {
           globalThis.__HALLVALLA_DESKTOP__ = "windows";
           globalThis.__HALLVALLA_DESKTOP_VERSION__ = ${JSON.stringify(HALLVALLA_WINDOWS_VERSION)};
           document.documentElement.dataset.hallvallaDesktop = "windows";
+
           const download = document.getElementById("hallvallaAndroidDownloadBtn");
           if (download) download.hidden = true;
+
+          if (globalThis.__HALLVALLA_DESKTOP_UID_BRIDGE_INSTALLED__ !== true) {
+            globalThis.__HALLVALLA_DESKTOP_UID_BRIDGE_INSTALLED__ = true;
+
+            const hallvallaSyncDesktopUid = () => {
+              try {
+                if (typeof getAuth !== "function") return;
+                const user = getAuth()?.currentUser || null;
+                const realUid = user?.uid && !user.isAnonymous ? String(user.uid) : "";
+
+                if (realUid) {
+                  try { uid = realUid; } catch (_) {}
+                  try { globalThis.uid = realUid; } catch (_) {}
+                  globalThis.__HALLVALLA_DESKTOP_AUTH_UID__ = realUid;
+                }
+              } catch (_) {}
+            };
+
+            hallvallaSyncDesktopUid();
+
+            try {
+              if (typeof getAuth === "function" && typeof onAuthStateChanged === "function") {
+                onAuthStateChanged(getAuth(), hallvallaSyncDesktopUid);
+              }
+            } catch (_) {}
+
+            setInterval(hallvallaSyncDesktopUid, 500);
+          }
         } catch (_) {}
       })();
     `, true);
   });
-
   await mainWindow.loadURL(`${origin}/hallvalla-stage.html?desktop=windows`);
 }
 
@@ -337,3 +365,4 @@ app.on("before-quit", () => {
     localServer = null;
   }
 });
+
