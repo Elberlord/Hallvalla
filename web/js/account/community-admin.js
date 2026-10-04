@@ -1023,9 +1023,27 @@ async function hallvallaAdminResolveSupportRequest(uid,requestId,action){
     }
     if(action!=="approve")return;
     const orderId=String(request.paypalOrderId||"").trim();
+    const captureId=String(request.paypalCaptureId||"").trim();
+
     if(!orderId)throw new Error("La solicitud no contiene PayPal Order ID.");
-    const usedSnap=await get(ref(db,`community/paypalApprovedOrders/${orderId}`));
-    if(usedSnap.exists())throw new Error("Ese PayPal Order ID ya fue utilizado en otra aprobación.");
+
+    const usedOrderSnap=await get(
+      ref(db,`community/paypalApprovedOrders/${orderId}`)
+    );
+
+    if(usedOrderSnap.exists()){
+      throw new Error("Ese PayPal Order ID ya fue utilizado en otra aprobación.");
+    }
+
+    if(captureId){
+      const usedCaptureSnap=await get(
+        ref(db,`community/paypalApprovedCaptures/${captureId}`)
+      );
+
+      if(usedCaptureSnap.exists()){
+        throw new Error("Ese PayPal Capture ID ya fue utilizado en otra aprobación.");
+      }
+    }
     if(offer.kind==="welcome"){
       const welcomeSnap=await get(ref(db,`community/welcomeClaims/${safeUid}`));
       if(welcomeSnap.exists())throw new Error("Esa cuenta ya recibió el paquete de bienvenida.");
@@ -1042,7 +1060,26 @@ async function hallvallaAdminResolveSupportRequest(uid,requestId,action){
       patch[`community/adminRewards/${safeUid}/${packId}`]={rewardId:packId,targetUid:safeUid,type:"pack",amount:offer.basicPacks,packTier:"basic",note:"Paquete de bienvenida · Sobres básicos",createdAt:now+2,createdBy:HALLVALLA_MASTER_ADMIN_UID};
       patch[`community/welcomeClaims/${safeUid}`]={uid:safeUid,requestId:safeRequestId,claimedAt:now,approvedBy:HALLVALLA_MASTER_ADMIN_UID};
     }
-    patch[`community/paypalApprovedOrders/${orderId}`]={orderId,requestId:safeRequestId,uid:safeUid,offerId:offer.offerId,approvedAt:now,approvedBy:HALLVALLA_MASTER_ADMIN_UID};
+    patch[`community/paypalApprovedOrders/${orderId}`]={
+      orderId,
+      requestId:safeRequestId,
+      uid:safeUid,
+      offerId:offer.offerId,
+      approvedAt:now,
+      approvedBy:HALLVALLA_MASTER_ADMIN_UID
+    };
+
+    if(captureId){
+      patch[`community/paypalApprovedCaptures/${captureId}`]={
+        captureId,
+        orderId,
+        requestId:safeRequestId,
+        uid:safeUid,
+        offerId:offer.offerId,
+        approvedAt:now,
+        approvedBy:HALLVALLA_MASTER_ADMIN_UID
+      };
+    }
     patch[`community/supportRequests/${safeUid}/${safeRequestId}`]={...request,status:"approved",reviewedAt:now,reviewedBy:HALLVALLA_MASTER_ADMIN_UID,adminNote:"Pago verificado manualmente en PayPal."};
     await update(ref(db),patch);
     hallvallaAdminStatus(`Pago aprobado. ${offer.label} quedará entregado a ${safeUid}.`,"success");

@@ -809,6 +809,37 @@
           }
         }
       },
+      "paypalApprovedCaptures": {
+        ".read": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
+        "$captureId": {
+          ".write": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2' && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['captureId','orderId','requestId','uid','offerId','approvedAt','approvedBy']) && newData.child('captureId').val() === $captureId && newData.child('orderId').isString() && newData.child('orderId').val().length >= 6 && newData.child('orderId').val().length <= 80 && newData.child('requestId').isString() && newData.child('requestId').val().length > 0 && newData.child('requestId').val().length <= 120 && newData.child('uid').isString() && newData.child('uid').val().length > 0 && newData.child('uid').val().length <= 160 && newData.child('offerId').isString() && newData.child('offerId').val().length > 0 && newData.child('offerId').val().length <= 40 && newData.child('approvedAt').isNumber() && newData.child('approvedAt').val() > 0 && newData.child('approvedBy').val() === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
+          "captureId": {
+            ".validate": "newData.isString() && newData.val() === $captureId && newData.val().length >= 6 && newData.val().length <= 80"
+          },
+          "orderId": {
+            ".validate": "newData.isString() && newData.val().length >= 6 && newData.val().length <= 80"
+          },
+          "requestId": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120"
+          },
+          "uid": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 160"
+          },
+          "offerId": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40"
+          },
+          "approvedAt": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "approvedBy": {
+            ".validate": "newData.isString() && newData.val() === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
       "paypalApprovedOrders": {
         ".read": "auth != null && auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2'",
         "$orderId": {
