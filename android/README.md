@@ -1,9 +1,9 @@
-# HallValla Android v143 — PayPal LIVE manual + Comunidad + PvP validado + frontend local + Google nativo + 1366×636
+# HallValla Android v145 - frontend canonico local + Google nativo + API 35 + 1366x636
 
 - applicationId: `com.hallvalla.game`
-- versionCode: `142`
-- versionName: `1.0.142`
-- Sitio cargado: `https://elberlord.github.io/Hallvalla/?apk=143&hvfit=1`
+- versionCode: `145`
+- versionName: `1.0.145`
+- Sitio cargado: `https://elberlord.github.io/Hallvalla/?apk=145&hvfit=1`
 - Firma: debe usar exactamente el mismo `hallvalla-release.p12` de v130.
 - OAuth Web Client usado por Firebase: `496903032464-mcru6mkdr99pgos2fdegarg08eb55ujf.apps.googleusercontent.com`
 
@@ -100,3 +100,10 @@ Si falta esa asociación, Google Play Services devuelve `DEVELOPER_ERROR (10)` y
 - El UID maestro se valida también en Firebase Rules; ocultar/mostrar el botón no es la medida de seguridad.
 - El antiguo modo de pruebas que desbloqueaba cartas/progresión fue retirado del frontend público.
 - Requiere publicar `backend/firebase/database.rules.json` v252 antes de probar Comunidad/Admin.
+
+## v145 - empaquetado Android desde web canonica aprobada
+- Sube Android a `versionCode 145` / `versionName 1.0.145`.
+- Empaqueta el `web/` canonico actual mediante `assets.srcDirs`, sin modificar archivos de `web/`.
+- Mantiene `compileSdk 35`, `targetSdk 35`, `minSdk 24`, Google Sign-In nativo, Firebase, gamepad nativo y viewport 1366x636.
+- Renueva el marcador de cache local a `v145` para evitar reutilizar recursos de APK anteriores.
+- El fix UID de Windows permanece exclusivo del shell `windows/`.
