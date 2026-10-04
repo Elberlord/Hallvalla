@@ -7,7 +7,7 @@ const path = require("path");
 const crypto = require("crypto");
 const { URL } = require("url");
 
-const HALLVALLA_WINDOWS_VERSION = "1.0.143";
+const HALLVALLA_WINDOWS_VERSION = "1.0.144";
 const HALLVALLA_WINDOW_TITLE = "HallValla";
 let localServer = null;
 let mainWindow = null;

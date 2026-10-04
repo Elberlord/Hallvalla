@@ -1,6 +1,6 @@
 {
   "name": "hallvalla-windows",
-  "version": "1.0.143",
+  "version": "1.0.144",
   "private": true,
   "description": "HallValla Windows desktop shell using the canonical web game.",
   "main": "main.js",
@@ -49,7 +49,7 @@
         }
       ],
       "icon": "hallvalla_logo_512.png",
-      "artifactName": "HallValla-Setup-v143.${ext}"
+      "artifactName": "HallValla-Setup-v144.${ext}"
     },
     "nsis": {
       "oneClick": false,
