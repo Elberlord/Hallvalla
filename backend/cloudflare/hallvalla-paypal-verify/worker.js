@@ -1,6 +1,5 @@
 const PAYPAL_BASE = "https://api-m.paypal.com";
 const FIREBASE_DB_BASE = "https://hallvalla-online-default-rtdb.firebaseio.com";
-const FIREBASE_WEB_API_KEY = "AIzaSyA6C6f3gSVDvgxcQuyD8PsyQiHNDPD_ZOQ";
 const HALLVALLA_MASTER_ADMIN_UID = "5V3mDjSyeNbI7W0qI16cEz5PbsN2";
 
 const OFFERS = Object.freeze({
@@ -21,6 +20,8 @@ let cachedGoogleToken = null;
 let cachedGoogleTokenExpiresAt = 0;
 let cachedServiceAccount = null;
 let cachedServiceKey = null;
+let cachedFirebaseJwks = null;
+let cachedFirebaseJwksExpiresAt = 0;
 
 function isAllowedOrigin(origin) {
   return (
@@ -219,52 +220,275 @@ async function getGoogleAccessToken(env) {
   return cachedGoogleToken;
 }
 
-async function verifyFirebaseUser(idToken) {
-  if (!idToken) {
-    throw new Error("FIREBASE_ID_TOKEN_MISSING");
+function base64UrlToBytes(value) {
+  let base64 = String(value || "")
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+
+  while (base64.length % 4) {
+    base64 += "=";
+  }
+
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return bytes;
+}
+
+function base64UrlToJson(value) {
+  const bytes = base64UrlToBytes(value);
+  const jsonText = new TextDecoder().decode(bytes);
+  return JSON.parse(jsonText);
+}
+
+async function getFirebaseSigningKeys() {
+  const now = Date.now();
+
+  if (
+    cachedFirebaseJwks &&
+    now < cachedFirebaseJwksExpiresAt
+  ) {
+    return cachedFirebaseJwks;
   }
 
   const response = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(FIREBASE_WEB_API_KEY)}`,
+    "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
     {
-      method: "POST",
+      method: "GET",
       headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ idToken })
+        Accept: "application/json"
+      }
     }
   );
 
   const data =
     await response.json().catch(() => ({}));
 
-  const user =
-    Array.isArray(data?.users)
-      ? data.users[0]
-      : null;
-
-  if (!response.ok || !user?.localId) {
-    throw new Error("FIREBASE_ID_TOKEN_INVALID");
+  if (
+    !response.ok ||
+    !Array.isArray(data?.keys) ||
+    data.keys.length === 0
+  ) {
+    throw new Error(
+      "FIREBASE_PUBLIC_KEYS_FAILED"
+    );
   }
 
-  const uid =
-    String(user.localId || "").trim();
+  cachedFirebaseJwks = data.keys;
 
-  if (!uid || uid.length > 160) {
-    throw new Error("FIREBASE_UID_INVALID");
+  const cacheControl =
+    String(
+      response.headers.get(
+        "Cache-Control"
+      ) || ""
+    );
+
+  const maxAgeMatch =
+    cacheControl.match(
+      /max-age=(\d+)/i
+    );
+
+  const maxAgeSeconds =
+    maxAgeMatch
+      ? Math.max(
+          300,
+          Math.min(
+            86400,
+            Number(maxAgeMatch[1]) ||
+              3600
+          )
+        )
+      : 3600;
+
+  cachedFirebaseJwksExpiresAt =
+    now +
+    maxAgeSeconds * 1000;
+
+  return cachedFirebaseJwks;
+}
+
+async function verifyFirebaseUser(idToken) {
+  if (!idToken) {
+    throw new Error(
+      "FIREBASE_ID_TOKEN_MISSING"
+    );
+  }
+
+  const parts =
+    String(idToken).split(".");
+
+  if (parts.length !== 3) {
+    throw new Error(
+      "FIREBASE_ID_TOKEN_INVALID"
+    );
+  }
+
+  let header;
+  let payload;
+
+  try {
+    header =
+      base64UrlToJson(parts[0]);
+
+    payload =
+      base64UrlToJson(parts[1]);
+  } catch {
+    throw new Error(
+      "FIREBASE_ID_TOKEN_INVALID"
+    );
+  }
+
+  if (
+    header?.alg !== "RS256" ||
+    !header?.kid
+  ) {
+    throw new Error(
+      "FIREBASE_ID_TOKEN_INVALID"
+    );
+  }
+
+  const keys =
+    await getFirebaseSigningKeys();
+
+  let jwk =
+    keys.find(
+      key =>
+        String(key?.kid || "") ===
+        String(header.kid)
+    );
+
+  if (!jwk) {
+    cachedFirebaseJwks = null;
+    cachedFirebaseJwksExpiresAt = 0;
+
+    const refreshedKeys =
+      await getFirebaseSigningKeys();
+
+    jwk =
+      refreshedKeys.find(
+        key =>
+          String(key?.kid || "") ===
+          String(header.kid)
+      );
+
+    if (!jwk) {
+      throw new Error(
+        "FIREBASE_SIGNING_KEY_NOT_FOUND"
+      );
+    }
+  }
+
+  return verifyFirebaseTokenWithKey(
+    parts,
+    payload,
+    jwk
+  );
+}
+
+async function verifyFirebaseTokenWithKey(
+  parts,
+  payload,
+  jwk
+) {
+  let publicKey;
+
+  try {
+    publicKey =
+      await crypto.subtle.importKey(
+        "jwk",
+        jwk,
+        {
+          name: "RSASSA-PKCS1-v1_5",
+          hash: "SHA-256"
+        },
+        false,
+        ["verify"]
+      );
+  } catch {
+    throw new Error(
+      "FIREBASE_PUBLIC_KEY_INVALID"
+    );
+  }
+
+  const signedData =
+    new TextEncoder().encode(
+      `${parts[0]}.${parts[1]}`
+    );
+
+  const signature =
+    base64UrlToBytes(parts[2]);
+
+  const signatureValid =
+    await crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5",
+      publicKey,
+      signature,
+      signedData
+    );
+
+  if (!signatureValid) {
+    throw new Error(
+      "FIREBASE_ID_TOKEN_INVALID"
+    );
+  }
+
+  const now =
+    Math.floor(Date.now() / 1000);
+
+  const expectedIssuer =
+    "https://securetoken.google.com/hallvalla-online";
+
+  const uid =
+    String(
+      payload?.sub || ""
+    ).trim();
+
+  if (
+    payload?.aud !==
+      "hallvalla-online" ||
+    payload?.iss !==
+      expectedIssuer ||
+    !uid ||
+    uid.length > 160 ||
+    !Number.isFinite(
+      Number(payload?.exp)
+    ) ||
+    Number(payload.exp) <= now ||
+    !Number.isFinite(
+      Number(payload?.iat)
+    ) ||
+    Number(payload.iat) >
+      now + 60 ||
+    !Number.isFinite(
+      Number(payload?.auth_time)
+    ) ||
+    Number(payload.auth_time) >
+      now + 60
+  ) {
+    throw new Error(
+      "FIREBASE_ID_TOKEN_INVALID"
+    );
   }
 
   const displayName =
     String(
-      user.displayName ||
-      user.email?.split("@")[0] ||
+      payload?.name ||
+      payload?.email?.split("@")[0] ||
       "Jugador"
     )
       .replace(/\s+/g, " ")
       .trim()
-      .slice(0, 24) || "Jugador";
+      .slice(0, 24) ||
+    "Jugador";
 
-  return { uid, displayName };
+  return {
+    uid,
+    displayName
+  };
 }
 
 async function getPayPalToken(env) {
@@ -446,66 +670,125 @@ function databaseUrl(path = "") {
     String(path || "")
       .replace(/^\/+|\/+$/g, "");
 
-  if (!clean)
+  if (!clean) {
     return `${FIREBASE_DB_BASE}/.json`;
+  }
 
   const encoded =
     clean
       .split("/")
-      .map(part => encodeURIComponent(part))
+      .map((part) => encodeURIComponent(part))
       .join("/");
 
   return `${FIREBASE_DB_BASE}/${encoded}.json`;
 }
 
-async function databaseFetch(
-  path,
-  {
-    method = "GET",
-    token,
-    body,
-    headers = {}
-  } = {}
-) {
-  const response = await fetch(
-    databaseUrl(path),
-    {
-      method,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        ...(body !== undefined
-          ? {
-              "Content-Type":
-                "application/json"
-            }
-          : {}),
-        ...headers
-      },
-      body:
-        body === undefined
-          ? undefined
-          : JSON.stringify(body)
-    }
-  );
+/**
+ * Opciones válidas para una llamada REST a Firebase.
+ *
+ * @typedef {Object} FirebaseRequestOptions
+ * @property {string=} method
+ * @property {string=} token
+ * @property {*=} body
+ * @property {Record<string,string>=} headers
+ */
 
-  const text = await response.text();
+/**
+ * Ejecuta una petición REST autenticada contra Realtime Database.
+ *
+ * @param {string} path
+ * @param {FirebaseRequestOptions=} options
+ * @returns {Promise<{
+ *   response: Response,
+ *   data: any
+ * }>}
+ */
+async function databaseFetch(path, options = {}) {
+  const method =
+    typeof options.method === "string"
+      ? options.method
+      : "GET";
+
+  const token =
+    typeof options.token === "string"
+      ? options.token
+      : "";
+
+  const body = options.body;
+
+  const headers =
+    options.headers &&
+    typeof options.headers === "object"
+      ? options.headers
+      : {};
+
+  /** @type {Record<string,string>} */
+  const requestHeaders = {
+    ...headers
+  };
+
+  if (token) {
+    requestHeaders.Authorization =
+      `Bearer ${token}`;
+  }
+
+  if (body !== undefined) {
+    requestHeaders["Content-Type"] =
+      "application/json";
+  }
+
+  const response =
+    await fetch(
+      databaseUrl(path),
+      {
+        method,
+        headers: requestHeaders,
+        body:
+          body === undefined
+            ? undefined
+            : JSON.stringify(body)
+      }
+    );
+
+  const text =
+    await response.text();
 
   let data = null;
 
   if (text) {
     try {
-      data = JSON.parse(text);
+      data =
+        JSON.parse(text);
     } catch {
       data = text;
     }
   }
 
-  return { response, data };
+  return {
+    response,
+    data
+  };
 }
 
+/**
+ * Lee un nodo de Firebase.
+ *
+ * @param {string} path
+ * @param {string} token
+ * @returns {Promise<any>}
+ */
 async function databaseGet(path, token) {
-  const { response, data } =
-    await databaseFetch(path, { token });
+  const {
+    response,
+    data
+  } =
+    await databaseFetch(
+      path,
+      {
+        method: "GET",
+        token
+      }
+    );
 
   if (!response.ok) {
     throw new Error(
@@ -516,6 +799,19 @@ async function databaseGet(path, token) {
   return data;
 }
 
+/**
+ * Reserva un nodo de forma atómica usando ETag.
+ * Evita que dos peticiones procesen la misma
+ * orden o Capture ID simultáneamente.
+ *
+ * @param {string} path
+ * @param {*} value
+ * @param {string} token
+ * @returns {Promise<{
+ *   created: boolean,
+ *   data: any
+ * }>}
+ */
 async function reserveRecord(
   path,
   value,
@@ -525,6 +821,7 @@ async function reserveRecord(
     await databaseFetch(
       path,
       {
+        method: "GET",
         token,
         headers: {
           "X-Firebase-ETag": "true"
@@ -546,7 +843,9 @@ async function reserveRecord(
   }
 
   const etag =
-    first.response.headers.get("ETag");
+    first.response.headers.get(
+      "ETag"
+    );
 
   if (!etag) {
     throw new Error(
@@ -586,7 +885,8 @@ async function reserveRecord(
 
   return {
     created: true,
-    data: put.data ?? value
+    data:
+      put.data ?? value
   };
 }
 
@@ -988,9 +1288,9 @@ export default {
           ok: true,
           service:
             "hallvalla-paypal-verify",
-          revision: 2,
+          revision: 3,
           mode:
-            "firebase-authenticated-auto-delivery"
+            "firebase-jwt-verified-auto-delivery"
         }
       );
     }
@@ -1055,7 +1355,7 @@ export default {
           request,
           {
             ok: true,
-            revision: 2,
+            revision: 3,
             firebaseUserVerified:
               true,
             firebaseDatabaseAdmin:
