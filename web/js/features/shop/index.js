@@ -17,7 +17,7 @@ const SHOP_PACK_VISUALS=Object.freeze({
   legendary:"assets/shop/v6/packs/legendary.webp" // Legendaria -> legendary -> púrpura
 });
 
-/* Aportes PayPal LIVE. Las gemas se entregan como agradecimiento después de aprobación manual. */
+/* PayPal LIVE v146. El Worker verifica el pago y autoriza la recompensa automáticamente. */
 const SHOP_GEM_BUNDLES=Object.freeze([
   Object.freeze({gems:100,usd:0.99}),
   Object.freeze({gems:250,usd:1.99}),
@@ -166,10 +166,10 @@ function ensureHallvallaShopPayPalModal(){
       <h2 id="shopGemPayPalTitle">GRACIAS POR APOYAR</h2>
       <div id="shopGemPayPalAmount" class="welcome-paypal-price"></div>
       <p id="shopGemPayPalPrice" class="welcome-paypal-once"></p>
-      <div class="welcome-paypal-sandbox">PAYPAL LIVE · REVISIÓN MANUAL</div>
+      <div class="welcome-paypal-sandbox">PAYPAL LIVE · VERIFICACIÓN SEGURA</div>
       <div id="shopGemPayPalButtonContainer" class="welcome-paypal-button"></div>
       <p id="shopGemPayPalStatus" class="welcome-paypal-status" aria-live="polite"></p>
-      <small class="welcome-paypal-note">Las gemas son un agradecimiento por apoyar HallValla. Tras pagar, la solicitud queda pendiente hasta que el administrador verifique el Order ID directamente en PayPal.</small>
+      <small class="welcome-paypal-note">Tras el pago, HallValla verifica la orden directamente con PayPal y envía las gemas automáticamente a la cuenta autenticada.</small>
     </section>`;
   document.body.appendChild(modal);
   const close=()=>modal.classList.add("hidden");
@@ -230,7 +230,7 @@ async function renderHallvallaShopGemPayPalButton(offer){
           if(!globalThis.hallvallaCreateSupportRequest)throw new Error("El registro de solicitudes no está disponible.");
           const request=await globalThis.hallvallaCreateSupportRequest({offerId:`support_gems_${amount}`,paypalDetails:details});
           container.innerHTML="";
-          if(status)status.textContent=`Pago recibido · Orden ${orderId}. Solicitud ${request.requestId} PENDIENTE. Las ${amount.toLocaleString("es-CR")} gemas se entregarán cuando el administrador verifique el pago.`;
+          if(status)status.textContent=`Pago verificado · Orden ${orderId}. ${amount.toLocaleString("es-CR")} gemas enviadas a tu cuenta${request.idempotent?" · compra ya procesada previamente":""}.`;
         });
       },
       onCancel(){
@@ -238,7 +238,7 @@ async function renderHallvallaShopGemPayPalButton(offer){
       },
       onError(error){
         console.error("[HallValla][Shop PayPal LIVE]",error);
-        if(status)status.textContent="No se pudo completar el pago. No se creó ninguna solicitud.";
+        if(status)status.textContent="No se pudo completar o verificar el pago. No se acreditó ninguna recompensa.";
       }
     }).render(container);
   }catch(error){

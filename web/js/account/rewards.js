@@ -4,7 +4,7 @@
 
 /* ============================================================
    PAQUETE DE BIENVENIDA · PAYPAL LIVE
-   El pago queda PENDIENTE hasta que el administrador lo verifique manualmente en PayPal.
+   El Worker verifica PayPal y autoriza la entrega automáticamente.
    ============================================================ */
 const HALLVALLA_WELCOME_PACK_PAYPAL_CLIENT_ID="BAAxtgtvIqauIKFjqhOKQs6EfF5UW4NnyImbSbxwLRV0hVIZ1NswqSwlLsWbMp-un966O5drctiq7wtP98";
 const HALLVALLA_WELCOME_PACK_PRICE_USD="0.99";
@@ -31,10 +31,10 @@ function ensureHallvallaWelcomePayPalModal(){
         <div><strong>10</strong><span>Gemas</span></div>
       </div>
       <p class="welcome-paypal-once">Oferta prevista como compra única por cuenta.</p>
-      <div class="welcome-paypal-sandbox">PAYPAL LIVE · REVISIÓN MANUAL</div>
+      <div class="welcome-paypal-sandbox">PAYPAL LIVE · VERIFICACIÓN SEGURA</div>
       <div id="welcomePayPalButtonContainer" class="welcome-paypal-button"></div>
       <p id="welcomePayPalStatus" class="welcome-paypal-status" aria-live="polite"></p>
-      <small class="welcome-paypal-note">Después del pago se crea una solicitud. El administrador verifica el Order ID en PayPal y luego acredita 3 sobres básicos, 300 de oro y 10 gemas.</small>
+      <small class="welcome-paypal-note">Después del pago, HallValla verifica la orden directamente con PayPal y envía automáticamente 3 sobres básicos, 300 de oro y 10 gemas.</small>
     </section>`;
   document.body.appendChild(modal);
   const close=()=>modal.classList.add("hidden");
@@ -95,7 +95,7 @@ async function renderHallvallaWelcomePayPalButton(){
           if(!globalThis.hallvallaCreateSupportRequest)throw new Error("El registro de solicitudes no está disponible.");
           const request=await globalThis.hallvallaCreateSupportRequest({offerId:"welcome_pack_v1",paypalDetails:details});
           container.innerHTML="";
-          if(status)status.textContent=`Pago recibido · Orden ${orderId}. Solicitud ${request.requestId} PENDIENTE. El administrador verificará el pago antes de entregar el paquete.`;
+          if(status)status.textContent=`Pago verificado · Orden ${orderId}. Paquete de bienvenida enviado a tu cuenta${request.idempotent?" · compra ya procesada previamente":""}.`;
         });
       },
       onCancel(){
@@ -103,7 +103,7 @@ async function renderHallvallaWelcomePayPalButton(){
       },
       onError(error){
         console.error("[HallValla][PayPal LIVE]",error);
-        if(status)status.textContent="No se pudo completar el pago. No se creó ninguna solicitud.";
+        if(status)status.textContent="No se pudo completar o verificar el pago. No se acreditó ninguna recompensa.";
       }
     }).render(container);
   }catch(error){

@@ -4,7 +4,7 @@
    - Moderación temporal (silencio / baneo) controlada por Firebase Rules.
    - Eventos globales publicados por el UID maestro.
    - Premios administrativos dirigidos a una cuenta concreta.
-   - Solicitudes PayPal LIVE con aprobación humana del administrador.
+   - PayPal LIVE v146 verificado automáticamente por servidor.
 */
 
 const HALLVALLA_MASTER_ADMIN_UID="5V3mDjSyeNbI7W0qI16cEz5PbsN2";
@@ -16,6 +16,26 @@ const HALLVALLA_SUPPORT_WHATSAPP_DIGITS="50664305227";
 const HALLVALLA_DIAGNOSTIC_STORAGE_KEY="hallvallaDiagnosticBlackboxV1";
 const HALLVALLA_DIAGNOSTIC_LIMIT=10;
 const HALLVALLA_REPORT_EVIDENCE_MAX_DATA_URL=520000;
+const HALLVALLA_PAYPAL_WORKER_BASE="https://hallvalla-paypal-verify.anakinjd1985.workers.dev";
+
+const HALLVALLA_PAYPAL_REASON_MESSAGES=Object.freeze({
+  AUTH_INVALID:"Tu sesión de HallValla no pudo verificarse. Inicia sesión de nuevo.",
+  ORDER_NOT_FOUND:"PayPal no encontró esa orden.",
+  ORDER_NOT_COMPLETED:"El pago todavía no aparece como COMPLETED.",
+  CUSTOM_ID_MISMATCH:"La orden PayPal no corresponde a esta cuenta de HallValla.",
+  ORDER_AMOUNT_MISMATCH:"El importe de la orden PayPal no coincide con la oferta.",
+  CAPTURE_INVALID:"PayPal no devolvió una captura válida.",
+  CAPTURE_AMOUNT_MISMATCH:"El importe capturado por PayPal no coincide con la oferta.",
+  ORDER_ALREADY_USED:"Ese Order ID de PayPal ya fue utilizado.",
+  CAPTURE_ALREADY_USED:"Ese Capture ID de PayPal ya fue utilizado.",
+  WELCOME_ALREADY_CLAIMED:"Esta cuenta ya recibió el paquete de bienvenida.",
+  SERVER_AUTH_FAILED:"El servidor de pagos no pudo autenticarse con Firebase.",
+  SERVER_CREDENTIALS_INVALID:"La credencial privada del servidor de pagos no es válida.",
+  DATABASE_FAILED:"El servidor verificó el pago pero no pudo registrar la recompensa.",
+  PAYPAL_LOOKUP_FAILED:"PayPal no pudo verificar la orden en este momento.",
+  PAYPAL_FAILED:"El servidor no pudo autenticarse con PayPal.",
+  ORIGIN_NOT_ALLOWED:"Este cliente no está autorizado para usar el servidor de pagos."
+});
 
 const HALLVALLA_SUPPORT_OFFERS=Object.freeze({
   support_gems_100:Object.freeze({offerId:"support_gems_100",kind:"gems",amountUsd:"0.99",gems:100,gold:0,basicPacks:0,label:"100 gemas"}),
@@ -207,6 +227,48 @@ function hallvallaSupportCaptureSelfTest(){
     incompleteRejected
   };
 }
+async function hallvallaPayPalWorkerRequest(path,payload={}){
+  const user=auth?.currentUser;
+  if(!user)throw new Error("Debes iniciar sesión antes de usar PayPal.");
+
+  let idToken="";
+  try{
+    idToken=await user.getIdToken(true);
+  }catch(error){
+    console.error("[HallValla][PayPal] No se pudo obtener Firebase ID token:",error);
+    throw new Error("No se pudo verificar tu sesión de HallValla.");
+  }
+
+  let response;
+  try{
+    response=await fetch(`${HALLVALLA_PAYPAL_WORKER_BASE}${path}`,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":`Bearer ${idToken}`
+      },
+      body:JSON.stringify(payload||{})
+    });
+  }catch(error){
+    console.error("[HallValla][PayPal] Worker no disponible:",error);
+    throw new Error("No se pudo contactar el servidor seguro de pagos.");
+  }
+
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok||data?.ok!==true){
+    const reason=String(data?.reason||data?.error||"SERVER_ERROR");
+    const message=HALLVALLA_PAYPAL_REASON_MESSAGES[reason]||`El servidor de pagos rechazó la operación (${reason}).`;
+    const error=new Error(message);
+    error.code=reason;
+    error.payload=data;
+    throw error;
+  }
+  return data;
+}
+
+async function hallvallaPayPalServerSelfTest(){
+  return hallvallaPayPalWorkerRequest("/self-test",{});
+}
 async function hallvallaGetWelcomeSupportState(user=auth?.currentUser){
   const uid=String(user?.uid||"").trim();
   if(!uid)return {state:"signed_out"};
@@ -240,17 +302,30 @@ async function hallvallaCreateSupportRequest({offerId,paypalDetails}={}){
   const user=auth?.currentUser;
   const uid=String(user?.uid||"").trim();
   if(!uid)throw new Error("Debes iniciar sesión con Google antes de registrar el apoyo.");
+
   const offer=hallvallaSupportOffer(offerId);
   if(!offer)throw new Error("Oferta de apoyo desconocida.");
+
+  // Defensa local adicional. La decisión final siempre la toma el Worker.
   const info=hallvallaValidateSupportCapture(offer,paypalDetails||{},uid);
+
   if(offer.kind==="welcome"){
     const state=await hallvallaGetWelcomeSupportState(user);
     if(state.state==="approved")throw new Error("El paquete de bienvenida ya fue aprobado para esta cuenta.");
-    if(state.state==="pending")throw new Error("Ya tienes una solicitud de bienvenida pendiente de revisión.");
+    if(state.state==="pending")throw new Error("Ya tienes una solicitud de bienvenida pendiente. No vuelvas a pagar.");
   }
-  const requestId=hallvallaCommunityId("support");
-  const payload={
-    requestId,
+
+  const result=await hallvallaPayPalWorkerRequest("/claim",{
+    orderId:info.orderId,
+    offerId:offer.offerId
+  });
+
+  if(result?.valid!==true||result?.claimed!==true){
+    throw new Error("El servidor no confirmó la entrega de la compra.");
+  }
+
+  return {
+    requestId:String(result.requestId||`paypalv146_${info.orderId}`),
     uid,
     playerName:hallvallaCommunityName(),
     kind:offer.kind,
@@ -259,17 +334,13 @@ async function hallvallaCreateSupportRequest({offerId,paypalDetails}={}){
     gems:offer.gems,
     gold:offer.gold,
     basicPacks:offer.basicPacks,
-    paypalOrderId:info.orderId,
-    paypalCaptureId:info.captureId,
-    paypalStatus:info.paypalStatus||"COMPLETED",
-    createdAt:Date.now(),
-    status:"pending",
-    reviewedAt:0,
-    reviewedBy:"",
-    adminNote:""
+    paypalOrderId:String(result.orderId||info.orderId),
+    paypalCaptureId:String(result.captureId||info.captureId),
+    paypalStatus:"COMPLETED",
+    status:"approved",
+    serverVerified:true,
+    idempotent:result.idempotent===true
   };
-  await set(ref(db,`community/supportRequestsV146/${uid}/${requestId}`),payload);
-  return payload;
 }
 function hallvallaSupportStatusLabel(status){
   return ({pending:"PENDIENTE",approved:"APROBADA",rejected:"RECHAZADA"})[String(status||"")]||String(status||"—").toUpperCase();
@@ -1072,6 +1143,9 @@ async function hallvallaAdminResolveSupportRequest(uid,requestId,action,channel=
       return;
     }
     if(action!=="approve")return;
+    if(safeChannel==="v146"){
+      throw new Error("Las compras v146 solo pueden aprobarse mediante la verificación automática del servidor.");
+    }
     const orderId=String(request.paypalOrderId||"").trim();
     const captureId=String(request.paypalCaptureId||"").trim();
 
@@ -1526,4 +1600,4 @@ function hallvallaCommunityBind(){
 
 hallvallaCommunityBind();
 onAuthStateChanged(auth,user=>hallvallaCommunityAttach(user||null));
-Object.assign(globalThis,{hallvallaCommunityOpen,hallvallaCommunityClose,hallvallaCommunityIsAdmin,hallvallaSupportOpen,hallvallaDiagnosticEvent:hallvallaDiagnosticPush,hallvallaCreateSupportRequest,hallvallaGetWelcomeSupportState,hallvallaSupportOffer,hallvallaValidateSupportCapture,hallvallaSupportCaptureSelfTest});
+Object.assign(globalThis,{hallvallaCommunityOpen,hallvallaCommunityClose,hallvallaCommunityIsAdmin,hallvallaSupportOpen,hallvallaDiagnosticEvent:hallvallaDiagnosticPush,hallvallaCreateSupportRequest,hallvallaGetWelcomeSupportState,hallvallaSupportOffer,hallvallaValidateSupportCapture,hallvallaSupportCaptureSelfTest,hallvallaPayPalServerSelfTest});
