@@ -1,9 +1,9 @@
-# HallValla Android v145 - frontend canonico local + Google nativo + API 35 + 1366x636
+# HallValla Android v146 - frontend canonico local + Google nativo + API 35 + 1366x636
 
 - applicationId: `com.hallvalla.game`
-- versionCode: `145`
-- versionName: `1.0.145`
-- Sitio cargado: `https://elberlord.github.io/Hallvalla/?apk=145&hvfit=1`
+- versionCode: `146`
+- versionName: `1.0.146`
+- Sitio cargado: `https://elberlord.github.io/Hallvalla/?apk=146&hvfit=1`
 - Firma: debe usar exactamente el mismo `hallvalla-release.p12` de v130.
 - OAuth Web Client usado por Firebase: `496903032464-mcru6mkdr99pgos2fdegarg08eb55ujf.apps.googleusercontent.com`
 

@@ -5,7 +5,7 @@ cd /d "%~dp0"
 
 echo.
 echo ==============================================
-echo   HALLVALLA WINDOWS v145 - SECURITY BUILD
+echo   HALLVALLA WINDOWS v146 - SECURITY BUILD
 echo ==============================================
 echo.
 
@@ -45,16 +45,16 @@ if errorlevel 1 goto :fail
 
 echo.
 echo [4/4] Calculando SHA-256 del instalador...
-if exist "dist\HallValla-Setup-v145.exe" (
-  certutil -hashfile "dist\HallValla-Setup-v145.exe" SHA256
+if exist "dist\HallValla-Setup-v146.exe" (
+  certutil -hashfile "dist\HallValla-Setup-v146.exe" SHA256
 ) else (
-  echo [ERROR] No encuentro dist\HallValla-Setup-v145.exe
+  echo [ERROR] No encuentro dist\HallValla-Setup-v146.exe
   goto :fail
 )
 
 echo.
 echo LISTO:
-echo %CD%\dist\HallValla-Setup-v145.exe
+echo %CD%\dist\HallValla-Setup-v146.exe
 echo.
 pause
 exit /b 0

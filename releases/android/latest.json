@@ -1,11 +1,11 @@
 {
   "platform": "android",
   "applicationId": "com.hallvalla.game",
-  "versionCode": 145,
-  "versionName": "1.0.145",
-  "file": "HallValla-Android-v145.apk",
-  "releaseTag": "android-v145",
-  "sha256": "5d2bd6781c5143f09bc93d72c86660d42513dd1b1aee458bd9e39b6859744955",
+  "versionCode": 146,
+  "versionName": "1.0.146",
+  "file": "HallValla-Android-v146.apk",
+  "releaseTag": "android-v146",
+  "sha256": "93220d9b7e0b4962d8be9e9d1913fe18fe3034ebc7f081d851d048faf5345e39",
   "publicPath": "downloads/HallValla-Android.apk",
-  "purpose": "signed production Android build v145"
+  "purpose": "signed production Android build v146"
 }
