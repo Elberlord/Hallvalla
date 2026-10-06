@@ -134,10 +134,9 @@ async function buyGoldWithGems(index){
   }
   const confirmed=await hvConfirm(`¿Comprar ${gold.toLocaleString("es-CR")} de oro por ${cost.toLocaleString("es-CR")} gemas?\n\nGemas después de la compra: ${(currentGems-cost).toLocaleString("es-CR")}`,"Confirmar compra","Comprar","Cancelar");
   if(!confirmed)return;
-  profile.gems=currentGems-cost;
-  profile.gold=Math.max(0,Number(profile.gold||0))+gold;
-  savePlayerProfile(profile);
-  renderPlayerProfile(profile);
+  try{await globalThis.hallvallaEconomySpend("exchange_gold",{index:Number(index)});}
+  catch(error){await hvAlert(error?.code?.startsWith("INSUFFICIENT_")?"Tu saldo real de gemas es insuficiente.":"No se pudo confirmar la compra con el servidor.","Compra no realizada");return;}
+  renderPlayerProfile(getPlayerProfile());
   renderHomeProgress();
   await hvAlert(`Recibiste ${gold.toLocaleString("es-CR")} de oro.`,"Compra realizada");
   renderShopView("gold");
@@ -384,8 +383,8 @@ async function buyPackWithGold(packKey){
   const confirmed=await hvConfirm(`Oro disponible: ${formatGold(currentGold)}\nCosto del sobre: ${formatGold(packCost)}\nOro después de comprar: ${formatGold(remainingGold)}\n\nLas probabilidades individuales de cada carta están disponibles en “PROBABILIDADES” antes de comprar.\n\n¿Comprar ${pack.name}?`,"Confirmar compra","Comprar","Cancelar");
   if(!confirmed)return;
 
-  profile.gold=remainingGold;
-  savePlayerProfile(profile);
+  try{await globalThis.hallvallaEconomySpend("shop_pack",{packKey:pack.key});}
+  catch(error){await hvAlert(error?.code?.startsWith("INSUFFICIENT_")?"Tu saldo real de oro es insuficiente.":"No se pudo confirmar la compra con el servidor.","Compra no realizada");return;}
   queuePurchasedShopPackFirst(buildPendingShopPack(pack.key,{
     source:"shop",
     costGold:packCost,

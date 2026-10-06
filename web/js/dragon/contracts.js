@@ -294,8 +294,7 @@ function applyDragonFrost(unit,sourceName="Dragón de Hielo",stacks=1,state=publ
     if(already)return{handled:true,value:{awarded:false,xp:battle.xp||0,gold:0,levelUps:0,cards:[],battle,progress:getAdventureProgress(),dragonContract:true,eggAwarded:false}};
     const xpResult=addPlayerXp(battle.xp||0);
     const profile=getPlayerProfile();
-    profile.gold=(profile.gold||0)+(battle.gold||0);
-    savePlayerProfile(profile);
+    void globalThis.hallvallaEconomyQueueClaim("dragon",{battleId:String(battle.id||"")});
     const egg=grantDragonEgg(battle);
     markDragonContractClaimed(battle.id);
     renderPlayerProfile(profile);renderHomeProgress();

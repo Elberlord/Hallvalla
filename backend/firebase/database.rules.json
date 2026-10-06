@@ -1114,6 +1114,12 @@
           }
         }
       }
+    },
+    "economyV146": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.uid === '5V3mDjSyeNbI7W0qI16cEz5PbsN2')",
+        ".write": false
+      }
     }
   }
 }

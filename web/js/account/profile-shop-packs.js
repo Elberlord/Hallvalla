@@ -194,6 +194,7 @@ function getPlayerProfile(){
   try{
     const saved = JSON.parse(localStorage.getItem("hallvalla_player_profile") || "null");
     const profile={...defaultPlayerProfile, ...(saved || {})};
+    try{globalThis.hallvallaEconomyOverlayProfile?.(profile);}catch(_){ }
     const rawLevel=Math.max(1,Math.floor(Number(profile.level)||1));
     const levelWasClamped=rawLevel>PLAYER_LEVEL_MAX;
     const xpWasCleared=rawLevel>=PLAYER_LEVEL_MAX&&Number(profile.xp||0)!==0;
@@ -216,6 +217,7 @@ function getPlayerProfile(){
     return profile;
   }catch(e){
     const profile={...defaultPlayerProfile};
+    try{globalThis.hallvallaEconomyOverlayProfile?.(profile);}catch(_){ }
     profile.leaderLevels=normalizeLeaderLevels(profile.leaderLevels||{},profile.level);
     profile.leaderLevel5Abilities=normalizeLeaderLevel5Abilities(profile.leaderLevel5Abilities||{},profile.leaderLevels);
     profile.leaderRecords=normalizeLeaderRecords(profile.leaderRecords||{});
@@ -228,7 +230,8 @@ function getPlayerProfile(){
   }
 }
 function savePlayerProfile(profile){
-  const safe=profile&&typeof profile==="object"?profile:{};
+  let safe=profile&&typeof profile==="object"?profile:{};
+  try{safe=globalThis.hallvallaEconomyGuardProfileForSave?.(safe)||safe;}catch(_){ }
   safe.level=Math.max(1,Math.min(PLAYER_LEVEL_MAX,Math.floor(Number(safe.level)||1)));
   if(safe.level>=PLAYER_LEVEL_MAX){safe.xp=0;safe.xpToNext=0;}
   localStorage.setItem("hallvalla_player_profile", JSON.stringify(safe));
@@ -575,9 +578,7 @@ function claimAccountMasteryRewards(requests=[]){
       book[key].claimed=[...new Set([...(book[key].claimed||[]),target])].sort((a,b)=>a-b);
     });
     if(packGain>0&&typeof savePendingPacks==="function")savePendingPacks(pendingPacks);
-    profile.gold=Math.max(0,Number(profile.gold||0))+goldGain;
-    profile.gems=Math.max(0,Number(profile.gems||0))+gemsGain;
-    profile.fragments=Math.max(0,Number(profile.fragments||0))+fragmentsGain;
+    valid.forEach(({key,target})=>{void globalThis.hallvallaEconomyQueueClaim("mastery",{key,target});});
     if(minePieceGain>0){
       if(typeof grantHallvallaMineShopFreePieces==="function")void grantHallvallaMineShopFreePieces(minePieceGain,"account_mastery");
       else profile.minePuzzleVouchers=Math.max(0,Math.floor(Number(profile.minePuzzleVouchers||0)))+minePieceGain;
@@ -943,7 +944,7 @@ function setProfileMessage(text,type=""){
   msg.textContent=text;
   msg.className=`profile-message ${type}`.trim();
 }
-function saveProfileNameChange(){
+async function saveProfileNameChange(){
   const input=$("profileNameInput");
   const profile=getPlayerProfile();
   const currentName=cleanPlayerName(profile.name||"Nuevo jugador");
@@ -955,7 +956,8 @@ function saveProfileNameChange(){
   if(cost>0 && (profile.gems||0)<cost){
     return setProfileMessage(`Necesitas ${cost} gemas para cambiar el nombre. Tienes ${profile.gems||0}.`,"error");
   }
-  if(cost>0)profile.gems=(profile.gems||0)-cost;
+  try{await globalThis.hallvallaEconomySpend("rename",{newName:nextName});}
+  catch(error){return setProfileMessage(error?.code?.startsWith("INSUFFICIENT_")?"No tienes gemas suficientes para cambiar el nombre.":"No se pudo confirmar el cambio con el servidor.","error");}
   profile.name=nextName;
   profile.nameChangeCount=(profile.nameChangeCount||0)+1;
   savePlayerProfile(profile);

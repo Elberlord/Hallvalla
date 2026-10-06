@@ -122,14 +122,14 @@ globalThis.hallvallaBasicTutorialOnManaOrbCollected=hallvallaBasicTutorialOnMana
 globalThis.hallvallaBasicTutorialOnLeaderShield=hallvallaBasicTutorialOnLeaderShield;
 globalThis.hallvallaBasicTutorialOnSpellPlayed=hallvallaBasicTutorialOnSpellPlayed;
 function getTutorialRewardedSteps(){try{return new Set(JSON.parse(localStorage.getItem(HALLVALLA_BASIC_TUTORIAL_REWARDS_KEY)||"[]"));}catch(e){return new Set();}}
-function awardBasicTutorialStep(stepIndex){const rewarded=getTutorialRewardedSteps();if(rewarded.has(stepIndex))return;rewarded.add(stepIndex);try{localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_REWARDS_KEY,JSON.stringify([...rewarded]));}catch(e){}const profile=getPlayerProfile();profile.gold=(profile.gold||0)+5;savePlayerProfile(profile);renderPlayerProfile(profile);}
+function awardBasicTutorialStep(stepIndex){const rewarded=getTutorialRewardedSteps();if(rewarded.has(stepIndex))return;rewarded.add(stepIndex);try{localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_REWARDS_KEY,JSON.stringify([...rewarded]));}catch(e){}const profile=getPlayerProfile();void globalThis.hallvallaEconomyQueueClaim("tutorial",{mode:"step",key:`basic_${stepIndex}`});savePlayerProfile(profile);renderPlayerProfile(profile);}
 function setBasicTutorialComplete(){
   try{localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_COMPLETE_KEY,"true");localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_KEY,"true");localStorage.setItem(HALLVALLA_BASIC_TUTORIAL_STEP_KEY,String(BASIC_TUTORIAL_STEPS.length));}catch(e){}
   try{
     const rewardKey="hallvalla_tutorial_basic_completion_reward_v1";
     if(localStorage.getItem(rewardKey)!=="true"){
       localStorage.setItem(rewardKey,"true");
-      const profile=getPlayerProfile();profile.gold=(Number(profile.gold)||0)+20;savePlayerProfile(profile);renderPlayerProfile?.(profile);
+      const profile=getPlayerProfile();void globalThis.hallvallaEconomyQueueClaim("tutorial",{mode:"complete",key:"basic"});savePlayerProfile(profile);renderPlayerProfile?.(profile);
     }
   }catch(_){ }
   renderHomeProgress();

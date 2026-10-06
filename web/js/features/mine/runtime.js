@@ -246,6 +246,15 @@ async function reconcileHallvallaMineAssignmentsWithDeck(options={}){
     if(key)ownedCounts.set(key,Math.max(0,Math.floor(Number(card?.qty||0))));
   });
   const now=getHallvallaMineNow();
+  const economyRemoveIndexes=[];
+  try{
+    const preview=getHallvallaMineState(),kept=new Map();
+    preview.slots.forEach((slot,index)=>{
+      const safe=normalizeHallvallaMineSlot(slot),key=String(safe.cardKey||""),owned=Math.max(0,Math.floor(Number(ownedCounts.get(key)||0))),reserved=Math.max(0,Math.floor(Number(deckCounts.get(key)||0))),allowed=Math.max(0,owned-reserved),used=Math.max(0,Math.floor(Number(kept.get(key)||0)));
+      if(!key)return;if(used<allowed)kept.set(key,used+1);else economyRemoveIndexes.push(index);
+    });
+    if(economyRemoveIndexes.length)await globalThis.hallvallaEconomyClaim("mine_production",{indexes:economyRemoveIndexes});
+  }catch(error){console.warn("[HallValla][Mina] Economy Authority no confirmó la producción antes de reconciliar:",error);return {committed:false,removed:0,earned:0,reason:"ECONOMY"};}
   let committedSummary={removed:[],earned:0};
   const tx=await transactHallvallaMineStateRemote(current=>{
     const next=normalizeHallvallaMineState(current);
@@ -275,8 +284,7 @@ async function reconcileHallvallaMineAssignmentsWithDeck(options={}){
   const earned=Math.max(0,Math.floor(Number(committedSummary.earned||0)));
   if(earned>0){
     const profile=getPlayerProfile();
-    profile.gems=Math.max(0,Number(profile.gems||0))+earned;
-    savePlayerProfile(profile);
+    void recordHallvallaMineMissionStat("collected_gems",earned);
     void recordHallvallaMineMissionStat("collected_gems",earned);
     try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
   }
@@ -428,7 +436,7 @@ function hallvallaMineLoseGems(amount=1){
   if(lostPending>0)saveHallvallaMineState(mineState);
   if(remaining>0){
     const profile=getPlayerProfile(),available=Math.max(0,Number(profile.gems||0)),take=Math.min(remaining,available);
-    if(take>0){profile.gems=available-take;savePlayerProfile(profile);lostWallet+=take;remaining-=take;}
+    if(take>0){void globalThis.hallvallaEconomySpend("mine_loss",{field:"gems",amount:take,ref:`mine_loss_gems_${Date.now()}`});lostWallet+=take;remaining-=take;}
   }
   return {lostPending,lostWallet,total:lostPending+lostWallet};
 }
@@ -444,7 +452,7 @@ function applyHallvallaMineEventSpawnEffect(def){
   }
   if(def.key==="derrumbe"){
     const profile=getPlayerProfile(),lost=Math.min(100,Math.max(0,Number(profile.gold||0)));
-    if(lost>0){profile.gold=Math.max(0,Number(profile.gold||0)-lost);savePlayerProfile(profile);}
+    if(lost>0){void globalThis.hallvallaEconomySpend("mine_loss",{field:"gold",amount:lost,ref:`mine_loss_gold_${Date.now()}`});}
     return lost>0?`Perdiste ${lost}🪙 · requiere reparación`:`Galería dañada · requiere reparación`;
   }
   return def.baseEffect||"Daño";
@@ -586,6 +594,7 @@ async function handleHallvallaMineEventAction(key,button=null){
   if(!hallvallaMineOnlineReady()){setHallvallaMineStatus("Sincronizando la Mina con el servidor...");void syncHallvallaMineRemoteState();return;}
   const state=getHallvallaMineEventState(),index=state.active.findIndex(event=>event.key===key);
   if(index<0)return;
+  const economyEventId=String(state.active[index]?.id||`${key}_${Date.now()}`);
   const def=HALLVALLA_MINE_EVENT_DEFS[key];
   if(!def)return;
   const profile=getPlayerProfile();
@@ -601,9 +610,8 @@ async function handleHallvallaMineEventAction(key,button=null){
       setHallvallaMineStatus(`No se pudo confirmar la reparación con Firebase. No se descontó ${useFreeClear?"el vale":"oro"}.`);
       return;
     }
-    if(useFreeClear)profile.freeMineDisasterClears=Math.max(0,freeClears-1);
-    else profile.gold=Math.max(0,Number(profile.gold||0)-cost);
-    savePlayerProfile(profile);
+    if(useFreeClear){profile.freeMineDisasterClears=Math.max(0,freeClears-1);savePlayerProfile(profile);}
+    else await globalThis.hallvallaEconomySpend("mine_repair",{key,eventId:economyEventId});
     try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
     setHallvallaMineStatus(useFreeClear?"Desastre eliminado gratis con una recompensa de Maestría.":`Reparación completada: -${cost} de oro.`);
     void recordHallvallaMineMissionStat(`repair_${key}`,1);
@@ -611,6 +619,7 @@ async function handleHallvallaMineEventAction(key,button=null){
     renderHallvallaMineEvents(tx.state);
     return;
   }
+  await globalThis.hallvallaEconomyClaim("mine_event",{key,eventId:economyEventId});
   const tx=await transactHallvallaMineEventStateRemote(current=>{
     const currentIndex=current.active.findIndex(event=>event.key===key);
     if(currentIndex<0)return;
@@ -619,10 +628,7 @@ async function handleHallvallaMineEventAction(key,button=null){
   if(!tx.committed){setHallvallaMineStatus("Ese evento ya fue resuelto en otro dispositivo o no pudo confirmarse con Firebase.");return;}
   const nextState=tx.state;
   const reward=def.reward||{};
-  profile.gems=Math.max(0,Number(profile.gems||0))+Math.max(0,Number(reward.gems||0));
-  profile.gold=Math.max(0,Number(profile.gold||0))+Math.max(0,Number(reward.gold||0));
-  profile.fragments=Math.max(0,Number(profile.fragments||0))+Math.max(0,Number(reward.fragments||0));
-  savePlayerProfile(profile);
+  /* moneda acreditada por Economy Authority antes de cerrar el evento */
   try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
   renderMineScreen();
   renderHallvallaMineEvents(nextState);
@@ -954,8 +960,7 @@ async function buyHallvallaMineWorkerSlot(index){
     // El desbloqueo ya fue confirmado por Firebase. Conservamos el desbloqueo y dejamos trazabilidad visible.
     console.error("[HallValla][Mina][Unlock] saldo local cambió después del commit",{freshGems,cost});
   }
-  fresh.gems=Math.max(0,freshGems-cost);
-  savePlayerProfile(fresh);
+  await globalThis.hallvallaEconomySpend("mine_slot",{index:targetIndex});
   hallvallaMineUi.selectedSlot=targetIndex;
   hallvallaMineUi.page=Math.floor(targetIndex/5);
   setHallvallaMineStatus(`Ranura ${targetIndex+1} desbloqueada por ${cost.toLocaleString("es-ES")} gemas. Ya puedes asignar otro trabajador.`);
@@ -1059,6 +1064,9 @@ async function unassignHallvallaMineUnit(){
   if(!slot.cardKey){setHallvallaMineStatus("");return;}
   let earned=0,removedName=String(slot.cardName||"Unidad");
   const now=getHallvallaMineNow();
+  let economyEarned=0;
+  try{const settlement=await globalThis.hallvallaEconomyClaim("mine_production",{indexes:[selectedIndex]});economyEarned=Math.max(0,Number(settlement?.receipt?.delta?.gems||0));}
+  catch(error){console.warn("[HallValla][Mina] Economy Authority no confirmó la producción antes de retirar:",error);setHallvallaMineStatus("No se pudo confirmar la producción con el servidor. No se retiró la unidad.");return;}
   const tx=await transactHallvallaMineStateRemote(current=>{
     const currentSlot=current.slots[selectedIndex]||createHallvallaMineSlot();
     if(!currentSlot.cardKey)return;
@@ -1070,7 +1078,7 @@ async function unassignHallvallaMineUnit(){
     return next;
   });
   if(!tx.committed){setHallvallaMineStatus("La unidad ya fue retirada en otro dispositivo o Firebase no pudo confirmar la operación.");return;}
-  if(earned>0){profile.gems=Math.max(0,Number(profile.gems||0))+earned;savePlayerProfile(profile);void recordHallvallaMineMissionStat("collected_gems",earned);}
+  if(earned>0){earned=Math.max(earned,economyEarned);void recordHallvallaMineMissionStat("collected_gems",earned);void recordHallvallaMineMissionStat("collected_gems",earned);}
   try{if(earned>0){if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}}catch(_){ }
   setHallvallaMineStatus(earned>0?`${removedName} retirada de la mina. Recogiste ${earned} gema${earned===1?"":"s"}.`:`${removedName} retirada de la mina.`);
   renderMineScreen();
@@ -1107,6 +1115,8 @@ async function claimHallvallaMineRewards(){
       localStorage.setItem(HALLVALLA_MINE_STORAGE_KEY,JSON.stringify(freshState));
     }
 
+    const economySettlement=await globalThis.hallvallaEconomyClaim("mine_production",{});
+    const economyReward=Math.max(0,Number(economySettlement?.receipt?.delta?.gems||0));
     let tx={committed:false,state:getHallvallaMineState()};
     if(HALLVALLA_LOCALHOST_TEST_MODE===true){
       tx=await transactHallvallaMineStateRemote(current=>{
@@ -1160,9 +1170,8 @@ async function claimHallvallaMineRewards(){
       return;
     }
 
-    const reward=Math.max(0,Math.floor(Number(confirmedTotal||0)));
-    const updatedProfile={...profile,gems:Math.max(0,Number(profile.gems||0))+reward};
-    savePlayerProfile(updatedProfile);
+    const reward=Math.max(0,Math.floor(Number(economyReward||confirmedTotal||0)));
+    const updatedProfile=getPlayerProfile();
     if(reward>0)void recordHallvallaMineMissionStat("collected_gems",reward);
 
     // Actualización inmediata del contador visible de la Mina, además del render general.
@@ -1630,7 +1639,7 @@ function getHallvallaMineWheelTargetSlot(mineState=getHallvallaMineState()){
   return index>=0?index:-1;
 }
 function rewardHallvallaMineWheelCompensation(){
-  const profile=getPlayerProfile();profile.gems=Math.max(0,Number(profile.gems||0))+5;savePlayerProfile(profile);return "No había mineros activos: recibiste +5💎 como compensación.";
+  const at=Number(getHallvallaMineWheelState()?.lastResult?.at||0);void globalThis.hallvallaEconomyQueueClaim("mine_compensation",{at});return "No había mineros activos: recibiste +5💎 como compensación.";
 }
 function applyHallvallaMineWheelAcceleration(def){
   const mineState=getHallvallaMineState(),now=getHallvallaMineNow(),rate=hallvallaMineRateMs(mineState.level||1);
@@ -1668,10 +1677,10 @@ async function applyHallvallaMineWheelOutcome(def,state){
   if(!def)return "Resultado no disponible.";
   if(["half_all","half_slot","complete_slot","complete_all","cycles_slot","cycles_all","advance_slot","advance_all"].includes(def.effect))return applyHallvallaMineWheelAcceleration(def);
   if(def.effect==="jackpot"){
-    const profile=getPlayerProfile(),amount=Math.max(HALLVALLA_MINE_WHEEL_JACKPOT_BASE,Number(state?.jackpot||HALLVALLA_MINE_WHEEL_JACKPOT_BASE));profile.gems=Math.max(0,Number(profile.gems||0))+amount;savePlayerProfile(profile);return `¡Premio Mayor! +${amount}💎.`;
+    const amount=Math.max(HALLVALLA_MINE_WHEEL_JACKPOT_BASE,Number(state?.jackpot||HALLVALLA_MINE_WHEEL_JACKPOT_BASE));return `¡Premio Mayor! +${amount}💎.`;
   }
   if(def.effect==="gems"||def.effect==="gold"||def.effect==="fragments"){
-    const profile=getPlayerProfile(),amount=Math.max(0,Number(def.amount||0));profile[def.effect]=Math.max(0,Number(profile[def.effect]||0))+amount;savePlayerProfile(profile);return `+${amount}${def.effect==="gems"?"💎":def.effect==="gold"?" de oro":" fragmentos"}.`;
+    const amount=Math.max(0,Number(def.amount||0));return `+${amount}${def.effect==="gems"?"💎":def.effect==="gold"?" de oro":" fragmentos"}.`;
   }
   if(def.effect==="mine_piece"){
     const amount=Math.max(1,Math.floor(Number(def.amount||1)));
@@ -1704,7 +1713,7 @@ async function applyHallvallaMineWheelOutcome(def,state){
     return granted>0?`Ganaste ${granted}${granted>1?" ×":""} ${packDef?.name||`Pack ${tier}`}. Está disponible para abrir en tus recompensas.`:`El ${packDef?.name||`Pack ${tier}`} ya había sido acreditado.`;
   }
   if(def.effect==="gold_loss"||def.effect==="gem_loss"||def.effect==="fragments_loss"){
-    const profile=getPlayerProfile(),field=def.effect==="gold_loss"?"gold":def.effect==="gem_loss"?"gems":"fragments",amount=Math.min(Math.max(0,Number(def.amount||0)),Math.max(0,Number(profile[field]||0)));profile[field]=Math.max(0,Number(profile[field]||0)-amount);savePlayerProfile(profile);return amount>0?`Perdiste ${amount}${field==="gems"?"💎":field==="gold"?" de oro":" fragmentos"}.`:"No tenías recursos de ese tipo para perder.";
+    const profile=getPlayerProfile(),field=def.effect==="gold_loss"?"gold":def.effect==="gem_loss"?"gems":"fragments",amount=Math.min(Math.max(0,Number(def.amount||0)),Math.max(0,Number(profile[field]||0)));return amount>0?`Perdiste ${amount}${field==="gems"?"💎":field==="gold"?" de oro":" fragmentos"}.`:"No tenías recursos de ese tipo para perder.";
   }
   if(def.effect==="mine_gems"){
     const loss=hallvallaMineLoseGems(Math.max(0,Number(def.amount||0))).total;return loss>0?`Perdiste ${loss}💎 de la producción/cartera.`:"No había diamantes disponibles para perder.";
@@ -1740,7 +1749,7 @@ async function spinHallvallaMineWheel(){
       if(result){result.className="mine-wheel-result negative";result.innerHTML="<b>No se pudo girar</b>";}
       return;
     }
-    if(tx.cost>0){const fresh=getPlayerProfile();fresh.gems=Math.max(0,Number(fresh.gems||0)-tx.cost);savePlayerProfile(fresh);}
+    await globalThis.hallvallaEconomySpend("mine_wheel_settle",{at:Number(tx.state?.lastResult?.at||0)});
     const effectText=await applyHallvallaMineWheelOutcome(tx.def,tx.state);
     void recordHallvallaMineMissionStat("wheel_spins",1);
     if(tx.def?.effect==="jackpot")void recordHallvallaMineMissionStat("jackpot_wins",1);
@@ -1934,9 +1943,9 @@ function getHallvallaMineMissionProgress(def,state=getHallvallaMineMissionsState
 }
 function applyHallvallaMineMissionReward(reward={}){
   const profile=getPlayerProfile();
-  if(Number(reward.gold||0)>0)profile.gold=Math.max(0,Number(profile.gold||0))+Math.floor(Number(reward.gold));
-  if(Number(reward.gems||0)>0)profile.gems=Math.max(0,Number(profile.gems||0))+Math.floor(Number(reward.gems));
-  if(Number(reward.fragments||0)>0)profile.fragments=Math.max(0,Number(profile.fragments||0))+Math.floor(Number(reward.fragments));
+  /* gold acreditado por Economy Authority */
+  /* gems acreditado por Economy Authority */
+  /* fragments acreditado por Economy Authority */
   savePlayerProfile(profile);
   try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
   const gold=$("mineGoldValue"),gems=$("mineGemsValue");
@@ -2028,6 +2037,7 @@ async function claimHallvallaMineMission(missionId=""){
     state=getHallvallaMineMissionsState();
     state.claimed[def.id]=committedTier;
     cacheHallvallaMineMissionsState(state);
+    await globalThis.hallvallaEconomyClaim("mine_mission",{missionId:def.id,tier:committedTier});
     applyHallvallaMineMissionReward(reward);
     console.info("[HallValla][Mina][Misiones][Claim] premio aplicado",{missionId:def.id,tier:committedTier,reward});
 
@@ -2301,7 +2311,7 @@ async function buyHallvallaMineLevelPotion(kind,button=null){
       profile.leaderLevel5Abilities=normalizeLeaderLevel5Abilities(profile.leaderLevel5Abilities||{},profile.leaderLevels);
       if(status)status.textContent=`${target.name} subió a Nivel ${next}.`;
     }
-    profile.gems=Math.max(0,gems-HALLVALLA_MINE_LEVEL_POTION_COST);savePlayerProfile(profile);
+    await globalThis.hallvallaEconomySpend("mine_potion",{kind:potionKind,day});savePlayerProfile(profile);
     if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);if(typeof renderSelectedLeaderBadge==="function")renderSelectedLeaderBadge();if(typeof renderHomeProgress==="function")renderHomeProgress();
     renderHallvallaMineShop(nextState);if(typeof renderMineResourceValues==="function")renderMineResourceValues();
   }catch(error){console.warn("[HallValla][Mina][Pociones] Compra fallida:",error);if(status)status.textContent="No se pudo completar la compra.";renderHallvallaMineShop(getHallvallaMineShopState());}
@@ -2402,7 +2412,7 @@ async function buyHallvallaMineShopPiece(cardKey,button=null){
       if(status)status.textContent=useVoucher?"El canje de la pieza gratis no fue confirmado. Tu vale no se consumió.":"La compra no fue confirmada. No se descontaron gemas.";
       renderHallvallaMineShop(await syncHallvallaMineShopRemote());return;
     }
-    if(!useVoucher){profile.gems=Math.max(0,gems-HALLVALLA_MINE_SHOP_PIECE_COST);savePlayerProfile(profile);if(typeof renderHomeProgress==="function")renderHomeProgress();}
+    if(!useVoucher){await globalThis.hallvallaEconomySpend("mine_piece",{key,day});if(typeof renderHomeProgress==="function")renderHomeProgress();}
     const pieces=Number(nextState.units?.[key]?.pieces||0),card=getHallvallaMineShopTemplate(key);
     if(pieces>=25){ensureHallvallaMineUndeadCollectionUnlock(key);if(status)status.textContent=`${card?.name||"Unidad No Muerta"} completada: 25/25. La carta fue añadida a tu Colección.`;}
     else if(status)status.textContent=`Pieza ${useVoucher?"gratis aplicada":"comprada"} para ${card?.name||"la unidad"}: ${pieces}/25.`;

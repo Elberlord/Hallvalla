@@ -347,19 +347,15 @@ function renderDailyRewardModal(){
   }
   updateDailyRewardButton();
 }
-function grantDailyReward(reward,state,day){
+async function grantDailyReward(reward,state,day){
   if(!reward)return false;
   if(reward.type==="pack"){
     const pack=buildPendingShopPack(reward.tier,{source:"daily_reward",dailyMonth:state.monthKey,dailyDay:day,free:true,costGold:0});
     addPendingPack(pack);
     return true;
   }
-  const profile=getPlayerProfile();
-  if(reward.type==="gold")profile.gold=Math.max(0,Number(profile.gold||0))+Math.max(0,Number(reward.amount||0));
-  else if(reward.type==="gems")profile.gems=Math.max(0,Number(profile.gems||0))+Math.max(0,Number(reward.amount||0));
-  else if(reward.type==="fragments")profile.fragments=Math.max(0,Number(profile.fragments||0))+Math.max(0,Number(reward.amount||0));
-  else return false;
-  savePlayerProfile(profile);
+  if(!["gold","gems","fragments"].includes(String(reward.type||"")))return false;
+  await globalThis.hallvallaEconomyClaim("daily",{type:String(reward.type),amount:Math.max(0,Number(reward.amount||0)),monthKey:String(state.monthKey||""),day:Number(day)});
   renderHomeProgress();
   return true;
 }
@@ -370,7 +366,7 @@ async function claimDailyReward(){
     const state=getDailyRewardState(),now=Date.now(),availability=getDailyRewardAvailability(state,now);
     if(!availability.available){renderDailyRewardModal();return;}
     const day=availability.index+1,reward=state.rewards[availability.index];
-    if(!grantDailyReward(reward,state,day))throw new Error("No se pudo aplicar la recompensa.");
+    if(!(await grantDailyReward(reward,state,day)))throw new Error("No se pudo aplicar la recompensa.");
     state.claimedAt[availability.index]=now;
     state.lastClaimAt=now;
     saveDailyRewardState(state);

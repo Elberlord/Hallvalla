@@ -269,7 +269,7 @@ function rollAdventureFarmReward(chapter,battle){
 }
 async function applyAdventureFarmReward(reward,chapter,battle){
   if(reward.kind==="gold"){
-    const profile=getPlayerProfile();profile.gold=Math.max(0,Number(profile.gold||0))+reward.amount;savePlayerProfile(profile);
+    /* Economy Authority: el oro del farmeo se acredita en adventure_farm_settle. */
     return {text:`+${reward.amount} de oro`,kind:"gold"};
   }
   if(reward.kind==="card"){
@@ -285,7 +285,7 @@ async function applyAdventureFarmReward(reward,chapter,battle){
     if(spin?.committed&&spin.granted>0)return {text:"+1 tiro gratis de la ruleta de la Mina",kind:"free_spin"};
   }
   const fallback=80+getAdventureFarmMapLevel(chapter)*60;
-  const profile=getPlayerProfile();profile.gold=Math.max(0,Number(profile.gold||0))+fallback;savePlayerProfile(profile);
+  await globalThis.hallvallaEconomyClaim("adventure_farm_fallback",{nodeCode:getAdventureBattleCode(chapter,battle),cycleId:getAdventureFarmCycleId()});
   return {text:`+${fallback} de oro (compensación)`,kind:"gold"};
 }
 async function farmCompletedAdventureNode(chapter,battle){
@@ -325,7 +325,7 @@ async function farmCompletedAdventureNode(chapter,battle){
       await hvAlert(`Este nodo ya fue farmeado en otro dispositivo o la operación ya estaba registrada.\n\nSe restaura en ${formatAdventureFarmRemaining(getAdventureFarmNextResetAt(currentNow)-currentNow)}.`,`Nodo ${nodeCode} · Ya reclamado`);return;
     }
     const updatedClaims=getAdventureFarmClaims();updatedClaims[nodeCode]=normalizeAdventureFarmClaim(result.snapshot.val()||record);cacheAdventureFarmClaims(updatedClaims);
-    fresh.gems=Math.max(0,Number(fresh.gems||0))-HALLVALLA_ADVENTURE_FARM_COST_GEMS;savePlayerProfile(fresh);
+    await globalThis.hallvallaEconomySpend("adventure_farm_settle",{nodeCode,cycleId});
     const applied=await applyAdventureFarmReward(reward,chapter,battle);
     try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(getPlayerProfile());}catch(_){ }
     renderAdventureMap();

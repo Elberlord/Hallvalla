@@ -222,8 +222,7 @@ function completeAdventureBattleOnce(pub){
     markBeastCraftingUnlocked();
     const xpResult=addPlayerXp(battle.xp||0);
     const profile=getPlayerProfile();
-    profile.gems=(profile.gems||0)+(battle.gems||10);
-    savePlayerProfile(profile);
+    void globalThis.hallvallaEconomyQueueClaim("beastmaster",{duelNumber:Number(pub.beastmasterGlobalDuelNumber||0)});
     const beastReward=getRandomBeastEventCard();
     if(beastReward&&!isDragonCardForBeastReward(beastReward))addCardsToCollection([beastReward]);
     markBeastmasterBattleRewarded(pub);
@@ -256,7 +255,7 @@ function completeAdventureBattleOnce(pub){
     }
     const xpResult=addPlayerXp(battle.xp||0);
     const profile=getPlayerProfile();
-    profile.gold=(profile.gold||0)+(battle.gold||0);
+    void globalThis.hallvallaEconomyQueueClaim("adventure",{battleId:String(battle.id||"")});
     const leaderUnlocked=markAdventureLeaderUnlocked(profile,battle.rewardLeader);
     const rewardCards=getRewardCardsForBattle(battle,progress.selectedSpecial||pub.adventureSpecial||"");
     if(rewardCards.length)addCardsToCollection(rewardCards);
@@ -276,7 +275,7 @@ function completeAdventureBattleOnce(pub){
 
   const xpResult=addPlayerXp(battle.xp||0);
   const profile=getPlayerProfile();
-  profile.gold=(profile.gold||0)+(battle.gold||0);
+  void globalThis.hallvallaEconomyQueueClaim("adventure",{battleId:String(battle.id||"")});
   const leaderUnlocked=markAdventureLeaderUnlocked(profile,battle.rewardLeader);
   savePlayerProfile(profile);
   renderPlayerProfile(profile);

@@ -1401,10 +1401,8 @@ async function hallvallaCommunityApplyReward(reward){
       else throw new Error("La cola de packs no está disponible.");
     }
   }else{
-    const profile=getPlayerProfile();
     if(!["gems","gold","fragments"].includes(type))throw new Error("Tipo de premio no soportado.");
-    profile[type]=Math.max(0,Number(profile[type]||0))+amount;
-    savePlayerProfile(profile);
+    await globalThis.hallvallaEconomyClaim("admin_reward",{rewardId:String(reward.rewardId||"")});
   }
   try{renderPlayerProfile?.();renderHomeProgress?.();renderNotificationBadge?.();}catch(_){ }
 }

@@ -140,14 +140,14 @@ function awardHallvallaSystemTutorialStep(key,index){
   const rewarded=new Set(Array.isArray(book.rewardedSteps?.[key])?book.rewardedSteps[key]:[]);
   if(rewarded.has(index))return false;
   rewarded.add(index);book.rewardedSteps[key]=[...rewarded].sort((a,b)=>a-b);saveHallvallaSystemTutorialBook(book);
-  const profile=getPlayerProfile();profile.gold=(Number(profile.gold)||0)+HALLVALLA_SYSTEM_TUTORIAL_STEP_GOLD;savePlayerProfile(profile);renderPlayerProfile?.(profile);
+  const profile=getPlayerProfile();void globalThis.hallvallaEconomyQueueClaim("tutorial",{mode:"step",key:`system_${key}_${index}`});savePlayerProfile(profile);renderPlayerProfile?.(profile);
   return true;
 }
 function awardHallvallaSystemTutorialCompletion(key){
   const book=getHallvallaSystemTutorialBook();
   if(book.completionRewarded?.[key])return false;
   book.completionRewarded[key]=true;saveHallvallaSystemTutorialBook(book);
-  const profile=getPlayerProfile();profile.gold=(Number(profile.gold)||0)+HALLVALLA_SYSTEM_TUTORIAL_COMPLETE_GOLD;savePlayerProfile(profile);renderPlayerProfile?.(profile);
+  const profile=getPlayerProfile();void globalThis.hallvallaEconomyQueueClaim("tutorial",{mode:"complete",key:`system_${key}`});savePlayerProfile(profile);renderPlayerProfile?.(profile);
   return true;
 }
 function markHallvallaSystemTutorialComplete(key){
@@ -431,7 +431,7 @@ function awardTacticsTutorialStep(stepIndex){
   rewarded.add(safe);
   try{localStorage.setItem(HALLVALLA_TACTICS_TUTORIAL_REWARDS_KEY,JSON.stringify([...rewarded]));}catch(_){ }
   const profile=getPlayerProfile();
-  profile.gold=(Number(profile.gold)||0)+5;
+  void globalThis.hallvallaEconomyQueueClaim("tutorial",{mode:"step",key:`tactics_${safe}`});
   savePlayerProfile(profile);
   if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);
   if(typeof setHint==="function")setHint(`Tácticas avanzadas · Lección ${safe+1}: +5 de oro.`);

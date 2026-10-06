@@ -1402,9 +1402,9 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
       }
       return;
     }
-    profile.gold=Math.max(0,(profile.gold||0)-entryCost);
-    savePlayerProfile(profile);
-    renderPlayerProfile(profile);
+    try{await globalThis.hallvallaEconomySpend("beastmaster_entry",{duelNumber:Number(beastmasterEntry?.duelNumber||0)});}
+    catch(error){await hvAlert(error?.code?.startsWith("INSUFFICIENT_")?"Tu saldo real de oro es insuficiente.":"No se pudo confirmar el costo del duelo.","Evento no disponible");return;}
+    renderPlayerProfile(getPlayerProfile());
     beastmasterEntryCharged=entryCost>0;
     battle={
       ...battle,
@@ -1423,9 +1423,9 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
       await hvAlert(`Necesitas ${entryCost} de oro para desafiar a ${battle.enemyName}. Tienes ${profile.gold||0}.`,`Oro insuficiente`);
       return;
     }
-    profile.gold=Math.max(0,(profile.gold||0)-entryCost);
-    savePlayerProfile(profile);
-    renderPlayerProfile(profile);
+    try{await globalThis.hallvallaEconomySpend("dragon_entry",{battleId:String(battle.id||"")});}
+    catch(error){await hvAlert(error?.code?.startsWith("INSUFFICIENT_")?"Tu saldo real de oro es insuficiente.":"No se pudo confirmar el costo del contrato.","Contrato no disponible");return;}
+    renderPlayerProfile(getPlayerProfile());
     battle={...battle,dragonContractEntryGoldCost:entryCost};
   }
   const playerCombatDeck=realtimeEnabled
@@ -1538,8 +1538,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     try{await remove(ref(db,`games/${code}`));}catch(_){}
     if(battle.beastEvent&&beastmasterEntryCharged){
       const refundProfile=getPlayerProfile();
-      refundProfile.gold=(refundProfile.gold||0)+Math.max(0,Number(battle.beastmasterEntryGoldCost||BEASTMASTER_DUEL_GOLD_COST)||0);
-      savePlayerProfile(refundProfile);
+      void globalThis.hallvallaEconomySpend("beastmaster_refund",{duelNumber:Number(battle.beastmasterGlobalDuelNumber||0)});
       renderPlayerProfile(refundProfile);
     }
     console.error("[HallValla] No se pudo crear la batalla de aventura:",error);
