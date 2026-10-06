@@ -12,6 +12,8 @@ const HALLVALLA_MASTER_ADMIN_UID="5V3mDjSyeNbI7W0qI16cEz5PbsN2";
 const SECURITY_WINDOW_MS=24*60*60*1000;
 const SECURITY_AUTO_HOLD_MS=24*60*60*1000;
 const SECURITY_AUTO_HOLD_SCORE=100;
+const SECURITY_TEST_UID="XBUqAS2DrtTaRVAxZaJuQue6bIJ3";
+const SECURITY_TEST_HOLD_MS=60*60*1000;
 
 const GOLD_OFFERS=Object.freeze([
   {gold:5000,gems:90},{gold:2500,gems:50},{gold:7500,gems:130},
@@ -452,13 +454,16 @@ async function bumpSecurityRisk(uid,reason,points,token){
   }
   throw new Error("SECURITY_RISK_CONFLICT");
 }
+function securityHoldDurationMs(uid){
+  return uid===SECURITY_TEST_UID?SECURITY_TEST_HOLD_MS:SECURITY_AUTO_HOLD_MS;
+}
 async function applyAutomaticSecurityHold(uid,token,risk){
   if(uid===HALLVALLA_MASTER_ADMIN_UID)return false;
   if(pos(risk?.score,10000)<SECURITY_AUTO_HOLD_SCORE)return false;
   const now=Date.now();
   const current=await dbget(`community/moderation/${uid}`,token).catch(()=>null);
   const existingUntil=pos(current?.banUntil,9999999999999);
-  const desiredUntil=now+SECURITY_AUTO_HOLD_MS;
+  const desiredUntil=now+securityHoldDurationMs(uid);
   const banUntil=Math.max(existingUntil,desiredUntil);
   await dbpatch(`community/moderation/${uid}`,{
     muteUntil:pos(current?.muteUntil,9999999999999),
@@ -474,12 +479,13 @@ async function createServerSecurityAlert({uid,token,user,request,reason,rule,ris
   const now=Date.now();
   const alertId=cleanKey(`economy_${now}_${crypto.randomUUID?.()||Math.random().toString(36).slice(2)}`,140);
   const attempts=Math.max(1,pos(risk?.counts?.[cleanKey(reason,64)],1000000));
+  const holdHours=Math.max(1,Math.round(securityHoldDurationMs(uid)/(60*60*1000)));
   const evidence=[
     `Worker Economy r4`,
     `ruta=${new URL(request.url).pathname}`,
     `motivo=${reason}`,
     `riesgo=+${rule.points} => ${pos(risk?.score,10000)}/${SECURITY_AUTO_HOLD_SCORE}`,
-    holdApplied?"AUTO-HOLD 24H=SI":"AUTO-HOLD 24H=NO",
+    holdApplied?`AUTO-HOLD ${holdHours}H=SI`:`AUTO-HOLD ${holdHours}H=NO`,
     `datos=${securityPayloadEvidence(body)}`
   ].join(" · ").slice(0,700);
   await dbset(`community/securityAlerts/${alertId}`,{
@@ -492,7 +498,7 @@ async function createServerSecurityAlert({uid,token,user,request,reason,rule,ris
     evidence,
     attempts,
     client:securityClient(request),
-    build:"economy-r4",
+    build:"economy-r5",
     createdAt:now,
     status:"open",
     resolvedAt:0,
@@ -534,7 +540,7 @@ async function createSecuritySelfTestAlert(uid,token,user,request){
     evidence:"Alerta sintética creada por la cuenta administradora. No suma riesgo y no aplica sanciones.",
     attempts:1,
     client:securityClient(request),
-    build:"economy-r4",
+    build:"economy-r5",
     createdAt:now,
     status:"open",
     resolvedAt:0,
@@ -562,11 +568,13 @@ export default{
     if(request.method==="GET"&&url.pathname==="/")return out({
       ok:true,
       service:"hallvalla-economy-authority",
-      revision:4,
+      revision:5,
       mode:"authoritative-wallet-fraud-audit",
       serverSecurityAudit:true,
       automaticSecurityHold:true,
-      autoHoldScore:SECURITY_AUTO_HOLD_SCORE
+      autoHoldScore:SECURITY_AUTO_HOLD_SCORE,
+      testHoldOverrideEnabled:true,
+      testHoldOverrideHours:1
     },200,origin);
     if(request.method!=="POST")return out({ok:false,reason:"METHOD_NOT_ALLOWED"},405,origin);
 
@@ -578,33 +586,33 @@ export default{
 
       if(url.pathname==="/bootstrap"){
         const s=await ensure(u.uid,token);
-        return out({ok:true,revision:4,wallet:wallet(s.wallet),migratedAt:s.migratedAt||0},200,origin);
+        return out({ok:true,revision:5,wallet:wallet(s.wallet),migratedAt:s.migratedAt||0},200,origin);
       }
       if(url.pathname==="/state"){
         const s=await ensure(u.uid,token);
-        return out({ok:true,revision:4,wallet:wallet(s.wallet),updatedAt:s.updatedAt||0},200,origin);
+        return out({ok:true,revision:5,wallet:wallet(s.wallet),updatedAt:s.updatedAt||0},200,origin);
       }
       if(url.pathname==="/security-self-test"){
         const alertId=await createSecuritySelfTestAlert(u.uid,token,u,request);
-        return out({ok:true,revision:4,alertId,synthetic:true,riskChanged:false,holdApplied:false},200,origin);
+        return out({ok:true,revision:5,alertId,synthetic:true,riskChanged:false,holdApplied:false},200,origin);
       }
       if(url.pathname==="/spend"){
         await assertEconomyNotSuspended(u.uid,token);
         await ensure(u.uid,token);
         const kind=String(body.kind||""),op=cleanKey(body.opId||`op_${Date.now()}`,120);
         const result=await transact(u.uid,token,s=>resolveSpend(kind,body.payload||{},u.uid,token,s,op));
-        return out({ok:true,revision:4,...result},200,origin);
+        return out({ok:true,revision:5,...result},200,origin);
       }
       if(url.pathname==="/claim"){
         await assertEconomyNotSuspended(u.uid,token);
         await ensure(u.uid,token);
         const kind=String(body.kind||"");
         const result=await transact(u.uid,token,s=>resolveClaim(kind,body.payload||{},u.uid,token,s));
-        return out({ok:true,revision:4,...result},200,origin);
+        return out({ok:true,revision:5,...result},200,origin);
       }
       if(url.pathname==="/self-test"){
         const s=await ensure(u.uid,token);
-        return out({ok:true,revision:4,firebaseUserVerified:true,firebaseDatabaseAdmin:true,serverSecurityAudit:true,wallet:wallet(s.wallet)},200,origin);
+        return out({ok:true,revision:5,firebaseUserVerified:true,firebaseDatabaseAdmin:true,serverSecurityAudit:true,wallet:wallet(s.wallet)},200,origin);
       }
       return out({ok:false,reason:"NOT_FOUND"},404,origin);
     }catch(e){
