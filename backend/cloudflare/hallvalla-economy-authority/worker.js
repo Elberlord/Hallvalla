@@ -1,4 +1,4 @@
-/* HallValla Economy Authority · v146 · Worker v2 */
+/* HallValla Economy Authority · v146 · Worker v4 · Server Fraud Audit */
 "use strict";
 
 const PROJECT_ID="hallvalla-online";
@@ -8,6 +8,10 @@ const JWK_URL="https://www.googleapis.com/service_accounts/v1/jwk/securetoken@sy
 const TOKEN_URL="https://oauth2.googleapis.com/token";
 const SCOPE="https://www.googleapis.com/auth/firebase.database https://www.googleapis.com/auth/userinfo.email";
 const MAX=2147483647;
+const HALLVALLA_MASTER_ADMIN_UID="5V3mDjSyeNbI7W0qI16cEz5PbsN2";
+const SECURITY_WINDOW_MS=24*60*60*1000;
+const SECURITY_AUTO_HOLD_MS=24*60*60*1000;
+const SECURITY_AUTO_HOLD_SCORE=100;
 
 const GOLD_OFFERS=Object.freeze([
   {gold:5000,gems:90},{gold:2500,gems:50},{gold:7500,gems:130},
@@ -79,7 +83,7 @@ async function verify(idToken){
   if(!ok)throw new Error("FIREBASE_ID_TOKEN_SIGNATURE");
   const now=Math.floor(Date.now()/1000);
   if(c.aud!==PROJECT_ID||c.iss!==ISSUER||!c.sub||Number(c.exp||0)<=now||Number(c.iat||0)>now+60)throw new Error("FIREBASE_ID_TOKEN_INVALID");
-  return {uid:String(c.sub)};
+  return {uid:String(c.sub),name:String(c.name||""),email:String(c.email||"")};
 }
 function pkcs8(pem){
   const b=String(pem||"").replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s+/g,"");
@@ -102,6 +106,16 @@ async function dbetag(path,token){const r=await fetch(dburl(path,token),{headers
 async function dbput(path,value,etag,token){
   const r=await fetch(dburl(path,token),{method:"PUT",headers:{"Content-Type":"application/json","if-match":etag},body:JSON.stringify(value)});
   if(r.status===412)return {conflict:true};if(!r.ok)throw new Error(`DATABASE_PUT_${r.status}`);return {conflict:false};
+}
+async function dbset(path,value,token){
+  const r=await fetch(dburl(path,token),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(value)});
+  if(!r.ok)throw new Error(`DATABASE_SET_${r.status}`);
+  return r.json().catch(()=>value);
+}
+async function dbpatch(path,value,token){
+  const r=await fetch(dburl(path,token),{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(value)});
+  if(!r.ok)throw new Error(`DATABASE_PATCH_${r.status}`);
+  return r.json().catch(()=>value);
 }
 
 function cloudProfile(c){try{const x=c?.storage?.hallvalla_player_profile;return typeof x==="string"?JSON.parse(x):{};}catch(_){return{};}}
@@ -338,6 +352,198 @@ async function transact(uid,token,resolver){
   }
   throw new Error("ECONOMY_TRANSACTION_CONFLICT");
 }
+
+function securityRule(reason,body={}){
+  const r=String(reason||"");
+  if(
+    !r||
+    r==="ACCOUNT_SUSPENDED"||
+    r==="NOT_FOUND"||
+    r==="METHOD_NOT_ALLOWED"||
+    r==="DAILY_TOO_EARLY"||
+    r==="ECONOMY_TRANSACTION_CONFLICT"||
+    r.startsWith("INSUFFICIENT_")||
+    r.startsWith("DATABASE_")||
+    r.startsWith("FIREBASE_")||
+    r==="AUTH_INVALID"
+  )return null;
+
+  const critical=new Set([
+    "CLAIM_KIND_INVALID",
+    "SPEND_KIND_INVALID",
+    "DAILY_REWARD_INVALID",
+    "TUTORIAL_REWARD_INVALID",
+    "BALANCE_LIMIT"
+  ]);
+  if(critical.has(r)){
+    return {severity:"critical",points:60,summary:"Solicitud económica imposible o no autorizada"};
+  }
+
+  if(
+    r.endsWith("_INVALID")||
+    r==="MASTERY_TARGET_NOT_SERVER_AUTHORIZED"||
+    r==="MINE_PRODUCTION_LIMIT"
+  ){
+    return {severity:"high",points:35,summary:"Datos económicos inválidos enviados al servidor"};
+  }
+
+  if(
+    r.includes("NOT_CONFIRMED")||
+    r.includes("MISMATCH")||
+    r.includes("NOT_ACTIVE")||
+    r.includes("PROGRESS_NOT_CONFIRMED")||
+    r.includes("ENTRY_NOT_FOUND")||
+    r.includes("STATE_NOT_FOUND")
+  ){
+    return {severity:"medium",points:15,summary:"El servidor no pudo confirmar el progreso declarado"};
+  }
+
+  return null;
+}
+function securityClient(request){
+  const ua=String(request?.headers?.get?.("user-agent")||"");
+  if(/Android/i.test(ua))return "android";
+  if(/Windows/i.test(ua))return "windows";
+  return "web";
+}
+function securityPayloadEvidence(body={}){
+  try{
+    const safe={
+      kind:String(body?.kind||"").slice(0,60),
+      opId:String(body?.opId||"").slice(0,120),
+      payload:body?.payload&&typeof body.payload==="object"?body.payload:{}
+    };
+    return JSON.stringify(safe).replace(/[\r\n\t]+/g," ").slice(0,420);
+  }catch(_){return "{}";}
+}
+async function securityPlayerName(uid,token,user={}){
+  try{
+    const cloud=await latestCloud(uid,token);
+    const profile=cloudJson(cloud,"hallvalla_player_profile")||{};
+    const name=String(profile?.name||user?.name||"Jugador").replace(/\s+/g," ").trim().slice(0,24);
+    return name||"Jugador";
+  }catch(_){
+    const name=String(user?.name||"Jugador").replace(/\s+/g," ").trim().slice(0,24);
+    return name||"Jugador";
+  }
+}
+async function bumpSecurityRisk(uid,reason,points,token){
+  const path=`securityV146/risk/${uid}`;
+  for(let attempt=0;attempt<6;attempt++){
+    const got=await dbetag(path,token);
+    const now=Date.now();
+    const previous=got.value&&typeof got.value==="object"?got.value:{};
+    const expired=!Number(previous.windowStartedAt||0)||now-Number(previous.windowStartedAt||0)>SECURITY_WINDOW_MS;
+    const counts=expired?{}:{...(previous.counts||{})};
+    const code=cleanKey(reason,64);
+    counts[code]=Math.min(1000000,pos(counts[code],1000000)+1);
+    const score=Math.min(10000,(expired?0:pos(previous.score,10000))+Math.max(0,pos(points,1000)));
+    const next={
+      version:1,
+      score,
+      counts,
+      windowStartedAt:expired?now:Number(previous.windowStartedAt),
+      lastAt:now,
+      lastReason:String(reason||"").slice(0,100),
+      autoHoldCount:pos(previous.autoHoldCount,1000000)
+    };
+    const put=await dbput(path,next,got.etag,token);
+    if(!put.conflict)return next;
+  }
+  throw new Error("SECURITY_RISK_CONFLICT");
+}
+async function applyAutomaticSecurityHold(uid,token,risk){
+  if(uid===HALLVALLA_MASTER_ADMIN_UID)return false;
+  if(pos(risk?.score,10000)<SECURITY_AUTO_HOLD_SCORE)return false;
+  const now=Date.now();
+  const current=await dbget(`community/moderation/${uid}`,token).catch(()=>null);
+  const existingUntil=pos(current?.banUntil,9999999999999);
+  const desiredUntil=now+SECURITY_AUTO_HOLD_MS;
+  const banUntil=Math.max(existingUntil,desiredUntil);
+  await dbpatch(`community/moderation/${uid}`,{
+    muteUntil:pos(current?.muteUntil,9999999999999),
+    muteReason:String(current?.muteReason||"").slice(0,180),
+    banUntil,
+    banReason:"Bloqueo automático de seguridad: actividad económica inválida detectada. Revisión administrativa pendiente.",
+    updatedAt:now,
+    updatedBy:"SERVER_SECURITY_V146"
+  },token);
+  return true;
+}
+async function createServerSecurityAlert({uid,token,user,request,reason,rule,risk,body,holdApplied=false}){
+  const now=Date.now();
+  const alertId=cleanKey(`economy_${now}_${crypto.randomUUID?.()||Math.random().toString(36).slice(2)}`,140);
+  const attempts=Math.max(1,pos(risk?.counts?.[cleanKey(reason,64)],1000000));
+  const evidence=[
+    `Worker Economy r4`,
+    `ruta=${new URL(request.url).pathname}`,
+    `motivo=${reason}`,
+    `riesgo=+${rule.points} => ${pos(risk?.score,10000)}/${SECURITY_AUTO_HOLD_SCORE}`,
+    holdApplied?"AUTO-HOLD 24H=SI":"AUTO-HOLD 24H=NO",
+    `datos=${securityPayloadEvidence(body)}`
+  ].join(" · ").slice(0,700);
+  await dbset(`community/securityAlerts/${alertId}`,{
+    alertId,
+    uid:String(uid).slice(0,160),
+    playerName:await securityPlayerName(uid,token,user),
+    severity:rule.severity,
+    code:String(reason||"security").slice(0,64),
+    summary:String(rule.summary||"Alerta de seguridad económica").slice(0,180),
+    evidence,
+    attempts,
+    client:securityClient(request),
+    build:"economy-r4",
+    createdAt:now,
+    status:"open",
+    resolvedAt:0,
+    resolvedBy:"",
+    adminNote:""
+  },token);
+  return alertId;
+}
+async function recordSecurityIncident({uid,token,user,request,reason,body}){
+  if(!uid||!token||uid===HALLVALLA_MASTER_ADMIN_UID)return null;
+  const rule=securityRule(reason,body);
+  if(!rule)return null;
+  const risk=await bumpSecurityRisk(uid,reason,rule.points,token);
+  const holdApplied=await applyAutomaticSecurityHold(uid,token,risk);
+  const alertId=await createServerSecurityAlert({uid,token,user,request,reason,rule,risk,body,holdApplied});
+  if(holdApplied){
+    const riskPath=`securityV146/risk/${uid}`;
+    await dbpatch(riskPath,{autoHoldCount:pos(risk.autoHoldCount,1000000)+1,lastAutoHoldAt:Date.now()},token).catch(()=>{});
+  }
+  return {alertId,riskScore:risk.score,holdApplied};
+}
+async function assertEconomyNotSuspended(uid,token){
+  if(uid===HALLVALLA_MASTER_ADMIN_UID)return true;
+  const moderation=await dbget(`community/moderation/${uid}`,token).catch(()=>null);
+  if(pos(moderation?.banUntil,9999999999999)>Date.now())throw new Error("ACCOUNT_SUSPENDED");
+  return true;
+}
+async function createSecuritySelfTestAlert(uid,token,user,request){
+  if(uid!==HALLVALLA_MASTER_ADMIN_UID)throw new Error("ADMIN_ONLY");
+  const now=Date.now();
+  const alertId=cleanKey(`security_self_test_${now}_${crypto.randomUUID?.()||"test"}`,140);
+  await dbset(`community/securityAlerts/${alertId}`,{
+    alertId,
+    uid:String(uid).slice(0,160),
+    playerName:await securityPlayerName(uid,token,user),
+    severity:"low",
+    code:"server_security_self_test",
+    summary:"Prueba del registro de seguridad del Worker",
+    evidence:"Alerta sintética creada por la cuenta administradora. No suma riesgo y no aplica sanciones.",
+    attempts:1,
+    client:securityClient(request),
+    build:"economy-r4",
+    createdAt:now,
+    status:"open",
+    resolvedAt:0,
+    resolvedBy:"",
+    adminNote:""
+  },token);
+  return alertId;
+}
+
 function publicReason(e){
   const m=String(e?.message||e||"ECONOMY_FAILED");
   if(m.startsWith("FIREBASE_ID_TOKEN")||m.startsWith("FIREBASE_SIGNING"))return "AUTH_INVALID";
@@ -353,28 +559,77 @@ export default{
     const origin=request.headers.get("origin")||"*";
     if(request.method==="OPTIONS")return new Response(null,{status:204,headers:cors(origin)});
     const url=new URL(request.url);
-    if(request.method==="GET"&&url.pathname==="/")return out({ok:true,service:"hallvalla-economy-authority",revision:3,mode:"authoritative-wallet-memory-tamper-protection"},200,origin);
+    if(request.method==="GET"&&url.pathname==="/")return out({
+      ok:true,
+      service:"hallvalla-economy-authority",
+      revision:4,
+      mode:"authoritative-wallet-fraud-audit",
+      serverSecurityAudit:true,
+      automaticSecurityHold:true,
+      autoHoldScore:SECURITY_AUTO_HOLD_SCORE
+    },200,origin);
     if(request.method!=="POST")return out({ok:false,reason:"METHOD_NOT_ALLOWED"},405,origin);
+
+    let securityContext={uid:"",token:"",user:null,body:{},path:url.pathname};
+
     try{
       const u=await auth(request),token=await serviceToken(env),body=await request.json().catch(()=>({}));
-      if(url.pathname==="/bootstrap"){const s=await ensure(u.uid,token);return out({ok:true,revision:3,wallet:wallet(s.wallet),migratedAt:s.migratedAt||0},200,origin);}
-      if(url.pathname==="/state"){const s=await ensure(u.uid,token);return out({ok:true,revision:3,wallet:wallet(s.wallet),updatedAt:s.updatedAt||0},200,origin);}
+      securityContext={uid:u.uid,token,user:u,body,path:url.pathname};
+
+      if(url.pathname==="/bootstrap"){
+        const s=await ensure(u.uid,token);
+        return out({ok:true,revision:4,wallet:wallet(s.wallet),migratedAt:s.migratedAt||0},200,origin);
+      }
+      if(url.pathname==="/state"){
+        const s=await ensure(u.uid,token);
+        return out({ok:true,revision:4,wallet:wallet(s.wallet),updatedAt:s.updatedAt||0},200,origin);
+      }
+      if(url.pathname==="/security-self-test"){
+        const alertId=await createSecuritySelfTestAlert(u.uid,token,u,request);
+        return out({ok:true,revision:4,alertId,synthetic:true,riskChanged:false,holdApplied:false},200,origin);
+      }
       if(url.pathname==="/spend"){
+        await assertEconomyNotSuspended(u.uid,token);
         await ensure(u.uid,token);
         const kind=String(body.kind||""),op=cleanKey(body.opId||`op_${Date.now()}`,120);
         const result=await transact(u.uid,token,s=>resolveSpend(kind,body.payload||{},u.uid,token,s,op));
-        return out({ok:true,revision:3,...result},200,origin);
+        return out({ok:true,revision:4,...result},200,origin);
       }
       if(url.pathname==="/claim"){
+        await assertEconomyNotSuspended(u.uid,token);
         await ensure(u.uid,token);
         const kind=String(body.kind||"");
         const result=await transact(u.uid,token,s=>resolveClaim(kind,body.payload||{},u.uid,token,s));
-        return out({ok:true,revision:3,...result},200,origin);
+        return out({ok:true,revision:4,...result},200,origin);
       }
-      if(url.pathname==="/self-test"){const s=await ensure(u.uid,token);return out({ok:true,revision:3,firebaseUserVerified:true,firebaseDatabaseAdmin:true,wallet:wallet(s.wallet)},200,origin);}
+      if(url.pathname==="/self-test"){
+        const s=await ensure(u.uid,token);
+        return out({ok:true,revision:4,firebaseUserVerified:true,firebaseDatabaseAdmin:true,serverSecurityAudit:true,wallet:wallet(s.wallet)},200,origin);
+      }
       return out({ok:false,reason:"NOT_FOUND"},404,origin);
     }catch(e){
-      const reason=publicReason(e),status=reason==="AUTH_INVALID"||reason==="FIREBASE_ID_TOKEN_MISSING"?401:reason.startsWith("INSUFFICIENT_")?409:/INVALID|NOT_FOUND|NOT_CONFIRMED|NOT_ACTIVE|NOT_ALLOWED|MISMATCH|TOO_EARLY/.test(reason)?400:500;
+      const reason=publicReason(e);
+      if(securityContext.uid&&securityContext.token){
+        try{
+          await recordSecurityIncident({
+            uid:securityContext.uid,
+            token:securityContext.token,
+            user:securityContext.user,
+            request,
+            reason,
+            body:securityContext.body
+          });
+        }catch(auditError){
+          console.error("[HallValla][SecurityAudit] No se pudo registrar incidente:",auditError);
+        }
+      }
+      const status=
+        reason==="AUTH_INVALID"||reason==="FIREBASE_ID_TOKEN_MISSING"?401:
+        reason==="ACCOUNT_SUSPENDED"?423:
+        reason==="ADMIN_ONLY"?403:
+        reason.startsWith("INSUFFICIENT_")?409:
+        /INVALID|NOT_FOUND|NOT_CONFIRMED|NOT_ACTIVE|NOT_ALLOWED|MISMATCH|TOO_EARLY/.test(reason)?400:
+        500;
       console.error("[HallValla][Economy]",e);
       return out({ok:false,reason,message:String(e?.message||e)},status,origin);
     }
