@@ -30,7 +30,7 @@
 <meta name="hallvalla-version" content="20261002.252">
 <meta name="hallvalla-build" content="v8_MODULAR_20261002.252">
 <meta name="hallvalla-build-name" content="Design Stage fijo 1366×636 · v192 arquitectura modular · canon v191 preservado">
-<link rel="stylesheet" href="styles.css?h=e934da5ab4b4"/>
+<link rel="stylesheet" href="styles.css?h=368bd225ba0a"/>
 
 <link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.90">
 <link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.90">
@@ -1002,26 +1002,20 @@
             <div class="hv50-mine-roster-title"><span>UNIDADES</span><strong>DISPONIBLES</strong></div>
             <div id="mineRosterRow" class="hv50-mine-roster"></div>
             <div class="hv50-mine-actions" aria-label="Acciones de la Mina">
-              <button id="mineBuySlotBtn" class="hv50-action hv50-action--buy" type="button" aria-label="Comprar nuevo espacio">
-                <span class="hv50-action-ring" aria-hidden="true">
-                  <svg viewBox="0 0 48 48" focusable="false"><path d="M12 34 31 15M18 12l18 18M10 38l6-1 1-6M31 10l7 7M38 31v10M33 36h10"/></svg>
-                </span>
+              <button id="mineBuySlotBtn" class="hv50-action hv50-action--buy" type="button" aria-label="Comprar nuevo espacio" title="Comprar nuevo espacio">
+                <img class="hv50-action-art" src="assets/mine/actions/mine_new_slot.webp" alt="" aria-hidden="true" draggable="false">
                 <span class="hv50-action-label">Nuevo espacio</span>
-                <small id="mineBuySlotHint" class="hv50-action-hint">Ranura 06 · 5💎</small>
+                <small id="mineBuySlotHint" class="hv50-action-hint">Ranura disponible</small>
               </button>
 
-              <button id="mineClaimBtn" class="hv50-action hv50-action--claim" type="button" aria-label="Recoger producción">
-                <span class="hv50-action-ring" aria-hidden="true">
-                  <svg viewBox="0 0 48 48" focusable="false"><path d="M8 15h27l-3 18H12L8 15Zm4 0 3-7h17l3 7M16 38a2 2 0 1 0 0 .1M29 38a2 2 0 1 0 0 .1M36 20h6M39 17v6"/></svg>
-                </span>
+              <button id="mineClaimBtn" class="hv50-action hv50-action--claim" type="button" aria-label="Recoger produccion" title="Recoger toda la produccion">
+                <img class="hv50-action-art" src="assets/mine/actions/mine_collect_all.webp" alt="" aria-hidden="true" draggable="false">
                 <span class="hv50-action-label">Recoger todo</span>
-                <small class="hv50-action-hint">Producción lista</small>
+                <small class="hv50-action-hint">Produccion lista</small>
               </button>
 
-              <button id="mineUnassignBtn" class="hv50-action hv50-action--retire" type="button" aria-label="Retirar trabajador">
-                <span class="hv50-action-ring" aria-hidden="true">
-                  <svg viewBox="0 0 48 48" focusable="false"><path d="M10 30c1-9 6-15 14-15s13 6 14 15H10Zm7-14 2-6h10l2 6M24 30v8M18 38h12M35 10h8v8M43 10 33 20"/></svg>
-                </span>
+              <button id="mineUnassignBtn" class="hv50-action hv50-action--retire" type="button" aria-label="Retirar trabajador" title="Retirar trabajador">
+                <img class="hv50-action-art" src="assets/mine/actions/mine_retire_worker.webp" alt="" aria-hidden="true" draggable="false">
                 <span class="hv50-action-label">Retirar</span>
                 <small class="hv50-action-hint">Trabajador</small>
               </button>

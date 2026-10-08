@@ -28892,3 +28892,124 @@ html.hv-universal-dragging-enabled .hv-universal-selected{cursor:grabbing!import
 .hv-support-status-pending{background:rgba(225,189,105,.16);color:#e1bd69}.hv-support-status-approved{background:rgba(65,180,110,.16);color:#74d99c}.hv-support-status-rejected{background:rgba(190,70,70,.18);color:#ef8b8b}
 .hv-admin-support-row .hv-admin-actions{grid-template-columns:1fr 1fr 1fr;margin-top:3px}
 @media(max-width:900px){.hv-admin-support-list{grid-template-columns:1fr}}
+
+/* HALLVALLA_MINA_ACTION_ART_V3
+   Los tres controles de Produccion salen del rectangulo de UNIDADES DISPONIBLES.
+   Solo cambia presentacion; IDs y funciones permanecen intactos. */
+.hv50-mine-bottom-dock{
+  grid-template-columns:130px minmax(0,1fr) !important;
+  margin-right:300px !important;
+  overflow:visible !important;
+}
+.hv50-mine-actions{
+  position:absolute !important;
+  z-index:24 !important;
+  left:calc(100% + 12px) !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  width:288px !important;
+  padding:0 !important;
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  align-items:center !important;
+  justify-items:center !important;
+  gap:10px !important;
+  overflow:visible !important;
+}
+.hv50-action{
+  width:88px !important;
+  min-width:0 !important;
+  padding:0 !important;
+  display:grid !important;
+  justify-items:center !important;
+  align-content:center !important;
+  gap:1px !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+}
+.hv50-action-ring{display:none !important}
+.hv50-action-art{
+  display:block !important;
+  width:78px !important;
+  height:78px !important;
+  object-fit:contain !important;
+  pointer-events:none !important;
+  user-select:none !important;
+  filter:drop-shadow(0 7px 11px rgba(0,0,0,.62));
+  transition:transform .16s ease,filter .16s ease,opacity .16s ease;
+}
+.hv50-action:hover:not(:disabled) .hv50-action-art,
+.hv50-action:focus-visible:not(:disabled) .hv50-action-art{
+  transform:translateY(-4px) scale(1.06);
+  filter:brightness(1.10) drop-shadow(0 10px 15px rgba(0,0,0,.72)) drop-shadow(0 0 8px rgba(216,168,79,.22));
+}
+.hv50-action:active:not(:disabled) .hv50-action-art{
+  transform:translateY(-1px) scale(.97);
+}
+.hv50-action-label{
+  color:#f4dfae !important;
+  font:800 9px/1.08 Georgia,serif !important;
+  text-align:center !important;
+  text-shadow:0 2px 4px #000 !important;
+}
+.hv50-action-hint{
+  max-width:86px !important;
+  color:#b7a78d !important;
+  font:750 6px/1.05 system-ui,sans-serif !important;
+  text-align:center !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+.hv50-action:disabled{
+  opacity:.36 !important;
+  cursor:default !important;
+}
+.hv50-action:disabled .hv50-action-art{
+  filter:grayscale(.72) brightness(.58) drop-shadow(0 5px 8px rgba(0,0,0,.5)) !important;
+}
+
+@media(max-width:1100px){
+  .hv50-mine-bottom-dock{
+    grid-template-columns:95px minmax(0,1fr) !important;
+    margin-right:238px !important;
+  }
+  .hv50-mine-actions{
+    left:calc(100% + 8px) !important;
+    width:230px !important;
+    gap:6px !important;
+  }
+  .hv50-action{width:70px !important}
+  .hv50-action-art{width:58px !important;height:58px !important}
+  .hv50-action-label{font-size:7px !important}
+  .hv50-action-hint{display:none !important}
+}
+
+@media(max-height:720px) and (min-width:701px){
+  .hv50-action-art{width:68px !important;height:68px !important}
+  .hv50-action-label{font-size:7px !important}
+}
+
+@media(max-width:700px) and (orientation:portrait){
+  .hv50-mine-bottom-dock{
+    grid-template-columns:1fr !important;
+    margin-right:0 !important;
+    margin-bottom:88px !important;
+  }
+  .hv50-mine-actions{
+    left:50% !important;
+    top:calc(100% + 7px) !important;
+    transform:translateX(-50%) !important;
+    width:min(270px,96%) !important;
+    gap:6px !important;
+  }
+  .hv50-action{width:78px !important}
+  .hv50-action-art{width:60px !important;height:60px !important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .hv50-action-art{animation:none !important;transition:none !important}
+}
