@@ -3,8 +3,9 @@
 
 const DRAGON_COMPANION_ELEMENTS=["lightning","fire","ice"];
 const DRAGON_COMPANION_STAGES=["egg","baby","young","adult"];
-const DRAGON_STAGE_THRESHOLDS=Object.freeze({egg:200,baby:5000,young:10000,adult:10000});
+const DRAGON_STAGE_THRESHOLDS=Object.freeze({egg:200,baby:500,young:1000,adult:10000});
 const DRAGON_ACTIVE_RECORD_KEY="hallvalla_active_dragon_companion_v1";
+const DRAGON_ACTIVE_RECORD_IDS_KEY="hallvalla_active_dragon_companions_v2";
 const DRAGON_GROWTH_BATTLE_KEY="hallvalla_dragon_growth_battle_v1";
 const DRAGON_GROWTH_KILL_LEDGER_KEY="hallvalla_dragon_growth_kill_ledger_v2";
 
@@ -97,7 +98,7 @@ function makeDragonCompanionCard(stage,element){
   const stageName=dragonStageLabel(stage);
   const elementName=dragonElementLabel(element);
   const rarity=stage==="baby"?"Gloriosa":stage==="young"?"Mítica":"Astral";
-  const threshold=stage==="baby"?5000:stage==="young"?10000:10000;
+  const threshold=getDragonStageThreshold(stage);
   const growthText=stage==="adult"?"Forma adulta completa.":`Mientras permanezca vivo en el campo, todas las eliminaciones aliadas continúan sumando a su crecimiento. Evoluciona después del duelo al alcanzar ${threshold} eliminaciones acumuladas.`;
   return{
     key:dragonCardKey(stage,element),name:`Dragón ${stageName} de ${elementName}`,type:"unit",
@@ -183,18 +184,48 @@ function grantBeastmasterRareDragonEgg(source={}){
   return record;
 }
 
-function countDragonCardsInDeck(deck=[]){return(deck||[]).filter(card=>isDragonCompanionKey(card?.key)).length;}
-registerHallvallaHook("deck.maxCopies",(value,{card})=>isDragonCompanionKey(card?.key)?3:value,{id:"dragon-growth:max-copies"});
+function getDragonDeckIdentity(cardOrKey){
+  const key=String(typeof cardOrKey==="string"?cardOrKey:cardOrKey?.key||"");
+  if(!isDragonCompanionKey(key))return"";
+  if(key==="dragon_egg")return"egg";
+  const template=typeof cardOrKey==="string"?getDragonCompanionCardTemplate(key):cardOrKey;
+  const direct=String(template?.dragonElement||"");
+  if(DRAGON_COMPANION_ELEMENTS.includes(direct))return direct;
+  const match=key.match(/^(?:baby|young|adult)_(lightning|fire|ice)_dragon$/);
+  return match?.[1]||"";
+}
+function getDragonCardsInDeck(deck=[]){return(deck||[]).filter(card=>isDragonCompanionKey(card?.key));}
+function countDragonCardsInDeck(deck=[]){return getDragonCardsInDeck(deck).length;}
+function getDragonDeckConflict(cardOrKey,deck=[]){
+  const identity=getDragonDeckIdentity(cardOrKey);
+  if(!identity)return"";
+  const dragons=getDragonCardsInDeck(deck);
+  if(dragons.length>=3)return"Solo puedes llevar hasta 3 Dragones/Huevos por mazo.";
+  if(dragons.some(card=>getDragonDeckIdentity(card)===identity)){
+    if(identity==="egg")return"Solo puedes llevar un Huevo de Dragón por mazo.";
+    return `Solo puedes llevar un Dragón de ${dragonElementLabel(identity)} por mazo.`;
+  }
+  return"";
+}
+registerHallvallaHook("deck.maxCopies",(value,{card})=>isDragonCompanionKey(card?.key)?1:value,{id:"dragon-growth:max-copies"});
 registerHallvallaHook("deck.validation",(result,{cards})=>{
   const errors=[...(result.errors||[])];
-  if(countDragonCardsInDeck(cards)>1)errors.push("Solo puedes llevar un Huevo o Dragón de cualquier etapa por mazo.");
+  const dragons=getDragonCardsInDeck(cards);
+  if(dragons.length>3)errors.push("Solo puedes llevar hasta 3 Dragones/Huevos por mazo.");
+  const counts=new Map();
+  dragons.forEach(card=>{const id=getDragonDeckIdentity(card);if(id)counts.set(id,(counts.get(id)||0)+1);});
+  for(const [identity,count] of counts){
+    if(count<=1)continue;
+    errors.push(identity==="egg"?"Solo puedes llevar un Huevo de Dragón por mazo.":`Solo puedes llevar un Dragón de ${dragonElementLabel(identity)} por mazo.`);
+  }
   return{...result,errors,valid:errors.length===0};
 },{id:"dragon-growth:deck-validation"});
 registerHallvallaHook("deck.addCard",({cardKey})=>{
-  if(isDragonCompanionKey(cardKey)&&countDragonCardsInDeck(currentDeckDraft)>0){setHint("Solo puedes incluir un Huevo o Dragón por mazo.");return{handled:true,value:false};}
+  if(!isDragonCompanionKey(cardKey))return{handled:false};
+  const conflict=getDragonDeckConflict(cardKey,currentDeckDraft);
+  if(conflict){setHint(conflict);return{handled:true,value:false};}
   return{handled:false};
-},{id:"dragon-growth:add-card"});
-registerHallvallaHook("forge.craftLockReason",(value,{card})=>isDragonCompanionKey(card?.key)?"Los huevos y dragones no se fabrican: se obtienen y evolucionan mediante los Contratos de las Bestias.":value,{id:"dragon-growth:craft-lock"});
+},{id:"dragon-growth:add-card"});registerHallvallaHook("forge.craftLockReason",(value,{card})=>isDragonCompanionKey(card?.key)?"Los huevos y dragones no se fabrican: se obtienen y evolucionan mediante los Contratos de las Bestias.":value,{id:"dragon-growth:craft-lock"});
 
 function replaceDragonCardInSavedDeck(oldKey,newKey){
   const replacement=getDragonCompanionCardTemplate(newKey);
@@ -213,10 +244,29 @@ function setActiveDragonRecordId(id){
   try{id?sessionStorage.setItem(DRAGON_ACTIVE_RECORD_KEY,String(id)):sessionStorage.removeItem(DRAGON_ACTIVE_RECORD_KEY);}catch(e){}
 }
 function getActiveDragonRecordId(){try{return sessionStorage.getItem(DRAGON_ACTIVE_RECORD_KEY)||"";}catch(e){return"";}}
-registerHallvallaHook("unit.make",(unit,{card})=>{
+function getActiveDragonRecordIds(){
+  try{
+    const ids=JSON.parse(sessionStorage.getItem(DRAGON_ACTIVE_RECORD_IDS_KEY)||"[]");
+    if(Array.isArray(ids)&&ids.length)return[...new Set(ids.map(String).filter(Boolean))];
+  }catch(_){}
+  const legacy=getActiveDragonRecordId();
+  return legacy?[legacy]:[];
+}
+function addActiveDragonRecordId(id){
+  const safe=String(id||"");
+  if(!safe)return;
+  const ids=getActiveDragonRecordIds();
+  if(!ids.includes(safe))ids.push(safe);
+  try{sessionStorage.setItem(DRAGON_ACTIVE_RECORD_IDS_KEY,JSON.stringify(ids));}catch(_){}
+  setActiveDragonRecordId(safe);
+}
+function clearActiveDragonRecordIds(){
+  try{sessionStorage.removeItem(DRAGON_ACTIVE_RECORD_IDS_KEY);}catch(_){}
+  setActiveDragonRecordId("");
+}registerHallvallaHook("unit.make",(unit,{card})=>{
   if(!unit||!isDragonCompanionKey(unit.key))return unit;
   const record=findDragonRecordForCardKey(unit.key);
-  if(Number(unit.owner)===getLocalDragonOwner()&&record)setActiveDragonRecordId(record.id);
+  if(Number(unit.owner)===getLocalDragonOwner()&&record)addActiveDragonRecordId(record.id);
   const threshold=getDragonStageThreshold(record?.stage||unit.dragonStage||"adult");
   return{...unit,dragonCompanion:true,dragonCompanionId:record?.id||"",dragonStage:record?.stage||unit.dragonStage,dragonElement:record?.element||unit.dragonElement,dragonKills:Number(record?.kills||0),dragonThreshold:threshold,dragonGrowthThreshold:threshold};
 },{id:"dragon-growth:normal-unit"});
@@ -224,7 +274,7 @@ registerHallvallaHook("unit.make",(unit,{card})=>{
 registerHallvallaHook("principal.makeUnit",(unit,{owner})=>{
   if(!unit||!isDragonCompanionKey(unit.key))return unit;
   const record=findDragonRecordForCardKey(unit.key);
-  if(Number(owner)===getLocalDragonOwner()&&record)setActiveDragonRecordId(record.id);
+  if(Number(owner)===getLocalDragonOwner()&&record)addActiveDragonRecordId(record.id);
   const threshold=getDragonStageThreshold(record?.stage||unit.dragonStage||"adult");
   return{
     ...unit,dragonCompanion:true,dragonCompanionId:record?.id||"",dragonStage:record?.stage||unit.dragonStage,
@@ -232,7 +282,7 @@ registerHallvallaHook("principal.makeUnit",(unit,{owner})=>{
     aerial:unit.key!=="dragon_egg",flight:unit.key!=="dragon_egg",immobile:unit.key==="dragon_egg",cannotAttack:unit.key==="dragon_egg",cannotDefend:unit.key==="dragon_egg"
   };
 },{id:"dragon-growth:principal-unit"});
-registerHallvallaHook("principal.beforeMakeUnits",({owner})=>{if(Number(owner)===getLocalDragonOwner())setActiveDragonRecordId("");},{id:"dragon-growth:principal-units-reset"});
+registerHallvallaHook("principal.beforeMakeUnits",({owner})=>{if(Number(owner)===getLocalDragonOwner())clearActiveDragonRecordIds();},{id:"dragon-growth:principal-units-reset"});
 
 function getDragonCompanionStatusStacks(attacker){return attacker?.dragonStage==="baby"?1:2;}
 function applyDragonCompanionElementStatus(unit,attacker,stacks=1,state=publicState){
@@ -318,11 +368,10 @@ registerHallvallaHook("unit.effectiveMov",(value,{unit})=>{
   return Math.max(0,value);
 },{id:"dragon-growth:frost-mov"});
 
-function getActiveLivingDragonUnit(state){
+function getActiveLivingDragonUnits(state){
   const owner=getLocalDragonOwner();
-  return(state?.units||[]).find(unit=>unit&&Number(unit.owner)===owner&&isDragonCompanionKey(unit.key)&&Number(unit.hp||0)>0)||null;
-}
-function getNewEnemyDeaths(prevState,nextState){
+  return(state?.units||[]).filter(unit=>unit&&Number(unit.owner)===owner&&isDragonCompanionKey(unit.key)&&Number(unit.hp||0)>0);
+}function getNewEnemyDeaths(prevState,nextState){
   if(!prevState||!nextState)return[];
   const owner=getLocalDragonOwner();
   const nextById=new Map((nextState.units||[]).map(unit=>[unit.id,unit]));
@@ -356,24 +405,30 @@ function addDragonProgress(recordId,amount){
 }
 function maybeAccumulateDragonKills(prevState,nextState){
   if(!prevState||!nextState||nextState.mode==="tutorial")return;
-  const dragon=getActiveLivingDragonUnit(nextState)||getActiveLivingDragonUnit(prevState);
-  if(!dragon)return;
+  const active=new Map();
+  [...getActiveLivingDragonUnits(prevState),...getActiveLivingDragonUnits(nextState)].forEach(dragon=>{
+    const recordId=String(dragon?.dragonCompanionId||findDragonRecordForCardKey(dragon?.key)?.id||"");
+    if(recordId&&!active.has(recordId))active.set(recordId,dragon);
+  });
+  if(!active.size)return;
   const ledger=getDragonKillLedger(nextState);
   const seen=new Set(ledger.ids||[]);
   const deaths=getNewEnemyDeaths(prevState,nextState).filter(unit=>unit?.id&&!seen.has(unit.id));
   if(!deaths.length)return;
   deaths.forEach(unit=>seen.add(unit.id));
   saveDragonKillLedger({battleKey:ledger.battleKey,ids:[...seen]});
-  const recordId=dragon.dragonCompanionId||getActiveDragonRecordId()||findDragonRecordForCardKey(dragon.key)?.id;
-  if(!recordId)return;
-  const updated=addDragonProgress(recordId,deaths.length);
-  if(!updated)return;
-  const threshold=getDragonStageThreshold(updated.stage);
-  const remaining=Math.max(0,threshold-updated.kills);
-  setHint(`${dragon.name}: ${updated.kills}/${threshold} eliminaciones acumuladas · faltan ${remaining}${updated.ready?" · evolución preparada al terminar el duelo":""}.`);
+  const hints=[];
+  for(const [recordId,dragon] of active){
+    addActiveDragonRecordId(recordId);
+    const updated=addDragonProgress(recordId,deaths.length);
+    if(!updated||updated.stage==="adult")continue;
+    const threshold=getDragonStageThreshold(updated.stage);
+    const remaining=Math.max(0,threshold-updated.kills);
+    hints.push(`${dragon.name}: ${updated.kills}/${threshold} · faltan ${remaining}${updated.ready?" · evolución preparada":""}`);
+  }
+  if(hints.length)setHint(hints.join(" | "));
   setTimeout(()=>{try{render?.();}catch(e){}},0);
-}
-registerHallvallaHook("veilCurse.killEventProcessed",({prevState,nextState})=>maybeAccumulateDragonKills(prevState,nextState),{id:"dragon-growth:accumulate-kills"});
+}registerHallvallaHook("veilCurse.killEventProcessed",({prevState,nextState})=>maybeAccumulateDragonKills(prevState,nextState),{id:"dragon-growth:accumulate-kills"});
 registerHallvallaHook("battle.unitKillRecorded",({prevState,nextState})=>maybeAccumulateDragonKills(prevState,nextState),{id:"dragon-growth:accumulate-kills-canonical"});
 
 function evolveDragonRecord(record){
@@ -383,7 +438,11 @@ function evolveDragonRecord(record){
   let nextStage=current.stage,nextElement=current.element;
   if(current.stage==="egg"){
     nextStage="baby";
-    nextElement=DRAGON_COMPANION_ELEMENTS[Math.floor(Math.random()*DRAGON_COMPANION_ELEMENTS.length)];
+    const deck=typeof getSavedDeck==="function"?getSavedDeck():[];
+    const used=new Set(getDragonCardsInDeck(deck).filter(card=>card?.key!==oldKey).map(getDragonDeckIdentity).filter(id=>DRAGON_COMPANION_ELEMENTS.includes(id)));
+    const available=DRAGON_COMPANION_ELEMENTS.filter(element=>!used.has(element));
+    const pool=available.length?available:DRAGON_COMPANION_ELEMENTS;
+    nextElement=pool[Math.floor(Math.random()*pool.length)];
   }else if(current.stage==="baby")nextStage="young";
   else if(current.stage==="young")nextStage="adult";
   const next=normalizeDragonCompanionRecord({...current,stage:nextStage,element:nextElement,ready:false,hatched:true,evolvedAt:Date.now()});
@@ -393,31 +452,35 @@ function processDragonGrowthAfterBattle(state){
   if(!state||state.phase!=="ended"||!state.endedAt)return[];
   const battleKey=`${gameId||state.code||"local"}:${state.endedAt}`;
   try{if(localStorage.getItem(DRAGON_GROWTH_BATTLE_KEY)===battleKey)return[];localStorage.setItem(DRAGON_GROWTH_BATTLE_KEY,battleKey);}catch(e){}
-  let activeId=getActiveDragonRecordId();
+  const owner=getLocalDragonOwner();
+  const activeIds=new Set(getActiveDragonRecordIds());
+  (state.units||[]).forEach(unit=>{
+    if(unit&&Number(unit.owner)===owner&&isDragonCompanionKey(unit.key)&&unit.dragonCompanionId)activeIds.add(String(unit.dragonCompanionId));
+  });
   const records=getDragonCompanions();
-  if(!activeId){
-    const owner=getLocalDragonOwner();
-    const fieldDragon=(state.units||[]).find(unit=>unit&&Number(unit.owner)===owner&&isDragonCompanionKey(unit.key));
-    if(fieldDragon?.dragonCompanionId)activeId=fieldDragon.dragonCompanionId;
+  const evolutions=[];
+  for(const activeId of activeIds){
+    const index=records.findIndex(record=>record.id===activeId);
+    if(index<0)continue;
+    const evolution=evolveDragonRecord(records[index]);
+    if(!evolution)continue;
+    records[index]=evolution.next;
+    evolutions.push(evolution);
   }
-  if(!activeId)return[];
-  const index=records.findIndex(record=>record.id===activeId);
-  if(index<0)return[];
-  const evolution=evolveDragonRecord(records[index]);
-  if(!evolution)return[];
-  records[index]=evolution.next;
+  clearActiveDragonRecordIds();
+  if(!evolutions.length)return[];
   saveDragonCompanions(records);
   syncDragonCollectionFromRecords(records);
-  replaceDragonCardInSavedDeck(evolution.oldKey,evolution.newKey);
-  setActiveDragonRecordId("");
-  const title=evolution.old.stage==="egg"?"El huevo ha eclosionado":`${dragonStageLabel(evolution.old.stage)} evolucionado`;
-  const message=evolution.old.stage==="egg"
+  evolutions.forEach(evolution=>replaceDragonCardInSavedDeck(evolution.oldKey,evolution.newKey));
+  const lines=evolutions.map(evolution=>evolution.old.stage==="egg"
     ?`El Huevo de Dragón alcanzó 200 eliminaciones y nació un Dragón Bebé de ${dragonElementLabel(evolution.next.element)}.`
-    :`${dragonElementLabel(evolution.next.element)} alcanzó ${evolution.next.kills} eliminaciones y evolucionó a Dragón ${dragonStageLabel(evolution.next.stage)}.`;
-  setTimeout(()=>hvAlert(message,title),260);
-  return[evolution];
-}
-registerHallvallaHook("battle.resultChecked",({state})=>processDragonGrowthAfterBattle(state),{id:"dragon-growth:process-after-battle"});
+    :`${dragonElementLabel(evolution.next.element)} alcanzó ${evolution.next.kills} eliminaciones y evolucionó a Dragón ${dragonStageLabel(evolution.next.stage)}.`);
+  const title=evolutions.length===1
+    ?(evolutions[0].old.stage==="egg"?"El huevo ha eclosionado":`${dragonStageLabel(evolutions[0].old.stage)} evolucionado`)
+    :`${evolutions.length} dragones evolucionaron`;
+  setTimeout(()=>hvAlert(lines.join("\n"),title),260);
+  return evolutions;
+}registerHallvallaHook("battle.resultChecked",({state})=>processDragonGrowthAfterBattle(state),{id:"dragon-growth:process-after-battle"});
 
 function getDragonDetProgressData(entity){
   if(!entity||!isDragonCompanionKey(entity.key))return null;
