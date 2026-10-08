@@ -183,7 +183,7 @@ async function hallvallaRtInitializeResources(){
 async function hallvallaRtResourceAndDrawTick(now){
   const elapsed=Math.max(0,now-hallvallaRtState.lastResourceAt);
   if(elapsed<HALLVALLA_RT_CFG.resourceEveryMs)return false;
-  // La recarga NO aumenta capacidad: restaura un solo punto ya ganado cada 9 s.
+  // La recarga NO aumenta capacidad: restaura un solo punto ya ganado cada 4.5 s.
   // La única forma de subir el máximo es capturar el orbe de MANÁ.
   hallvallaRtState.lastResourceAt=now;
   hallvallaRtState.cycle+=1;

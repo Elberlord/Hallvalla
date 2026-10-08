@@ -101,7 +101,7 @@ function hallvallaRtSyncPreparedBattle(){
     hallvallaRtPrimePreparedState();
     hallvallaRtState.timer=battleSetInterval(()=>{void hallvallaRtLoop();},HALLVALLA_RT_CFG.loopMs,"realtime-loop");
     hallvallaRtState.motionTimer=battleSetInterval(()=>{void hallvallaRtMotionLoop();},HALLVALLA_RT_CFG.motionLoopMs||HALLVALLA_RT_CFG.loopMs,"realtime-motion-loop");
-    setHint("2 MANÁ inicial · recarga 1 cada 9 s · orbe +1 capacidad cada 14 s · LB recoge · RB escudo 3 s.");
+    setHint("2 MANÁ inicial · recarga 1 cada 4.5 s · orbe +1 capacidad cada 14 s · LB recoge · RB escudo 3 s.");
     void hallvallaRtLoop();
     void hallvallaRtMotionLoop();
   }else{
