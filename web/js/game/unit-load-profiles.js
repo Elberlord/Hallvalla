@@ -10,21 +10,31 @@ const HALLVALLA_WEIGHT_PENALTY_THRESHOLDS=Object.freeze({
   penalty2Max:1.40
 });
 
-/* v216 · Ritmo TR canónico.
-   Conserva exactamente las diferencias relativas del modelo v176 por AGI/carga/MOV,
-   pero todas las unidades atacan 2 s antes y vuelven a moverse 3 s antes.
-   Ventanas resultantes: ataque ~8–14 s; movimiento ~7–15 s. */
-const HALLVALLA_SPEED_MODEL_VERSION="20260919.216";
+/* v218 Â· Ritmo TR canÃ³nico.
+   Conserva las diferencias relativas por AGI/carga/MOV.
+   Respecto al modelo v216, una unidad sana ataca y se mueve 2 s antes.
+   Ventanas sanas aproximadas: ataque 6â€“12 s; movimiento 5â€“13 s.
+   DespuÃ©s se suman penalizaciones fÃ­sicas/estados, con tope de +4 s por acciÃ³n. */
+const HALLVALLA_SPEED_MODEL_VERSION="20261009.218";
 const HALLVALLA_SPEED_TIMING=Object.freeze({
   attackBaseMs:13000,
   attackMinMs:10000,
   attackMaxMs:16000,
-  attackSpeedupMs:2000,
+  attackSpeedupMs:4000,
   moveBaseMs:22000,
   moveMinMs:10000,
   moveMaxMs:18000,
-  moveSpeedupMs:3000,
+  moveSpeedupMs:5000,
   moveAttackGapMs:1000
+});
+const HALLVALLA_SPEED_STATUS_TIMING=Object.freeze({
+  maxPenaltyMs:4000,
+  bleedAttackMs:1000,
+  bleedMoveMs:1000,
+  burnAttackMs:1000,
+  burnMoveMs:1000,
+  poisonStageAttackMs:Object.freeze({1:500,2:1000,3:1500}),
+  poisonStageMoveMs:Object.freeze({1:500,2:1000,3:1500})
 });
 function hallvallaClamp(value,min,max){return Math.max(min,Math.min(max,Number(value)||0));}
 function hallvallaSpeedEffectiveAgi(unit){
@@ -34,21 +44,83 @@ function hallvallaSpeedEffectiveAgi(unit){
 function hallvallaSpeedLoadProfile(unit){
   try{return typeof getHallvallaUnitLoadProfile==="function"?getHallvallaUnitLoadProfile(unit):null;}catch(_){return null;}
 }
-function getHallvallaUnitAttackCooldownMs(unit){
+function hallvallaTimingDirectPenaltyMs(unit,kind,now=Date.now()){
+  const field=kind==="attack"?"attackTimePenaltyMs":"moveTimePenaltyMs";
+  const untilField=kind==="attack"?"attackTimePenaltyUntil":"moveTimePenaltyUntil";
+  const value=Math.max(0,Number(unit?.[field]||0));
+  const until=Math.max(0,Number(unit?.[untilField]||0));
+  return value>0&&(!until||until>now)?value:0;
+}
+function hallvallaSpeedStatusPenaltyMs(unit,kind,now=Date.now()){
+  if(!unit)return 0;
+  const attack=kind==="attack";
+  let total=0;
+
+  if(Number(unit.bleedDamage||0)>0){
+    total+=attack?HALLVALLA_SPEED_STATUS_TIMING.bleedAttackMs:HALLVALLA_SPEED_STATUS_TIMING.bleedMoveMs;
+  }
+
+  if(Number(unit.poisonDamage||0)>0||Number(unit.poisonTurns||0)>0||unit.poisonPersistent===true){
+    const stage=Math.max(1,Math.min(3,Number(unit.poisonStage||1)||1));
+    const table=attack?HALLVALLA_SPEED_STATUS_TIMING.poisonStageAttackMs:HALLVALLA_SPEED_STATUS_TIMING.poisonStageMoveMs;
+    total+=Number(table[stage]||0);
+  }
+
+  if(Number(unit.burnDamage||0)>0&&(Number(unit.burnTurns||0)>0||unit.burnPersistent===true)){
+    total+=attack?HALLVALLA_SPEED_STATUS_TIMING.burnAttackMs:HALLVALLA_SPEED_STATUS_TIMING.burnMoveMs;
+  }
+
+  total+=hallvallaTimingDirectPenaltyMs(unit,kind,now);
+
+  const timed=Array.isArray(unit.rtTimingPenalties)?unit.rtTimingPenalties:[];
+  for(const entry of timed){
+    if(!entry)continue;
+    const until=Math.max(0,Number(entry.until||0));
+    if(until&&until<=now)continue;
+    total+=Math.max(0,Number(attack?entry.attackMs:entry.moveMs)||0);
+  }
+
+  return Math.min(HALLVALLA_SPEED_STATUS_TIMING.maxPenaltyMs,Math.max(0,Math.round(total)));
+}
+function withHallvallaTimingPenalty(unit,{attackMs=0,moveMs=0,durationMs=0,source="Estado",key=""}={}){
+  if(!unit)return unit;
+  const now=Date.now();
+  const penaltyKey=String(key||source||"timing").trim()||"timing";
+  const until=Math.max(0,Number(durationMs||0))>0?now+Math.max(0,Number(durationMs||0)):0;
+  const list=(Array.isArray(unit.rtTimingPenalties)?unit.rtTimingPenalties:[])
+    .filter(entry=>entry&&(!Number(entry.until||0)||Number(entry.until||0)>now)&&String(entry.key||"")!==penaltyKey);
+  list.push({
+    key:penaltyKey,
+    source:String(source||"Estado"),
+    attackMs:Math.max(0,Math.round(Number(attackMs||0))),
+    moveMs:Math.max(0,Math.round(Number(moveMs||0))),
+    until
+  });
+  return {...unit,rtTimingPenalties:list};
+}
+function clearHallvallaTimingPenalty(unit,key=""){
+  if(!unit)return unit;
+  const wanted=String(key||"");
+  if(!wanted)return {...unit,rtTimingPenalties:[]};
+  return {...unit,rtTimingPenalties:(Array.isArray(unit.rtTimingPenalties)?unit.rtTimingPenalties:[]).filter(entry=>String(entry?.key||"")!==wanted)};
+}
+function getHallvallaUnitBaseAttackCooldownMs(unit){
   const agi=hallvallaSpeedEffectiveAgi(unit);
   const profile=hallvallaSpeedLoadProfile(unit);
   const burden=Math.max(0,Number(profile?.burdenRatio||unit?.loadBurdenRatio||0));
   const weaponKg=Math.max(0,Number(profile?.weaponWeightKg||0));
   const armorKg=Math.max(0,Number(profile?.armorWeightKg||unit?.armorWeightKg||0));
   const shieldKg=Math.max(0,Number(profile?.shieldGearWeightKg||0));
-  // AGI baja el intervalo. Arma, armadura, escudo y carga añaden inercia.
   const agilityFactor=hallvallaClamp(1-(agi-5)*0.055,0.72,1.28);
   const loadFactor=1+Math.min(0.16,burden*0.08)+Math.min(0.14,weaponKg*0.012)+Math.min(0.08,(armorKg+shieldKg)*0.003);
   const raw=HALLVALLA_SPEED_TIMING.attackBaseMs*agilityFactor*loadFactor;
   const legacyWindow=hallvallaClamp(raw,HALLVALLA_SPEED_TIMING.attackMinMs,HALLVALLA_SPEED_TIMING.attackMaxMs);
   return Math.max(1000,Math.round(legacyWindow-HALLVALLA_SPEED_TIMING.attackSpeedupMs));
 }
-function getHallvallaUnitMoveCooldownMs(unit){
+function getHallvallaUnitAttackCooldownMs(unit){
+  return getHallvallaUnitBaseAttackCooldownMs(unit)+hallvallaSpeedStatusPenaltyMs(unit,"attack");
+}
+function getHallvallaUnitBaseMoveCooldownMs(unit){
   const mov=Math.max(0,Math.min(5,Number(typeof effectiveMov==="function"?effectiveMov(unit):unit?.mov)||0));
   if(mov<=0)return Number.POSITIVE_INFINITY;
   const agi=hallvallaSpeedEffectiveAgi(unit);
@@ -56,26 +128,34 @@ function getHallvallaUnitMoveCooldownMs(unit){
   const burden=Math.max(0,Number(profile?.burdenRatio||unit?.loadBurdenRatio||0));
   const armorKg=Math.max(0,Number(profile?.armorWeightKg||unit?.armorWeightKg||0));
   const shieldKg=Math.max(0,Number(profile?.shieldGearWeightKg||0));
-  // MOV/locomoción manda primero; AGI afina la frecuencia y el peso castiga el paso.
   const locomotionBase=HALLVALLA_SPEED_TIMING.moveBaseMs/(0.70+mov*0.30);
   const agilityFactor=hallvallaClamp(1-(agi-5)*0.04,0.80,1.20);
   const loadFactor=1+Math.min(0.18,burden*0.10)+Math.min(0.10,(armorKg+shieldKg)*0.0025);
   const raw=locomotionBase*agilityFactor*loadFactor;
-  // Regla v176: desplazarse nunca puede ocurrir con mayor frecuencia que atacar.
-  // Se conserva al menos 1 s de separación para que el avance del campo sea legible.
-  // Calculamos primero la ventana v176 para mantener las diferencias relativas entre unidades;
-  // después aplicamos el aumento global de velocidad de movimiento solicitado en v216.
-  const legacyAttackWindow=getHallvallaUnitAttackCooldownMs(unit)+HALLVALLA_SPEED_TIMING.attackSpeedupMs;
+  const legacyAttackWindow=getHallvallaUnitBaseAttackCooldownMs(unit)+HALLVALLA_SPEED_TIMING.attackSpeedupMs;
   const legacyAttackFloor=legacyAttackWindow+HALLVALLA_SPEED_TIMING.moveAttackGapMs;
   const legacyWindow=hallvallaClamp(Math.max(raw,legacyAttackFloor),HALLVALLA_SPEED_TIMING.moveMinMs,HALLVALLA_SPEED_TIMING.moveMaxMs);
   return Math.max(1000,Math.round(legacyWindow-HALLVALLA_SPEED_TIMING.moveSpeedupMs));
 }
+function getHallvallaUnitMoveCooldownMs(unit){
+  const base=getHallvallaUnitBaseMoveCooldownMs(unit);
+  if(!Number.isFinite(base))return base;
+  return base+hallvallaSpeedStatusPenaltyMs(unit,"move");
+}
 function getHallvallaUnitSpeedProfile(unit){
-  const attackCooldownMs=getHallvallaUnitAttackCooldownMs(unit);
-  const moveCooldownMs=getHallvallaUnitMoveCooldownMs(unit);
+  const healthyAttackCooldownMs=getHallvallaUnitBaseAttackCooldownMs(unit);
+  const healthyMoveCooldownMs=getHallvallaUnitBaseMoveCooldownMs(unit);
+  const attackPenaltyMs=hallvallaSpeedStatusPenaltyMs(unit,"attack");
+  const movePenaltyMs=hallvallaSpeedStatusPenaltyMs(unit,"move");
+  const attackCooldownMs=healthyAttackCooldownMs+attackPenaltyMs;
+  const moveCooldownMs=Number.isFinite(healthyMoveCooldownMs)?healthyMoveCooldownMs+movePenaltyMs:healthyMoveCooldownMs;
   return Object.freeze({
     modelVersion:HALLVALLA_SPEED_MODEL_VERSION,
     agility:hallvallaSpeedEffectiveAgi(unit),
+    healthyAttackCooldownMs,
+    healthyMoveCooldownMs,
+    attackPenaltyMs,
+    movePenaltyMs,
     attackCooldownMs,
     moveCooldownMs,
     attackSeconds:Math.round((attackCooldownMs/1000)*10)/10,
@@ -265,6 +345,7 @@ Object.assign(globalThis,{
   HALLVALLA_LOAD_MODEL_VERSION,
   HALLVALLA_SPEED_MODEL_VERSION,
   HALLVALLA_SPEED_TIMING,
+  HALLVALLA_SPEED_STATUS_TIMING,
   HALLVALLA_WEIGHT_PENALTY_THRESHOLDS,
   HALLVALLA_NATURAL_MOV_BY_KEY,
   HALLVALLA_UNIT_LOAD_PROFILES,
@@ -273,6 +354,11 @@ Object.assign(globalThis,{
   getHallvallaUnitAttackCooldownMs,
   getHallvallaUnitMoveCooldownMs,
   getHallvallaUnitSpeedProfile,
+  getHallvallaUnitBaseAttackCooldownMs,
+  getHallvallaUnitBaseMoveCooldownMs,
+  hallvallaSpeedStatusPenaltyMs,
+  withHallvallaTimingPenalty,
+  clearHallvallaTimingPenalty,
   applyHallvallaUnitLoadProfile,
   applyHallvallaUnitLoadProfiles,
   auditHallvallaUnitLoadProfiles

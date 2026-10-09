@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 /* HallValla v220 · Reglas, resolutores y servicios especiales de cartas. */
 
 
@@ -1744,6 +1744,8 @@ const ARCHER_UNIT_KEYS=new Set([
   "simo_hayha",
   "nasu_no_yoichi",
   "arjuna",
+  "ulysses",
+  "genghis_khan",
   "saladin_archer_cavalry",
   "attila_hun",
   "samurai_yabusame",

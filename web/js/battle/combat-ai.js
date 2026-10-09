@@ -700,6 +700,10 @@ async function resolveSharedAttackOutcome({
   units=solomonIfritResult.units;
   const taipanResult=resolveTaipanPoisonAfterHit(units,a,d,hit,hpLoss);
   units=taipanResult.units;
+  const unitSkillAttackResult=typeof globalThis.applyHallvallaUnitSkillAttackEffects==="function"
+    ?globalThis.applyHallvallaUnitSkillAttackEffects(units,a,d,{hit:!!hit.hit,hpLoss,guardLoss,mods,attackContext})
+    :{units,text:"",statusFxEvent:null,floatFxEvent:null};
+  units=unitSkillAttackResult.units||units;
   let defenderFell=!!units.find(u=>u.id===d.id&&u.hp<=0);
   const leonidasLastStand=defenderFell?applyLeonidasLastStand(units,d.id,a.id):{units,triggered:false,killerFell:false,saved:false};
   units=leonidasLastStand.units;
@@ -740,7 +744,7 @@ async function resolveSharedAttackOutcome({
   if(steelWallTriggered)units=applySteelWall(units,d.owner,d.id);
   const coverFireTriggered=runInState(()=>shouldTriggerCoverFire(a,hpLoss,hit.hit),{units,legendaryTraps:resolvedLegendaryTraps,beastTraps});
   if(coverFireTriggered)units=applyCoverFire(units,a.owner,a.id);
-  let bleedText=`${solomonIfritResult.logs.length?` ${solomonIfritResult.logs.join(" ")}`:""}${taipanResult.text||""}`;
+  let bleedText=`${solomonIfritResult.logs.length?` ${solomonIfritResult.logs.join(" ")}`:""}${taipanResult.text||""}${unitSkillAttackResult.text||""}`;
   let alreadyBleeding=false;
   if(hit.hit&&hpLoss>0&&a.key==="scout"&&units.some(u=>u.id===d.id)){
     const targetAfterBleed=units.find(u=>u.id===d.id);
@@ -980,6 +984,7 @@ async function resolveSharedAttackOutcome({
     veilCurseResult,
     arcaneAdeptStatusEvent,
     poisonStatusEvent,
+    unitSkillStatusEvent:unitSkillAttackResult.statusFxEvent||null,
     miyamotoCounterBleedEvent,
     lionFearCombat,
     porcupineResult,

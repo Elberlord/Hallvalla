@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 /* HallValla 7BOARDCTRL8U · FX, audio y progreso local */
 
 
@@ -1246,7 +1246,7 @@ function getUnitWeaponKind(unit){
 
   // El arma visual tiene prioridad sobre la clase táctica. Por ejemplo,
   // Yabusame es Caballería tácticamente, pero dispara un arco.
-  if(leaderType==="archer"||tactical==="bow"||key.includes("archer")||key.includes("yabusame")||key.includes("bow")||key.includes("arrow")||name.includes("arquera")||name.includes("arquero")||name.includes("arco")||name.includes("flecha")||name.includes("tirador")||name.includes("simo")||icon.includes("🏹"))return "arrow";
+  if(leaderType==="archer"||tactical==="bow"||(typeof isArcherWeaponUnitCardLike==="function"&&isArcherWeaponUnitCardLike(unit))||key.includes("archer")||key.includes("yabusame")||key.includes("bow")||key.includes("arrow")||name.includes("arquera")||name.includes("arquero")||name.includes("arco")||name.includes("flecha")||name.includes("tirador")||name.includes("simo")||icon.includes("🏹"))return "arrow";
   if(leaderType==="axe"||tactical==="axe"||key.includes("axe")||key.includes("hacha")||key.includes("ulfhednar")||key.includes("berserker")||name.includes("hacha")||name.includes("ulfhednar")||name.includes("berserker")||text.includes("hacha")||icon.includes("🪓"))return "axe";
   if(tactical==="spear"||key.includes("spearman")||key.includes("spear")||key.includes("lance")||key.includes("lanza")||key.includes("naginata")||name.includes("lancero")||name.includes("lanza")||name.includes("pica")||name.includes("naginata")||text.includes("lanza")||text.includes("pica"))return "spear";
 
