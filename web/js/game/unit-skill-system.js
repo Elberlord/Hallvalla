@@ -269,7 +269,7 @@ function maybeShowHallvallaUnitSkillChoice(){
     const skill=HALLVALLA_UNIT_SKILL_BANK[id];if(!skill)continue;
     const fake={key:item.unitKey,rarity:item.rarity};
     const button=document.createElement("button");button.type="button";button.className="hv-skill-option";
-    button.innerHTML=`<div class="hv-skill-origin">${skill.origin||skill.category}</div><h3>${skill.name}</h3><div class="hv-skill-effect">${skill.effect}${skill.secondary?` ${skill.secondary}`:""}</div><div class="hv-skill-numbers">${hvSkillDescribe(skill,fake)}</div><div class="hv-skill-trigger">${skill.trigger?`Activación TR: ${skill.trigger}`:"Pasiva / contextual"}</div>`;
+    button.innerHTML=`<div class="hv-skill-origin">${skill.origin||skill.category}</div><h3>${skill.name}</h3><div class="hv-skill-effect">${skill.effect}${skill.secondary?` ${skill.secondary}`:""}</div><div class="hv-skill-numbers">${hvSkillDescribe(skill,fake)}</div><div class="hv-skill-trigger">${skill.trigger?`Activación: ${skill.trigger}`:"Pasiva / contextual"}</div>`;
     button.addEventListener("click",()=>{
       if(!hvSkillChoose(item.id,id))return;
       overlay.classList.add("hidden");
@@ -572,10 +572,10 @@ setTimeout(()=>{try{maybeShowHallvallaUnitSkillChoice();hvSkillInstallGlossaryAc
 
 
 /* =====================================================================
-   STAGE 4 Â· DET DE HABILIDADES + GLOSARIO DE EFECTOS Â· 2026-10-09
+   STAGE 4 · DET DE HABILIDADES + GLOSARIO DE EFECTOS · 2026-10-09
    - El DET muestra el banco Stage 3 como fuente de verdad para unidades.
-   - El glosario es visible para jugadores desde ConfiguraciÃ³n.
-   - No usa semÃ¡ntica por turnos: las descripciones son TR/segundos/eventos.
+   - El glosario es visible para jugadores desde Configuración.
+   - No usa semántica por turnos: las descripciones son TR/segundos/eventos.
    ===================================================================== */
 const HALLVALLA_EFFECT_GLOSSARY_DATE="2026-10-09";
 
@@ -606,14 +606,14 @@ function hvSkillDetailedText(skill,entity,{source=""}={}){
   const numbers=hvSkillDescribe(skill,entity);
   const lines=[];
   if(source)lines.push(source);
-  if(skill.trigger)lines.push(`ActivaciÃ³n TR: ${skill.trigger}.`);
+  if(skill.trigger)lines.push(`Activación: ${skill.trigger}.`);
   if(skill.effect)lines.push(skill.effect);
   if(skill.secondary)lines.push(skill.secondary);
   if(numbers)lines.push(`Valor para ${String(entity?.rarity||"esta rareza")}: ${numbers}.`);
   if(skill.weapons?.length)lines.push(`Armas compatibles: ${skill.weapons.join(", ")}.`);
   if(skill.classes?.length)lines.push(`Clases compatibles: ${skill.classes.join(", ")}.`);
   if(skill.counters)lines.push(`Contrajuego: ${skill.counters}.`);
-  const lore=[skill.origin,skill.reference].filter(Boolean).join(" Â· ");
+  const lore=[skill.origin,skill.reference].filter(Boolean).join(" · ");
   if(lore)lines.push(`Base: ${lore}.`);
   return lines.join(" ");
 }
@@ -658,35 +658,35 @@ function hvSkillInstallDetIntegration(){
     if(!stage3.length)return legacy;
     const used=new Set(stage3.map(section=>hvSkillNorm(section?.title||"")));
     // El banco Stage 3 gana cuando existe el mismo nombre. Reglas universales
-    // que no estÃ¡n en el banco (Ultimate Blow, VÃ­nculo Arcano, etc.) se conservan.
+    // que no están en el banco (Ultimate Blow, Vínculo Arcano, etc.) se conservan.
     const extra=legacy.filter(section=>!used.has(hvSkillNorm(section?.title||"")));
     return [...stage3,...extra].slice(0,15);
   };
 }
 
 const HALLVALLA_ENGINE_GLOSSARY=Object.freeze([
-  {name:"Sangrado",category:"Estado",effect:"Causa daÃ±o periÃ³dico directo a Vida y permanece hasta curaciÃ³n/limpieza o destrucciÃ³n, segÃºn la fuente.",trigger:"Se aplica cuando una habilidad o ataque compatible logra su condiciÃ³n.",tags:["bleed"]},
-  {name:"Veneno",category:"Estado",effect:"Causa daÃ±o periÃ³dico que puede aumentar por gravedad. La unidad permanece envenenada hasta curaciÃ³n/limpieza o destrucciÃ³n.",trigger:"Se aplica por ataques, magia, trampas o habilidades compatibles.",tags:["poison"]},
-  {name:"Quemadura",category:"Estado",effect:"Causa daÃ±o de fuego periÃ³dico y ademÃ¡s penaliza el ritmo de ataque y movimiento mientras estÃ¡ activa.",trigger:"Impactos o habilidades de fuego compatibles.",tags:["burn"]},
-  {name:"Herida de pierna",category:"Herida",effect:"Reduce MOV/AGI y aÃ±ade una penalizaciÃ³n mayor al tiempo de movimiento que al de ataque.",trigger:"Impacto localizado o habilidad compatible.",tags:["leg_slow"]},
-  {name:"Herida de brazo",category:"Herida",effect:"Reduce AT/DX y aÃ±ade una penalizaciÃ³n mayor al tiempo de ataque que al de movimiento.",trigger:"Impacto localizado o habilidad compatible.",tags:["arm_slow"]},
-  {name:"Ceguera / DesorientaciÃ³n",category:"Control",effect:"Reduce la precisiÃ³n efectiva del objetivo mediante pÃ©rdida de DX y puede alterar temporalmente su capacidad de respuesta.",trigger:"Fogonazo, humo, arena, impacto facial u otras habilidades compatibles.",tags:["blind"]},
-  {name:"ParÃ¡lisis",category:"Control",effect:"Bloquea temporalmente acciones de combate segÃºn la fuente: movimiento, ataque, defensa y/o contraataque.",trigger:"Electricidad, magia o control compatible.",tags:["shock"]},
-  {name:"Aturdimiento",category:"Control",effect:"Bloqueo real de acciones durante su duraciÃ³n. No es una simple suma de segundos al cooldown.",trigger:"Golpes de control, trampas o habilidades compatibles.",tags:["control"]},
-  {name:"Silencio",category:"Control",effect:"Impide activar efectos o capacidades que requieran acciÃ³n especial durante su duraciÃ³n.",trigger:"Trampas o habilidades de supresiÃ³n.",tags:["control"]},
-  {name:"Miedo / Control",category:"Control",effect:"Altera la conducta o estadÃ­sticas del objetivo durante un intervalo limitado.",trigger:"Auras, rugidos, intimidaciÃ³n y otras habilidades compatibles.",tags:["control"]},
-  {name:"Sigilo",category:"TÃ¡ctica",effect:"Oculta a la unidad de determinadas selecciones/ataques hasta que sea revelada o rompa su condiciÃ³n de ocultamiento.",trigger:"Habilidades de asesino, exploraciÃ³n o terreno.",tags:["tactical"]},
-  {name:"Exilio",category:"Control",effect:"Retira temporalmente una unidad del campo y luego la devuelve segÃºn la regla especÃ­fica que lo causÃ³.",trigger:"Trampas o efectos de control mayor.",tags:["control"]},
-  {name:"Rompeguardia",category:"Ofensiva",effect:"Reduce, ignora o destruye parte de la Guardia antes de que el daÃ±o llegue a Vida.",trigger:"Armas penetrantes, hachas, proyectiles especializados y otras habilidades.",tags:["guard_break"]},
-  {name:"PurificaciÃ³n",category:"Soporte",effect:"Elimina estados negativos compatibles de una unidad aliada.",trigger:"Habilidad de soporte con objetivo vÃ¡lido.",tags:["support"]},
-  {name:"CuraciÃ³n",category:"Soporte",effect:"Recupera Vida sin superar el mÃ¡ximo y respetando bloqueos de curaciÃ³n activos.",trigger:"Habilidad de soporte con aliado herido.",tags:["support"]},
-  {name:"ReanimaciÃ³n",category:"Necromancia",effect:"Devuelve temporalmente un cadÃ¡ver al campo bajo control de la fuente nigromÃ¡ntica.",trigger:"Nigromante con cadÃ¡ver elegible y espacio disponible.",tags:["death"]},
-  {name:"ResurrecciÃ³n",category:"Soporte",effect:"Devuelve una unidad caÃ­da como aliado segÃºn la regla especÃ­fica de la habilidad.",trigger:"Soporte especializado con requisitos cumplidos.",tags:["support","death"]},
-  {name:"Exorcismo",category:"Soporte/Control",effect:"DaÃ±a o elimina reanimados, no muertos o restos que podrÃ­an volver al campo.",trigger:"Unidad o habilidad con rasgo de exorcismo.",tags:["exorcism"]},
-  {name:"Atacar Primero",category:"Regla de arma",effect:"Una unidad de lanza compatible puede reaccionar antes contra una entrada cuerpo a cuerpo vÃ¡lida.",trigger:"Ataque adyacente de RG 1 que cumple la regla de lanza.",tags:["tactical"]},
-  {name:"AnticaballerÃ­a",category:"Regla de arma",effect:"Las armas de asta obtienen ventaja especÃ­fica contra unidades montadas en combate cuerpo a cuerpo.",trigger:"Combate de lanza/pica contra CaballerÃ­a.",tags:["tactical"]},
-  {name:"Ultimate Blow",category:"Regla de clase",effect:"Un Asesino puede rematar a una unidad enemiga no lÃ­der muy herida dentro del alcance especial; el golpe ignora Guardia pero sigue resolviendo PREC/EVA.",trigger:"Objetivo con 1â€“2 HP dentro del alcance especial.",tags:["offense"]},
-  {name:"VÃ­nculo Arcano",category:"Regla de clase",effect:"Una unidad mÃ¡gica jugada desde la mano puede recibir el vÃ­nculo correspondiente al permanecer junto al lÃ­der Hechicero.",trigger:"Adyacencia vÃ¡lida al lÃ­der y origen de invocaciÃ³n compatible.",tags:["support"]}
+  {name:"Sangrado",category:"Estado",effect:"Causa daño periódico directo a Vida y permanece hasta curación/limpieza o destrucción, según la fuente.",trigger:"Se aplica cuando una habilidad o ataque compatible logra su condición.",tags:["bleed"]},
+  {name:"Veneno",category:"Estado",effect:"Causa daño periódico que puede aumentar por gravedad. La unidad permanece envenenada hasta curación/limpieza o destrucción.",trigger:"Se aplica por ataques, magia, trampas o habilidades compatibles.",tags:["poison"]},
+  {name:"Quemadura",category:"Estado",effect:"Causa daño de fuego periódico y además penaliza el ritmo de ataque y movimiento mientras está activa.",trigger:"Impactos o habilidades de fuego compatibles.",tags:["burn"]},
+  {name:"Herida de pierna",category:"Herida",effect:"Reduce MOV/AGI y añade una penalización mayor al tiempo de movimiento que al de ataque.",trigger:"Impacto localizado o habilidad compatible.",tags:["leg_slow"]},
+  {name:"Herida de brazo",category:"Herida",effect:"Reduce AT/DX y añade una penalización mayor al tiempo de ataque que al de movimiento.",trigger:"Impacto localizado o habilidad compatible.",tags:["arm_slow"]},
+  {name:"Ceguera / Desorientación",category:"Control",effect:"Reduce la precisión efectiva del objetivo mediante pérdida de DX y puede alterar temporalmente su capacidad de respuesta.",trigger:"Fogonazo, humo, arena, impacto facial u otras habilidades compatibles.",tags:["blind"]},
+  {name:"Parálisis",category:"Control",effect:"Bloquea temporalmente acciones de combate según la fuente: movimiento, ataque, defensa y/o contraataque.",trigger:"Electricidad, magia o control compatible.",tags:["shock"]},
+  {name:"Aturdimiento",category:"Control",effect:"Bloqueo real de acciones durante su duración. No es una simple suma de segundos al cooldown.",trigger:"Golpes de control, trampas o habilidades compatibles.",tags:["control"]},
+  {name:"Silencio",category:"Control",effect:"Impide activar efectos o capacidades que requieran acción especial durante su duración.",trigger:"Trampas o habilidades de supresión.",tags:["control"]},
+  {name:"Miedo / Control",category:"Control",effect:"Altera la conducta o estadísticas del objetivo durante un intervalo limitado.",trigger:"Auras, rugidos, intimidación y otras habilidades compatibles.",tags:["control"]},
+  {name:"Sigilo",category:"Táctica",effect:"Oculta a la unidad de determinadas selecciones/ataques hasta que sea revelada o rompa su condición de ocultamiento.",trigger:"Habilidades de asesino, exploración o terreno.",tags:["tactical"]},
+  {name:"Exilio",category:"Control",effect:"Retira temporalmente una unidad del campo y luego la devuelve según la regla específica que lo causó.",trigger:"Trampas o efectos de control mayor.",tags:["control"]},
+  {name:"Rompeguardia",category:"Ofensiva",effect:"Reduce, ignora o destruye parte de la Guardia antes de que el daño llegue a Vida.",trigger:"Armas penetrantes, hachas, proyectiles especializados y otras habilidades.",tags:["guard_break"]},
+  {name:"Purificación",category:"Soporte",effect:"Elimina estados negativos compatibles de una unidad aliada.",trigger:"Habilidad de soporte con objetivo válido.",tags:["support"]},
+  {name:"Curación",category:"Soporte",effect:"Recupera Vida sin superar el máximo y respetando bloqueos de curación activos.",trigger:"Habilidad de soporte con aliado herido.",tags:["support"]},
+  {name:"Reanimación",category:"Necromancia",effect:"Devuelve temporalmente un cadáver al campo bajo control de la fuente nigromántica.",trigger:"Nigromante con cadáver elegible y espacio disponible.",tags:["death"]},
+  {name:"Resurrección",category:"Soporte",effect:"Devuelve una unidad caída como aliado según la regla específica de la habilidad.",trigger:"Soporte especializado con requisitos cumplidos.",tags:["support","death"]},
+  {name:"Exorcismo",category:"Soporte/Control",effect:"Daña o elimina reanimados, no muertos o restos que podrían volver al campo.",trigger:"Unidad o habilidad con rasgo de exorcismo.",tags:["exorcism"]},
+  {name:"Atacar Primero",category:"Regla de arma",effect:"Una unidad de lanza compatible puede reaccionar antes contra una entrada cuerpo a cuerpo válida.",trigger:"Ataque adyacente de RG 1 que cumple la regla de lanza.",tags:["tactical"]},
+  {name:"Anticaballería",category:"Regla de arma",effect:"Las armas de asta obtienen ventaja específica contra unidades montadas en combate cuerpo a cuerpo.",trigger:"Combate de lanza/pica contra Caballería.",tags:["tactical"]},
+  {name:"Ultimate Blow",category:"Regla de clase",effect:"Un Asesino puede rematar a una unidad enemiga no líder muy herida dentro del alcance especial; el golpe ignora Guardia pero sigue resolviendo PREC/EVA.",trigger:"Objetivo con 1–2 HP dentro del alcance especial.",tags:["offense"]},
+  {name:"Vínculo Arcano",category:"Regla de clase",effect:"Una unidad mágica jugada desde la mano puede recibir el vínculo correspondiente al permanecer junto al líder Hechicero.",trigger:"Adyacencia válida al líder y origen de invocación compatible.",tags:["support"]}
 ]);
 
 function hvGlossaryEsc(value){
@@ -702,7 +702,7 @@ function hvGlossaryEntries(){
       effect:[skill.effect,skill.secondary].filter(Boolean).join(" "),
       trigger:skill.trigger||"Pasiva / contextual",
       numbers:"",
-      origin:[skill.origin,skill.reference].filter(Boolean).join(" Â· "),
+      origin:[skill.origin,skill.reference].filter(Boolean).join(" · "),
       weapons:(skill.weapons||[]).join(", "),
       classes:(skill.classes||[]).join(", "),
       counters:skill.counters||"",
@@ -723,7 +723,7 @@ function hvGlossaryEntries(){
             name:section.title,
             category:"Magia / Trampa",
             effect:section.body,
-            trigger:"SegÃºn la condiciÃ³n de la carta",
+            trigger:"Según la condición de la carta",
             source:`Carta: ${cardKey}`,
             origin:"",
             weapons:"",
@@ -770,8 +770,8 @@ function hvSkillEnsureGlossaryUi(){
   overlay.id="hvEffectGlossaryOverlay";
   overlay.className="hidden";
   overlay.innerHTML=`<section class="hv-glossary-card" role="dialog" aria-modal="true" aria-labelledby="hvEffectGlossaryTitle">
-    <header class="hv-glossary-head"><div><h2 id="hvEffectGlossaryTitle">Glosario de efectos</h2><p>CatÃ¡logo vigente al ${HALLVALLA_EFFECT_GLOSSARY_DATE}. Incluye habilidades, estados, reglas de clase y efectos de magias/trampas.</p></div><button class="hv-glossary-close" type="button" aria-label="Cerrar">Ã—</button></header>
-    <div class="hv-glossary-tools"><input id="hvGlossarySearch" type="search" placeholder="Buscar: fuego, arco, exorcismo, Sangrado..." autocomplete="off"><select id="hvGlossaryCategory" aria-label="Filtrar categorÃ­a"><option value="">Todas las categorÃ­as</option></select><div id="hvGlossaryCount" class="hv-glossary-count"></div></div>
+    <header class="hv-glossary-head"><div><h2 id="hvEffectGlossaryTitle">Glosario de efectos</h2><p>Catálogo vigente al ${HALLVALLA_EFFECT_GLOSSARY_DATE}. Incluye habilidades, estados, reglas de clase y efectos de magias/trampas.</p></div><button class="hv-glossary-close" type="button" aria-label="Cerrar">×</button></header>
+    <div class="hv-glossary-tools"><input id="hvGlossarySearch" type="search" placeholder="Buscar: fuego, arco, exorcismo, Sangrado..." autocomplete="off"><select id="hvGlossaryCategory" aria-label="Filtrar categoría"><option value="">Todas las categorías</option></select><div id="hvGlossaryCount" class="hv-glossary-count"></div></div>
     <div id="hvGlossaryList" class="hv-glossary-list"></div>
   </section>`;
   document.body.appendChild(overlay);
@@ -800,9 +800,9 @@ function hvGlossaryRender(){
   count.textContent=`${filtered.length} / ${entries.length}`;
   list.innerHTML=filtered.length?filtered.map(entry=>{
     const skill=HALLVALLA_UNIT_SKILL_BANK[entry.id];
-    const scale=skill?hvSkillDescribe(skill,{rarity:"BÃ¡sica"}):"";
-    const scaleMax=skill?hvSkillDescribe(skill,{rarity:"SemidiÃ³s"}):"";
-    return `<article class="hv-glossary-entry"><div class="hv-glossary-meta"><span class="hv-glossary-id">${hvGlossaryEsc(entry.id||"")}</span> Â· ${hvGlossaryEsc(entry.category||"Efecto")} Â· ${hvGlossaryEsc(entry.source||"")}</div><h3>${hvGlossaryEsc(entry.name||"Efecto")}</h3><div class="hv-glossary-effect">${hvGlossaryEsc(entry.effect||"")}</div>${entry.trigger?`<div class="hv-glossary-line"><b>ActivaciÃ³n TR:</b> ${hvGlossaryEsc(entry.trigger)}</div>`:""}${skill&&scale?`<div class="hv-glossary-line"><b>BÃ¡sica:</b> ${hvGlossaryEsc(scale)}</div>`:""}${skill&&scaleMax&&scaleMax!==scale?`<div class="hv-glossary-line"><b>SemidiÃ³s:</b> ${hvGlossaryEsc(scaleMax)}</div>`:""}${entry.weapons?`<div class="hv-glossary-line"><b>Armas:</b> ${hvGlossaryEsc(entry.weapons)}</div>`:""}${entry.classes?`<div class="hv-glossary-line"><b>Clases:</b> ${hvGlossaryEsc(entry.classes)}</div>`:""}${entry.counters?`<div class="hv-glossary-line"><b>Contrajuego:</b> ${hvGlossaryEsc(entry.counters)}</div>`:""}${entry.origin?`<div class="hv-glossary-line"><b>Base:</b> ${hvGlossaryEsc(entry.origin)}</div>`:""}</article>`;
+    const scale=skill?hvSkillDescribe(skill,{rarity:"Básica"}):"";
+    const scaleMax=skill?hvSkillDescribe(skill,{rarity:"Semidiós"}):"";
+    return `<article class="hv-glossary-entry"><div class="hv-glossary-meta"><span class="hv-glossary-id">${hvGlossaryEsc(entry.id||"")}</span> · ${hvGlossaryEsc(entry.category||"Efecto")} · ${hvGlossaryEsc(entry.source||"")}</div><h3>${hvGlossaryEsc(entry.name||"Efecto")}</h3><div class="hv-glossary-effect">${hvGlossaryEsc(entry.effect||"")}</div>${entry.trigger?`<div class="hv-glossary-line"><b>Activación:</b> ${hvGlossaryEsc(entry.trigger)}</div>`:""}${skill&&scale?`<div class="hv-glossary-line"><b>Básica:</b> ${hvGlossaryEsc(scale)}</div>`:""}${skill&&scaleMax&&scaleMax!==scale?`<div class="hv-glossary-line"><b>Semidiós:</b> ${hvGlossaryEsc(scaleMax)}</div>`:""}${entry.weapons?`<div class="hv-glossary-line"><b>Armas:</b> ${hvGlossaryEsc(entry.weapons)}</div>`:""}${entry.classes?`<div class="hv-glossary-line"><b>Clases:</b> ${hvGlossaryEsc(entry.classes)}</div>`:""}${entry.counters?`<div class="hv-glossary-line"><b>Contrajuego:</b> ${hvGlossaryEsc(entry.counters)}</div>`:""}${entry.origin?`<div class="hv-glossary-line"><b>Base:</b> ${hvGlossaryEsc(entry.origin)}</div>`:""}</article>`;
   }).join(""):`<div class="hv-glossary-empty">No hay efectos que coincidan con ese filtro.</div>`;
 }
 function openHallvallaEffectsGlossary(){
@@ -822,7 +822,7 @@ function hvSkillInstallGlossaryAccess(){
     button.addEventListener("click",openHallvallaEffectsGlossary);
     settings.appendChild(button);
   }
-  // Si la guÃ­a de reglas ya existe, aÃ±ade acceso directo tambiÃ©n allÃ­.
+  // Si la guía de reglas ya existe, añade acceso directo también allí.
   const guideActions=document.querySelector("#statGuideModal .stat-guide-actions");
   if(guideActions&&!document.getElementById("statGuideGlossaryBtn")){
     const button=document.createElement("button");
