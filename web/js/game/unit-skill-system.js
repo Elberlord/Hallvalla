@@ -563,9 +563,288 @@ if(typeof registerHallvallaHook==="function"){
 
 hvSkillInstallMasteryWrappers();
 hvSkillInstallDeckWrappers();
+hvSkillInstallDetIntegration();
+hvSkillWrapGuideForGlossary();
 ensureHallvallaUnitSkillCopies();
-setTimeout(()=>{try{maybeShowHallvallaUnitSkillChoice();}catch(_){}},1600);
+hvSkillInstallGlossaryAccess();
+setTimeout(()=>{try{maybeShowHallvallaUnitSkillChoice();hvSkillInstallGlossaryAccess();}catch(_){}},1600);
 
+
+
+/* =====================================================================
+   STAGE 4 Â· DET DE HABILIDADES + GLOSARIO DE EFECTOS Â· 2026-10-09
+   - El DET muestra el banco Stage 3 como fuente de verdad para unidades.
+   - El glosario es visible para jugadores desde ConfiguraciÃ³n.
+   - No usa semÃ¡ntica por turnos: las descripciones son TR/segundos/eventos.
+   ===================================================================== */
+const HALLVALLA_EFFECT_GLOSSARY_DATE="2026-10-09";
+
+function hvSkillSectionKind(skill){
+  const tags=new Set(skill?.tags||[]);
+  const cat=hvSkillNorm(skill?.category||"");
+  if(tags.has("support")||cat.includes("soporte"))return "buff";
+  if(tags.has("poison")||tags.has("bleed")||tags.has("burn")||tags.has("shock")||tags.has("blind")||tags.has("leg_slow")||tags.has("arm_slow")||tags.has("control"))return "debuff";
+  if(tags.has("defense")||cat.includes("defensiva"))return "passive";
+  if(tags.has("tactical")||cat.includes("tactica"))return "trigger";
+  return "effect";
+}
+function hvSkillSectionIcon(skill){
+  const tags=new Set(skill?.tags||[]);
+  if(tags.has("bleed"))return "assets/ui/status_icons/status_bleed.webp";
+  if(tags.has("poison"))return "assets/ui/status_icons/status_poison.webp";
+  if(tags.has("burn"))return "assets/ui/status_icons/status_burn.webp";
+  if(tags.has("shock"))return "assets/ui/status_icons/status_paralysis.webp";
+  if(tags.has("blind")||tags.has("leg_slow")||tags.has("arm_slow"))return "assets/ui/status_icons/status_debuff.webp";
+  if(tags.has("support"))return "assets/ui/status_icons/status_buff.webp";
+  if(tags.has("guard_break"))return "assets/ui/status_icons/status_guard.webp";
+  if(tags.has("death")||tags.has("exorcism"))return "assets/ui/status_icons/status_curse.webp";
+  if(tags.has("mobility"))return "assets/ui/det_icons/trigger.webp";
+  return "assets/ui/status_icons/status_generic.webp";
+}
+function hvSkillDetailedText(skill,entity,{source=""}={}){
+  if(!skill)return "";
+  const numbers=hvSkillDescribe(skill,entity);
+  const lines=[];
+  if(source)lines.push(source);
+  if(skill.trigger)lines.push(`ActivaciÃ³n TR: ${skill.trigger}.`);
+  if(skill.effect)lines.push(skill.effect);
+  if(skill.secondary)lines.push(skill.secondary);
+  if(numbers)lines.push(`Valor para ${String(entity?.rarity||"esta rareza")}: ${numbers}.`);
+  if(skill.weapons?.length)lines.push(`Armas compatibles: ${skill.weapons.join(", ")}.`);
+  if(skill.classes?.length)lines.push(`Clases compatibles: ${skill.classes.join(", ")}.`);
+  if(skill.counters)lines.push(`Contrajuego: ${skill.counters}.`);
+  const lore=[skill.origin,skill.reference].filter(Boolean).join(" Â· ");
+  if(lore)lines.push(`Base: ${lore}.`);
+  return lines.join(" ");
+}
+function getHallvallaUnitSkillSectionsForEntity(entity){
+  const key=String(entity?.key||"");
+  const meta=HALLVALLA_UNIT_SKILL_ASSIGNMENTS[key];
+  if(!meta||!entity||(entity.type!=="unit"&&!entity.key))return [];
+  let learned=hvSkillUnique(entity.unitLearnedSkillIds||[]);
+  const copyId=String(entity.unitCopyId||"");
+  if(copyId&&!learned.length){
+    const rec=hvSkillFindCopy(copyId);
+    if(rec)learned=hvSkillUnique(rec.learnedSkillIds||[]);
+  }
+  const innate=hvSkillUnique(meta.innate||[]);
+  const learnedSet=new Set(learned);
+  return hvSkillUnique([...innate,...learned]).map(id=>{
+    const skill=HALLVALLA_UNIT_SKILL_BANK[id];
+    if(!skill)return null;
+    const learnedHere=learnedSet.has(id);
+    return {
+      title:skill.name,
+      body:hvSkillDetailedText(skill,{...entity,rarity:entity.rarity||meta.rarity},{
+        source:learnedHere?`Habilidad aprendida de esta copia (${id}).`:`Habilidad innata de ${meta.name} (${id}).`
+      }),
+      icon:hvSkillSectionIcon(skill),
+      kind:hvSkillSectionKind(skill),
+      skillId:id,
+      learned:learnedHere
+    };
+  }).filter(Boolean);
+}
+function hvSkillInstallDetIntegration(){
+  if(globalThis.__HALLVALLA_STAGE4_DET_SKILLS__)return;
+  const original=typeof globalThis.getDetAbilitySectionsForInspector==="function"
+    ? globalThis.getDetAbilitySectionsForInspector
+    : null;
+  if(!original)return;
+  globalThis.__HALLVALLA_STAGE4_DET_SKILLS__=true;
+  globalThis.getDetAbilitySectionsForInspector=function(entity,effectText=""){
+    const stage3=getHallvallaUnitSkillSectionsForEntity(entity);
+    const legacy=original(entity,effectText)||[];
+    if(!stage3.length)return legacy;
+    const used=new Set(stage3.map(section=>hvSkillNorm(section?.title||"")));
+    // El banco Stage 3 gana cuando existe el mismo nombre. Reglas universales
+    // que no estÃ¡n en el banco (Ultimate Blow, VÃ­nculo Arcano, etc.) se conservan.
+    const extra=legacy.filter(section=>!used.has(hvSkillNorm(section?.title||"")));
+    return [...stage3,...extra].slice(0,15);
+  };
+}
+
+const HALLVALLA_ENGINE_GLOSSARY=Object.freeze([
+  {name:"Sangrado",category:"Estado",effect:"Causa daÃ±o periÃ³dico directo a Vida y permanece hasta curaciÃ³n/limpieza o destrucciÃ³n, segÃºn la fuente.",trigger:"Se aplica cuando una habilidad o ataque compatible logra su condiciÃ³n.",tags:["bleed"]},
+  {name:"Veneno",category:"Estado",effect:"Causa daÃ±o periÃ³dico que puede aumentar por gravedad. La unidad permanece envenenada hasta curaciÃ³n/limpieza o destrucciÃ³n.",trigger:"Se aplica por ataques, magia, trampas o habilidades compatibles.",tags:["poison"]},
+  {name:"Quemadura",category:"Estado",effect:"Causa daÃ±o de fuego periÃ³dico y ademÃ¡s penaliza el ritmo de ataque y movimiento mientras estÃ¡ activa.",trigger:"Impactos o habilidades de fuego compatibles.",tags:["burn"]},
+  {name:"Herida de pierna",category:"Herida",effect:"Reduce MOV/AGI y aÃ±ade una penalizaciÃ³n mayor al tiempo de movimiento que al de ataque.",trigger:"Impacto localizado o habilidad compatible.",tags:["leg_slow"]},
+  {name:"Herida de brazo",category:"Herida",effect:"Reduce AT/DX y aÃ±ade una penalizaciÃ³n mayor al tiempo de ataque que al de movimiento.",trigger:"Impacto localizado o habilidad compatible.",tags:["arm_slow"]},
+  {name:"Ceguera / DesorientaciÃ³n",category:"Control",effect:"Reduce la precisiÃ³n efectiva del objetivo mediante pÃ©rdida de DX y puede alterar temporalmente su capacidad de respuesta.",trigger:"Fogonazo, humo, arena, impacto facial u otras habilidades compatibles.",tags:["blind"]},
+  {name:"ParÃ¡lisis",category:"Control",effect:"Bloquea temporalmente acciones de combate segÃºn la fuente: movimiento, ataque, defensa y/o contraataque.",trigger:"Electricidad, magia o control compatible.",tags:["shock"]},
+  {name:"Aturdimiento",category:"Control",effect:"Bloqueo real de acciones durante su duraciÃ³n. No es una simple suma de segundos al cooldown.",trigger:"Golpes de control, trampas o habilidades compatibles.",tags:["control"]},
+  {name:"Silencio",category:"Control",effect:"Impide activar efectos o capacidades que requieran acciÃ³n especial durante su duraciÃ³n.",trigger:"Trampas o habilidades de supresiÃ³n.",tags:["control"]},
+  {name:"Miedo / Control",category:"Control",effect:"Altera la conducta o estadÃ­sticas del objetivo durante un intervalo limitado.",trigger:"Auras, rugidos, intimidaciÃ³n y otras habilidades compatibles.",tags:["control"]},
+  {name:"Sigilo",category:"TÃ¡ctica",effect:"Oculta a la unidad de determinadas selecciones/ataques hasta que sea revelada o rompa su condiciÃ³n de ocultamiento.",trigger:"Habilidades de asesino, exploraciÃ³n o terreno.",tags:["tactical"]},
+  {name:"Exilio",category:"Control",effect:"Retira temporalmente una unidad del campo y luego la devuelve segÃºn la regla especÃ­fica que lo causÃ³.",trigger:"Trampas o efectos de control mayor.",tags:["control"]},
+  {name:"Rompeguardia",category:"Ofensiva",effect:"Reduce, ignora o destruye parte de la Guardia antes de que el daÃ±o llegue a Vida.",trigger:"Armas penetrantes, hachas, proyectiles especializados y otras habilidades.",tags:["guard_break"]},
+  {name:"PurificaciÃ³n",category:"Soporte",effect:"Elimina estados negativos compatibles de una unidad aliada.",trigger:"Habilidad de soporte con objetivo vÃ¡lido.",tags:["support"]},
+  {name:"CuraciÃ³n",category:"Soporte",effect:"Recupera Vida sin superar el mÃ¡ximo y respetando bloqueos de curaciÃ³n activos.",trigger:"Habilidad de soporte con aliado herido.",tags:["support"]},
+  {name:"ReanimaciÃ³n",category:"Necromancia",effect:"Devuelve temporalmente un cadÃ¡ver al campo bajo control de la fuente nigromÃ¡ntica.",trigger:"Nigromante con cadÃ¡ver elegible y espacio disponible.",tags:["death"]},
+  {name:"ResurrecciÃ³n",category:"Soporte",effect:"Devuelve una unidad caÃ­da como aliado segÃºn la regla especÃ­fica de la habilidad.",trigger:"Soporte especializado con requisitos cumplidos.",tags:["support","death"]},
+  {name:"Exorcismo",category:"Soporte/Control",effect:"DaÃ±a o elimina reanimados, no muertos o restos que podrÃ­an volver al campo.",trigger:"Unidad o habilidad con rasgo de exorcismo.",tags:["exorcism"]},
+  {name:"Atacar Primero",category:"Regla de arma",effect:"Una unidad de lanza compatible puede reaccionar antes contra una entrada cuerpo a cuerpo vÃ¡lida.",trigger:"Ataque adyacente de RG 1 que cumple la regla de lanza.",tags:["tactical"]},
+  {name:"AnticaballerÃ­a",category:"Regla de arma",effect:"Las armas de asta obtienen ventaja especÃ­fica contra unidades montadas en combate cuerpo a cuerpo.",trigger:"Combate de lanza/pica contra CaballerÃ­a.",tags:["tactical"]},
+  {name:"Ultimate Blow",category:"Regla de clase",effect:"Un Asesino puede rematar a una unidad enemiga no lÃ­der muy herida dentro del alcance especial; el golpe ignora Guardia pero sigue resolviendo PREC/EVA.",trigger:"Objetivo con 1â€“2 HP dentro del alcance especial.",tags:["offense"]},
+  {name:"VÃ­nculo Arcano",category:"Regla de clase",effect:"Una unidad mÃ¡gica jugada desde la mano puede recibir el vÃ­nculo correspondiente al permanecer junto al lÃ­der Hechicero.",trigger:"Adyacencia vÃ¡lida al lÃ­der y origen de invocaciÃ³n compatible.",tags:["support"]}
+]);
+
+function hvGlossaryEsc(value){
+  return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+}
+function hvGlossaryEntries(){
+  const out=[];
+  for(const skill of Object.values(HALLVALLA_UNIT_SKILL_BANK)){
+    out.push({
+      id:skill.id,
+      name:skill.name,
+      category:skill.category||"Habilidad",
+      effect:[skill.effect,skill.secondary].filter(Boolean).join(" "),
+      trigger:skill.trigger||"Pasiva / contextual",
+      numbers:"",
+      origin:[skill.origin,skill.reference].filter(Boolean).join(" Â· "),
+      weapons:(skill.weapons||[]).join(", "),
+      classes:(skill.classes||[]).join(", "),
+      counters:skill.counters||"",
+      source:"Banco de habilidades",
+      tags:skill.tags||[]
+    });
+  }
+  for(const entry of HALLVALLA_ENGINE_GLOSSARY){
+    out.push({...entry,id:`ENGINE-${hvSkillNorm(entry.name)}`,source:"Regla del motor",origin:"",weapons:"",classes:"",counters:"",numbers:""});
+  }
+  try{
+    if(typeof DET_CARD_EFFECT_SECTIONS!=="undefined"){
+      for(const [cardKey,sections] of Object.entries(DET_CARD_EFFECT_SECTIONS||{})){
+        for(const section of (Array.isArray(sections)?sections:[])){
+          if(!section?.title||!section?.body)continue;
+          out.push({
+            id:`CARD-${cardKey}-${hvSkillNorm(section.title)}`,
+            name:section.title,
+            category:"Magia / Trampa",
+            effect:section.body,
+            trigger:"SegÃºn la condiciÃ³n de la carta",
+            source:`Carta: ${cardKey}`,
+            origin:"",
+            weapons:"",
+            classes:"",
+            counters:"",
+            numbers:"",
+            tags:[section.kind||"effect"]
+          });
+        }
+      }
+    }
+  }catch(_){}
+  const seen=new Set();
+  return out.filter(entry=>{
+    const sig=`${hvSkillNorm(entry.name)}|${hvSkillNorm(entry.effect)}`;
+    if(seen.has(sig))return false;
+    seen.add(sig);
+    return true;
+  }).sort((a,b)=>String(a.category||"").localeCompare(String(b.category||""),"es")||String(a.name||"").localeCompare(String(b.name||""),"es"));
+}
+function hvSkillEnsureGlossaryUi(){
+  if(document.getElementById("hvEffectGlossaryOverlay"))return;
+  const style=document.createElement("style");
+  style.id="hvEffectGlossaryStyle";
+  style.textContent=`
+  #hvEffectGlossaryOverlay{position:fixed;inset:0;z-index:1000001;background:rgba(0,0,0,.84);display:flex;align-items:center;justify-content:center;padding:16px;font-family:Arial,sans-serif}
+  #hvEffectGlossaryOverlay.hidden{display:none}
+  .hv-glossary-card{width:min(1180px,97vw);height:min(88vh,760px);display:flex;flex-direction:column;overflow:hidden;border:2px solid #b88a39;border-radius:18px;background:linear-gradient(180deg,#21170f,#0b0907);box-shadow:0 24px 90px #000;color:#f5e8c8}
+  .hv-glossary-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 20px 10px;border-bottom:1px solid rgba(203,159,73,.35)}
+  .hv-glossary-head h2{margin:0;color:#ffd77e;font:700 28px Georgia,serif}.hv-glossary-head p{margin:5px 0 0;color:#cdbf9f;font-size:13px}
+  .hv-glossary-close{width:40px;height:40px;border-radius:50%;border:1px solid #b88a39;background:#23180d;color:#ffd77e;font-size:26px;cursor:pointer}
+  .hv-glossary-tools{display:grid;grid-template-columns:1fr 250px auto;gap:10px;padding:12px 20px}
+  .hv-glossary-tools input,.hv-glossary-tools select{min-height:40px;border:1px solid #73582d;border-radius:9px;background:#0f0c09;color:#fff;padding:0 12px}
+  .hv-glossary-count{display:flex;align-items:center;color:#e1ca98;font-weight:700;white-space:nowrap}
+  .hv-glossary-list{overflow:auto;padding:0 20px 20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .hv-glossary-entry{border:1px solid rgba(175,132,57,.52);border-radius:11px;background:rgba(59,42,24,.66);padding:12px}
+  .hv-glossary-entry h3{margin:0 0 3px;color:#ffd77e;font:700 18px Georgia,serif}.hv-glossary-meta{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#bca77b}
+  .hv-glossary-effect{margin:8px 0;color:#f6f1e8;font-size:14px;line-height:1.38}.hv-glossary-line{font-size:12px;line-height:1.35;color:#cfc4ad;margin-top:4px}
+  .hv-glossary-id{color:#87c8ff}.hv-glossary-empty{grid-column:1/-1;text-align:center;padding:40px;color:#cdbf9f}
+  @media(max-width:820px){.hv-glossary-tools{grid-template-columns:1fr}.hv-glossary-list{grid-template-columns:1fr}.hv-glossary-card{height:94vh}}
+  `;
+  document.head.appendChild(style);
+  const overlay=document.createElement("div");
+  overlay.id="hvEffectGlossaryOverlay";
+  overlay.className="hidden";
+  overlay.innerHTML=`<section class="hv-glossary-card" role="dialog" aria-modal="true" aria-labelledby="hvEffectGlossaryTitle">
+    <header class="hv-glossary-head"><div><h2 id="hvEffectGlossaryTitle">Glosario de efectos</h2><p>CatÃ¡logo vigente al ${HALLVALLA_EFFECT_GLOSSARY_DATE}. Incluye habilidades, estados, reglas de clase y efectos de magias/trampas.</p></div><button class="hv-glossary-close" type="button" aria-label="Cerrar">Ã—</button></header>
+    <div class="hv-glossary-tools"><input id="hvGlossarySearch" type="search" placeholder="Buscar: fuego, arco, exorcismo, Sangrado..." autocomplete="off"><select id="hvGlossaryCategory" aria-label="Filtrar categorÃ­a"><option value="">Todas las categorÃ­as</option></select><div id="hvGlossaryCount" class="hv-glossary-count"></div></div>
+    <div id="hvGlossaryList" class="hv-glossary-list"></div>
+  </section>`;
+  document.body.appendChild(overlay);
+  const close=()=>overlay.classList.add("hidden");
+  overlay.querySelector(".hv-glossary-close").addEventListener("click",close);
+  overlay.addEventListener("click",ev=>{if(ev.target===overlay)close();});
+  overlay.querySelector("#hvGlossarySearch").addEventListener("input",()=>hvGlossaryRender());
+  overlay.querySelector("#hvGlossaryCategory").addEventListener("change",()=>hvGlossaryRender());
+}
+function hvGlossaryRender(){
+  hvSkillEnsureGlossaryUi();
+  const overlay=document.getElementById("hvEffectGlossaryOverlay"),list=overlay?.querySelector("#hvGlossaryList"),category=overlay?.querySelector("#hvGlossaryCategory"),search=overlay?.querySelector("#hvGlossarySearch"),count=overlay?.querySelector("#hvGlossaryCount");
+  if(!overlay||!list||!category||!search||!count)return;
+  const entries=hvGlossaryEntries();
+  if(category.options.length<=1){
+    [...new Set(entries.map(entry=>String(entry.category||"Otros")).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es")).forEach(value=>{
+      const option=document.createElement("option");option.value=value;option.textContent=value;category.appendChild(option);
+    });
+  }
+  const q=hvSkillNorm(search.value),cat=String(category.value||"");
+  const filtered=entries.filter(entry=>{
+    if(cat&&String(entry.category)!==cat)return false;
+    if(!q)return true;
+    return hvSkillNorm([entry.id,entry.name,entry.category,entry.effect,entry.trigger,entry.origin,entry.weapons,entry.classes,entry.counters,entry.source,(entry.tags||[]).join(" ")].join(" ")).includes(q);
+  });
+  count.textContent=`${filtered.length} / ${entries.length}`;
+  list.innerHTML=filtered.length?filtered.map(entry=>{
+    const skill=HALLVALLA_UNIT_SKILL_BANK[entry.id];
+    const scale=skill?hvSkillDescribe(skill,{rarity:"BÃ¡sica"}):"";
+    const scaleMax=skill?hvSkillDescribe(skill,{rarity:"SemidiÃ³s"}):"";
+    return `<article class="hv-glossary-entry"><div class="hv-glossary-meta"><span class="hv-glossary-id">${hvGlossaryEsc(entry.id||"")}</span> Â· ${hvGlossaryEsc(entry.category||"Efecto")} Â· ${hvGlossaryEsc(entry.source||"")}</div><h3>${hvGlossaryEsc(entry.name||"Efecto")}</h3><div class="hv-glossary-effect">${hvGlossaryEsc(entry.effect||"")}</div>${entry.trigger?`<div class="hv-glossary-line"><b>ActivaciÃ³n TR:</b> ${hvGlossaryEsc(entry.trigger)}</div>`:""}${skill&&scale?`<div class="hv-glossary-line"><b>BÃ¡sica:</b> ${hvGlossaryEsc(scale)}</div>`:""}${skill&&scaleMax&&scaleMax!==scale?`<div class="hv-glossary-line"><b>SemidiÃ³s:</b> ${hvGlossaryEsc(scaleMax)}</div>`:""}${entry.weapons?`<div class="hv-glossary-line"><b>Armas:</b> ${hvGlossaryEsc(entry.weapons)}</div>`:""}${entry.classes?`<div class="hv-glossary-line"><b>Clases:</b> ${hvGlossaryEsc(entry.classes)}</div>`:""}${entry.counters?`<div class="hv-glossary-line"><b>Contrajuego:</b> ${hvGlossaryEsc(entry.counters)}</div>`:""}${entry.origin?`<div class="hv-glossary-line"><b>Base:</b> ${hvGlossaryEsc(entry.origin)}</div>`:""}</article>`;
+  }).join(""):`<div class="hv-glossary-empty">No hay efectos que coincidan con ese filtro.</div>`;
+}
+function openHallvallaEffectsGlossary(){
+  hvSkillEnsureGlossaryUi();
+  hvGlossaryRender();
+  const overlay=document.getElementById("hvEffectGlossaryOverlay");
+  if(overlay)overlay.classList.remove("hidden");
+}
+function hvSkillInstallGlossaryAccess(){
+  const settings=document.querySelector("#settingsPanel .settings-learning-zone");
+  if(settings&&!document.getElementById("openEffectsGlossaryBtn")){
+    const button=document.createElement("button");
+    button.id="openEffectsGlossaryBtn";
+    button.type="button";
+    button.className="btn ghost full";
+    button.textContent="Glosario de efectos";
+    button.addEventListener("click",openHallvallaEffectsGlossary);
+    settings.appendChild(button);
+  }
+  // Si la guÃ­a de reglas ya existe, aÃ±ade acceso directo tambiÃ©n allÃ­.
+  const guideActions=document.querySelector("#statGuideModal .stat-guide-actions");
+  if(guideActions&&!document.getElementById("statGuideGlossaryBtn")){
+    const button=document.createElement("button");
+    button.id="statGuideGlossaryBtn";
+    button.type="button";
+    button.className="btn ghost";
+    button.textContent="Glosario";
+    button.addEventListener("click",openHallvallaEffectsGlossary);
+    guideActions.prepend(button);
+  }
+}
+function hvSkillWrapGuideForGlossary(){
+  if(globalThis.__HALLVALLA_STAGE4_GUIDE_GLOSSARY__)return;
+  const original=typeof globalThis.openStatGuideModal==="function"?globalThis.openStatGuideModal:null;
+  if(!original)return;
+  globalThis.__HALLVALLA_STAGE4_GUIDE_GLOSSARY__=true;
+  globalThis.openStatGuideModal=function(...args){
+    const result=original(...args);
+    hvSkillInstallGlossaryAccess();
+    return result;
+  };
+}
 
 function hallvallaSkillLocalTestChoice(unitKey="archer"){
   const local=(typeof location!=="undefined")&&(/^(localhost|127\.0\.0\.1)$/i.test(location.hostname)||location.protocol==="file:");
@@ -594,6 +873,9 @@ Object.assign(globalThis,{
   hvSkillScale,
   hvSkillActiveIds,
   hvSkillEntries,
+  getHallvallaUnitSkillSectionsForEntity,
+  openHallvallaEffectsGlossary,
+  hvGlossaryEntries,
   hallvallaSkillLocalTestChoice
 });
 console.info(`[HallValla][Stage3] Banco de ${Object.keys(HALLVALLA_UNIT_SKILL_BANK).length} habilidades y ${Object.keys(HALLVALLA_UNIT_SKILL_ASSIGNMENTS).length} unidades/entidades listo.`);
