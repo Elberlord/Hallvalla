@@ -1,0 +1,25 @@
+HALLVALLA 2026-10-10 · UNIT MOTION STAGE 5C-A · FAMILIAS DE RIG
+
+Objetivo: formalizar familias reutilizables de esqueletos 2D sin activar unidades nuevas.
+
+Familias canónicas:
+- winged_quadruped_dragon_v1
+- humanoid_v1
+- mounted_v1
+- quadruped_beast_v1
+- flying_v1
+- serpentine_v1
+
+Cada familia declara topología corporal, piezas mínimas/opcionales, canales visuales
+(idle, move, attack, hit, guard, summon, death) y piezas conductoras del ataque.
+
+baby_fire_dragon conserva su rig Stage 5B sin cambios visuales.
+Las demás unidades siguen usando fallback hasta recibir arte/pivotes propios.
+
+No modifica PvP, Firebase, daño, IA, hitboxes, coordenadas, tiempos, mazos ni cartas.
+
+Diagnóstico:
+hvListRigFamilies()
+hvGetRigFamily("humanoid_v1")
+hvValidateRigManifest("baby_fire_dragon")
+__HALLVALLA_UNIT_RIG_DEBUG__()
