@@ -1,0 +1,22 @@
+HALLVALLA 2026-10-10 · STAGE 5C-B0 · RIG LAB DEV
+
+Objetivo:
+Permitir probar rigs aunque el usuario no posea las cartas/unidades piloto.
+
+Acceso:
+Abrir HallValla agregando:
+?dev&riglab=1
+
+El laboratorio:
+- enumera todos los rigs registrados en HALLVALLA_UNIT_RIGS
+- renderiza el rig sin añadirlo al mazo
+- no crea partidas
+- no escribe Firebase
+- no cambia inventario ni progresión
+- permite probar Idle, Move, Attack, Hit, Guard, Dodge, Summon y Death
+
+Cuando Stage 5C-B añada nuevos pilotos, aparecerán automáticamente en el selector.
+
+Producción:
+Sin ?dev no se carga la interfaz DEV.
+Sin riglab=1 no se abre Rig Lab.
