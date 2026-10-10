@@ -29851,3 +29851,122 @@ body.field-figure-editing .hv-rig-2d[data-hv-rig-family]:not([data-hv-rig-family
 html.hv-document-hidden .hv-rig-2d[data-hv-rig-family] .hv-rig-part{animation-play-state:paused!important}
 @media(prefers-reduced-motion:reduce){.hv-rig-2d[data-hv-rig-family] .hv-rig-part{animation:none!important}}
 /* === END HALLVALLA UNIT RIG 2D · STAGE 5C-B ============================== */
+
+/* === HALLVALLA UNIT MOTION · STAGE 5C-C MEGAPACK =========================
+   Migración automática por clip del field figure original.
+   Incluye poses articuladas de CONVOCACIÓN y MUERTE para las seis familias. */
+
+/* Auto-rig: el mismo source WebP se recorta por pieza; no duplica assets en repo. */
+.hv-rig-2d[data-hv-rig-auto="1"]>.hv-rig-part{
+  object-fit:contain;
+  object-position:center;
+}
+
+/* CONVOCACIÓN: siempre gana sobre idle/move durante la entrada. */
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-body{animation:hvMegaSummonBody var(--hv-spawn-ms,440ms) cubic-bezier(.2,.8,.2,1) both!important}
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-head{animation:hvMegaSummonHead var(--hv-spawn-ms,440ms) ease-out both!important}
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-arm_far{animation:hvMegaSummonArmFar var(--hv-spawn-ms,440ms) ease-out both!important}
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-arm_near{animation:hvMegaSummonArmNear var(--hv-spawn-ms,440ms) ease-out both!important}
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-leg_far,
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-leg_near{animation:hvMegaSummonLeg var(--hv-spawn-ms,440ms) ease-out both!important}
+
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_body{animation:hvMegaSummonBody var(--hv-spawn-ms,480ms) ease-out both!important}
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-rider_body,
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-rider_head{animation:hvMegaSummonRider var(--hv-spawn-ms,480ms) ease-out both!important}
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_foreleg_far,
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_foreleg_near,
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_hindleg_far,
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_hindleg_near{animation:hvMegaSummonLeg var(--hv-spawn-ms,480ms) ease-out both!important}
+
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-body{animation:hvMegaSummonBody var(--hv-spawn-ms,440ms) ease-out both!important}
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-head{animation:hvMegaSummonBeastHead var(--hv-spawn-ms,440ms) ease-out both!important}
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-foreleg_far,
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-foreleg_near,
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-hindleg_far,
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-hindleg_near{animation:hvMegaSummonLeg var(--hv-spawn-ms,440ms) ease-out both!important}
+
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-body{animation:hvMegaSummonBody var(--hv-spawn-ms,560ms) ease-out both!important}
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-wing_far{animation:hvMegaSummonWingFar var(--hv-spawn-ms,560ms) ease-out both!important}
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-wing_near{animation:hvMegaSummonWingNear var(--hv-spawn-ms,560ms) ease-out both!important}
+
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-head{animation:hvMegaSummonSnakeHead var(--hv-spawn-ms,440ms) ease-out both!important}
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-body_front,
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-body_mid,
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-body_rear,
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-tail{animation:hvMegaSummonSnakeBody var(--hv-spawn-ms,440ms) ease-out both!important}
+
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-body{animation:hvMegaSummonBody var(--hv-spawn-ms,560ms) ease-out both!important}
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-head{animation:hvMegaSummonDragonHead var(--hv-spawn-ms,560ms) ease-out both!important}
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-wing_far{animation:hvMegaSummonWingFar var(--hv-spawn-ms,560ms) ease-out both!important}
+.unit-card[data-hv-spawn="1"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-wing_near{animation:hvMegaSummonWingNear var(--hv-spawn-ms,560ms) ease-out both!important}
+
+/* MUERTE: pose corporal sobre el ghost de Stage 4. */
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-body{animation:hvMegaDeathBody var(--hv-death-ms,620ms) cubic-bezier(.3,.1,.7,1) forwards!important}
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-head{animation:hvMegaDeathHead var(--hv-death-ms,620ms) ease-in forwards!important}
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-arm_far{animation:hvMegaDeathArmFar var(--hv-death-ms,620ms) ease-in forwards!important}
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-arm_near{animation:hvMegaDeathArmNear var(--hv-death-ms,620ms) ease-in forwards!important}
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-leg_far,
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-leg_near{animation:hvMegaDeathLeg var(--hv-death-ms,620ms) ease-in forwards!important}
+
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-rider_body,
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-rider_head{animation:hvMegaDeathRider var(--hv-death-ms,620ms) ease-in forwards!important}
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_body{animation:hvMegaDeathMountBody var(--hv-death-ms,620ms) ease-in forwards!important}
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_foreleg_far,
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_foreleg_near,
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_hindleg_far,
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_hindleg_near{animation:hvMegaDeathLeg var(--hv-death-ms,620ms) ease-in forwards!important}
+
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-body{animation:hvMegaDeathBeastBody var(--hv-death-ms,620ms) ease-in forwards!important}
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-head{animation:hvMegaDeathBeastHead var(--hv-death-ms,620ms) ease-in forwards!important}
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-foreleg_far,
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-foreleg_near,
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-hindleg_far,
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-hindleg_near{animation:hvMegaDeathLeg var(--hv-death-ms,620ms) ease-in forwards!important}
+
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-wing_far{animation:hvMegaDeathWingFar var(--hv-death-ms,620ms) ease-in forwards!important}
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-wing_near{animation:hvMegaDeathWingNear var(--hv-death-ms,620ms) ease-in forwards!important}
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-body,
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-head{animation:hvMegaDeathBirdBody var(--hv-death-ms,620ms) ease-in forwards!important}
+
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-head{animation:hvMegaDeathSnakeHead var(--hv-death-ms,620ms) ease-in forwards!important}
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-body_front,
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-body_mid,
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-body_rear,
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-tail{animation:hvMegaDeathSnakeBody var(--hv-death-ms,620ms) ease-in forwards!important}
+
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-head{animation:hvMegaDeathDragonHead var(--hv-death-ms,620ms) ease-in forwards!important}
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-wing_far{animation:hvMegaDeathWingFar var(--hv-death-ms,620ms) ease-in forwards!important}
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-wing_near{animation:hvMegaDeathWingNear var(--hv-death-ms,620ms) ease-in forwards!important}
+.hv-unit-death-ghost .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-body{animation:hvMegaDeathBeastBody var(--hv-death-ms,620ms) ease-in forwards!important}
+
+@keyframes hvMegaSummonBody{0%{transform:translateY(11%) scale(.84);opacity:.15}62%{transform:translateY(-2%) scale(1.025);opacity:1}100%{transform:none;opacity:1}}
+@keyframes hvMegaSummonHead{0%{transform:translateY(-15%) rotate(-8deg);opacity:0}65%{transform:translateY(2%) rotate(2deg);opacity:1}100%{transform:none;opacity:1}}
+@keyframes hvMegaSummonArmFar{0%{transform:rotate(22deg) translateX(-8%);opacity:0}100%{transform:none;opacity:1}}
+@keyframes hvMegaSummonArmNear{0%{transform:rotate(-22deg) translateX(8%);opacity:0}100%{transform:none;opacity:1}}
+@keyframes hvMegaSummonLeg{0%{transform:scaleY(.68) translateY(18%);opacity:.1}70%{transform:scaleY(1.04) translateY(-2%);opacity:1}100%{transform:none;opacity:1}}
+@keyframes hvMegaSummonRider{0%{transform:translateY(-18%) rotate(-5deg);opacity:0}100%{transform:none;opacity:1}}
+@keyframes hvMegaSummonBeastHead{0%{transform:translateX(10%) rotate(8deg);opacity:0}100%{transform:none;opacity:1}}
+@keyframes hvMegaSummonWingFar{0%{transform:rotate(28deg) scale(.72);opacity:0}70%{transform:rotate(-4deg) scale(1.03);opacity:1}100%{transform:none;opacity:1}}
+@keyframes hvMegaSummonWingNear{0%{transform:rotate(-30deg) scale(.72);opacity:0}70%{transform:rotate(5deg) scale(1.03);opacity:1}100%{transform:none;opacity:1}}
+@keyframes hvMegaSummonSnakeHead{0%{transform:translateY(18%) rotate(-12deg);opacity:0}100%{transform:none;opacity:1}}
+@keyframes hvMegaSummonSnakeBody{0%{transform:scaleX(.72) translateY(12%);opacity:.1}70%{transform:scaleX(1.03);opacity:1}100%{transform:none;opacity:1}}
+@keyframes hvMegaSummonDragonHead{0%{transform:translateY(12%) rotate(-10deg);opacity:0}100%{transform:none;opacity:1}}
+
+@keyframes hvMegaDeathBody{0%{transform:none}35%{transform:rotate(-5deg) translateY(3%)}100%{transform:rotate(24deg) translate(11%,24%)}}
+@keyframes hvMegaDeathHead{0%{transform:none}100%{transform:rotate(35deg) translate(13%,22%)}}
+@keyframes hvMegaDeathArmFar{0%{transform:none}100%{transform:rotate(-38deg) translate(-8%,18%)}}
+@keyframes hvMegaDeathArmNear{0%{transform:none}100%{transform:rotate(42deg) translate(9%,20%)}}
+@keyframes hvMegaDeathLeg{0%{transform:none}100%{transform:rotate(13deg) translateY(10%) scaleY(.88)}}
+@keyframes hvMegaDeathRider{0%{transform:none}100%{transform:rotate(28deg) translate(13%,24%)}}
+@keyframes hvMegaDeathMountBody{0%{transform:none}100%{transform:rotate(12deg) translate(5%,19%) scaleY(.88)}}
+@keyframes hvMegaDeathBeastBody{0%{transform:none}100%{transform:rotate(11deg) translateY(18%) scaleY(.8)}}
+@keyframes hvMegaDeathBeastHead{0%{transform:none}100%{transform:rotate(24deg) translate(8%,24%)}}
+@keyframes hvMegaDeathWingFar{0%{transform:none}100%{transform:rotate(33deg) translateY(12%)}}
+@keyframes hvMegaDeathWingNear{0%{transform:none}100%{transform:rotate(-38deg) translateY(15%)}}
+@keyframes hvMegaDeathBirdBody{0%{transform:none}100%{transform:rotate(18deg) translate(8%,28%)}}
+@keyframes hvMegaDeathSnakeHead{0%{transform:none}100%{transform:rotate(28deg) translate(8%,18%)}}
+@keyframes hvMegaDeathSnakeBody{0%{transform:none}100%{transform:rotate(7deg) translateY(12%) scaleY(.82)}}
+@keyframes hvMegaDeathDragonHead{0%{transform:none}100%{transform:rotate(27deg) translate(8%,22%)}}
+
+/* El megapack no altera reduced-motion ni modo editor. */
+/* === END STAGE 5C-C MEGAPACK ============================================ */

@@ -1,0 +1,39 @@
+HALLVALLA 2026-10-10 · STAGE 5C-C · MEGAPACK DE RIGS
+
+OBJETIVO
+Extender la articulación 2D a todo el catálogo de unidades compatible de una sola vez.
+
+ESTRATEGIA
+- Los seis rigs aprobados con capas reales siguen teniendo prioridad.
+- Las demás unidades reciben un rig AUTO-CLIP construido directamente desde su
+  field figure actual. No se generan cientos de WebP nuevos.
+- La clasificación se hace por anatomía/datos de la carta:
+  humanoid_v1, mounted_v1, quadruped_beast_v1, flying_v1,
+  serpentine_v1, winged_quadruped_dragon_v1.
+- dragon_egg queda fuera porque es inmóvil y no tiene anatomía locomotora.
+
+CONVOCACIÓN Y MUERTE
+Esta etapa añade articulación corporal visible para Summon y Death en TODAS las
+familias, incluidos los seis pilotos previos. Antes existía el efecto general de
+Stage 4 pero no una pose interna de las extremidades.
+
+RIG LAB
+?dev&riglab=1 ahora enumera el catálogo completo compatible, no solo los pilotos.
+Cada opción indica:
+- CAPAS = rig artesanal ya creado
+- AUTO = rig generado por el Megapack
+
+SEGURIDAD
+No modifica PvP, Firebase, stats, IA, daño, Guardia, hitboxes, coordenadas,
+timers de combate, inventario, mazos ni cartas.
+
+LIMITACIÓN CONOCIDA
+AUTO-CLIP es una migración masiva experimental. Usa geometría corporal genérica.
+Unidades con siluetas muy atípicas pueden necesitar calibración manual posterior.
+Los líderes siguen usando su renderer de leader-base/portrait y no se mezclan
+con esta migración de unidades de campo.
+
+DIAGNÓSTICO
+hvGetMegapackRigStats()
+hvListUnitRigCatalog()
+__HALLVALLA_UNIT_RIG_DEBUG__()
