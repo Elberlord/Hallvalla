@@ -29368,3 +29368,192 @@ html.hv-document-hidden .cell > .unit-card[data-hv-reaction] .field-figure-img{
   }
 }
 /* === END HALLVALLA UNIT MOTION · STAGE 2 ================================ */
+
+/* === HALLVALLA UNIT MOTION · STAGE 3 · WEAPON / CLASS PERSONALITY =========
+   Personalidad visual por arma/clase. Solo modifica la presentación. */
+.cell > .unit-card[data-hv-motion-personality="samurai"]{
+  --hv-motion-idle-ms:3000ms;
+  --hv-motion-idle-rise:-1.05%;
+  --hv-motion-idle-tilt:.22deg;
+  --hv-motion-step-lift:-4.1%;
+  --hv-motion-stride-a:-2.2deg;
+  --hv-motion-stride-b:2.5deg;
+}
+.cell > .unit-card[data-hv-motion-personality="samurai_lancer"]{
+  --hv-motion-idle-ms:3200ms;
+  --hv-motion-idle-rise:-.85%;
+  --hv-motion-idle-tilt:.16deg;
+  --hv-motion-step-lift:-3.7%;
+  --hv-motion-stride-a:-1.5deg;
+  --hv-motion-stride-b:1.8deg;
+}
+.cell > .unit-card[data-hv-motion-personality="assassin"]{
+  --hv-motion-idle-ms:2400ms;
+  --hv-motion-idle-rise:-1.45%;
+  --hv-motion-idle-tilt:.48deg;
+  --hv-motion-breath-scale:1.018;
+  --hv-motion-step-lift:-5.7%;
+  --hv-motion-stride-a:-3.4deg;
+  --hv-motion-stride-b:3.8deg;
+}
+.cell > .unit-card[data-hv-motion-personality="archer"]{
+  --hv-motion-idle-ms:3450ms;
+  --hv-motion-idle-rise:-.8%;
+  --hv-motion-idle-tilt:.18deg;
+  --hv-motion-step-lift:-3.3%;
+  --hv-motion-stride-a:-1.5deg;
+  --hv-motion-stride-b:1.7deg;
+}
+.cell > .unit-card[data-hv-motion-personality="mounted_archer"],
+.cell > .unit-card[data-hv-motion-personality="cavalry"],
+.cell > .unit-card[data-hv-motion-personality="cavalry_lancer"]{
+  --hv-motion-idle-ms:2200ms;
+  --hv-motion-idle-rise:-1.55%;
+  --hv-motion-idle-tilt:.25deg;
+  --hv-motion-step-lift:-5%;
+  --hv-motion-stride-a:-1.7deg;
+  --hv-motion-stride-b:2deg;
+}
+.cell > .unit-card[data-hv-motion-personality="hoplite"],
+.cell > .unit-card[data-hv-motion-personality="guardian"]{
+  --hv-motion-idle-ms:3900ms;
+  --hv-motion-idle-rise:-.55%;
+  --hv-motion-idle-tilt:.09deg;
+  --hv-motion-breath-scale:1.006;
+  --hv-motion-step-lift:-2.4%;
+  --hv-motion-stride-a:-.9deg;
+  --hv-motion-stride-b:1deg;
+}
+.cell > .unit-card[data-hv-motion-personality="lancer"]{
+  --hv-motion-idle-ms:3350ms;
+  --hv-motion-idle-rise:-.9%;
+  --hv-motion-idle-tilt:.14deg;
+  --hv-motion-step-lift:-3.4%;
+  --hv-motion-stride-a:-1.3deg;
+  --hv-motion-stride-b:1.5deg;
+}
+.cell > .unit-card[data-hv-motion-personality="berserker"]{
+  --hv-motion-idle-ms:2500ms;
+  --hv-motion-idle-rise:-1.25%;
+  --hv-motion-idle-tilt:.42deg;
+  --hv-motion-breath-scale:1.017;
+  --hv-motion-step-lift:-4.5%;
+  --hv-motion-stride-a:-2.5deg;
+  --hv-motion-stride-b:2.8deg;
+}
+.cell > .unit-card[data-hv-motion-personality="mage"]{
+  --hv-motion-idle-ms:3000ms;
+  --hv-motion-idle-rise:-2.45%;
+  --hv-motion-idle-tilt:.38deg;
+  --hv-motion-breath-scale:1.014;
+  --hv-motion-step-lift:-4.2%;
+}
+.cell > .unit-card[data-hv-motion-personality="healer"]{
+  --hv-motion-idle-ms:3600ms;
+  --hv-motion-idle-rise:-1.8%;
+  --hv-motion-idle-tilt:.20deg;
+  --hv-motion-breath-scale:1.012;
+  --hv-motion-step-lift:-3.4%;
+}
+.cell > .unit-card[data-hv-motion-personality="skirmisher"]{
+  --hv-motion-idle-ms:2550ms;
+  --hv-motion-idle-rise:-1.55%;
+  --hv-motion-idle-tilt:.42deg;
+  --hv-motion-step-lift:-5.1%;
+  --hv-motion-stride-a:-3deg;
+  --hv-motion-stride-b:3.2deg;
+}
+
+/* Katana / sable: preparación compacta y corte seco. */
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-personality="samurai"][data-hv-attack-style="slash"] .field-figure-layer{
+  animation:hvUnitAttackSamurai var(--hv-action-ms,390ms) cubic-bezier(.12,.82,.18,1) both!important;
+}
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-personality="samurai"][data-hv-attack-style="slash"] .field-figure-img{
+  animation:hvUnitAttackSamuraiFigure var(--hv-action-ms,390ms) ease-in-out both!important;
+}
+@keyframes hvUnitAttackSamurai{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  34%{transform:translateX(-50%) translate(calc(var(--hv-action-back-x,-4px) * .6),calc(var(--hv-action-back-y,0px) * .6)) rotate(calc(var(--ff-rotation,0deg) - var(--hv-action-tilt,4deg)))}
+  52%{transform:translateX(-50%) translate(calc(var(--hv-action-x,14px) * 1.08),calc(var(--hv-action-y,0px) * 1.08)) rotate(calc(var(--ff-rotation,0deg) + var(--hv-action-tilt,4deg)))}
+  72%{transform:translateX(-50%) translate(calc(var(--hv-action-x,14px) * .18),calc(var(--hv-action-y,0px) * .18)) rotate(var(--ff-rotation,0deg))}
+}
+@keyframes hvUnitAttackSamuraiFigure{
+  0%,100%{transform:scaleX(var(--ff-scale-x,1)) scaleY(1) skewX(0)}
+  34%{transform:scaleX(var(--ff-scale-x,1)) scaleY(.97) skewX(-3deg)}
+  52%{transform:scaleX(var(--ff-scale-x,1)) scaleY(1.035) skewX(4.3deg)}
+}
+
+/* Asesino: entrada baja, golpe muy corto y recuperación rápida. */
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-personality="assassin"] .field-figure-layer{
+  animation:hvUnitAttackAssassin var(--hv-action-ms,360ms) cubic-bezier(.1,.85,.18,1) both!important;
+}
+@keyframes hvUnitAttackAssassin{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  24%{transform:translateX(-50%) translate(calc(var(--hv-action-back-x,-3px) * .35),4px) rotate(calc(var(--ff-rotation,0deg) - 2.4deg))}
+  50%{transform:translateX(-50%) translate(calc(var(--hv-action-x,15px) * 1.12),calc(var(--hv-action-y,0px) * 1.12 - 2px)) rotate(calc(var(--ff-rotation,0deg) + var(--hv-action-tilt,4deg)))}
+  70%{transform:translateX(-50%) translate(calc(var(--hv-action-x,15px) * .12),1px) rotate(var(--ff-rotation,0deg))}
+}
+
+/* Hoplita: menos giro corporal, empuje firme de lanza. */
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-personality="hoplite"][data-hv-attack-style="thrust"] .field-figure-layer{
+  animation:hvUnitAttackHoplite var(--hv-action-ms,520ms) cubic-bezier(.16,.76,.2,1) both!important;
+}
+@keyframes hvUnitAttackHoplite{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  30%{transform:translateX(-50%) translate(calc(var(--hv-action-back-x,-5px) * .42),calc(var(--hv-action-back-y,0px) * .42)) rotate(calc(var(--ff-rotation,0deg) - .45deg))}
+  62%{transform:translateX(-50%) translate(calc(var(--hv-action-x,19px) * 1.05),calc(var(--hv-action-y,0px) * 1.05)) rotate(calc(var(--ff-rotation,0deg) + .35deg))}
+}
+
+/* Berserker: carga del cuerpo antes del golpe pesado. */
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-personality="berserker"][data-hv-attack-style="heavy"] .field-figure-layer{
+  animation:hvUnitAttackBerserker var(--hv-action-ms,660ms) cubic-bezier(.18,.7,.18,1) both!important;
+}
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-personality="berserker"][data-hv-attack-style="heavy"] .field-figure-img{
+  animation:hvUnitAttackBerserkerFigure var(--hv-action-ms,660ms) ease-in-out both!important;
+}
+@keyframes hvUnitAttackBerserker{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  32%{transform:translateX(-50%) translate(calc(var(--hv-action-back-x,-6px) * .9),-7px) rotate(calc(var(--ff-rotation,0deg) - var(--hv-action-tilt,4deg)))}
+  62%{transform:translateX(-50%) translate(calc(var(--hv-action-x,15px) * 1.12),calc(var(--hv-action-y,0px) + 6px)) rotate(calc(var(--ff-rotation,0deg) + var(--hv-action-tilt,4deg)))}
+  82%{transform:translateX(-50%) translate(calc(var(--hv-action-x,15px) * .18),3px) rotate(var(--ff-rotation,0deg))}
+}
+@keyframes hvUnitAttackBerserkerFigure{
+  0%,100%{transform:scaleX(var(--ff-scale-x,1)) scaleY(1)}
+  32%{transform:scaleX(calc(var(--ff-scale-x,1) * 1.04)) scaleY(1.05)}
+  62%{transform:scaleX(calc(var(--ff-scale-x,1) * .98)) scaleY(.91)}
+}
+
+/* Arquero montado: el torso absorbe el movimiento de la montura al disparar. */
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-personality="mounted_archer"][data-hv-attack-style="ranged"] .field-figure-layer{
+  animation:hvUnitAttackMountedArcher var(--hv-action-ms,485ms) ease-in-out both!important;
+}
+@keyframes hvUnitAttackMountedArcher{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  28%{transform:translateX(-50%) translate(calc(var(--hv-action-back-x,-4px) * .55),-3px) rotate(calc(var(--ff-rotation,0deg) - 1.6deg))}
+  50%{transform:translateX(-50%) translate(calc(var(--hv-action-x,8px) * .2),2px) rotate(calc(var(--ff-rotation,0deg) + 1deg))}
+  72%{transform:translateX(-50%) translate(calc(var(--hv-action-x,8px) * .08),-1px) rotate(var(--ff-rotation,0deg))}
+}
+
+/* Sanador: canalización menos agresiva que la magia ofensiva. */
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-personality="healer"][data-hv-attack-style="magic"] .field-figure-layer{
+  animation:hvUnitAttackHealer var(--hv-action-ms,700ms) ease-in-out both!important;
+}
+@keyframes hvUnitAttackHealer{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  38%{transform:translateX(-50%) translate(0,-4px) rotate(calc(var(--ff-rotation,0deg) - .35deg))}
+  64%{transform:translateX(-50%) translate(calc(var(--hv-action-x,6px) * .16),-2px) rotate(calc(var(--ff-rotation,0deg) + .35deg))}
+}
+
+/* Guardia/escudo: reacción más contenida al absorber impactos. */
+.cell > .unit-card[data-hv-motion-personality="guardian"][data-hv-reaction="guard"] .field-figure-layer,
+.cell > .unit-card[data-hv-motion-personality="hoplite"][data-hv-reaction="guard"] .field-figure-layer{
+  animation-duration:340ms!important;
+}
+
+@media(prefers-reduced-motion:reduce){
+  .cell > .unit-card[data-hv-motion-personality] .field-figure-layer,
+  .cell > .unit-card[data-hv-motion-personality] .field-figure-img{
+    animation:none!important;
+  }
+}
+/* === END HALLVALLA UNIT MOTION · STAGE 3 ================================ */

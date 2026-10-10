@@ -1,0 +1,63 @@
+HALLVALLA 2026-10-10 · UNIT MOTION STAGE 3 · PERSONALIDAD POR ARMA/CLASE
+
+OBJETIVO
+Evitar que todas las unidades compartan exactamente el mismo lenguaje corporal.
+Stage 3 conserva Stage 1 (idle/move) y Stage 2 (attack/reaction), pero añade
+personalidad visual según arma, clase y locomoción.
+
+PERSONALIDADES CANÓNICAS INICIALES
+- samurai
+- samurai_lancer
+- assassin
+- archer
+- mounted_archer
+- hoplite
+- lancer
+- cavalry_lancer
+- cavalry
+- berserker
+- guardian
+- mage
+- healer
+- swordsman
+- heavy
+- beast
+- flying
+- supernatural
+- skirmisher
+- soldier
+
+EJEMPLOS
+- Samurai: preparación compacta y corte más seco.
+- Asesino/ninja: postura baja, entrada rápida y recuperación corta.
+- Hoplita: estocada firme con poca rotación corporal.
+- Lancero: mayor alcance visual de la estocada.
+- Berserker: carga corporal más marcada antes del golpe pesado.
+- Arquero montado: balance de torso distinto al disparar desde montura.
+- Guardia/escudo: idle y reacción de bloqueo más contenidos.
+- Mago: flotación/canalización más marcada.
+- Sanador: canalización menos agresiva que la magia ofensiva.
+- Caballería: desplazamiento y ataque más enérgicos.
+- Bestias: movimientos más explosivos.
+
+SEGURIDAD
+Todo Stage 3 es cosmético.
+NO cambia:
+- tiempos de ataque reales
+- tiempos de movimiento reales
+- daño
+- Guardia
+- precisión/evasión
+- alcance
+- IA
+- coordenadas
+- hitboxes
+- Firebase/PvP
+
+La duración de animación puede variar visualmente por personalidad, pero nunca bloquea
+ni espera la resolución del combate. El motor TR sigue siendo la autoridad.
+
+DIAGNÓSTICO
+En consola:
+__HALLVALLA_UNIT_MOTION_DEBUG__()
+hvUnitMotionPersonality(unit)

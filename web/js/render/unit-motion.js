@@ -6,7 +6,7 @@
 (()=>{
   "use strict";
 
-  const HALLVALLA_UNIT_MOTION_VERSION="20261010.2";
+  const HALLVALLA_UNIT_MOTION_VERSION="20261010.3";
   const records=new Map();
   const actionTimers=new Map();
   const reactionTimers=new Map();
@@ -61,12 +61,16 @@
   }
 
   function setMotionVars(el,unit,profile){
+    const personality=unitMotionPersonality(unit,profile);
     el.dataset.hvMotionProfile=profile;
+    el.dataset.hvMotionPersonality=personality;
     el.style.setProperty("--hv-motion-phase",`${stablePhase(unit?.id||unit?.key)}ms`);
   }
 
   function beginMove(el,unit,previous,x,y,profile){
-    const duration=PROFILE_TIMING[profile]??540;
+    const personality=unitMotionPersonality(unit,profile);
+    const tuning=personalityTuning(personality);
+    const duration=Math.max(300,Math.round((PROFILE_TIMING[profile]??540)*Number(tuning.move||1)));
     if(duration<=0){
       el.dataset.hvMotion="idle";
       return {until:0,timer:0};
@@ -182,6 +186,80 @@
     try{return globalThis.HALLVALLA_UNIT_SKILL_ASSIGNMENTS?.[key]||null;}catch(_){return null;}
   }
 
+
+  function unitMotionIdentity(unit){
+    const meta=unitMotionSkillMeta(unit);
+    const weaponTags=[
+      ...(Array.isArray(unit?.weaponTags)?unit.weaponTags:[]),
+      ...(Array.isArray(meta?.weaponTags)?meta.weaponTags:[])
+    ].map(value=>String(value||"").toLowerCase());
+    const classTags=[
+      ...(Array.isArray(unit?.classTags)?unit.classTags:[]),
+      ...(Array.isArray(meta?.classTags)?meta.classTags:[])
+    ].map(value=>String(value||"").toLowerCase());
+    const weaponClass=String(unit?.weaponClass||"").toLowerCase();
+    const key=String(unit?.key||"").toLowerCase();
+    return {
+      weaponTags,
+      classTags,
+      weaponClass,
+      key,
+      text:[weaponClass,key,...weaponTags,...classTags].join(" ")
+    };
+  }
+
+  function unitMotionPersonality(unit,profile=motionProfile(unit)){
+    const identity=unitMotionIdentity(unit);
+    const text=identity.text;
+    const has=(re)=>re.test(text);
+
+    if(has(/\b(bow|crossbow|firearm|rifle|pistol)\b/)&&has(/\b(mount|cavalry)\b/))return "mounted_archer";
+    if(has(/\bsamurai\b/)&&has(/\b(spear|pike|polearm|naginata)\b/))return "samurai_lancer";
+    if(has(/\bsamurai\b/))return "samurai";
+    if(has(/\b(assassin|ninja|shinobi)\b/))return "assassin";
+    if(has(/\b(bow|crossbow|firearm|rifle|pistol|archer|ranged)\b/))return "archer";
+    if(has(/\b(hoplite|phalanx)\b/))return "hoplite";
+    if(has(/\b(spear|pike|polearm|lance|lancer|naginata)\b/)&&has(/\b(mount|cavalry)\b/))return "cavalry_lancer";
+    if(has(/\b(spear|pike|polearm|lance|lancer|naginata)\b/))return "lancer";
+    if(has(/\b(berserker|ulfhednar)\b/))return "berserker";
+    if(has(/\b(shield_bearer|guardian)\b/)||has(/\bshield\b/))return "guardian";
+    if((unit?.healer||has(/\bhealer\b/))&&(unit?.caster||has(/\b(magic|staff|mage)\b/)))return "healer";
+    if(unit?.caster||unit?.hechicero||unit?.hechicera||unit?.nigromante||has(/\b(magic|staff|mage|sorcer|wizard|necrom)\b/))return "mage";
+    if(has(/\b(mount|cavalry)\b/)||profile==="mounted")return "cavalry";
+    if(profile==="beast")return "beast";
+    if(profile==="flying")return "flying";
+    if(profile==="supernatural")return "supernatural";
+    if(has(/\b(sword|katana|dagger)\b/))return "swordsman";
+    if(has(/\b(axe|poleaxe|hammer|mace|club|heavy_infantry)\b/)||profile==="heavy")return "heavy";
+    if(profile==="light")return "skirmisher";
+    return "soldier";
+  }
+
+  function personalityTuning(personality){
+    return ({
+      samurai:{move:.94,action:.82,reach:1.12,tilt:1.25},
+      samurai_lancer:{move:.96,action:.86,reach:1.16,tilt:.82},
+      assassin:{move:.88,action:.78,reach:1.18,tilt:1.42},
+      archer:{move:.98,action:1.04,reach:.90,tilt:.62},
+      mounted_archer:{move:.90,action:.93,reach:.96,tilt:.68},
+      hoplite:{move:1.05,action:1.08,reach:1.14,tilt:.55},
+      lancer:{move:.98,action:.96,reach:1.18,tilt:.72},
+      cavalry_lancer:{move:.88,action:.90,reach:1.25,tilt:.86},
+      cavalry:{move:.88,action:.90,reach:1.18,tilt:.92},
+      berserker:{move:.96,action:1.12,reach:1.20,tilt:1.28},
+      guardian:{move:1.08,action:1.12,reach:.90,tilt:.52},
+      mage:{move:1.03,action:1.08,reach:.86,tilt:.62},
+      healer:{move:1.06,action:1.15,reach:.76,tilt:.48},
+      swordsman:{move:.98,action:.95,reach:1.05,tilt:1},
+      heavy:{move:1.05,action:1.08,reach:1.02,tilt:.82},
+      beast:{move:.86,action:.90,reach:1.20,tilt:1.15},
+      flying:{move:.92,action:.95,reach:1.08,tilt:.78},
+      supernatural:{move:1.02,action:1.02,reach:1.02,tilt:.72},
+      skirmisher:{move:.90,action:.90,reach:1.08,tilt:1.12},
+      soldier:{move:1,action:1,reach:1,tilt:1}
+    })[personality]||{move:1,action:1,reach:1,tilt:1};
+  }
+
   function unitAttackStyle(unit){
     const meta=unitMotionSkillMeta(unit);
     const weaponTags=[
@@ -253,19 +331,23 @@
     const targetEl=motionTargetElement(target);
     const vector=normalizedScreenVector(el,targetEl);
     const style=unitAttackStyle(attacker);
-    const duration=actionDuration(style);
+    const personality=unitMotionPersonality(attacker,motionProfile(attacker));
+    const tuning=personalityTuning(personality);
+    const duration=Math.max(300,Math.round(actionDuration(style)*Number(tuning.action||1)));
 
     clearActionTimer(id);
 
-    const reach=style==="charge"?20:style==="thrust"?17:style==="beast"?16:style==="heavy"?13:style==="slash"?12:style==="shield"?11:8;
+    const baseReach=style==="charge"?20:style==="thrust"?17:style==="beast"?16:style==="heavy"?13:style==="slash"?12:style==="shield"?11:8;
+    const reach=baseReach*Number(tuning.reach||1);
     el.style.setProperty("--hv-action-x",`${(vector.x*reach).toFixed(2)}px`);
     el.style.setProperty("--hv-action-y",`${(vector.y*reach*.72).toFixed(2)}px`);
     el.style.setProperty("--hv-action-back-x",`${(-vector.x*Math.max(4,reach*.38)).toFixed(2)}px`);
     el.style.setProperty("--hv-action-back-y",`${(-vector.y*Math.max(3,reach*.24)).toFixed(2)}px`);
-    el.style.setProperty("--hv-action-tilt",`${(vector.x>=0?1:-1)*3.2}deg`);
+    el.style.setProperty("--hv-action-tilt",`${((vector.x>=0?1:-1)*3.2*Number(tuning.tilt||1)).toFixed(2)}deg`);
     el.style.setProperty("--hv-action-ms",`${duration}ms`);
     el.dataset.hvAction="attack";
     el.dataset.hvAttackStyle=style;
+    el.dataset.hvAttackPersonality=personality;
 
     const token=`${id}:${Date.now()}:${Math.random()}`;
     el.dataset.hvActionToken=token;
@@ -274,6 +356,7 @@
       if(el.dataset.hvActionToken!==token)return;
       el.removeAttribute("data-hv-action");
       el.removeAttribute("data-hv-attack-style");
+      el.removeAttribute("data-hv-attack-personality");
       el.removeAttribute("data-hv-action-token");
       actionTimers.delete(id);
     },duration+45);
@@ -331,9 +414,11 @@
     document.querySelectorAll(".unit-card[data-hv-motion],.unit-card[data-hv-action],.unit-card[data-hv-reaction]").forEach(el=>{
       el.removeAttribute("data-hv-motion");
       el.removeAttribute("data-hv-motion-profile");
+      el.removeAttribute("data-hv-motion-personality");
       el.removeAttribute("data-hv-motion-token");
       el.removeAttribute("data-hv-action");
       el.removeAttribute("data-hv-attack-style");
+      el.removeAttribute("data-hv-attack-personality");
       el.removeAttribute("data-hv-action-token");
       el.removeAttribute("data-hv-reaction");
       el.removeAttribute("data-hv-reaction-token");
@@ -355,6 +440,7 @@
     hvSyncUnitVisualMotion,
     hvPlayUnitAttackMotion,
     hvPlayUnitReactionMotion,
+    hvUnitMotionPersonality:unitMotionPersonality,
     hvResetUnitVisualMotion,
     __HALLVALLA_UNIT_MOTION_DEBUG__:hvUnitMotionDebug
   });
