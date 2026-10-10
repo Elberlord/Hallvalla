@@ -29766,3 +29766,88 @@ body.field-figure-editing .hv-rig-part{animation:none!important}
 html.hv-document-hidden .hv-rig-part{animation-play-state:paused!important}
 @media(prefers-reduced-motion:reduce){.hv-rig-part{animation:none!important}}
 /* === END HALLVALLA UNIT RIG 2D · STAGE 5A =============================== */
+
+/* === HALLVALLA UNIT RIG 2D · STAGE 5C-B · PILOTOS DE FAMILIA ============ */
+.unit-card[data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-head{animation:hvRigHumanHeadIdle 2200ms ease-in-out infinite}
+.unit-card[data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-body{animation:hvRigHumanBodyIdle 1900ms ease-in-out infinite}
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-leg_near,
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-arm_far{animation:hvRigHumanStepA 520ms ease-in-out infinite}
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-leg_far,
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-arm_near{animation:hvRigHumanStepB 520ms ease-in-out infinite}
+.unit-card[data-hv-action="attack"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-arm_near,
+.unit-card[data-hv-action="attack"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-weapon{animation:hvRigHumanAttack var(--hv-action-ms,470ms) cubic-bezier(.15,.78,.18,1) both!important}
+.unit-card[data-hv-reaction="hit"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-head{animation:hvRigHumanHit var(--hv-react-ms,340ms) ease-out both!important}
+.unit-card[data-hv-reaction="guard"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-arm_near{animation:hvRigGuardSmall var(--hv-react-ms,300ms) ease-out both!important}
+
+.unit-card[data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_head{animation:hvRigMountHeadIdle 2100ms ease-in-out infinite}
+.unit-card[data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_tail{animation:hvRigMountTailIdle 1700ms ease-in-out infinite}
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_foreleg_near,
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_hindleg_far{animation:hvRigMountGallopA 440ms ease-in-out infinite}
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_foreleg_far,
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_hindleg_near{animation:hvRigMountGallopB 440ms ease-in-out infinite}
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-rider_body{animation:hvRigRiderBob 440ms ease-in-out infinite}
+.unit-card[data-hv-action="attack"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-rider_arm_near,
+.unit-card[data-hv-action="attack"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-weapon{animation:hvRigRiderAttack var(--hv-action-ms,470ms) ease-out both!important}
+
+.unit-card[data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-head{animation:hvRigBeastHeadIdle 1800ms ease-in-out infinite}
+.unit-card[data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-tail{animation:hvRigBeastTailIdle 1500ms ease-in-out infinite}
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-foreleg_near,
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-hindleg_far{animation:hvRigBeastRunA 470ms ease-in-out infinite}
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-foreleg_far,
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-hindleg_near{animation:hvRigBeastRunB 470ms ease-in-out infinite}
+.unit-card[data-hv-action="attack"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-head{animation:hvRigBeastAttack var(--hv-action-ms,470ms) cubic-bezier(.2,.8,.2,1) both!important}
+
+.unit-card[data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-wing_near{animation:hvRigBirdWingNearIdle 1200ms ease-in-out infinite}
+.unit-card[data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-wing_far{animation:hvRigBirdWingFarIdle 1200ms ease-in-out infinite}
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-wing_near{animation:hvRigBirdWingNearMove 360ms ease-in-out infinite}
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-wing_far{animation:hvRigBirdWingFarMove 360ms ease-in-out infinite}
+.unit-card[data-hv-action="attack"] .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-head{animation:hvRigBirdAttack var(--hv-action-ms,470ms) ease-out both!important}
+
+.unit-card[data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-head{animation:hvRigSnakeHeadIdle 1700ms ease-in-out infinite}
+.unit-card[data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-body_front{animation:hvRigSnakeFrontIdle 1700ms ease-in-out infinite}
+.unit-card[data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-body_mid{animation:hvRigSnakeMidIdle 1900ms ease-in-out infinite}
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-body_front{animation:hvRigSnakeMoveA 620ms ease-in-out infinite}
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-body_mid{animation:hvRigSnakeMoveB 620ms ease-in-out infinite}
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-tail{animation:hvRigSnakeMoveA 620ms ease-in-out infinite reverse}
+.unit-card[data-hv-action="attack"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-head{animation:hvRigSnakeAttack var(--hv-action-ms,470ms) cubic-bezier(.15,.78,.18,1) both!important}
+
+.unit-card[data-hv-reaction="hit"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-rider_body,
+.unit-card[data-hv-reaction="hit"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-head,
+.unit-card[data-hv-reaction="hit"] .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-body,
+.unit-card[data-hv-reaction="hit"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-head{animation:hvRigHitSmall var(--hv-react-ms,340ms) ease-out both!important}
+
+@keyframes hvRigHumanHeadIdle{0%,100%{transform:rotate(-.7deg) translateY(0)}50%{transform:rotate(.8deg) translateY(-.5%)}}
+@keyframes hvRigHumanBodyIdle{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.008)}}
+@keyframes hvRigHumanStepA{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(6deg)}}
+@keyframes hvRigHumanStepB{0%,100%{transform:rotate(5deg)}50%{transform:rotate(-5deg)}}
+@keyframes hvRigHumanAttack{0%,100%{transform:rotate(0) translate(0,0)}38%{transform:rotate(-12deg) translate(-2%,1%)}68%{transform:rotate(14deg) translate(5%,-1%)}}
+@keyframes hvRigHumanHit{0%,100%{transform:rotate(0)}45%{transform:rotate(-7deg) translateX(-2%)}}
+@keyframes hvRigMountHeadIdle{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(2.5deg) translateY(-.8%)}}
+@keyframes hvRigMountTailIdle{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(5deg)}}
+@keyframes hvRigMountGallopA{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(9deg)}}
+@keyframes hvRigMountGallopB{0%,100%{transform:rotate(7deg)}50%{transform:rotate(-7deg)}}
+@keyframes hvRigRiderBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.7%)}}
+@keyframes hvRigRiderAttack{0%,100%{transform:rotate(0)}35%{transform:rotate(-10deg)}65%{transform:rotate(15deg)}}
+@keyframes hvRigBeastHeadIdle{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(2deg) translateY(-.7%)}}
+@keyframes hvRigBeastTailIdle{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(6deg)}}
+@keyframes hvRigBeastRunA{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(8deg)}}
+@keyframes hvRigBeastRunB{0%,100%{transform:rotate(7deg)}50%{transform:rotate(-7deg)}}
+@keyframes hvRigBeastAttack{0%,100%{transform:rotate(0) translate(0,0)}55%{transform:rotate(5deg) translate(5%,-1%)}}
+@keyframes hvRigBirdWingNearIdle{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(-7deg)}}
+@keyframes hvRigBirdWingFarIdle{0%,100%{transform:rotate(2deg)}50%{transform:rotate(7deg)}}
+@keyframes hvRigBirdWingNearMove{0%,100%{transform:rotate(8deg)}50%{transform:rotate(-18deg)}}
+@keyframes hvRigBirdWingFarMove{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(16deg)}}
+@keyframes hvRigBirdAttack{0%,100%{transform:rotate(0)}55%{transform:rotate(7deg) translate(5%,-1%)}}
+@keyframes hvRigSnakeHeadIdle{0%,100%{transform:rotate(-1.5deg) translateX(-.5%)}50%{transform:rotate(2deg) translateX(1%)}}
+@keyframes hvRigSnakeFrontIdle{0%,100%{transform:rotate(1deg)}50%{transform:rotate(-1.6deg)}}
+@keyframes hvRigSnakeMidIdle{0%,100%{transform:translateX(-.5%)}50%{transform:translateX(.8%)}}
+@keyframes hvRigSnakeMoveA{0%,100%{transform:rotate(-3deg) translateX(-1%)}50%{transform:rotate(3deg) translateX(1.5%)}}
+@keyframes hvRigSnakeMoveB{0%,100%{transform:rotate(2.5deg) translateX(1%)}50%{transform:rotate(-2.5deg) translateX(-1%)}}
+@keyframes hvRigSnakeAttack{0%,100%{transform:rotate(0) translate(0,0)}48%{transform:rotate(-4deg) translate(-2%,1%)}68%{transform:rotate(7deg) translate(8%,-2%)}}
+@keyframes hvRigGuardSmall{0%,100%{transform:rotate(0)}50%{transform:rotate(-7deg) translateX(-2%)}}
+@keyframes hvRigHitSmall{0%,100%{transform:rotate(0) translateX(0)}45%{transform:rotate(-4deg) translateX(-2%)}}
+
+body.field-figure-editing .hv-rig-2d[data-hv-rig-family]:not([data-hv-rig-family="winged_quadruped_dragon_v1"]) .hv-rig-part{animation:none!important}
+html.hv-document-hidden .hv-rig-2d[data-hv-rig-family] .hv-rig-part{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){.hv-rig-2d[data-hv-rig-family] .hv-rig-part{animation:none!important}}
+/* === END HALLVALLA UNIT RIG 2D · STAGE 5C-B ============================== */

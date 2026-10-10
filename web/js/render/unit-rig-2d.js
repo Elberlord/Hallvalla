@@ -5,7 +5,7 @@
 (()=>{
   "use strict";
 
-  const HALLVALLA_UNIT_RIG_VERSION="20261010.3";
+  const HALLVALLA_UNIT_RIG_VERSION="20261010.4";
 
   function part(id,src,z,originX,originY){
     return Object.freeze({id,src,z,originX,originY});
@@ -80,6 +80,104 @@
         part("foreleg_near","assets/field_rigs/baby_fire_dragon/foreleg_near.webp",7,62,57),
         part("head","assets/field_rigs/baby_fire_dragon/head.webp",8,50,46),
         part("wing_near","assets/field_rigs/baby_fire_dragon/wing_near.webp",9,64,36)
+      ])
+    }),
+    armored_man_at_arms:Object.freeze({
+      key:"armored_man_at_arms",
+      name:"Hombre de armas acorazado",
+      family:"humanoid_v1",
+      pilot:true,
+      enabled:true,
+      sourceFigure:"assets/field_figures_light/basic/armored_man_at_arms.webp",
+      assetRoot:"assets/field_rigs/armored_man_at_arms",
+      canvasRule:"same-transparent-canvas",
+      parts:Object.freeze([
+        part("leg_far","assets/field_rigs/armored_man_at_arms/leg_far.webp",1,47,50),
+        part("weapon","assets/field_rigs/armored_man_at_arms/weapon.webp",2,33,31),
+        part("arm_far","assets/field_rigs/armored_man_at_arms/arm_far.webp",3,39,25),
+        part("body","assets/field_rigs/armored_man_at_arms/body.webp",4,50,47),
+        part("leg_near","assets/field_rigs/armored_man_at_arms/leg_near.webp",5,57,50),
+        part("arm_near","assets/field_rigs/armored_man_at_arms/arm_near.webp",6,63,25),
+        part("head","assets/field_rigs/armored_man_at_arms/head.webp",7,51,22)
+      ])
+    }),
+    cavalry:Object.freeze({
+      key:"cavalry",
+      name:"Caballería ligera",
+      family:"mounted_v1",
+      pilot:true,
+      enabled:true,
+      sourceFigure:"assets/field_figures_light/basic/cavalry_light.webp",
+      assetRoot:"assets/field_rigs/cavalry",
+      canvasRule:"same-transparent-canvas",
+      parts:Object.freeze([
+        part("mount_tail","assets/field_rigs/cavalry/mount_tail.webp",1,26,49),
+        part("mount_hindleg_far","assets/field_rigs/cavalry/mount_hindleg_far.webp",2,31,55),
+        part("mount_foreleg_far","assets/field_rigs/cavalry/mount_foreleg_far.webp",3,52,52),
+        part("mount_body","assets/field_rigs/cavalry/mount_body.webp",4,50,50),
+        part("mount_hindleg_near","assets/field_rigs/cavalry/mount_hindleg_near.webp",5,39,56),
+        part("mount_foreleg_near","assets/field_rigs/cavalry/mount_foreleg_near.webp",6,60,52),
+        part("mount_head","assets/field_rigs/cavalry/mount_head.webp",7,63,33),
+        part("cloak","assets/field_rigs/cavalry/cloak.webp",8,34,33),
+        part("rider_body","assets/field_rigs/cavalry/rider_body.webp",9,43,34),
+        part("rider_arm_far","assets/field_rigs/cavalry/rider_arm_far.webp",10,33,20),
+        part("rider_arm_near","assets/field_rigs/cavalry/rider_arm_near.webp",11,51,21),
+        part("rider_head","assets/field_rigs/cavalry/rider_head.webp",12,47,21),
+        part("weapon","assets/field_rigs/cavalry/weapon.webp",13,27,26)
+      ])
+    }),
+    african_lion:Object.freeze({
+      key:"african_lion",
+      name:"León Africano",
+      family:"quadruped_beast_v1",
+      pilot:true,
+      enabled:true,
+      sourceFigure:"assets/field_figures_light/beasts/african_lion.webp",
+      assetRoot:"assets/field_rigs/african_lion",
+      canvasRule:"same-transparent-canvas",
+      parts:Object.freeze([
+        part("tail","assets/field_rigs/african_lion/tail.webp",1,20,59),
+        part("hindleg_far","assets/field_rigs/african_lion/hindleg_far.webp",2,32,56),
+        part("foreleg_far","assets/field_rigs/african_lion/foreleg_far.webp",3,54,52),
+        part("body","assets/field_rigs/african_lion/body.webp",4,50,52),
+        part("hindleg_near","assets/field_rigs/african_lion/hindleg_near.webp",5,43,57),
+        part("foreleg_near","assets/field_rigs/african_lion/foreleg_near.webp",6,74,52),
+        part("head","assets/field_rigs/african_lion/head.webp",7,61,41)
+      ])
+    }),
+    black_raven:Object.freeze({
+      key:"black_raven",
+      name:"Cuervo Negro",
+      family:"flying_v1",
+      pilot:true,
+      enabled:true,
+      sourceFigure:"assets/field_figures_light/beasts/black_raven.webp",
+      assetRoot:"assets/field_rigs/black_raven",
+      canvasRule:"same-transparent-canvas",
+      parts:Object.freeze([
+        part("base","assets/field_rigs/black_raven/base.webp",0,50,75),
+        part("wing_far","assets/field_rigs/black_raven/wing_far.webp",1,47,26),
+        part("tail","assets/field_rigs/black_raven/tail.webp",2,48,43),
+        part("body","assets/field_rigs/black_raven/body.webp",3,55,39),
+        part("head","assets/field_rigs/black_raven/head.webp",4,63,28),
+        part("wing_near","assets/field_rigs/black_raven/wing_near.webp",5,64,30)
+      ])
+    }),
+    constrictor_snake:Object.freeze({
+      key:"constrictor_snake",
+      name:"Serpiente Constrictora",
+      family:"serpentine_v1",
+      pilot:true,
+      enabled:true,
+      sourceFigure:"assets/field_figures_light/beasts/constrictor_snake.webp",
+      assetRoot:"assets/field_rigs/constrictor_snake",
+      canvasRule:"same-transparent-canvas",
+      parts:Object.freeze([
+        part("tail","assets/field_rigs/constrictor_snake/tail.webp",1,50,69),
+        part("body_rear","assets/field_rigs/constrictor_snake/body_rear.webp",2,50,66),
+        part("body_mid","assets/field_rigs/constrictor_snake/body_mid.webp",3,50,54),
+        part("body_front","assets/field_rigs/constrictor_snake/body_front.webp",4,60,43),
+        part("head","assets/field_rigs/constrictor_snake/head.webp",5,44,36)
       ])
     })
   });

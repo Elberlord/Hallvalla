@@ -1,0 +1,16 @@
+HALLVALLA 2026-10-10 · UNIT MOTION STAGE 5C-B · PILOTOS DE TODAS LAS FAMILIAS
+
+Activa un representante articulado de cada familia:
+- armored_man_at_arms · humanoid_v1
+- cavalry · mounted_v1
+- african_lion · quadruped_beast_v1
+- black_raven · flying_v1
+- constrictor_snake · serpentine_v1
+
+El Dragón Bebé de Fuego conserva su rig aprobado.
+
+Todas las capas mantienen lienzo 384×576. La pose base conserva el arte original,
+mientras Idle, Move, Attack, Hit y Guard articulan piezas corporales específicas.
+
+Prueba: HallValla con ?dev&riglab=1.
+No modifica PvP, Firebase, daño, IA, inventario, mazos, cartas ni tiempos de combate.
