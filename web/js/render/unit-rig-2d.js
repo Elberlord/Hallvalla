@@ -5,7 +5,7 @@
 (()=>{
   "use strict";
 
-  const HALLVALLA_UNIT_RIG_VERSION="20261010.1";
+  const HALLVALLA_UNIT_RIG_VERSION="20261010.2";
 
   function part(id,src,z,originX,originY){
     return Object.freeze({id,src,z,originX,originY});
@@ -20,20 +20,20 @@
       name:"Dragón Bebé de Fuego",
       family:"winged_quadruped_dragon_v1",
       pilot:true,
-      enabled:false,
+      enabled:true,
       sourceFigure:"assets/field_figures_light/beasts/baby_dragon.webp",
       assetRoot:"assets/field_rigs/baby_fire_dragon",
       canvasRule:"same-transparent-canvas",
       parts:Object.freeze([
-        part("wing_far","assets/field_rigs/baby_fire_dragon/wing_far.webp",1,49,43),
-        part("tail","assets/field_rigs/baby_fire_dragon/tail.webp",2,43,61),
-        part("hindleg_far","assets/field_rigs/baby_fire_dragon/hindleg_far.webp",3,44,68),
-        part("foreleg_far","assets/field_rigs/baby_fire_dragon/foreleg_far.webp",4,57,66),
+        part("wing_far","assets/field_rigs/baby_fire_dragon/wing_far.webp",1,37,36),
+        part("tail","assets/field_rigs/baby_fire_dragon/tail.webp",2,29,56),
+        part("hindleg_far","assets/field_rigs/baby_fire_dragon/hindleg_far.webp",3,29,60),
+        part("foreleg_far","assets/field_rigs/baby_fire_dragon/foreleg_far.webp",4,36,57),
         part("body","assets/field_rigs/baby_fire_dragon/body.webp",5,50,55),
-        part("hindleg_near","assets/field_rigs/baby_fire_dragon/hindleg_near.webp",6,45,69),
-        part("foreleg_near","assets/field_rigs/baby_fire_dragon/foreleg_near.webp",7,58,66),
-        part("head","assets/field_rigs/baby_fire_dragon/head.webp",8,60,48),
-        part("wing_near","assets/field_rigs/baby_fire_dragon/wing_near.webp",9,53,43)
+        part("hindleg_near","assets/field_rigs/baby_fire_dragon/hindleg_near.webp",6,70,60),
+        part("foreleg_near","assets/field_rigs/baby_fire_dragon/foreleg_near.webp",7,62,57),
+        part("head","assets/field_rigs/baby_fire_dragon/head.webp",8,50,46),
+        part("wing_near","assets/field_rigs/baby_fire_dragon/wing_near.webp",9,64,36)
       ])
     })
   });

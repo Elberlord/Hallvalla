@@ -1,0 +1,60 @@
+HALLVALLA 2026-10-10 · UNIT MOTION STAGE 5B · DRAGÓN BEBÉ DE FUEGO
+
+OBJETIVO
+Activar el primer rig 2D articulado real de HallValla usando baby_fire_dragon.
+
+CAPAS INSTALADAS
+- body.webp
+- head.webp
+- wing_far.webp
+- wing_near.webp
+- foreleg_far.webp
+- foreleg_near.webp
+- hindleg_far.webp
+- hindleg_near.webp
+- tail.webp
+
+CANVAS
+Todas las capas usan exactamente 384×576 px, igual que el field figure actual
+assets/field_figures_light/beasts/baby_dragon.webp.
+
+REGISTRO
+Las capas fueron reubicadas sobre el lienzo completo para conservar la composición
+del Dragón Bebé y permitir rotación alrededor de pivotes corporales reales.
+
+ACTIVACIÓN
+baby_fire_dragon pasa de enabled:false a enabled:true.
+baby_lightning_dragon y baby_ice_dragon NO cambian y siguen usando el fallback actual.
+
+MOVIMIENTOS ARTICULADOS HEREDADOS DE STAGE 5A
+- idle: alas, cola y cabeza
+- move: alas y cuatro extremidades
+- attack: cabeza, ala cercana y cola
+- hit: cabeza
+- guard: ala cercana
+
+El contenedor completo sigue recibiendo Stages 1–4, por lo que el rig combina movimiento
+general + articulación interna sin duplicar gameplay.
+
+SEGURIDAD
+No se modifica:
+- PvP
+- Firebase
+- IA
+- daño
+- Guardia numérica
+- precisión/evasión
+- rango
+- cooldowns
+- coordenadas
+- hitboxes
+- lógica de mazo
+
+FALLBACK
+Las demás unidades siguen usando sus figuras completas. Solo baby_fire_dragon activa
+este rig piloto.
+
+DIAGNÓSTICO
+__HALLVALLA_UNIT_RIG_DEBUG__()
+hvGetUnitRigStatus("baby_fire_dragon")
+Debe reportar enabled:true.
