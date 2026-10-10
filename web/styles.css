@@ -29668,3 +29668,101 @@ body.field-figure-editing .leader-base[data-hv-reaction] .leader-base-token{
   }
 }
 /* === END HALLVALLA UNIT MOTION · STAGE 4 ================================ */
+
+/* === HALLVALLA UNIT RIG 2D · STAGE 5A ===================================
+   Motor de capas. Solo entra en acción cuando un manifiesto de rig está enabled. */
+.field-figure-layer > .hv-rig-2d{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  pointer-events:none;
+  overflow:visible;
+  transform:scaleX(var(--ff-scale-x,1));
+  transform-origin:var(--ff-origin-x,50%) var(--ff-origin-y,92%);
+}
+.field-figure-layer > .hv-rig-2d > .hv-rig-part{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center;
+  display:block;
+  pointer-events:none;
+  user-select:none;
+  z-index:var(--hv-rig-z,1);
+  transform-origin:var(--hv-rig-origin-x,50%) var(--hv-rig-origin-y,50%);
+  will-change:transform;
+}
+
+/* Arquitectura inicial: dragón cuadrúpedo alado.
+   Los pivotes exactos se calibrarán con las capas reales en Stage 5B. */
+.unit-card[data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-wing_near{
+  animation:hvRigDragonWingNearIdle 1900ms ease-in-out infinite;
+  animation-delay:var(--hv-motion-phase,0ms);
+}
+.unit-card[data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-wing_far{
+  animation:hvRigDragonWingFarIdle 1900ms ease-in-out infinite;
+  animation-delay:calc(var(--hv-motion-phase,0ms) - 90ms);
+}
+.unit-card[data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-tail{
+  animation:hvRigDragonTailIdle 2400ms ease-in-out infinite;
+  animation-delay:var(--hv-motion-phase,0ms);
+}
+.unit-card[data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-head{
+  animation:hvRigDragonHeadIdle 2200ms ease-in-out infinite;
+  animation-delay:var(--hv-motion-phase,0ms);
+}
+
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-wing_near{
+  animation:hvRigDragonWingNearMove 520ms ease-in-out infinite;
+}
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-wing_far{
+  animation:hvRigDragonWingFarMove 520ms ease-in-out infinite;
+}
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-foreleg_near,
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-hindleg_far{
+  animation:hvRigDragonLegA 520ms ease-in-out infinite;
+}
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-foreleg_far,
+.unit-card[data-hv-motion="move"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-hindleg_near{
+  animation:hvRigDragonLegB 520ms ease-in-out infinite;
+}
+
+.unit-card[data-hv-action="attack"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-head{
+  animation:hvRigDragonHeadAttack var(--hv-action-ms,470ms) cubic-bezier(.15,.78,.18,1) both!important;
+}
+.unit-card[data-hv-action="attack"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-wing_near{
+  animation:hvRigDragonWingAttackNear var(--hv-action-ms,470ms) ease-in-out both!important;
+}
+.unit-card[data-hv-action="attack"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-tail{
+  animation:hvRigDragonTailAttack var(--hv-action-ms,470ms) ease-out both!important;
+}
+
+.unit-card[data-hv-reaction="hit"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-head{
+  animation:hvRigDragonHeadHit var(--hv-react-ms,340ms) ease-out both!important;
+}
+.unit-card[data-hv-guard-pose="ready"][data-hv-motion="idle"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-wing_near{
+  animation:hvRigDragonWingGuard 1800ms ease-in-out infinite!important;
+}
+
+@keyframes hvRigDragonWingNearIdle{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-3.2deg)}}
+@keyframes hvRigDragonWingFarIdle{0%,100%{transform:rotate(0deg)}50%{transform:rotate(2.4deg)}}
+@keyframes hvRigDragonTailIdle{0%,100%{transform:rotate(-1.8deg)}50%{transform:rotate(2.2deg)}}
+@keyframes hvRigDragonHeadIdle{0%,100%{transform:rotate(-.5deg) translateY(0)}50%{transform:rotate(1deg) translateY(-1.2%)}}
+@keyframes hvRigDragonWingNearMove{0%,100%{transform:rotate(4deg)}50%{transform:rotate(-12deg)}}
+@keyframes hvRigDragonWingFarMove{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(10deg)}}
+@keyframes hvRigDragonLegA{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(6deg)}}
+@keyframes hvRigDragonLegB{0%,100%{transform:rotate(5deg)}50%{transform:rotate(-5deg)}}
+@keyframes hvRigDragonHeadAttack{0%,100%{transform:rotate(0) translate(0,0)}35%{transform:rotate(-5deg) translate(-2%,1%)}62%{transform:rotate(7deg) translate(7%,-1%)}}
+@keyframes hvRigDragonWingAttackNear{0%,100%{transform:rotate(0)}45%{transform:rotate(-11deg)}68%{transform:rotate(5deg)}}
+@keyframes hvRigDragonTailAttack{0%,100%{transform:rotate(0)}42%{transform:rotate(-7deg)}66%{transform:rotate(5deg)}}
+@keyframes hvRigDragonHeadHit{0%,100%{transform:rotate(0) translate(0,0)}45%{transform:rotate(-8deg) translate(-5%,2%)}}
+@keyframes hvRigDragonWingGuard{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(-7deg)}}
+
+body.field-figure-editing .hv-rig-part{animation:none!important}
+html.hv-document-hidden .hv-rig-part{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){.hv-rig-part{animation:none!important}}
+/* === END HALLVALLA UNIT RIG 2D · STAGE 5A =============================== */

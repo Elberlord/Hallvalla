@@ -1,0 +1,55 @@
+HALLVALLA 2026-10-10 · UNIT MOTION STAGE 5A · RIG 2D ENGINE
+
+OBJETIVO
+Crear una arquitectura de rig 2D real por capas sin romper ninguna unidad existente.
+
+PRINCIPIO DE COMPATIBILIDAD
+- Unidad sin rig: figura WebP completa + Stages 1–4.
+- Unidad con rig registrado pero disabled:false: exactamente el mismo fallback.
+- Unidad con rig completo y enabled:true: el renderer sustituye solo la imagen interna
+  por capas articuladas; el gameplay sigue usando la misma unit-card y coordenadas.
+
+PILOTO
+baby_fire_dragon · Dragón Bebé de Fuego.
+
+El asset de campo actual de las formas bebé es:
+assets/field_figures_light/beasts/baby_dragon.webp
+
+Stage 5A NO inventa extremidades ni corta automáticamente la imagen.
+Prepara las nueve capas requeridas y sus pivotes iniciales para Stage 5B:
+wing_far, tail, hindleg_far, foreleg_far, body, hindleg_near, foreleg_near,
+head y wing_near.
+
+Las capas deben conservar el mismo lienzo transparente que la imagen fuente.
+
+INTEGRACIÓN CON STAGES 1–4
+El rig responde a los mismos estados visuales existentes:
+data-hv-motion=idle/move
+data-hv-action=attack
+data-hv-reaction=hit/guard/dodge
+data-hv-guard-pose=ready
+data-hv-spawn
+data-hv-recovery
+
+Por lo tanto no se modifica el motor TR ni se duplican reglas de combate.
+
+SEGURIDAD
+No cambia:
+- PvP
+- Firebase
+- IA
+- daño
+- Guardia numérica
+- alcance
+- precisión/evasión
+- cooldowns
+- movimiento lógico
+- hitboxes
+- mazos/cartas
+
+DIAGNÓSTICO
+Consola:
+__HALLVALLA_UNIT_RIG_DEBUG__()
+hvGetUnitRigStatus("baby_fire_dragon")
+
+En Stage 5A el piloto debe reportar registered:true y enabled:false.

@@ -1,0 +1,32 @@
+HALLVALLA · STAGE 5B · PILOTO DE RIG
+Unidad: baby_fire_dragon · Dragón Bebé de Fuego
+
+FUENTE ACTUAL
+assets/field_figures_light/beasts/baby_dragon.webp
+
+REGLA DE EXPORTACIÓN
+Cada pieza debe exportarse como WebP con transparencia y con EXACTAMENTE el mismo
+tamaño de lienzo que la imagen fuente. No recortar individualmente cada pieza.
+Esto conserva el registro/alineación entre capas y permite animar por pivotes.
+
+ARCHIVOS REQUERIDOS
+body.webp
+head.webp
+wing_far.webp
+wing_near.webp
+foreleg_far.webp
+foreleg_near.webp
+hindleg_far.webp
+hindleg_near.webp
+tail.webp
+
+DIRECTORIO DESTINO
+web/assets/field_rigs/baby_fire_dragon/
+
+STAGE 5A
+El motor y el manifiesto ya reconocen estas rutas, pero el rig permanece
+enabled:false hasta que todas las capas estén creadas y calibradas en Stage 5B.
+
+FALLBACK
+Mientras enabled:false, baby_fire_dragon sigue usando la figura actual completa.
+Las animaciones Stage 1–4 permanecen intactas.

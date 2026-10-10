@@ -168,7 +168,12 @@ function getFieldFigureHtml(u){
   const src=candidates.shift()||getAssetWarningImageSrc();
   const fallbackAttr=buildAssetFallbackAttr(candidates,`${u?.name||"Unidad"} · figura 3D`);
   const label=(HV_FIELD_FIGURES[key]?.name||u?.name||"Unidad").replace(/&/g,"&amp;").replace(/"/g,"&quot;");
-  return `<div class="field-figure-layer" data-field-figure-key="${key}" style="${hvFieldFigureStyleText(key)}" aria-hidden="true"><img class="field-figure-img" src="${src}" alt="" title="${label}" draggable="false" ${fallbackAttr}></div>`;
+  const legacyHtml=`<img class="field-figure-img" src="${src}" alt="" title="${label}" draggable="false" ${fallbackAttr}>`;
+  let rigHtml="";
+  try{
+    if(typeof globalThis.hvGetUnitRigHtml==="function")rigHtml=globalThis.hvGetUnitRigHtml(u,{key,legacySrc:src})||"";
+  }catch(_){rigHtml="";}
+  return `<div class="field-figure-layer" data-field-figure-key="${key}" style="${hvFieldFigureStyleText(key)}" aria-hidden="true">${rigHtml||legacyHtml}</div>`;
 }
 
 function hvApplyFieldFigureConfigToElement(el,key){
