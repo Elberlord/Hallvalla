@@ -28,8 +28,7 @@
     '#detStatValueGuard':{x:6.0093994140625,y:0},
     '#detStatValueAgility':{x:7.010986328125,y:-1.001556396484375},
     '#detStatValueRange':{x:8.0125732421875,y:-1.001556396484375},
-    '#detPortraitImage':{x:1.001556396484375,y:-13.020477294921875},
-    'button[data-ability-title="Golpe de Apertura"]':{x:-17.02679443359375,y:11.01739501953125}
+    '#detPortraitImage':{x:1.001556396484375,y:-13.020477294921875}
   });
   const originalStyles=new WeakMap();
   const touched=new Set();

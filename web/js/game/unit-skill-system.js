@@ -15,12 +15,17 @@ function hvSkillRarityIndex(entity){
   return HALLVALLA_UNIT_SKILL_RARITY[rarity]||1;
 }
 function hvSkillTierFromRank(rank){return Math.max(1,Math.min(HALLVALLA_UNIT_SKILL_MAX_TIER,Math.ceil(Math.max(1,Number(rank)||1)/3)));}
+function hvSkillOptionalNumber(value){
+  if(value===null||value===undefined||value==="")return null;
+  const n=Number(value);
+  return Number.isFinite(n)?n:null;
+}
 function hvSkillScale(skill,entity){
   const rarity=hvSkillRarityIndex(entity);
-  const base=Number(skill?.base),step=Number(skill?.step);
-  const duration=Number(skill?.duration),durationStep=Number(skill?.durationStep);
-  const proc=Number(skill?.proc),procStep=Number(skill?.procStep);
-  const cooldown=Number(skill?.cooldown),cooldownStep=Number(skill?.cooldownStep);
+  const base=hvSkillOptionalNumber(skill?.base),step=hvSkillOptionalNumber(skill?.step);
+  const duration=hvSkillOptionalNumber(skill?.duration),durationStep=hvSkillOptionalNumber(skill?.durationStep);
+  const proc=hvSkillOptionalNumber(skill?.proc),procStep=hvSkillOptionalNumber(skill?.procStep);
+  const cooldown=hvSkillOptionalNumber(skill?.cooldown),cooldownStep=hvSkillOptionalNumber(skill?.cooldownStep);
   return {
     rarity,
     value:Number.isFinite(base)?base+(rarity-1)*(Number.isFinite(step)?step:0):null,
@@ -660,7 +665,7 @@ function hvSkillInstallDetIntegration(){
     // El banco Stage 3 gana cuando existe el mismo nombre. Reglas universales
     // que no están en el banco (Ultimate Blow, Vínculo Arcano, etc.) se conservan.
     const extra=legacy.filter(section=>!used.has(hvSkillNorm(section?.title||"")));
-    return [...stage3,...extra].slice(0,15);
+    return [...stage3,...extra].slice(0,27);
   };
 }
 

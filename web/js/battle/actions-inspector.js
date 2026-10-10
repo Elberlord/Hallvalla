@@ -890,35 +890,54 @@ function ensureUnifiedDetOwnAbilities(modal,entity){
   const sections=typeof getDetAbilitySectionsForInspector==='function'
     ? getDetAbilitySectionsForInspector(entity)
     : [];
+  const visibleSections=(Array.isArray(sections)?sections:[]).slice(0,27);
   const list=document.createElement('div');
   list.id='detOwnEffectsList';
-  list.className=`hv-det-own-effects-list${sections.length?'':' is-empty'} count-${Math.min(10,Math.max(0,sections.length))}`;
-  list.setAttribute('aria-label',sections.length?`Efectos propios: ${sections.length}`:'Sin efectos propios');
+  list.className=`hv-det-own-effects-list count-${visibleSections.length}`;
+  list.setAttribute('aria-label',visibleSections.length?`Efectos propios: ${visibleSections.length}`:'Sin efectos propios');
+
   const listId=document.createElement('span');
   listId.className='hv-det-cal-id hv-det-own-effects-list-id';
   listId.textContent='abilities.list';
   list.appendChild(listId);
-  sections.forEach((section,index)=>{
+
+  for(let index=0;index<27;index++){
+    const section=visibleSections[index];
+
+    if(!section){
+      const slot=document.createElement('span');
+      slot.className='hv-det-own-ability-slot is-empty';
+      slot.dataset.detAbilitySlot=String(index+1);
+      slot.setAttribute('aria-hidden','true');
+      list.appendChild(slot);
+      continue;
+    }
+
     const visual=typeof getDetAbilityVisual==='function'
       ? getDetAbilityVisual(section)
       : {icon:'assets/ui/status_icons/status_generic.webp',label:section?.title||`Efecto ${index+1}`,kind:'effect'};
+
     const button=document.createElement('button');
     button.type='button';
     button.className='hv-det-own-ability-icon guide-ability-btn';
     button.dataset.abilityTitle=String(section?.title||visual?.label||`Efecto ${index+1}`);
-    button.dataset.abilityText=typeof hallvallaPublicGameplayText==='function'?hallvallaPublicGameplayText(section?.body||'Sin explicación adicional.'):String(section?.body||'Sin explicación adicional.');
+    button.dataset.abilityText=typeof hallvallaPublicGameplayText==='function'
+      ? hallvallaPublicGameplayText(section?.body||'Sin explicaci\u00f3n adicional.')
+      : String(section?.body||'Sin explicaci\u00f3n adicional.');
     button.dataset.abilityKind=String(visual?.kind||'effect');
     button.dataset.detAbilityIndex=String(index+1);
+    button.dataset.detAbilitySlot=String(index+1);
+
     const label=String(section?.title||visual?.label||`Efecto ${index+1}`);
     button.title=label;
     button.setAttribute('aria-label',`Abrir ${label}`);
     button.innerHTML=`<span class="hv-det-own-ability-art"><img src="${escapeHtml(String(visual?.icon||'assets/ui/status_icons/status_generic.webp'))}" alt="" draggable="false"></span><span class="hv-det-cal-id">ability.${index+1}</span>`;
     list.appendChild(button);
-  });
+  }
+
   card.appendChild(list);
   return list;
 }
-
 function ensureUnifiedDetPlayButton(modal,entity,{mode="card",allowPlay=false,playState=null}={}){
   const card=modal?.querySelector?.('.card-inspect-card');
   if(!card)return null;
