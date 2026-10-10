@@ -1,0 +1,40 @@
+HALLVALLA 2026-10-10 · UNIT MOTION STAGE 1 · IDLE + MOVE
+
+OBJETIVO
+Dar vida visual a las figuras del campo usando las imágenes actuales, sin cambiar
+reglas, tiempos de combate ni coordenadas.
+
+IMPLEMENTACIÓN
+- Nuevo controlador: web/js/render/unit-motion.js
+- Cada unidad recibe un perfil visual según su locomoción/carga:
+  light, foot, heavy, mounted, beast, flying, supernatural o immobile.
+- IDLE:
+  respiración, balanceo, ligera inclinación y compresión/estiramiento de la figura.
+- MOVE:
+  el renderer detecta el cambio real de celda y la figura entra desde la celda
+  anterior hasta su nueva posición con paso, elevación y deformación de zancada.
+- Las unidades no se mueven todas sincronizadas: cada una recibe una fase estable.
+- En perfil de rendimiento lite se conserva el movimiento principal y se reduce la
+  deformación continua para no castigar móviles modestos.
+- prefers-reduced-motion desactiva estas animaciones.
+
+SEGURIDAD DE GAMEPLAY
+NO modifica:
+- x/y canónicos.
+- hitboxes.
+- MOV.
+- cooldown de movimiento.
+- cooldown de ataque.
+- IA/autonomía.
+- Firebase/PvP.
+- estados, daño o habilidades.
+
+IMPORTANTE
+Stage 1 sigue utilizando una imagen completa por unidad. La sensación de articulación
+se consigue mediante transformaciones procedurales (balanceo, skew, squash/stretch y
+desplazamiento entre celdas). Brazos y piernas no están separados todavía.
+Una etapa posterior puede introducir rigs por piezas para articulación real.
+
+DIAGNÓSTICO DEV
+En consola:
+__HALLVALLA_UNIT_MOTION_DEBUG__()

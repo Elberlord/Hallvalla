@@ -113,6 +113,7 @@ function releaseBattleDynamicDom(){
   // Estas superficies son completamente reconstruibles por render() en la próxima entrada.
   resetBattleRenderScheduler();
   resetHallvallaBoardRenderCache();
+  if(typeof globalThis.hvResetUnitVisualMotion==="function")globalThis.hvResetUnitVisualMotion();
   const grid=$("grid"),handRow=$("handRow"),log=$("log");
   grid?.replaceChildren();
   handRow?.replaceChildren();
@@ -668,6 +669,7 @@ function syncBattleBoardUnit(record,u,x,y){
     record.unitMarkup=spec.markup;
     hallvallaBattleRenderPerf.board.unitMarkupUpdates+=1;
   }
+  if(typeof globalThis.hvSyncUnitVisualMotion==="function")globalThis.hvSyncUnitVisualMotion(el,u,{x,y});
 }
 function renderBoard(){
   const grid=$("grid");
