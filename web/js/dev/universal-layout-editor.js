@@ -715,6 +715,16 @@
     setStatus("Control universal: selecciona cualquier elemento visible del juego.");
   }
 
+  function openContentControl(){
+    const open=globalThis.hvContentEditorOpen;
+    if(typeof open!=="function"){
+      setStatus("Contenido: el editor todavía no está disponible.");
+      return;
+    }
+    open();
+    setStatus("Contenido: Editor de Contenido abierto.");
+  }
+
   const GROUPS=[
     {title:"COMBATE",items:[
       {label:"Interfaz completa",action:openBattleLayoutControl},
@@ -730,6 +740,9 @@
       {label:"Forja · Fundir / Construir",action:openForgeSystemControl},
       {label:"PvP / Online",action:openOnlineControl},
       {label:"Mapa de Aventura",action:openAdventureMapControl}
+    ]},
+    {title:"CONTENIDO",items:[
+      {label:"EDITOR DE CONTENIDO",action:openContentControl}
     ]}
   ];
 

@@ -303,12 +303,5 @@
 
   function open(){const panel=createPanel();panel.classList.remove("hidden");render();bridgeHealth();}
 
-  function injectHubButton(){
-    const hub=$("#hvDevToolsHub .hv-dev-hub-scroll");if(!hub||$("#hvContentEditorHubGroup"))return false;
-    const section=document.createElement("section");section.id="hvContentEditorHubGroup";section.className="hv-dev-hub-group";section.innerHTML=`<h4>CONTENIDO</h4><div class="hv-dev-hub-grid"><button type="button" id="hvOpenContentEditor">EDITOR DE CONTENIDO</button></div>`;hub.insertBefore(section,hub.querySelector(".hv-dev-hub-group:last-of-type"));$("#hvOpenContentEditor",section).onclick=open;return true;
-  }
-
   globalThis.hvContentEditorOpen=open;
-  const attach=()=>{let tries=0;const timer=setInterval(()=>{tries++;if(injectHubButton()||tries>80)clearInterval(timer);},100);};
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",attach,{once:true});else attach();
 })();
