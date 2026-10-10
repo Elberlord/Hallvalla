@@ -1200,6 +1200,31 @@ function hallvallaCommunityAttach(user){
   }
 }
 
+async function hallvallaAdminOpenContentEditor(){
+  if(!hallvallaCommunityIsAdmin())return;
+
+  if(globalThis.__HALLVALLA_DEV_TOOLS__!==true){
+    try{sessionStorage.setItem("hallvalla_admin_open_content_editor_v1","1");}catch(_){}
+    const url=new URL(location.href);
+    url.searchParams.set("dev","");
+    location.assign(url.href);
+    return;
+  }
+
+  hallvallaCommunityCloseAdmin();
+
+  try{
+    if(typeof globalThis.hvEnsureFeature==="function")await globalThis.hvEnsureFeature("hvdev");
+    const open=globalThis.hvContentEditorOpen;
+    if(typeof open!=="function")throw new Error("El Editor de Contenido no esta disponible.");
+    open();
+  }catch(error){
+    console.error("[HallValla][Admin] No se pudo abrir Editor de Contenido:",error);
+    hallvallaCommunityOpenAdmin();
+    hallvallaAdminStatus(String(error?.message||error),"error");
+  }
+}
+
 function hallvallaCommunityBind(){
   const bind=(id,event,handler)=>{const el=hallvallaCommunityNode(id);if(el&&el.dataset.hvCommunityBound!=="1"){el.dataset.hvCommunityBound="1";el.addEventListener(event,handler);}};
   bind("communityBtn","click",hallvallaCommunityOpen);
@@ -1217,6 +1242,7 @@ function hallvallaCommunityBind(){
   bind("communityAdminCloseBtn","click",hallvallaCommunityCloseAdmin);
   bind("communityAdminSectionCloseBtn","click",hallvallaCommunityCloseAdmin);
   bind("communityAdminBackBtn","click",hallvallaCommunityShowAdminRoot);
+  bind("adminContentEditorBtn","click",()=>void hallvallaAdminOpenContentEditor());
   bind("adminMuteBtn","click",()=>void hallvallaAdminModerate("mute"));
   bind("adminUnmuteBtn","click",()=>void hallvallaAdminModerate("unmute"));
   bind("adminBanBtn","click",()=>void hallvallaAdminModerate("ban"));

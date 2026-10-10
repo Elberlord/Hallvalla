@@ -304,4 +304,11 @@
   function open(){const panel=createPanel();panel.classList.remove("hidden");render();bridgeHealth();}
 
   globalThis.hvContentEditorOpen=open;
+
+  try{
+    if(sessionStorage.getItem("hallvalla_admin_open_content_editor_v1")==="1"){
+      sessionStorage.removeItem("hallvalla_admin_open_content_editor_v1");
+      setTimeout(()=>open(),250);
+    }
+  }catch(_){}
 })();
