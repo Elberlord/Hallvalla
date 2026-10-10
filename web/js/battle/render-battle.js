@@ -642,7 +642,14 @@ function getBattleBoardUnitSpec(u,x,y){
 }
 function syncBattleBoardUnit(record,u,x,y){
   if(!u){
-    if(record.unitEl){record.unitEl.remove();hallvallaBattleRenderPerf.board.unitNodesRemoved+=1;}
+    if(record.unitEl){
+      const removedId=String(record.unitEl.dataset?.unitId||"");
+      const stillAlive=removedId&&(publicState?.units||[]).some(item=>String(item?.id||"")===removedId&&Number(item?.hp||0)>0);
+      if(!stillAlive&&typeof globalThis.hvPlayUnitDeathMotion==="function"){
+        try{globalThis.hvPlayUnitDeathMotion(record.unitEl);}catch(_){}
+      }
+      record.unitEl.remove();hallvallaBattleRenderPerf.board.unitNodesRemoved+=1;
+    }
     record.unitEl=null;
     record.unitMarkup="";
     return;

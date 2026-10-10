@@ -6,10 +6,13 @@
 (()=>{
   "use strict";
 
-  const HALLVALLA_UNIT_MOTION_VERSION="20261010.3";
+  const HALLVALLA_UNIT_MOTION_VERSION="20261010.4";
   const records=new Map();
   const actionTimers=new Map();
   const reactionTimers=new Map();
+  const spawnTimers=new Map();
+  const recoveryTimers=new Map();
+  const deathGhostTimers=new Set();
   let syncCount=0;
 
   const PROFILE_TIMING=Object.freeze({
@@ -64,6 +67,7 @@
     const personality=unitMotionPersonality(unit,profile);
     el.dataset.hvMotionProfile=profile;
     el.dataset.hvMotionPersonality=personality;
+    el.dataset.hvGuardPose=unit?.defenseModeReady===true?"ready":"off";
     el.style.setProperty("--hv-motion-phase",`${stablePhase(unit?.id||unit?.key)}ms`);
   }
 
@@ -136,6 +140,7 @@
     const profile=motionProfile(unit);
 
     setMotionVars(el,unit,profile);
+    if(!previous)hvPlayUnitSummonMotion(el,unit,profile);
 
     if(profile==="immobile"){
       el.dataset.hvMotion="idle";
@@ -171,7 +176,7 @@
     const id=String(unit?.id||"");
     if(!id)return null;
     const safe=(globalThis.CSS&&typeof CSS.escape==="function")?CSS.escape(id):id.replace(/["\\]/g,"\\$&");
-    return document.querySelector(`.unit-card[data-unit-id="${safe}"]`);
+    return document.querySelector(`.unit-card[data-unit-id="${safe}"],.leader-base[data-leader-id="${safe}"]`);
   }
 
   function motionTargetElement(unit){
@@ -323,7 +328,7 @@
   }
 
   function hvPlayUnitAttackMotion(attacker,target,options={}){
-    if(!attacker||attacker.leader)return false;
+    if(!attacker)return false;
     const el=motionUnitElement(attacker);
     if(!el)return false;
 
@@ -359,13 +364,14 @@
       el.removeAttribute("data-hv-attack-personality");
       el.removeAttribute("data-hv-action-token");
       actionTimers.delete(id);
+      beginRecovery(el,id,personality);
     },duration+45);
     actionTimers.set(id,timer);
     return true;
   }
 
   function hvPlayUnitReactionMotion(defender,kind="hit",attacker=null){
-    if(!defender||defender.leader)return false;
+    if(!defender)return false;
     const el=motionUnitElement(defender);
     if(!el)return false;
 
@@ -404,17 +410,105 @@
     return true;
   }
 
+
+  function hvPlayUnitSummonMotion(el,unit,profile=motionProfile(unit)){
+    if(!el||unit?.leader)return false;
+    const id=String(unit?.id||"");
+    clearTimeout(spawnTimers.get(id));
+    el.dataset.hvSpawn="1";
+    const duration=profile==="heavy"?520:profile==="mounted"?480:profile==="flying"?560:440;
+    el.style.setProperty("--hv-spawn-ms",`${duration}ms`);
+    const token=`${id}:spawn:${Date.now()}:${Math.random()}`;
+    el.dataset.hvSpawnToken=token;
+    const timer=setTimeout(()=>{
+      if(!el.isConnected)return;
+      if(el.dataset.hvSpawnToken!==token)return;
+      el.removeAttribute("data-hv-spawn");
+      el.removeAttribute("data-hv-spawn-token");
+      spawnTimers.delete(id);
+    },duration+40);
+    spawnTimers.set(id,timer);
+    return true;
+  }
+
+  function hvPlayUnitDeathMotion(unitOrElement){
+    let el=null;
+    if(unitOrElement?.nodeType===1)el=unitOrElement;
+    else el=motionTargetElement(unitOrElement);
+    if(!el||!el.isConnected)return false;
+
+    const rect=el.getBoundingClientRect();
+    if(rect.width<=0||rect.height<=0)return false;
+
+    const ghost=el.cloneNode(true);
+    ghost.classList.add("hv-unit-death-ghost");
+    ghost.removeAttribute("id");
+    ghost.removeAttribute("role");
+    ghost.removeAttribute("tabindex");
+    ghost.style.position="fixed";
+    ghost.style.left=`${rect.left}px`;
+    ghost.style.top=`${rect.top}px`;
+    ghost.style.width=`${rect.width}px`;
+    ghost.style.height=`${rect.height}px`;
+    ghost.style.margin="0";
+    ghost.style.pointerEvents="none";
+    ghost.style.zIndex="9998";
+    ghost.style.transform="none";
+    ghost.style.translate="none";
+    ghost.style.scale="none";
+    ghost.style.opacity="1";
+    ghost.setAttribute("aria-hidden","true");
+    ghost.querySelectorAll("[id]").forEach(node=>node.removeAttribute("id"));
+    document.body.appendChild(ghost);
+
+    const duration=unitOrElement?.leader?720:620;
+    ghost.style.setProperty("--hv-death-ms",`${duration}ms`);
+    const timer=setTimeout(()=>ghost.remove(),duration+100);
+    deathGhostTimers.add(timer);
+    setTimeout(()=>deathGhostTimers.delete(timer),duration+120);
+    return true;
+  }
+
+  function beginRecovery(el,id,personality){
+    clearTimeout(recoveryTimers.get(id));
+    const duration=personality==="heavy"||personality==="guardian"||personality==="hoplite"?260:190;
+    el.dataset.hvRecovery="1";
+    el.style.setProperty("--hv-recovery-ms",`${duration}ms`);
+    const token=`${id}:recover:${Date.now()}:${Math.random()}`;
+    el.dataset.hvRecoveryToken=token;
+    const timer=setTimeout(()=>{
+      if(!el.isConnected)return;
+      if(el.dataset.hvRecoveryToken!==token)return;
+      el.removeAttribute("data-hv-recovery");
+      el.removeAttribute("data-hv-recovery-token");
+      recoveryTimers.delete(id);
+    },duration+30);
+    recoveryTimers.set(id,timer);
+  }
+
   function hvResetUnitVisualMotion(){
     for(const record of records.values())clearTimer(record);
     for(const timer of actionTimers.values())clearTimeout(timer);
     for(const timer of reactionTimers.values())clearTimeout(timer);
+    for(const timer of spawnTimers.values())clearTimeout(timer);
+    for(const timer of recoveryTimers.values())clearTimeout(timer);
+    for(const timer of deathGhostTimers)clearTimeout(timer);
     records.clear();
     actionTimers.clear();
     reactionTimers.clear();
+    spawnTimers.clear();
+    recoveryTimers.clear();
+    deathGhostTimers.clear();
+    document.querySelectorAll(".hv-unit-death-ghost").forEach(el=>el.remove());
     document.querySelectorAll(".unit-card[data-hv-motion],.unit-card[data-hv-action],.unit-card[data-hv-reaction]").forEach(el=>{
       el.removeAttribute("data-hv-motion");
       el.removeAttribute("data-hv-motion-profile");
       el.removeAttribute("data-hv-motion-personality");
+      el.removeAttribute("data-hv-guard-pose");
+      el.removeAttribute("data-hv-spawn");
+      el.removeAttribute("data-hv-spawn-token");
+      el.removeAttribute("data-hv-recovery");
+      el.removeAttribute("data-hv-recovery-token");
       el.removeAttribute("data-hv-motion-token");
       el.removeAttribute("data-hv-action");
       el.removeAttribute("data-hv-attack-style");
@@ -440,6 +534,8 @@
     hvSyncUnitVisualMotion,
     hvPlayUnitAttackMotion,
     hvPlayUnitReactionMotion,
+    hvPlayUnitSummonMotion,
+    hvPlayUnitDeathMotion,
     hvUnitMotionPersonality:unitMotionPersonality,
     hvResetUnitVisualMotion,
     __HALLVALLA_UNIT_MOTION_DEBUG__:hvUnitMotionDebug

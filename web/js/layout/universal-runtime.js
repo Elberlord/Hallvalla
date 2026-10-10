@@ -30,6 +30,10 @@
     '#detStatValueRange':{x:8.0125732421875,y:-1.001556396484375},
     '#detPortraitImage':{x:1.001556396484375,y:-13.020477294921875}
   });
+  // Batalla canonica aprobada por el usuario · Arsenal visible en PC y movil.
+  const BATTLE_CANONICAL_ITEMS=Object.freeze({
+    '#rtArsenalCards':{x:78.12283325195312,y:29.045654296875,sx:189,sy:189}
+  });
   const originalStyles=new WeakMap();
   const touched=new Set();
   let previewItems=null;
@@ -140,7 +144,7 @@
       if(original.pointerEvents)node.style.setProperty("pointer-events",original.pointerEvents,original.pointerEventsPriority);else node.style.removeProperty("pointer-events");
     }
   }
-  function canonicalItems(){return {...(CANONICAL_CONFIG.items||{}),...DET_CANONICAL_ITEMS};}
+  function canonicalItems(){return {...(CANONICAL_CONFIG.items||{}),...DET_CANONICAL_ITEMS,...BATTLE_CANONICAL_ITEMS};}
   function effectiveItems(){return previewItems||canonicalItems();}
   function restoreAll(){for(const node of Array.from(touched)){if(node?.isConnected)restoreNode(node);}touched.clear();}
   function applyAll(){

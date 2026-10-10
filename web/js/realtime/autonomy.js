@@ -159,6 +159,9 @@ async function hallvallaRtAttackUnit(attacker,target){
       else if(!prep.hit?.hit&&units.some(u=>u.id===d.id))floatFxEvent=makeFloatFxEvent("dodge",defenderNow,0,{iconText:"💨",labelText:"ESQ"});
     }
     const legendaryTraps=outcome.exileTrap?.traps||outcome.dmgTrap?.traps||prep.preTrap?.traps||publicState?.legendaryTraps||[];
+    if(d?.leader&&!units.some(u=>u&&u.id===d.id&&Number(u.hp||0)>0)&&typeof globalThis.hvPlayUnitDeathMotion==="function"){
+      try{globalThis.hvPlayUnitDeathMotion(d);}catch(_){}
+    }
     if(typeof globalThis.hvPlayUnitReactionMotion==="function"){
       try{
         const reaction=!prep.hit?.hit?"dodge":(Number(outcome.hpLoss||0)>0?"hit":(Number(outcome.guardLoss||0)>0?"guard":"hit"));

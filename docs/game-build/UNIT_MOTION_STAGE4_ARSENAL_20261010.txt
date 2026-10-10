@@ -1,0 +1,33 @@
+HALLVALLA 2026-10-10 · UNIT MOTION STAGE 4 + BATTLE ARSENAL CANONICAL
+
+MOTION STAGE 4
+- Invocación/aparición visual de nuevas unidades.
+- Postura visual de Guardia cuando defenseModeReady está activo.
+- Recuperación corporal después del ataque.
+- Caída/desvanecimiento visual al morir, sin retrasar la eliminación lógica.
+- Líderes participan visualmente en ataque, impacto, Guardia y esquiva.
+
+SEGURIDAD
+Todas las acciones son cosméticas:
+- no cambian daño
+- no cambian precisión/evasión
+- no cambian Guardia numérica
+- no cambian alcance
+- no cambian cooldowns
+- no cambian IA
+- no cambian coordenadas
+- no cambian hitboxes
+- no cambian Firebase
+- no cambian lógica PvP
+
+ARSENAL DE BATALLA
+Se hornea como ajuste canónico global el valor aprobado por el usuario:
+#rtArsenalCards
+x = 78.12283325195312
+y = 29.045654296875
+sx = 189
+sy = 189
+
+Se aplica en PC y móvil sobre el escenario fijo 1366x636.
+No se importa el JSON completo: se conserva únicamente este ajuste del Arsenal,
+evitando IDs temporales de unidades y offsets individuales de habilidades DET.
