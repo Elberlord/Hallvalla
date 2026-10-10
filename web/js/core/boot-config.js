@@ -156,8 +156,14 @@ function hallvallaPublicGameplayText(value){
     .replace(/\bturno actual\b/gi,"momento actual");
   text=text.replace(/\bdurante (\d+) turnos?\b/gi,(_,n)=>`durante ${Math.max(1,Number(n)||1)*10} s`)
     .replace(/\b(\d+) turnos? más\b/gi,(_,n)=>`${Math.max(1,Number(n)||1)*10} s más`)
-    .replace(/\bturnos\b/gi,"periodos de efecto")
-    .replace(/\bturno\b/gi,"periodo de efecto")
+    .replace(/\bal inicio de tu turno\b/gi,"cada 10 s")
+    .replace(/\bal inicio de tu proximo turno\b/gi,"en 10 s")
+    .replace(/\bal inicio del siguiente turno\b/gi,"en 10 s")
+    .replace(/\bcada turno\b/gi,"cada 10 s")
+    .replace(/\bperiodos de efecto\b/gi,"intervalos de 10 s")
+    .replace(/\bperiodo de efecto\b/gi,"intervalo de 10 s")
+    .replace(/\bturnos\b/gi,"intervalos de 10 s")
+    .replace(/\bturno\b/gi,"intervalo de 10 s")
     .replace(/\s{2,}/g," ")
     .replace(/\s+([.,;:])/g,"$1")
     .trim();

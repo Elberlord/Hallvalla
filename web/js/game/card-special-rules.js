@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 /* HallValla v220 · Reglas, resolutores y servicios especiales de cartas. */
 
 
@@ -1133,6 +1133,14 @@ function getWeaponClassForCard(card){
     if(leaderType==="axe")return "axe";
     if(leaderType==="assassin"||leaderType==="warrior")return "sword";
     return "sword";
+  }
+
+  const explicitWeaponClass=String(card.weaponClass||card.tacticalWeaponClass||"").toLowerCase();
+  if(explicitWeaponClass)return explicitWeaponClass;
+  const primaryWeapon=String(card.primaryWeapon||card.weaponTag||"").toLowerCase();
+  if(primaryWeapon){
+    const generatedWeapon=(globalThis.HALLVALLA_CONTENT_GENERATED?.registries?.weapons||[]).find(item=>String(item?.id||"").toLowerCase()===primaryWeapon);
+    if(generatedWeapon?.tacticalClass)return String(generatedWeapon.tacticalClass).toLowerCase();
   }
 
   if(WEAPON_CLASS_BY_KEY[key])return WEAPON_CLASS_BY_KEY[key];

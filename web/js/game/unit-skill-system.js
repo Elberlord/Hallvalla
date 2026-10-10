@@ -60,8 +60,8 @@ function hvSkillNormalizeCopyBook(profile){
     out.byKey[key]=(Array.isArray(list)?list:[]).filter(Boolean).map(rec=>({
       id:String(rec.id||hvSkillCopyId()),
       key:String(rec.key||key),
-      name:String(rec.name||HALLVALLA_UNIT_SKILL_ASSIGNMENTS[key]?.name||key),
-      rarity:String(rec.rarity||HALLVALLA_UNIT_SKILL_ASSIGNMENTS[key]?.rarity||"Básica"),
+      name:String(rec.name||hvSkillUnitMeta(key)?.name||key),
+      rarity:String(rec.rarity||hvSkillUnitMeta(key)?.rarity||"Básica"),
       active:rec.active!==false,
       createdAt:Number(rec.createdAt||Date.now()),
       learnedSkillIds:hvSkillUnique(rec.learnedSkillIds||[]).filter(id=>!!HALLVALLA_UNIT_SKILL_BANK[id]),
@@ -85,7 +85,7 @@ function ensureHallvallaUnitSkillCopies() {
   let changed=false;
   for(const {card,qty} of hvSkillCollectionUnits()){
     const key=String(card?.key||"");if(!key)continue;
-    const meta=HALLVALLA_UNIT_SKILL_ASSIGNMENTS[key]||{name:card?.name||key,rarity:card?.rarity||"Básica"};
+    const meta=hvSkillUnitMeta(key)||{name:card?.name||key,rarity:card?.rarity||"Básica"};
     const list=copyBook.byKey[key]||(copyBook.byKey[key]=[]);
     let active=list.filter(rec=>rec.active!==false);
     while(active.length<qty){
@@ -129,7 +129,10 @@ function hvSkillFindCopyMutable(copyId,book){
   }
   return null;
 }
-function hvSkillUnitMeta(key){return HALLVALLA_UNIT_SKILL_ASSIGNMENTS[String(key||"")]||null;}
+function hvSkillUnitMeta(key){
+  const safe=String(key||"");
+  return globalThis.HALLVALLA_CONTENT_GENERATED?.assignments?.[safe]||HALLVALLA_UNIT_SKILL_ASSIGNMENTS[safe]||null;
+}
 
 function assignHallvallaUnitCopyIdsToDeck(deck=[]){
   const profile=hvSkillGetProfile();
@@ -884,3 +887,5 @@ Object.assign(globalThis,{
   hallvallaSkillLocalTestChoice
 });
 console.info(`[HallValla][Stage3] Banco de ${Object.keys(HALLVALLA_UNIT_SKILL_BANK).length} habilidades y ${Object.keys(HALLVALLA_UNIT_SKILL_ASSIGNMENTS).length} unidades/entidades listo.`);
+
+Object.assign(globalThis,{HALLVALLA_UNIT_SKILL_BANK,HALLVALLA_UNIT_SKILL_ASSIGNMENTS,hvSkillUnitMeta});
