@@ -135,6 +135,9 @@ async function hallvallaRtAttackUnit(attacker,target){
     return true;
   }
   try{
+    if(typeof globalThis.hvPlayUnitAttackMotion==="function"){
+      try{globalThis.hvPlayUnitAttackMotion(a,d,{attackContext:prep.attackContext||null});}catch(_){}
+    }
     const outcome=await resolveSharedAttackOutcome({
       a,d,units:prep.units,liveUnits:units,
       attackContext:prep.attackContext,mods:prep.mods,hit:prep.hit,
@@ -156,6 +159,12 @@ async function hallvallaRtAttackUnit(attacker,target){
       else if(!prep.hit?.hit&&units.some(u=>u.id===d.id))floatFxEvent=makeFloatFxEvent("dodge",defenderNow,0,{iconText:"💨",labelText:"ESQ"});
     }
     const legendaryTraps=outcome.exileTrap?.traps||outcome.dmgTrap?.traps||prep.preTrap?.traps||publicState?.legendaryTraps||[];
+    if(typeof globalThis.hvPlayUnitReactionMotion==="function"){
+      try{
+        const reaction=!prep.hit?.hit?"dodge":(Number(outcome.hpLoss||0)>0?"hit":(Number(outcome.guardLoss||0)>0?"guard":"hit"));
+        globalThis.hvPlayUnitReactionMotion(defenderNow,reaction,attackerNow);
+      }catch(_){}
+    }
     await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:prep.beastTraps||publicState?.beastTraps||[],legendaryTraps,battleFxEvent,floatFxEvent,statusFxEvent:outcome.statusFxEvent||outcome.dragonCompanionResult?.statusFxEvent||outcome.veilCurseResult?.statusFxEvent||outcome.arcaneAdeptStatusEvent||outcome.poisonStatusEvent||outcome.unitSkillStatusEvent||outcome.miyamotoCounterBleedEvent||outcome.lionFearCombat?.statusFxEvent||outcome.porcupineResult?.statusFxEvent||outcome.genghisDebuffResult?.statusFxEvent||null});
     // Espada Invicta: una baja habilita el siguiente ataque sin esperar el cooldown normal.
     // No se serializa un "khalidChainReady": la única memoria persistente es la penalización AT acumulada.

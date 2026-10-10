@@ -1,0 +1,39 @@
+HALLVALLA 2026-10-10 · UNIT MOTION STAGE 2 · ATTACK + REACTION
+
+OBJETIVO
+Añadir acciones visuales de combate sobre la base aprobada de Stage 1.
+
+ATAQUES VISUALES
+El controlador clasifica automáticamente la acción según arma, clase y locomoción:
+- slash: espada/daga y cuerpo a cuerpo estándar.
+- thrust: lanza/pica/polearm/naginata.
+- heavy: hacha, poleaxe, martillo, maza o infantería pesada.
+- ranged: arco, ballesta, arma de fuego o unidades de rango.
+- magic: magos, sanadores y usuarios de magia/bastón.
+- charge: unidades montadas de contacto.
+- beast: bestias y armas naturales.
+- shield: golpe de escudo cuando el escudo es el arma dominante.
+
+REACCIONES
+- hit: retroceso visible cuando el ataque causa daño.
+- guard: impacto corto cuando la Guardia absorbe el golpe.
+- dodge: evasión lateral cuando el ataque falla.
+
+SEGURIDAD
+Las animaciones son disparadas por el ataque canónico ya resuelto por TR.
+No añaden esperas y NO modifican:
+- daño
+- precisión/evasión
+- Guardia
+- alcance
+- cooldowns
+- IA/autonomía
+- coordenadas
+- hitboxes
+- Firebase/PvP
+
+Las acciones solo transforman visualmente field-figure-layer / field-figure-img.
+Los líderes quedan fuera de esta etapa: Stage 2 se concentra en las figuras de unidades.
+
+DIAGNÓSTICO DEV
+__HALLVALLA_UNIT_MOTION_DEBUG__()

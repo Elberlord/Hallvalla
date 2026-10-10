@@ -29184,3 +29184,187 @@ html.hv-document-hidden .cell > .unit-card[data-hv-motion] .field-figure-img{
   }
 }
 /* === END HALLVALLA UNIT MOTION · STAGE 1 ================================ */
+
+/* === HALLVALLA UNIT MOTION · STAGE 2 · ATTACK + REACTION ==================
+   Ataques y reacciones visuales. No cambia daño, alcance, cooldowns ni reglas. */
+.cell > .unit-card[data-hv-action="attack"] .field-figure-layer,
+.cell > .unit-card[data-hv-action="attack"] .field-figure-img,
+.cell > .unit-card[data-hv-reaction] .field-figure-layer,
+.cell > .unit-card[data-hv-reaction] .field-figure-img{
+  animation-delay:0ms!important;
+  will-change:transform;
+}
+
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-style="slash"] .field-figure-layer{
+  animation:hvUnitAttackSlash var(--hv-action-ms,460ms) cubic-bezier(.18,.72,.24,1) both;
+}
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-style="slash"] .field-figure-img{
+  animation:hvUnitAttackSlashFigure var(--hv-action-ms,460ms) ease-in-out both;
+}
+@keyframes hvUnitAttackSlash{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  24%{transform:translateX(-50%) translate(var(--hv-action-back-x,-4px),var(--hv-action-back-y,0px)) rotate(calc(var(--ff-rotation,0deg) - var(--hv-action-tilt,3deg)))}
+  58%{transform:translateX(-50%) translate(var(--hv-action-x,12px),var(--hv-action-y,0px)) rotate(calc(var(--ff-rotation,0deg) + var(--hv-action-tilt,3deg)))}
+  78%{transform:translateX(-50%) translate(calc(var(--hv-action-x,12px) * .28),calc(var(--hv-action-y,0px) * .28)) rotate(var(--ff-rotation,0deg))}
+}
+@keyframes hvUnitAttackSlashFigure{
+  0%,100%{transform:scaleX(var(--ff-scale-x,1)) scaleY(1) skewX(0deg)}
+  24%{transform:scaleX(var(--ff-scale-x,1)) scaleY(.98) skewX(-2.6deg)}
+  58%{transform:scaleX(var(--ff-scale-x,1)) scaleY(1.025) skewX(3.4deg)}
+}
+
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-style="thrust"] .field-figure-layer{
+  animation:hvUnitAttackThrust var(--hv-action-ms,480ms) cubic-bezier(.16,.78,.18,1) both;
+}
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-style="thrust"] .field-figure-img{
+  animation:hvUnitAttackThrustFigure var(--hv-action-ms,480ms) ease-in-out both;
+}
+@keyframes hvUnitAttackThrust{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  30%{transform:translateX(-50%) translate(var(--hv-action-back-x,-5px),var(--hv-action-back-y,0px)) rotate(calc(var(--ff-rotation,0deg) - 1.2deg))}
+  62%{transform:translateX(-50%) translate(calc(var(--hv-action-x,17px) * 1.08),calc(var(--hv-action-y,0px) * 1.08)) rotate(calc(var(--ff-rotation,0deg) + .8deg))}
+}
+@keyframes hvUnitAttackThrustFigure{
+  0%,100%{transform:scaleX(var(--ff-scale-x,1)) scaleY(1) skewX(0deg)}
+  30%{transform:scaleX(var(--ff-scale-x,1)) scaleY(.965) skewX(-1.5deg)}
+  62%{transform:scaleX(var(--ff-scale-x,1)) scaleY(1.04) skewX(1.8deg)}
+}
+
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-style="heavy"] .field-figure-layer{
+  animation:hvUnitAttackHeavy var(--hv-action-ms,590ms) cubic-bezier(.2,.68,.2,1) both;
+}
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-style="heavy"] .field-figure-img{
+  animation:hvUnitAttackHeavyFigure var(--hv-action-ms,590ms) ease-in-out both;
+}
+@keyframes hvUnitAttackHeavy{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  28%{transform:translateX(-50%) translate(var(--hv-action-back-x,-5px),calc(var(--hv-action-back-y,0px) - 5px)) rotate(calc(var(--ff-rotation,0deg) - var(--hv-action-tilt,3deg)))}
+  63%{transform:translateX(-50%) translate(var(--hv-action-x,13px),calc(var(--hv-action-y,0px) + 4px)) rotate(calc(var(--ff-rotation,0deg) + var(--hv-action-tilt,3deg)))}
+  80%{transform:translateX(-50%) translate(calc(var(--hv-action-x,13px) * .2),2px) rotate(var(--ff-rotation,0deg))}
+}
+@keyframes hvUnitAttackHeavyFigure{
+  0%,100%{transform:scaleX(var(--ff-scale-x,1)) scaleY(1)}
+  28%{transform:scaleX(var(--ff-scale-x,1)) scaleY(1.035)}
+  63%{transform:scaleX(var(--ff-scale-x,1)) scaleY(.94)}
+}
+
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-style="ranged"] .field-figure-layer{
+  animation:hvUnitAttackRanged var(--hv-action-ms,520ms) ease-in-out both;
+}
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-style="ranged"] .field-figure-img{
+  animation:hvUnitAttackRangedFigure var(--hv-action-ms,520ms) ease-in-out both;
+}
+@keyframes hvUnitAttackRanged{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  38%{transform:translateX(-50%) translate(calc(var(--hv-action-back-x,-4px) * .7),calc(var(--hv-action-back-y,0px) * .7)) rotate(calc(var(--ff-rotation,0deg) - 1.8deg))}
+  58%{transform:translateX(-50%) translate(calc(var(--hv-action-x,8px) * .34),calc(var(--hv-action-y,0px) * .34)) rotate(calc(var(--ff-rotation,0deg) + 1deg))}
+}
+@keyframes hvUnitAttackRangedFigure{
+  0%,100%{transform:scaleX(var(--ff-scale-x,1)) scaleY(1) skewX(0deg)}
+  38%{transform:scaleX(var(--ff-scale-x,1)) scaleY(1.018) skewX(-2deg)}
+  58%{transform:scaleX(var(--ff-scale-x,1)) scaleY(.988) skewX(1.2deg)}
+}
+
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-style="magic"] .field-figure-layer{
+  animation:hvUnitAttackMagic var(--hv-action-ms,640ms) ease-in-out both;
+}
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-style="magic"] .field-figure-img{
+  animation:hvUnitAttackMagicFigure var(--hv-action-ms,640ms) ease-in-out both;
+}
+@keyframes hvUnitAttackMagic{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  38%{transform:translateX(-50%) translate(0,-6px) rotate(calc(var(--ff-rotation,0deg) - .8deg))}
+  64%{transform:translateX(-50%) translate(calc(var(--hv-action-x,8px) * .28),-3px) rotate(calc(var(--ff-rotation,0deg) + .8deg))}
+}
+@keyframes hvUnitAttackMagicFigure{
+  0%,100%{transform:scaleX(var(--ff-scale-x,1)) scaleY(1)}
+  38%{transform:scaleX(calc(var(--ff-scale-x,1) * 1.025)) scaleY(1.045)}
+  64%{transform:scaleX(calc(var(--ff-scale-x,1) * .992)) scaleY(.99)}
+}
+
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-style="charge"] .field-figure-layer{
+  animation:hvUnitAttackCharge var(--hv-action-ms,520ms) cubic-bezier(.12,.82,.18,1) both;
+}
+@keyframes hvUnitAttackCharge{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  24%{transform:translateX(-50%) translate(calc(var(--hv-action-back-x,-6px) * .55),calc(var(--hv-action-back-y,0px) * .55)) rotate(calc(var(--ff-rotation,0deg) - 1.5deg))}
+  60%{transform:translateX(-50%) translate(calc(var(--hv-action-x,20px) * 1.08),calc(var(--hv-action-y,0px) * 1.08)) rotate(calc(var(--ff-rotation,0deg) + 1.8deg))}
+  78%{transform:translateX(-50%) translate(calc(var(--hv-action-x,20px) * .3),calc(var(--hv-action-y,0px) * .3)) rotate(var(--ff-rotation,0deg))}
+}
+
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-style="beast"] .field-figure-layer{
+  animation:hvUnitAttackBeast var(--hv-action-ms,470ms) cubic-bezier(.16,.82,.22,1) both;
+}
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-style="beast"] .field-figure-img{
+  animation:hvUnitAttackBeastFigure var(--hv-action-ms,470ms) ease-in-out both;
+}
+@keyframes hvUnitAttackBeast{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  28%{transform:translateX(-50%) translate(var(--hv-action-back-x,-5px),3px) rotate(calc(var(--ff-rotation,0deg) - 1deg))}
+  60%{transform:translateX(-50%) translate(var(--hv-action-x,16px),calc(var(--hv-action-y,0px) - 5px)) rotate(calc(var(--ff-rotation,0deg) + 1.7deg))}
+}
+@keyframes hvUnitAttackBeastFigure{
+  0%,100%{transform:scaleX(var(--ff-scale-x,1)) scaleY(1)}
+  28%{transform:scaleX(calc(var(--ff-scale-x,1) * 1.035)) scaleY(.92)}
+  60%{transform:scaleX(calc(var(--ff-scale-x,1) * .985)) scaleY(1.065)}
+}
+
+.cell > .unit-card[data-hv-action="attack"][data-hv-attack-style="shield"] .field-figure-layer{
+  animation:hvUnitAttackShield var(--hv-action-ms,500ms) ease-in-out both;
+}
+@keyframes hvUnitAttackShield{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  34%{transform:translateX(-50%) translate(calc(var(--hv-action-back-x,-4px) * .5),calc(var(--hv-action-back-y,0px) * .5)) rotate(calc(var(--ff-rotation,0deg) - 1.5deg))}
+  61%{transform:translateX(-50%) translate(var(--hv-action-x,11px),var(--hv-action-y,0px)) rotate(calc(var(--ff-rotation,0deg) + 2deg))}
+}
+
+/* Reacciones del defensor. */
+.cell > .unit-card[data-hv-reaction="hit"] .field-figure-layer{
+  animation:hvUnitReactHit var(--hv-react-ms,340ms) ease-out both!important;
+}
+.cell > .unit-card[data-hv-reaction="guard"] .field-figure-layer{
+  animation:hvUnitReactGuard var(--hv-react-ms,300ms) ease-out both!important;
+}
+.cell > .unit-card[data-hv-reaction="dodge"] .field-figure-layer{
+  animation:hvUnitReactDodge var(--hv-react-ms,360ms) cubic-bezier(.18,.76,.26,1) both!important;
+}
+@keyframes hvUnitReactHit{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  34%{transform:translateX(-50%) translate(var(--hv-react-x,9px),var(--hv-react-y,0px)) rotate(calc(var(--ff-rotation,0deg) + var(--hv-react-tilt,2.8deg)))}
+  58%{transform:translateX(-50%) translate(calc(var(--hv-react-x,9px) * -.24),calc(var(--hv-react-y,0px) * -.24)) rotate(calc(var(--ff-rotation,0deg) - 1deg))}
+}
+@keyframes hvUnitReactGuard{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  30%{transform:translateX(-50%) translate(var(--hv-react-x,5px),var(--hv-react-y,0px)) rotate(calc(var(--ff-rotation,0deg) + var(--hv-react-tilt,1.7deg)))}
+  48%{transform:translateX(-50%) translate(calc(var(--hv-react-x,5px) * -.32),0) rotate(calc(var(--ff-rotation,0deg) - 1deg))}
+  68%{transform:translateX(-50%) translate(calc(var(--hv-react-x,5px) * .18),0) rotate(var(--ff-rotation,0deg))}
+}
+@keyframes hvUnitReactDodge{
+  0%,100%{transform:translateX(-50%) translate(0,0) rotate(var(--ff-rotation,0deg))}
+  44%{transform:translateX(-50%) translate(var(--hv-react-x,11px),var(--hv-react-y,0px)) rotate(calc(var(--ff-rotation,0deg) + var(--hv-react-tilt,1.7deg)))}
+  72%{transform:translateX(-50%) translate(calc(var(--hv-react-x,11px) * .22),calc(var(--hv-react-y,0px) * .22)) rotate(var(--ff-rotation,0deg))}
+}
+
+body.field-figure-editing .cell > .unit-card[data-hv-action] .field-figure-layer,
+body.field-figure-editing .cell > .unit-card[data-hv-action] .field-figure-img,
+body.field-figure-editing .cell > .unit-card[data-hv-reaction] .field-figure-layer,
+body.field-figure-editing .cell > .unit-card[data-hv-reaction] .field-figure-img{
+  animation:none!important;
+}
+
+html.hv-document-hidden .cell > .unit-card[data-hv-action] .field-figure-layer,
+html.hv-document-hidden .cell > .unit-card[data-hv-action] .field-figure-img,
+html.hv-document-hidden .cell > .unit-card[data-hv-reaction] .field-figure-layer,
+html.hv-document-hidden .cell > .unit-card[data-hv-reaction] .field-figure-img{
+  animation-play-state:paused!important;
+}
+
+@media(prefers-reduced-motion:reduce){
+  .cell > .unit-card[data-hv-action] .field-figure-layer,
+  .cell > .unit-card[data-hv-action] .field-figure-img,
+  .cell > .unit-card[data-hv-reaction] .field-figure-layer,
+  .cell > .unit-card[data-hv-reaction] .field-figure-img{
+    animation:none!important;
+  }
+}
+/* === END HALLVALLA UNIT MOTION · STAGE 2 ================================ */
