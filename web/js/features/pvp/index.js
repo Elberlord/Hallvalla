@@ -582,8 +582,13 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
     room=room&&typeof room==="object"?room:{}; roomCache=room;
     const roomPhase=String(room?.phase||"");
     if(roomPhase==="active"){
-      clearStep5ArenaPreview();
+      hide("pvpStep5ArenaGate",true);
+      const shell=$("gameShell");
+      if(shell){
+        shell.classList.remove("hidden","pvp-step5-preview");
+      }
       $("onlineLobby")?.classList.add("hidden");
+      $("mainMenu")?.classList.add("hidden");
       return;
     }
     if(roomPhase!=="arena_ready"){
