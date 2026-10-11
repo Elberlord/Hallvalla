@@ -109,6 +109,7 @@ function resolveWarriorLeaderSweep(units,attacker,primaryDefender,{runInState=(f
     if(!target)continue;
     const state={units:out,legendaryTraps,beastTraps};
     const mods=runInState(()=>getCombatMods(liveAttacker,target,{startedFromStealth:false,warriorSweep:true}),state);
+    out=applySkillCooldownMarksFromMods(out,mods);
     out=applyGuardOfIronCooldownFromMods(out,mods);
     const hit=runInState(()=>rollHit(liveAttacker,target,mods),{units:out,legendaryTraps,beastTraps});
     if(!hit.hit){hits.push(`${target.name}: evade`);continue;}
@@ -368,7 +369,7 @@ function applyAfterDamageBonuses(units,attackerBefore,defenderBefore,hpLoss,defe
 }
 
 const HALLVALLA_INTERPOSITION_SKILL_ID="HV-130";
-const HALLVALLA_INTERPOSITION_COOLDOWN_MS=9000;
+const HALLVALLA_INTERPOSITION_COOLDOWN_MS=30000;
 function hallvallaUnitHasRuntimeSkill(unit,skillId){
   const ids=[
     ...(Array.isArray(unit?.unitSkillRuntimeIds)?unit.unitSkillRuntimeIds:[]),
@@ -423,8 +424,11 @@ function applyGuardOfIronCooldownFromMods(units,mods){
     unitSkillCooldowns:{...(unit.unitSkillCooldowns||{}),[skillId]:Math.max(cooldownUntil,Number(unit?.unitSkillCooldowns?.[skillId]||0))}
   }:unit);
 }
-function applyAttackerSkillCooldownsFromMods(units,mods){
-  const marks=Array.isArray(mods?.attackerSkillCooldownMarks)?mods.attackerSkillCooldownMarks:[];
+function applySkillCooldownMarksFromMods(units,mods){
+  const marks=[
+    ...(Array.isArray(mods?.attackerSkillCooldownMarks)?mods.attackerSkillCooldownMarks:[]),
+    ...(Array.isArray(mods?.defenderSkillCooldownMarks)?mods.defenderSkillCooldownMarks:[])
+  ];
   if(!marks.length)return[...(units||[])];
   return (units||[]).map(unit=>{
     const own=marks.filter(mark=>String(mark?.unitId||"")===String(unit?.id||"")&&mark?.skillId&&Number(mark?.until||0)>0);
@@ -720,7 +724,7 @@ async function resolveSharedAttackOutcome({
   actionLogPrefix=""
 }){
   let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false,dragonCompanionText="";
-  units=applyAttackerSkillCooldownsFromMods(units,mods);
+  units=applySkillCooldownMarksFromMods(units,mods);
   a=units.find(unit=>unit.id===a.id)||a;
   const originalDefender=d;
   if(hit?.hit)units=applyJoanOrleansCooldownFromMods(units,mods);
@@ -740,7 +744,11 @@ async function resolveSharedAttackOutcome({
       mods.guardOfIronSkillId=redirectMods.guardOfIronSkillId;
       mods.guardOfIronCooldownUntil=redirectMods.guardOfIronCooldownUntil;
     }
+    if(Array.isArray(redirectMods?.defenderSkillCooldownMarks)){
+      mods.defenderSkillCooldownMarks=[...(mods.defenderSkillCooldownMarks||[]),...redirectMods.defenderSkillCooldownMarks];
+    }
   }
+  units=applySkillCooldownMarksFromMods(units,mods);
   units=applyGuardOfIronCooldownFromMods(units,mods);
   d=units.find(unit=>unit.id===d.id)||d;
   const mulanFollowupAttack=!!(a&&a.key==="mulan"&&a.mulanFollowupReady===true);
@@ -978,7 +986,7 @@ async function resolveSharedAttackOutcome({
       ?prepareMiyamotoCounterMods(defenderAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder,!hit.hit)
       :prepareCounterMods(getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder),{units,legendaryTraps:resolvedLegendaryTraps,beastTraps});
     units=applyGuardOfIronCooldownFromMods(units,cMods);
-    units=applyAttackerSkillCooldownsFromMods(units,cMods);
+    units=applySkillCooldownMarksFromMods(units,cMods);
     defenderAfter=units.find(u=>u.id===defenderAfter.id)||defenderAfter;
     attackerAfter=units.find(u=>u.id===attackerAfter.id)||attackerAfter;
     const cHit=rollHit(defenderAfter,attackerAfter,cMods);

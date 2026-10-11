@@ -20,18 +20,52 @@ function hvSkillOptionalNumber(value){
   const n=Number(value);
   return Number.isFinite(n)?n:null;
 }
+const HALLVALLA_TRIGGER_SKILL_COOLDOWN_SECONDS=30;
+function hvSkillUsesTriggerCooldown(skill){
+  const explicit=hvSkillOptionalNumber(skill?.cooldown);
+  if(Number.isFinite(explicit))return true;
+  const trigger=hvSkillNorm(skill?.trigger);
+  if(!trigger||trigger==="pasiva")return false;
+  const passivePrefixes=[
+    "mientras ",
+    "aliados cercanos",
+    "junto a ",
+    "adyacente a ",
+    "en formacion",
+    "unidad aliada mas adelantada",
+    "detras de ",
+    "por cada ",
+    "a 2 casillas o menos del lider",
+    "2+ caballerias aliadas proximas",
+    "2+ aliados moviendose hacia mismo sector",
+    "2+ aliados avanzan juntos",
+    "2+ aliados atacan mismo objetivo",
+    "3+ escuderos compatibles proximos",
+    "bajo fuego de rango",
+    "ruta lateral disponible",
+    "durante desplazamiento"
+  ];
+  return !passivePrefixes.some(prefix=>trigger===prefix||trigger.startsWith(prefix));
+}
+function hvSkillActivationLabel(skill){
+  const raw=String(skill?.trigger||"").trim();
+  if(!raw)return "";
+  if(hvSkillUsesTriggerCooldown(skill)&&/^cada\s+\d+(?:[.,]\d+)?\s*s\b/i.test(raw))return "Al estar disponible";
+  return raw;
+}
 function hvSkillScale(skill,entity){
   const rarity=hvSkillRarityIndex(entity);
   const base=hvSkillOptionalNumber(skill?.base),step=hvSkillOptionalNumber(skill?.step);
   const duration=hvSkillOptionalNumber(skill?.duration),durationStep=hvSkillOptionalNumber(skill?.durationStep);
   const proc=hvSkillOptionalNumber(skill?.proc),procStep=hvSkillOptionalNumber(skill?.procStep);
   const cooldown=hvSkillOptionalNumber(skill?.cooldown),cooldownStep=hvSkillOptionalNumber(skill?.cooldownStep);
+  const triggerCooldown=hvSkillUsesTriggerCooldown(skill);
   return {
     rarity,
     value:Number.isFinite(base)?base+(rarity-1)*(Number.isFinite(step)?step:0):null,
     duration:Number.isFinite(duration)?Math.max(0,duration+(rarity-1)*(Number.isFinite(durationStep)?durationStep:0)):null,
     proc:Number.isFinite(proc)?Math.max(0,Math.min(100,proc+(rarity-1)*(Number.isFinite(procStep)?procStep:0))):null,
-    cooldown:Number.isFinite(cooldown)?Math.max(0.5,cooldown+(rarity-1)*(Number.isFinite(cooldownStep)?cooldownStep:0)):null
+    cooldown:triggerCooldown?HALLVALLA_TRIGGER_SKILL_COOLDOWN_SECONDS:(Number.isFinite(cooldown)?Math.max(0.5,cooldown+(rarity-1)*(Number.isFinite(cooldownStep)?cooldownStep:0)):null)
   };
 }
 function hvSkillRoman(n){
@@ -316,10 +350,9 @@ function hvSkillAddNote(mods,text){if(!text)return;mods.notes=[...(mods.notes||[
 function hvSkillCombatMods(mods,{attacker,defender,attackContext}={}){
   const next={...(mods||{}),notes:[...((mods||{}).notes||[])]};if(!attacker||!defender)return next;
   const skillNow=Date.now();
-  const attackCooldownSkills=new Set(["Ojo de Águila","Tiro de Precisión","Flecha Perforante","Tiro Largo","Gandiva","Enganche de Asta","Ejecución","Ejecución Brutal"]);
   for(const skill of hvSkillEntries(attacker)){
     if(!hvSkillTriggerOk(skill,attacker,defender,attackContext))continue;
-    if(attackCooldownSkills.has(skill.name)&&!hvSkillCooldownReady(attacker,skill,skillNow))continue;
+    if(hvSkillUsesTriggerCooldown(skill)&&!hvSkillCooldownReady(attacker,skill,skillNow))continue;
     const scaled=hvSkillScale(skill,attacker),value=Math.max(0,Number(scaled.value||0)),effect=hvSkillNorm(`${skill.effect} ${skill.secondary}`),scale=hvSkillNorm(skill.scale),cat=hvSkillNorm(skill.category);
     let used=false;
     if(value>0&&(effect.includes("aumenta at")||effect.includes("bonus de at")||effect.includes("bonificacion de at")||effect.includes("gana at")||(cat.includes("ofensiva")&&scale==="at"))){next.attackerAtk=(next.attackerAtk||0)+value;used=true;}
@@ -327,14 +360,15 @@ function hvSkillCombatMods(mods,{attacker,defender,attackContext}={}){
     if(value>0&&(effect.includes("reduce guardia")||effect.includes("ignora parte de la guardia")||scale.includes("gd ignorada")||scale.includes("guardia ignorada"))){next.defenderGuard=(next.defenderGuard||0)-value;used=true;}
     if(value>0&&effect.includes("reduce agi")){next.defenderAgi=(next.defenderAgi||0)-value;used=true;}
     if(skill.name==="Ejecución Silenciosa"){if(Number(defender.hp||0)/Math.max(1,Number(defender.maxHp||defender.hp||1))<=.20){next.attackerAtk=(next.attackerAtk||0)+Math.max(1,value);used=true;}}
-    if(used&&attackCooldownSkills.has(skill.name)){
-      const cooldownMs=Math.max(500,Math.round(Number(scaled.cooldown||30)*1000));
+    if(used&&hvSkillUsesTriggerCooldown(skill)){
+      const cooldownMs=HALLVALLA_TRIGGER_SKILL_COOLDOWN_SECONDS*1000;
       next.attackerSkillCooldownMarks=[...(next.attackerSkillCooldownMarks||[]),{unitId:attacker.id,skillId:skill.id,until:skillNow+cooldownMs}];
     }
     if(used)hvSkillAddNote(next,`${skill.name} (${skill.id}).`);
   }
   for(const skill of hvSkillEntries(defender)){
     if(!hvSkillTriggerOk(skill,defender,attacker,null))continue;
+    if(hvSkillUsesTriggerCooldown(skill)&&!hvSkillCooldownReady(defender,skill,skillNow))continue;
     const scaled=hvSkillScale(skill,defender),value=Math.max(0,Number(scaled.value||0)),effect=hvSkillNorm(`${skill.effect} ${skill.secondary}`),cat=hvSkillNorm(skill.category),scale=hvSkillNorm(skill.scale);
     let used=false;
     if(skill.name==="Guardia de Hierro"){
@@ -361,6 +395,10 @@ function hvSkillCombatMods(mods,{attacker,defender,attackContext}={}){
     }
     if(value>0&&cat.includes("defensiva")&&(effect.includes("aumenta guardia")||scale==="gd"||scale.includes("gd vs rango"))){next.defenderGuard=(next.defenderGuard||0)+value;used=true;}
     if(skill.name==="Parada"){next.defenderAgi=(next.defenderAgi||0)+Math.max(1,value);used=true;}
+    if(used&&hvSkillUsesTriggerCooldown(skill)){
+      const cooldownMs=HALLVALLA_TRIGGER_SKILL_COOLDOWN_SECONDS*1000;
+      next.defenderSkillCooldownMarks=[...(next.defenderSkillCooldownMarks||[]),{unitId:defender.id,skillId:skill.id,until:skillNow+cooldownMs}];
+    }
     if(used)hvSkillAddNote(next,`${skill.name} (${skill.id}).`);
   }
   try{
@@ -683,7 +721,8 @@ function hvSkillDetailedText(skill,entity,{source=""}={}){
   const numbers=hvSkillDescribe(skill,entity);
   const lines=[];
   if(source)lines.push(source);
-  if(skill.trigger)lines.push(`Activación: ${skill.trigger}.`);
+  const activation=hvSkillActivationLabel(skill);
+  if(activation)lines.push(`Activación: ${activation}.`);
   if(skill.effect)lines.push(skill.effect);
   if(skill.secondary)lines.push(skill.secondary);
   if(numbers)lines.push(`Valor para ${String(entity?.rarity||"esta rareza")}: ${numbers}.`);
