@@ -423,6 +423,22 @@ function applyGuardOfIronCooldownFromMods(units,mods){
     unitSkillCooldowns:{...(unit.unitSkillCooldowns||{}),[skillId]:Math.max(cooldownUntil,Number(unit?.unitSkillCooldowns?.[skillId]||0))}
   }:unit);
 }
+function applyAttackerSkillCooldownsFromMods(units,mods){
+  const marks=Array.isArray(mods?.attackerSkillCooldownMarks)?mods.attackerSkillCooldownMarks:[];
+  if(!marks.length)return[...(units||[])];
+  return (units||[]).map(unit=>{
+    const own=marks.filter(mark=>String(mark?.unitId||"")===String(unit?.id||"")&&mark?.skillId&&Number(mark?.until||0)>0);
+    if(!own.length)return unit;
+    const cooldowns={...(unit.unitSkillCooldowns||{})};
+    for(const mark of own){
+      cooldowns[mark.skillId]=Math.max(
+        Number(mark.until||0),
+        Number(cooldowns[mark.skillId]||0)
+      );
+    }
+    return {...unit,unitSkillCooldowns:cooldowns};
+  });
+}
 function applyJoanOrleansCooldownFromMods(units,mods){
   const joanId=String(mods?.joanOrleansId||"");
   const cooldownUntil=Number(mods?.joanOrleansCooldownUntil||0);
@@ -704,6 +720,8 @@ async function resolveSharedAttackOutcome({
   actionLogPrefix=""
 }){
   let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false,dragonCompanionText="";
+  units=applyAttackerSkillCooldownsFromMods(units,mods);
+  a=units.find(unit=>unit.id===a.id)||a;
   const originalDefender=d;
   if(hit?.hit)units=applyJoanOrleansCooldownFromMods(units,mods);
   const interposition=hit?.hit?activateHallvallaInterposition(d,units):{units:[...(units||[])],defender:d,originalDefender:null,protector:null,text:""};
@@ -960,6 +978,8 @@ async function resolveSharedAttackOutcome({
       ?prepareMiyamotoCounterMods(defenderAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder,!hit.hit)
       :prepareCounterMods(getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder),{units,legendaryTraps:resolvedLegendaryTraps,beastTraps});
     units=applyGuardOfIronCooldownFromMods(units,cMods);
+    units=applyAttackerSkillCooldownsFromMods(units,cMods);
+    defenderAfter=units.find(u=>u.id===defenderAfter.id)||defenderAfter;
     attackerAfter=units.find(u=>u.id===attackerAfter.id)||attackerAfter;
     const cHit=rollHit(defenderAfter,attackerAfter,cMods);
     const cSpend=spendActionStatsByAttack(defenderAfter,attackerAfter,units,cMods,cHit);
