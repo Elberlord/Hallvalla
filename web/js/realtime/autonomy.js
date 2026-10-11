@@ -629,34 +629,240 @@ function hallvallaRtNearestWoundedAlly(caster,units=publicState?.units||[]){
   const rg=Math.max(1,Number(caster.effectRange||3));
   return (units||[]).filter(u=>u&&u.owner===caster.owner&&!u.leader&&u.id!==caster.id&&Number(u.hp||0)>0&&Number(u.hp||0)<Number(effectiveMaxHp(u)||u.maxHp||u.hp||1)&&dist(caster,u)<=rg&&!u.noHealWhilePoisoned).sort((a,b)=>(dist(caster,a)-dist(caster,b))||((Number(a.hp||0)/Math.max(1,effectiveMaxHp(a)))-(Number(b.hp||0)/Math.max(1,effectiveMaxHp(b))))||String(a.id||"").localeCompare(String(b.id||"")))[0]||null;
 }
+const HALLVALLA_RT_SUPPORT_TRIGGER_MS=30000;
+const HALLVALLA_RT_RECOVERY_DURATION_MS=10000;
+const HALLVALLA_RT_RECOVERY_TICK_MS=1000;
+const HALLVALLA_RT_RECOVERY_HP_PER_TICK=3;
+
+function hallvallaRtIsRearSupportUnit(unit){
+  const key=String(unit?.key||"");
+  return key==="acolyte_healer"||key==="ericto";
+}
+
+function hallvallaRtInstallRecovery(caster,units,now){
+  const until=now+HALLVALLA_RT_RECOVERY_DURATION_MS;
+
+  return (units||[]).map(unit=>{
+    if(
+      !unit||
+      Number(unit.hp||0)<=0||
+      Number(unit.owner)!==Number(caster.owner)
+    )return unit;
+
+    return {
+      ...unit,
+      rtRecoveryUntil:until,
+      rtRecoveryNextTickAt:now+HALLVALLA_RT_RECOVERY_TICK_MS,
+      rtRecoveryHealPerTick:HALLVALLA_RT_RECOVERY_HP_PER_TICK,
+      rtRecoverySourceId:caster.id,
+      rtRecoverySourceName:caster.name||"Acolita sanadora"
+    };
+  });
+}
+
 async function hallvallaRtAutoAcolyte(caster,now){
-  const last=Number(hallvallaRtState.supportAt.get(caster.id)||0);if(now-last<HALLVALLA_RT_CFG.supportEffectEveryMs)return false;
-  const units=[...(publicState?.units||[])],honor=hallvallaRtOwnerMana(caster.owner),grave=publicState?.erictoGraveyard||[];
-  const points=typeof getUnitServicePoints==="function"?getUnitServicePoints(caster):0;
-  let choice=null;
-  if(points>=100&&honor>=4){
-    const corpses=(typeof getAcolyteEligibleCorpses==="function"?getAcolyteEligibleCorpses(caster,grave):[]),cells=(typeof getAcolyteResurrectionCells==="function"?getAcolyteResurrectionCells(caster,units):[]);
-    if(corpses.length&&cells.length){const rec=[...corpses].sort((a,b)=>(Number(b.battlePower)||getUnitBattlePower(b.snapshot)||0)-(Number(a.battlePower)||getUnitBattlePower(a.snapshot)||0))[0];const enemyLeader=hallvallaRtGetOwnerLeader(caster.owner===1?2:1,units);const cell=[...cells].sort((a,b)=>enemyLeader?dist(a,enemyLeader)-dist(b,enemyLeader):0)[0];choice={technique:"resurrect",graveId:rec.graveId,x:cell.x,y:cell.y};}
-  }
-  if(!choice&&honor>=2){const wounded=hallvallaRtNearestWoundedAlly(caster,units);if(wounded)choice={technique:"transfer",targetId:wounded.id};}
-  if(!choice)return false;
-  const result=applyAcolyteHealerEffectState(caster,choice,units);if(!result?.success)return false;
-  const serviceGain=Math.max(0,Math.floor(Number(result.serviceGain||1))),beforePoints=typeof getUnitServicePoints==="function"?getUnitServicePoints(caster):0,afterPoints=beforePoints+serviceGain;
-  if(serviceGain>0&&typeof applyUnitServicePointsToUnits==="function")result.units=applyUnitServicePointsToUnits(result.units,caster,{key:getUnitMasteryKey(caster),name:caster.name,beforePoints,afterPoints,gain:serviceGain,unlockedPurification:beforePoints<50&&afterPoints>=50,unlockedResurrection:beforePoints<100&&afterPoints>=100});
-  hallvallaRtState.supportAt.set(caster.id,now);
-  await hallvallaRtSpendOwnerMana(caster.owner,result.honorCost||0,{units:result.units,erictoGraveyard:result.erictoGraveyard||grave,battleFxEvent:result.battleFxEvent||null,statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,log:[`${result.log}`,...(publicState?.log||[])].slice(0,18)});
-  if(serviceGain>0&&Number(caster.owner)===Number(myPlayer)&&typeof registerLocalUnitServicePoint==="function")registerLocalUnitServicePoint(caster,serviceGain);
+  const key=`recovery:${caster.id}`;
+  const last=Number(hallvallaRtState.supportAt.get(key)||0);
+
+  if(now-last<HALLVALLA_RT_SUPPORT_TRIGGER_MS)return false;
+
+  const units=[...(publicState?.units||[])];
+
+  if(!units.some(unit=>
+    unit&&
+    Number(unit.hp||0)>0&&
+    Number(unit.owner)===Number(caster.owner)
+  ))return false;
+
+  const nextUnits=hallvallaRtInstallRecovery(
+    caster,
+    units,
+    now
+  );
+
+  hallvallaRtState.supportAt.set(key,now);
+
+  const count=nextUnits.filter(unit=>
+    unit&&
+    Number(unit.hp||0)>0&&
+    Number(unit.owner)===Number(caster.owner)
+  ).length;
+
+  await updatePublic({
+    units:nextUnits,
+    log:[
+      `${caster.name} instala Recovery sobre ${count} unidad${count===1?"":"es"} aliada${count===1?"":"s"}: +3 Vida por segundo durante 10 s. Proxima activacion en 30 s.`,
+      ...(publicState?.log||[])
+    ].slice(0,18)
+  });
+
   return true;
 }
+
 async function hallvallaRtAutoEricto(caster,now){
-  const last=Number(hallvallaRtState.supportAt.get(caster.id)||0);if(now-last<HALLVALLA_RT_CFG.supportEffectEveryMs)return false;
-  const units=[...(publicState?.units||[])].map(u=>u.id===caster.id?{...u,acted:false,erictoUsedWindowKey:""}:u),grave=publicState?.erictoGraveyard||[];
-  const live=units.find(u=>u.id===caster.id)||{...caster,erictoUsedWindowKey:""};
-  const choice=typeof getBestErictoReanimationChoice==="function"?getBestErictoReanimationChoice(live,units,grave):null;if(!choice)return false;
-  const result=applyUnitEffectState(live,choice,units);if(!result?.success)return false;
-  hallvallaRtState.supportAt.set(caster.id,now);
-  await updatePublic({units:result.units,erictoGraveyard:result.erictoGraveyard||grave,battleFxEvent:result.battleFxEvent||null,statusFxEvent:result.statusFxEvent||null,floatFxEvent:result.floatFxEvent||null,log:[`${result.log}`,...(publicState?.log||[])].slice(0,18)});
-  const revived=(result.units||[]).filter(u=>u?.reanimated&&u.reanimatedByErictoId===caster.id).sort((a,b)=>Number(b.rtSummonedAt||0)-Number(a.rtSummonedAt||0))[0];if(revived)hallvallaRtRememberSummon(caster.owner,revived);
+  const key=`ericto:${caster.id}`;
+  const last=Number(hallvallaRtState.supportAt.get(key)||0);
+
+  if(now-last<HALLVALLA_RT_SUPPORT_TRIGGER_MS)return false;
+
+  const units=[...(publicState?.units||[])].map(
+    u=>u.id===caster.id
+      ?{...u,acted:false,erictoUsedWindowKey:""}
+      :u
+  );
+
+  const grave=publicState?.erictoGraveyard||[];
+
+  const live=units.find(u=>u.id===caster.id)||
+    {...caster,erictoUsedWindowKey:""};
+
+  if(Number(live.erictoNecromancyCooldownUntil||0)>now){
+    return false;
+  }
+
+  const choice=
+    typeof getBestErictoReanimationChoice==="function"
+      ?getBestErictoReanimationChoice(
+          live,
+          units,
+          grave
+        )
+      :null;
+
+  if(!choice)return false;
+
+  const result=applyUnitEffectState(
+    live,
+    choice,
+    units
+  );
+
+  if(!result?.success)return false;
+
+  hallvallaRtState.supportAt.set(key,now);
+
+  await updatePublic({
+    units:result.units,
+    erictoGraveyard:result.erictoGraveyard||grave,
+    battleFxEvent:result.battleFxEvent||null,
+    statusFxEvent:result.statusFxEvent||null,
+    floatFxEvent:result.floatFxEvent||null,
+    log:[
+      `${result.log} Proxima reanimacion disponible en 30 s.`,
+      ...(publicState?.log||[])
+    ].slice(0,18)
+  });
+
+  const revived=(result.units||[])
+    .filter(
+      u=>
+        u?.reanimated&&
+        u.reanimatedByErictoId===caster.id
+    )
+    .sort(
+      (a,b)=>
+        Number(b.rtSummonedAt||0)-
+        Number(a.rtSummonedAt||0)
+    )[0];
+
+  if(revived){
+    hallvallaRtRememberSummon(
+      caster.owner,
+      revived
+    );
+  }
+
+  return true;
+}
+
+async function hallvallaRtRecoveryTick(now){
+  let units=[...(publicState?.units||[])];
+  let changed=false;
+
+  units=units.map(unit=>{
+    if(!unit||Number(unit.hp||0)<=0){
+      return unit;
+    }
+
+    const until=Number(unit.rtRecoveryUntil||0);
+    const nextTick=Number(
+      unit.rtRecoveryNextTickAt||0
+    );
+
+    if(until<=0||nextTick<=0){
+      return unit;
+    }
+
+    let next={...unit};
+
+    if(now>=nextTick){
+      const lastDue=Math.min(now,until);
+
+      const ticks=Math.max(
+        1,
+        Math.floor(
+          (lastDue-nextTick)/
+          HALLVALLA_RT_RECOVERY_TICK_MS
+        )+1
+      );
+
+      const healPerTick=Math.max(
+        1,
+        Number(
+          unit.rtRecoveryHealPerTick||
+          HALLVALLA_RT_RECOVERY_HP_PER_TICK
+        )
+      );
+
+      const blocked=
+        unit.noHealWindowKey===
+          publicState?.combatWindowKey||
+        unit.noHealWhilePoisoned;
+
+      if(!blocked){
+        const maxHp=Math.max(
+          1,
+          Number(
+            typeof effectiveMaxHp==="function"
+              ?effectiveMaxHp(unit)
+              :unit.maxHp||unit.hp||1
+          )
+        );
+
+        next.hp=Math.min(
+          maxHp,
+          Number(unit.hp||0)+
+          (healPerTick*ticks)
+        );
+      }
+
+      next.rtRecoveryNextTickAt=
+        nextTick+
+        (ticks*HALLVALLA_RT_RECOVERY_TICK_MS);
+
+      changed=true;
+    }
+
+    if(
+      now>=until&&
+      Number(next.rtRecoveryNextTickAt||0)>until
+    ){
+      delete next.rtRecoveryUntil;
+      delete next.rtRecoveryNextTickAt;
+      delete next.rtRecoveryHealPerTick;
+      delete next.rtRecoverySourceId;
+      delete next.rtRecoverySourceName;
+
+      changed=true;
+    }
+
+    return next;
+  });
+
+  if(!changed)return false;
+
+  await updatePublic({units});
+
   return true;
 }
 async function hallvallaRtAutoGenericEffect(caster,now){
@@ -676,8 +882,8 @@ async function hallvallaRtSupportTick(now){
   const units=[...(publicState?.units||[])];
   for(const unit of units){
     if(!unit||unit.leader||Number(unit.hp||0)<=0)continue;
-    if(unit.key==="acolyte_healer"||unit.healer){if(await hallvallaRtAutoAcolyte(unit,now))continue;}
-    if(unit.key==="ericto"||unit.nigromante){if(await hallvallaRtAutoEricto(unit,now))continue;}
+    if(unit.key==="acolyte_healer"||unit.healer){await hallvallaRtAutoAcolyte(unit,now);continue;}
+    if(unit.key==="ericto"||unit.nigromante){await hallvallaRtAutoEricto(unit,now);continue;}
     if(typeof globalThis.hallvallaRtAutoUnitSkills==="function"&&await globalThis.hallvallaRtAutoUnitSkills(unit,now))continue;
     await hallvallaRtAutoGenericEffect(unit,now);
   }
@@ -758,6 +964,7 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
   for(const id of ids){
     if(moves>=maxMoves)break;
     const live=units.find(u=>u.id===id&&Number(u.hp||0)>0);if(!live||isRtTrapLocked(live,"move",now))continue;
+    if(hallvallaRtIsRearSupportUnit(live))continue;
     const mulanReposition=live.key==="mulan"&&live.mulanRepositionReady===true;
     const ownLeader=hallvallaRtGetOwnerLeader(live.owner,units);
     const inSpawnRing=!!ownLeader&&dist(live,ownLeader)<=1;

@@ -481,7 +481,7 @@ function applyAcolyteHealerEffectState(caster,choice,units=publicState?.units||[
 function getUnitEffectMode(u){
   if(!u)return "passive";
   if(u.leader&&u.leaderType==="beastmaster"&&getLeaderAbilityForOwner(u.owner)==="prepare_hunt")return "passive";
-  if(u.key==="acolyte_healer")return "choice";
+  if(u.key==="acolyte_healer")return "passive";
   if(["african_lion","black_raven","ericto"].includes(u.key))return "self";
   if(["richard_lionheart","saladin","sun_tzu","subotai"].includes(u.key))return "target";
   return "passive";
@@ -513,6 +513,7 @@ function getEffectTargetOptions(caster,units=publicState?.units||[]){
   if(caster.key==="african_lion"){return [caster];}
   if(caster.key==="black_raven"){return [caster];}
   if(caster.key==="ericto"){
+    if(Number(caster.erictoNecromancyCooldownUntil||0)>Date.now())return[];
     if(caster.erictoUsedWindowKey===publicState?.combatWindowKey)return[];
     if(getErictoLinkedReanimated(caster,units).length>=getErictoMaxReanimated(caster))return[];
     if(!getAdjacentFreeCells(caster,units).length)return[];
@@ -604,6 +605,8 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
   }else if(liveCaster.key==="black_raven"){
     const rev=revealStealthInRadius(out,owner,liveCaster,2,"Ojo del Cazador");out=rev.units.map(it=>it.id===liveCaster.id?{...it,acted:true}:it);const detection=typeof makeStage8StealthDetectionEvent==="function"?makeStage8StealthDetectionEvent(owner,liveCaster,2,"Ojo del Cazador"):null;log=detection?`${liveCaster.name} usa Ojo del Cazador y inspecciona el área en busca de Sigilo.`:`${liveCaster.name} usa Ojo del Cazador y revela ${rev.count} unidad${rev.count===1?"":"es"} con Sigilo.`;return{success:true,units:out,log,battleFxEvent,stealthDetectionEvent:detection};
   }else if(liveCaster.key==="ericto"){
+    const erictoNow=Date.now();
+    if(Number(liveCaster.erictoNecromancyCooldownUntil||0)>erictoNow)return{success:false,reason:"Necromancia de Farsalia sigue en recarga."};
     if(liveCaster.erictoUsedWindowKey===publicState?.combatWindowKey)return{success:false,reason:"Ericto ya usó Necromancia de Farsalia durante este ciclo táctico."};
     const current=getErictoLinkedReanimated(liveCaster,out).length;
     const maximum=getErictoMaxReanimated(liveCaster);
@@ -618,7 +621,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     if(!record||!cell)return{success:false,reason:"El cadáver o la celda elegida ya no están disponibles."};
     const revived=makeErictoReanimatedUnit(liveCaster,record,cell);
     const nextGraveyard=graveyard.map(r=>r.graveId===record.graveId?{...r,used:true,usedByErictoId:liveCaster.id,usedWindowKey:publicState?.combatWindowKey||""}:r);
-    out=out.map(it=>it.id===liveCaster.id?{...it,acted:true,erictoUsedWindowKey:publicState?.combatWindowKey||""}:it).concat(revived);
+    out=out.map(it=>it.id===liveCaster.id?{...it,acted:true,erictoUsedWindowKey:publicState?.combatWindowKey||"",erictoNecromancyCooldownUntil:erictoNow+30000}:it).concat(revived);
     log=`${liveCaster.name} usa Necromancia de Farsalia: ${record.name} regresa con ${revived.hp}/${revived.maxHp} Vida bajo su control.`;
     return{success:true,units:out,log,erictoGraveyard:nextGraveyard};
   }else if(liveCaster.key==="richard_lionheart"){

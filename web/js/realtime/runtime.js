@@ -22,6 +22,7 @@ async function hallvallaRtLoop(){
     await hallvallaRtSafeStage("ciclo táctico TR",()=>hallvallaRtCombatRefreshTick(now));
     await hallvallaRtSafeStage("efectos de líder",()=>hallvallaRtLeaderEffectsTick(now));
     await hallvallaRtSafeStage("soporte",()=>hallvallaRtSupportTick(now));
+    await hallvallaRtSafeStage("Recovery",()=>hallvallaRtRecoveryTick(now));
     await hallvallaRtSafeStage("estados",()=>hallvallaRtStatusTick(now));
     hallvallaRtScheduleLocalSnapshot(false);
     if(now-hallvallaRtState.lastUiAt>=300){hallvallaRtState.lastUiAt=now;hallvallaRtUpdateUi();}
