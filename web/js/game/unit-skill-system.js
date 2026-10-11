@@ -51,7 +51,7 @@ function hvSkillUsesTriggerCooldown(skill){
 }function hvSkillActivationLabel(skill){
   const raw=String(skill?.trigger||"").trim();
   if(!raw)return "";
-  if(hvSkillUsesTriggerCooldown(skill)&&/^cada\s+\d+(?:[.,]\d+)?\s*s\b/i.test(raw))return "Al estar disponible";
+  if(hvSkillUsesTriggerCooldown(skill)&&/^cada\s+\d+(?:[.,]\d+)?\s*s\b/i.test(raw))return raw.replace(/^cada\s+\d+(?:[.,]\d+)?\s*s\b/i,"Cada 30 s");
   return raw;
 }
 function hvSkillScale(skill,entity){
@@ -312,7 +312,7 @@ function maybeShowHallvallaUnitSkillChoice(){
     const skill=HALLVALLA_UNIT_SKILL_BANK[id];if(!skill)continue;
     const fake={key:item.unitKey,rarity:item.rarity};
     const button=document.createElement("button");button.type="button";button.className="hv-skill-option";
-    button.innerHTML=`<div class="hv-skill-origin">${skill.origin||skill.category}</div><h3>${skill.name}</h3><div class="hv-skill-effect">${skill.effect}${skill.secondary?` ${skill.secondary}`:""}</div><div class="hv-skill-numbers">${hvSkillDescribe(skill,fake)}</div><div class="hv-skill-trigger">${skill.trigger?`Activación: ${skill.trigger}`:"Pasiva / contextual"}</div>`;
+    button.innerHTML=`<div class="hv-skill-origin">${skill.origin||skill.category}</div><h3>${skill.name}</h3><div class="hv-skill-effect">${skill.effect}${skill.secondary?` ${skill.secondary}`:""}</div><div class="hv-skill-numbers">${hvSkillDescribe(skill,fake)}</div><div class="hv-skill-trigger">${hvSkillActivationLabel(skill)?`Activación: ${hvSkillActivationLabel(skill)}`:"Pasiva / contextual"}</div>`;
     button.addEventListener("click",()=>{
       if(!hvSkillChoose(item.id,id))return;
       overlay.classList.add("hidden");
@@ -837,7 +837,7 @@ function hvGlossaryEntries(){
       name:skill.name,
       category:skill.category||"Habilidad",
       effect:[skill.effect,skill.secondary].filter(Boolean).join(" "),
-      trigger:skill.trigger||"Pasiva / contextual",
+      trigger:hvSkillActivationLabel(skill)||"Pasiva / contextual",
       numbers:"",
       origin:[skill.origin,skill.reference].filter(Boolean).join(" · "),
       weapons:(skill.weapons||[]).join(", "),
