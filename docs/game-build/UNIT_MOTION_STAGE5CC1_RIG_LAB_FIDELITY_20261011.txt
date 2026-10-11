@@ -1,0 +1,20 @@
+HALLVALLA 2026-10-11 · STAGE 5C-C1 · RIG LAB FIDELITY FIX
+
+Problema confirmado:
+El Dragón Bebé de Fuego estaba aprobado en duelo pero se veía distinto en Rig Lab.
+
+Causas:
+1. Rig Lab forzaba 150×190 px, deformando el lienzo canónico 384×576 (2:3).
+2. Death creaba correctamente el ghost, pero el original seguía visible debajo.
+3. Summon podía reutilizar estados previos del laboratorio y no reiniciar la entrada.
+
+Correcciones:
+- Contenedor de prueba pasa a 160×240 (2:3), sin aplastar el rig.
+- Death oculta temporalmente la unidad original después de crear el ghost, igualando
+  el flujo visual del duelo donde la unidad lógica ya fue retirada.
+- El original vuelve después de la animación para seguir haciendo pruebas.
+- Summon limpia estados, fuerza reflow y dispara la convocatoria en el siguiente frame.
+- Idle/Move/Attack/Hit/Guard/Dodge restauran el personaje si quedó oculto por Death.
+
+No cambia el rig del Dragón Bebé de Fuego ni el Megapack.
+No modifica PvP, gameplay, Firebase, inventario, stats ni balance.

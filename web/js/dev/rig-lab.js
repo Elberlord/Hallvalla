@@ -1,6 +1,6 @@
 "use strict";
-/* HallValla · Rig Lab DEV · Stage 5C-B0
-   Laboratorio visual aislado: no escribe Firebase, no altera mazos ni batallas. */
+/* HallValla · Rig Lab DEV · Stage 5C-C1
+   Laboratorio visual fiel al tablero: no escribe Firebase, no altera mazos ni batallas. */
 (()=>{
   "use strict";
 
@@ -21,6 +21,18 @@
   const TARGET_ID="hv-rig-lab-target";
   let moveTick=0;
   let currentUnit=null;
+  let restoreTimer=0;
+
+  function clearRestoreTimer(){
+    if(restoreTimer){clearTimeout(restoreTimer);restoreTimer=0;}
+  }
+
+  function restoreLabCard(card){
+    if(!card)return;
+    clearRestoreTimer();
+    card.style.visibility="";
+    card.style.opacity="";
+  }
 
   function esc(value){
     return String(value??"").replace(/[&<>"']/g,ch=>({
@@ -74,6 +86,9 @@
   }
 
   function renderSelected(){
+    clearRestoreTimer();
+    const oldCard=document.getElementById("hvRigLabUnit");
+    restoreLabCard(oldCard);
     const root=document.getElementById(LAB_ID);
     const select=root?.querySelector("#hvRigLabSelect");
     const card=root?.querySelector("#hvRigLabUnit");
@@ -130,27 +145,45 @@
 
   function action(kind){
     const card=document.getElementById("hvRigLabUnit");
-    const target=document.getElementById("hvRigLabTarget");
     if(!card||!currentUnit)return;
     const targetUnit={id:TARGET_ID,key:"rig_lab_target",name:"Objetivo",owner:2,hp:10,x:5,y:0};
 
     try{
       if(kind==="idle"){
+        restoreLabCard(card);
         cleanupMotion(card);
       }else if(kind==="move"){
+        restoreLabCard(card);
         moveTick+=1;
         currentUnit.x=moveTick%2;
         globalThis.hvSyncUnitVisualMotion?.(card,currentUnit,{x:currentUnit.x,y:0});
       }else if(kind==="attack"){
+        restoreLabCard(card);
         globalThis.hvPlayUnitAttackMotion?.(currentUnit,targetUnit,{source:"rig-lab"});
       }else if(["hit","guard","dodge"].includes(kind)){
+        restoreLabCard(card);
         globalThis.hvPlayUnitReactionMotion?.(currentUnit,kind,targetUnit);
       }else if(kind==="summon"){
-        globalThis.hvPlayUnitSummonMotion?.(card,currentUnit);
+        restoreLabCard(card);
+        cleanupMotion(card);
+        void card.offsetWidth;
+        requestAnimationFrame(()=>globalThis.hvPlayUnitSummonMotion?.(card,currentUnit));
       }else if(kind==="death"){
-        globalThis.hvPlayUnitDeathMotion?.(card);
+        restoreLabCard(card);
+        cleanupMotion(card);
+        void card.offsetWidth;
+        const played=globalThis.hvPlayUnitDeathMotion?.(card);
+        if(played){
+          card.style.visibility="hidden";
+          restoreTimer=setTimeout(()=>{
+            restoreTimer=0;
+            card.style.visibility="";
+            cleanupMotion(card);
+          },760);
+        }
       }
     }catch(error){
+      restoreLabCard(card);
       const meta=document.getElementById("hvRigLabMeta");
       if(meta)meta.textContent=`ERROR ${kind}: ${error?.message||error}`;
     }
@@ -172,11 +205,12 @@
         border-radius:10px;padding:8px 12px;font-weight:700}
       #${LAB_ID} button{cursor:pointer}
       #${LAB_ID} .hv-rig-lab-meta{font-size:12px;opacity:.85;min-height:18px}
-      #${LAB_ID} .hv-rig-lab-stage{position:relative;min-height:330px;border-radius:16px;
+      #${LAB_ID} .hv-rig-lab-stage{position:relative;min-height:370px;border-radius:16px;
         border:1px dashed rgba(255,255,255,.22);overflow:hidden;background:radial-gradient(circle at center,#263145 0,#111725 58%,#070a12 100%)}
-      #${LAB_ID} .hv-rig-lab-unit{position:absolute!important;left:50%!important;top:52%!important;
-        width:150px!important;height:190px!important;transform:translate(-50%,-50%)!important;
-        overflow:visible!important;pointer-events:none!important}
+      #${LAB_ID} .hv-rig-lab-unit{position:absolute!important;left:50%!important;top:50%!important;
+        width:160px!important;height:240px!important;aspect-ratio:2/3!important;
+        transform:translate(-50%,-50%)!important;overflow:visible!important;pointer-events:none!important}
+      #${LAB_ID} .hv-rig-lab-unit>.field-figure-layer{width:100%!important;height:100%!important}
       #${LAB_ID} .hv-rig-lab-target{position:absolute;right:12%;top:50%;width:12px;height:12px;
         border-radius:50%;background:#ff6b6b;opacity:.5}
       #${LAB_ID} .hv-rig-lab-controls{display:flex;gap:8px;flex-wrap:wrap}
@@ -223,7 +257,7 @@
       const btn=ev.target?.closest?.("button[data-rig-action]");
       if(!btn)return;
       const a=btn.dataset.rigAction;
-      if(a==="close"){root.remove();style.remove();return;}
+      if(a==="close"){clearRestoreTimer();root.remove();style.remove();return;}
       if(a==="reload"){renderSelected();return;}
       action(a);
     });
