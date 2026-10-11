@@ -29970,3 +29970,128 @@ html.hv-document-hidden .hv-rig-2d[data-hv-rig-family] .hv-rig-part{animation-pl
 
 /* El megapack no altera reduced-motion ni modo editor. */
 /* === END STAGE 5C-C MEGAPACK ============================================ */
+
+/* === HALLVALLA UNIT MOTION · STAGE 5C-C2 · DODGE ARTICULADO ==============
+   El selector original de Dodge estaba limitado a .cell > .unit-card, por lo que
+   Rig Lab no podía mostrarlo. Esta capa añade soporte DEV y pose corporal por familia. */
+
+/* Rig Lab: reutiliza el desplazamiento lateral canónico de Stage 2. */
+#hvRigLab .unit-card[data-hv-reaction="dodge"] .field-figure-layer{
+  animation:hvUnitReactDodge var(--hv-react-ms,360ms) cubic-bezier(.18,.76,.26,1) both!important;
+}
+
+/* Humanoide: carga el peso en una pierna y aparta torso/cabeza. */
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-body{
+  animation:hvRigDodgeHumanBody var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-head{
+  animation:hvRigDodgeHumanHead var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-leg_near{
+  animation:hvRigDodgeHumanLegNear var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="humanoid_v1"] .hv-rig-part-leg_far{
+  animation:hvRigDodgeHumanLegFar var(--hv-react-ms,360ms) ease-out both!important;
+}
+
+/* Montado: la montura hace sidestep y el jinete compensa hacia el lado contrario. */
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_body{
+  animation:hvRigDodgeMountBody var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-rider_body,
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-rider_head{
+  animation:hvRigDodgeRider var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_foreleg_near,
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_hindleg_far{
+  animation:hvRigDodgeMountLegA var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_foreleg_far,
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="mounted_v1"] .hv-rig-part-mount_hindleg_near{
+  animation:hvRigDodgeMountLegB var(--hv-react-ms,360ms) ease-out both!important;
+}
+
+/* Bestia: agacha cuerpo, gira cabeza y cruza apoyo. */
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-body{
+  animation:hvRigDodgeBeastBody var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-head{
+  animation:hvRigDodgeBeastHead var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-foreleg_near,
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="quadruped_beast_v1"] .hv-rig-part-hindleg_far{
+  animation:hvRigDodgeBeastLegA var(--hv-react-ms,360ms) ease-out both!important;
+}
+
+/* Volador: maniobra de banqueo con alas asimétricas. */
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-body{
+  animation:hvRigDodgeBirdBody var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-wing_near{
+  animation:hvRigDodgeBirdWingNear var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="flying_v1"] .hv-rig-part-wing_far{
+  animation:hvRigDodgeBirdWingFar var(--hv-react-ms,360ms) ease-out both!important;
+}
+
+/* Serpiente: curva lateral de cabeza y secciones. */
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-head{
+  animation:hvRigDodgeSnakeHead var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-body_front{
+  animation:hvRigDodgeSnakeFront var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-body_mid{
+  animation:hvRigDodgeSnakeMid var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="serpentine_v1"] .hv-rig-part-tail{
+  animation:hvRigDodgeSnakeTail var(--hv-react-ms,360ms) ease-out both!important;
+}
+
+/* Dragón: pivote de cabeza, cuerpo, alas y cola durante el sidestep. */
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-body{
+  animation:hvRigDodgeDragonBody var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-head{
+  animation:hvRigDodgeDragonHead var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-wing_near{
+  animation:hvRigDodgeDragonWingNear var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-wing_far{
+  animation:hvRigDodgeDragonWingFar var(--hv-react-ms,360ms) ease-out both!important;
+}
+.unit-card[data-hv-reaction="dodge"] .hv-rig-2d[data-hv-rig-family="winged_quadruped_dragon_v1"] .hv-rig-part-tail{
+  animation:hvRigDodgeDragonTail var(--hv-react-ms,360ms) ease-out both!important;
+}
+
+@keyframes hvRigDodgeHumanBody{0%,100%{transform:none}43%{transform:rotate(-7deg) translate(-3%,-1%) scaleY(.96)}}
+@keyframes hvRigDodgeHumanHead{0%,100%{transform:none}43%{transform:rotate(9deg) translate(-5%,-2%)}}
+@keyframes hvRigDodgeHumanLegNear{0%,100%{transform:none}43%{transform:rotate(11deg) translateX(-4%)}}
+@keyframes hvRigDodgeHumanLegFar{0%,100%{transform:none}43%{transform:rotate(-7deg) translateX(3%)}}
+
+@keyframes hvRigDodgeMountBody{0%,100%{transform:none}43%{transform:rotate(-4deg) translate(-3%,-2%) scaleY(.96)}}
+@keyframes hvRigDodgeRider{0%,100%{transform:none}43%{transform:rotate(8deg) translate(2%,-3%)}}
+@keyframes hvRigDodgeMountLegA{0%,100%{transform:none}43%{transform:rotate(10deg) translate(-3%,-2%)}}
+@keyframes hvRigDodgeMountLegB{0%,100%{transform:none}43%{transform:rotate(-9deg) translate(3%,-1%)}}
+
+@keyframes hvRigDodgeBeastBody{0%,100%{transform:none}43%{transform:rotate(-5deg) translate(-3%,2%) scaleY(.91)}}
+@keyframes hvRigDodgeBeastHead{0%,100%{transform:none}43%{transform:rotate(11deg) translate(-6%,-1%)}}
+@keyframes hvRigDodgeBeastLegA{0%,100%{transform:none}43%{transform:rotate(12deg) translateX(-4%)}}
+
+@keyframes hvRigDodgeBirdBody{0%,100%{transform:none}43%{transform:rotate(-13deg) translate(-3%,-3%)}}
+@keyframes hvRigDodgeBirdWingNear{0%,100%{transform:none}43%{transform:rotate(24deg) scaleY(.9)}}
+@keyframes hvRigDodgeBirdWingFar{0%,100%{transform:none}43%{transform:rotate(-18deg) scaleY(1.04)}}
+
+@keyframes hvRigDodgeSnakeHead{0%,100%{transform:none}43%{transform:rotate(15deg) translate(-8%,-2%)}}
+@keyframes hvRigDodgeSnakeFront{0%,100%{transform:none}43%{transform:rotate(-8deg) translate(-4%,1%)}}
+@keyframes hvRigDodgeSnakeMid{0%,100%{transform:none}43%{transform:rotate(5deg) translate(3%,2%)}}
+@keyframes hvRigDodgeSnakeTail{0%,100%{transform:none}43%{transform:rotate(-9deg) translate(-2%,2%)}}
+
+@keyframes hvRigDodgeDragonBody{0%,100%{transform:none}43%{transform:rotate(-5deg) translate(-3%,-2%) scaleY(.95)}}
+@keyframes hvRigDodgeDragonHead{0%,100%{transform:none}43%{transform:rotate(12deg) translate(-6%,-3%)}}
+@keyframes hvRigDodgeDragonWingNear{0%,100%{transform:none}43%{transform:rotate(21deg) scale(.94)}}
+@keyframes hvRigDodgeDragonWingFar{0%,100%{transform:none}43%{transform:rotate(-17deg) scale(1.02)}}
+@keyframes hvRigDodgeDragonTail{0%,100%{transform:none}43%{transform:rotate(-12deg) translate(-3%,2%)}}
+
+/* === END STAGE 5C-C2 · DODGE ARTICULADO ================================ */

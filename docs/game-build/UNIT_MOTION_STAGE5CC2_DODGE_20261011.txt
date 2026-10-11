@@ -1,0 +1,21 @@
+HALLVALLA 2026-10-11 · STAGE 5C-C2 · DODGE ARTICULADO
+
+Problema:
+El botón Dodge del Rig Lab cambiaba data-hv-reaction a "dodge", pero la animación
+genérica original solo estaba definida para:
+.cell > .unit-card[data-hv-reaction="dodge"]
+
+Rig Lab no vive dentro de una .cell, así que la maniobra lateral no era visible.
+
+Corrección:
+- Se habilita hvUnitReactDodge dentro de #hvRigLab.
+- Se añaden poses corporales internas de esquive para:
+  humanoid_v1
+  mounted_v1
+  quadruped_beast_v1
+  flying_v1
+  serpentine_v1
+  winged_quadruped_dragon_v1
+
+La reacción sigue siendo puramente visual.
+No modifica la fórmula de evasión, precisión, daño, IA, PvP ni timings de combate.
