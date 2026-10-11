@@ -505,7 +505,7 @@ function maxWindowGuard(u){
   const base=typeof u.baseGuard==="number"?u.baseGuard:(u.guard||0);
   return Math.max(0,base+(getLeaderBonus(u).guard||0));
 }
-function effectiveGuard(u){return Math.max(0,(u?.guard||0)+(u?.tempGuardBuff||0)+getJoanGuardBuff(u)-getGenghisGuardDebuff(u)-getRtTrapDebuff(u,"guard")+hectorGuardAura(u)+achillesConcentrationGuard(u)+attilaEnemyAura(u).guard+solomonJinnGuardAura(u)+hoplitePhalanxGuard(u))}
+function effectiveGuard(u){return Math.max(0,(u?.guard||0)+(u?.tempGuardBuff||0)-getGenghisGuardDebuff(u)-getRtTrapDebuff(u,"guard")+hectorGuardAura(u)+achillesConcentrationGuard(u)+attilaEnemyAura(u).guard+solomonJinnGuardAura(u)+hoplitePhalanxGuard(u))}
 function displayEffectiveGuard(u){return Math.max(0,effectiveGuard(u)+(u?.defenseModeReady?2:0))}
 function getEvasionPressure(u){return Math.max(0,Number(u?.evasionSpent||0))}
 function getBaseEvasionScore(u){return Math.max(0,effectiveDex(u)+effectiveAgi(u))}
@@ -630,8 +630,7 @@ function getCombatMods(attacker,defender,attackContext=null){
   if(isBasicUnit(attacker)&&defender.special&&ownerHasUnit(attacker.owner,"spartacus")){mods.attackerAtk+=5;mods.notes.push(`${attacker.name} +5 AT por Romper Cadenas.`);}
   const caesar=firstOwnerUnit(defender.owner,"julius_caesar");
   if(caesar&&!caesar.caesarUsedWindow){mods.attackerAtk-=4;mods.attackerDex-=3;mods.caesarId=caesar.id;mods.notes.push(`${attacker.name} -4 AT/-3 DX por Disciplina de las Legiones.`);}
-  const joan=firstOwnerUnit(defender.owner,"joan_of_arc");
-  if(joan&&!defender.leader&&defender.id!==joan.id&&isLongGrowthReady(joan,"joanLastProcWindowIndex")&&defender.noReductionWindowKey!==publicState?.combatWindowKey&&!isRtTrapLocked(defender,"reduction")){mods.damageReduction+=3;mods.joanId=joan.id;mods.notes.push(`Juana de Arco reduce 3 daño recibido por un aliado.`);}
+
   if(defender.key==="gilgamesh"&&isRangedAttack(attacker,defender)&&defender.noReductionWindowKey!==publicState?.combatWindowKey&&!isRtTrapLocked(defender,"reduction")){mods.damageReduction+=2;mods.notes.push(`Gilgamesh reduce 2 daño de proyectiles o magia a distancia.`);}
   if(melee&&attacker.key==="bengal_tiger"&&isAttackFromStealth(attacker,attackContext)){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Emboscada desde Sigilo.`);}
   if(melee&&attacker.key==="bengal_tiger"&&adjacentAllies(defender).some(a=>a.owner===attacker.owner&&isBeastUnit(a))){mods.defenderAgi-=2;mods.notes.push(`${defender.name} -2 AGI por Ataque por la espalda de la manada.`);}

@@ -109,7 +109,8 @@ function resolveWarriorLeaderSweep(units,attacker,primaryDefender,{runInState=(f
     if(!target)continue;
     const state={units:out,legendaryTraps,beastTraps};
     const mods=runInState(()=>getCombatMods(liveAttacker,target,{startedFromStealth:false,warriorSweep:true}),state);
-    const hit=runInState(()=>rollHit(liveAttacker,target,mods),state);
+    out=applyGuardOfIronCooldownFromMods(out,mods);
+    const hit=runInState(()=>rollHit(liveAttacker,target,mods),{units:out,legendaryTraps,beastTraps});
     if(!hit.hit){hits.push(`${target.name}: evade`);continue;}
     const damage=runInState(()=>getBattleDamage(liveAttacker,mods),state);
     let guardLoss=0,hpLoss=0;
@@ -346,11 +347,7 @@ function applyAfterDamageBonuses(units,attackerBefore,defenderBefore,hpLoss,defe
     });
   }
   if(mods.caesarId)out=out.map(u=>u.id===mods.caesarId?{...u,caesarUsedWindow:true}:u);
-  if(mods.joanId&&attackHit){
-    const growthWindow=typeof getLongGrowthWindowIndex==="function"?getLongGrowthWindowIndex():Math.max(0,Number(publicState?.combatWindowIndex||0));
-    out=out.map(u=>u.id===mods.joanId?{...u,joanUsedWindow:true,joanLastProcWindowIndex:growthWindow}:u);
-    out=out.map(u=>u.id===defenderBefore.id&&u.hp>0&&!u.leader?{...u,joanGuardBuff:Math.max(8,Number(u.joanGuardBuff||0)),joanGuardUntilWindowIndex:Math.max(growthWindow+1,Number(u.joanGuardUntilWindowIndex||-1))}:u);
-  }
+
   if(defenderFell){
     const owner=attackerBefore.owner;
     out=out.map(u=>{
@@ -360,6 +357,63 @@ function applyAfterDamageBonuses(units,attackerBefore,defenderBefore,hpLoss,defe
     });
   }
   return out;
+}
+
+const HALLVALLA_INTERPOSITION_SKILL_ID="HV-130";
+const HALLVALLA_INTERPOSITION_COOLDOWN_MS=9000;
+function hallvallaUnitHasRuntimeSkill(unit,skillId){
+  const ids=[
+    ...(Array.isArray(unit?.unitSkillRuntimeIds)?unit.unitSkillRuntimeIds:[]),
+    ...(Array.isArray(unit?.unitSkillIds)?unit.unitSkillIds:[]),
+    ...(Array.isArray(unit?.unitInnateSkillIds)?unit.unitInnateSkillIds:[])
+  ];
+  return ids.includes(skillId);
+}
+function getHallvallaInterpositionProtector(defender,units=publicState?.units||[],now=Date.now()){
+  if(!defender||defender.leader||Number(defender.hp||0)<=0)return null;
+  const currentWindow=publicState?.combatWindowKey||"";
+  const candidates=(units||[]).filter(unit=>{
+    if(!unit||unit.id===defender.id||unit.owner!==defender.owner||unit.leader||Number(unit.hp||0)<=0)return false;
+    if(!hallvallaUnitHasRuntimeSkill(unit,HALLVALLA_INTERPOSITION_SKILL_ID))return false;
+    if(Number(unit?.unitSkillCooldowns?.[HALLVALLA_INTERPOSITION_SKILL_ID]||0)>now)return false;
+    if(currentWindow&&unit.noMoveWindowKey===currentWindow)return false;
+    if(typeof isRtTrapLocked==="function"&&isRtTrapLocked(unit,"move",now))return false;
+    try{return dist(unit,defender)<=2;}catch(_){return false;}
+  });
+  candidates.sort((a,b)=>{
+    let da=99,db=99;
+    try{da=dist(a,defender);db=dist(b,defender);}catch(_){}
+    if(da!==db)return da-db;
+    return Number(b.guard||0)-Number(a.guard||0);
+  });
+  return candidates[0]||null;
+}
+function activateHallvallaInterposition(defender,units,now=Date.now()){
+  const protector=getHallvallaInterpositionProtector(defender,units,now);
+  if(!protector)return{units:[...(units||[])],defender,originalDefender:null,protector:null,text:""};
+  const cooldownUntil=now+HALLVALLA_INTERPOSITION_COOLDOWN_MS;
+  const nextUnits=(units||[]).map(unit=>unit.id===protector.id?{
+    ...unit,
+    unitSkillCooldowns:{...(unit.unitSkillCooldowns||{}),[HALLVALLA_INTERPOSITION_SKILL_ID]:cooldownUntil}
+  }:unit);
+  const liveProtector=nextUnits.find(unit=>unit.id===protector.id)||protector;
+  return{
+    units:nextUnits,
+    defender:liveProtector,
+    originalDefender:defender,
+    protector:liveProtector,
+    text:`Interposición: ${liveProtector.name} recibe el ataque destinado a ${defender.name}.`
+  };
+}
+function applyGuardOfIronCooldownFromMods(units,mods){
+  const defenderId=String(mods?.guardOfIronDefenderId||"");
+  const skillId=String(mods?.guardOfIronSkillId||"");
+  const cooldownUntil=Number(mods?.guardOfIronCooldownUntil||0);
+  if(!defenderId||!skillId||cooldownUntil<=0)return[...(units||[])];
+  return (units||[]).map(unit=>unit.id===defenderId?{
+    ...unit,
+    unitSkillCooldowns:{...(unit.unitSkillCooldowns||{}),[skillId]:Math.max(cooldownUntil,Number(unit?.unitSkillCooldowns?.[skillId]||0))}
+  }:unit);
 }
 function hasAxeLeader(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="axe"&&hasActiveLeader(owner,units)}
 function hasBloodVictory(owner,units=publicState?.units||[]){return hasAxeLeader(owner,units)&&getLeaderAbilityForOwner(owner,units)==="blood_victory"}
@@ -633,9 +687,29 @@ async function resolveSharedAttackOutcome({
   actionLogPrefix=""
 }){
   let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false,dragonCompanionText="";
+  const originalDefender=d;
+  const interposition=hit?.hit?activateHallvallaInterposition(d,units):{units:[...(units||[])],defender:d,originalDefender:null,protector:null,text:""};
+  units=interposition.units||units;
+  if(interposition.protector){
+    d=interposition.defender;
+    const redirectMods=runInState(()=>getCombatMods(a,d,attackContext),{units,legendaryTraps:preTrap.traps,beastTraps});
+    const baseNotes=(mods?.notes||[]).filter(note=>!/Guardia de Hierro|Protector del Líder|Interposición/.test(String(note)));
+    const defenseNotes=(redirectMods?.notes||[]).filter(note=>/Guardia de Hierro|Protector del Líder/.test(String(note)));
+    mods={...mods,defenderGuard:Number(redirectMods?.defenderGuard||0),damageReduction:Number(redirectMods?.damageReduction||0),notes:[...baseNotes,...defenseNotes]};
+    delete mods.guardOfIronDefenderId;
+    delete mods.guardOfIronSkillId;
+    delete mods.guardOfIronCooldownUntil;
+    if(redirectMods?.guardOfIronDefenderId){
+      mods.guardOfIronDefenderId=redirectMods.guardOfIronDefenderId;
+      mods.guardOfIronSkillId=redirectMods.guardOfIronSkillId;
+      mods.guardOfIronCooldownUntil=redirectMods.guardOfIronCooldownUntil;
+    }
+  }
+  units=applyGuardOfIronCooldownFromMods(units,mods);
+  d=units.find(unit=>unit.id===d.id)||d;
   const mulanFollowupAttack=!!(a&&a.key==="mulan"&&a.mulanFollowupReady===true);
-  const declaredMelee=dist(a,d)<=1;
-  const declaredRanged=isRangedAttack(a,d);
+  const declaredMelee=dist(a,originalDefender)<=1;
+  const declaredRanged=isRangedAttack(a,originalDefender);
   const attackerWasStealthedBeforeAttack=attackContext.startedFromStealth;
   const keepStealthAfterAttack=shouldKeepStealthAfterAttack(a,d,attackContext);
   units=applyAttackSideEffects(a,d,units);
@@ -867,6 +941,8 @@ async function resolveSharedAttackOutcome({
     const cMods=runInState(()=>isMiyamotoCounter
       ?prepareMiyamotoCounterMods(defenderAfter,getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder,!hit.hit)
       :prepareCounterMods(getCombatMods(defenderAfter,attackerAfter),counterDefenseRemainder),{units,legendaryTraps:resolvedLegendaryTraps,beastTraps});
+    units=applyGuardOfIronCooldownFromMods(units,cMods);
+    attackerAfter=units.find(u=>u.id===attackerAfter.id)||attackerAfter;
     const cHit=rollHit(defenderAfter,attackerAfter,cMods);
     const cSpend=spendActionStatsByAttack(defenderAfter,attackerAfter,units,cMods,cHit);
     units=cSpend.units;
@@ -940,7 +1016,7 @@ async function resolveSharedAttackOutcome({
   bloodVictoryCheckpoint=[...units];
   const assassinIgnoreText=shouldIgnoreGuardForAttack(a,d,units)&&hit.hit?(isAssassinFinalBlowEligible(a,d)?" Ultimate Blow: ignora Guardia; PREC y EVA se resolvieron normalmente.":" Ignora Guardia."):"";
   const prePostCombatUnits=[...units];
-  const pressureText=evasionPressureText(d.name,evasionPressure.spent,evasionPressure.remaining);
+  const pressureText=evasionPressureText((interposition.originalDefender||d).name,evasionPressure.spent,evasionPressure.remaining);
   const actionSpendText=actionStatSpendText(a.name,actionSpend.spent,actionSpend.remaining);
   const warCryText=warCryTriggered?` Grito de Guerra: las otras unidades aliadas ganan +1 AT hasta el final del ciclo táctico actual.`:"";
   const bloodVictoryText=bloodVictoryTriggered?` ${bloodVictoryLogs.join(" ")}`:"";
@@ -972,7 +1048,9 @@ async function resolveSharedAttackOutcome({
   const stealthText=attackerWasStealthedBeforeAttack&&!hanzoContractResult.triggered?(geishaKeepsStealthAfterKill?` Danza del Engaño: ${a.name} destruye a su objetivo con Corte de Abanico y conserva Sigilo.`:(keepStealthAfterAttack?` Golpe Silencioso: ${a.name} atacó a distancia y mantiene Sigilo.`:` ${a.name} pierde Sigilo al declarar el ataque.`)):"";
   const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}${hanzoContractResult.text||""}${simoStealthResult.text||""}`;
   const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
-  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${d.name}: acierta (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD del ciclo táctico actual. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${hannibalSplitText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${actionLogPrefix}${a.name} ataca a ${d.name}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
+  const actionTargetName=(interposition.originalDefender||d).name;
+  const interpositionLogText=interposition.protector?` ${interposition.text}`:"";
+  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: acierta (${hit.roll}/${hit.chance}).${rerollText}${interpositionLogText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD del ciclo táctico actual. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${hannibalSplitText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
   return {
     units,
     prePostCombatUnits,
