@@ -291,9 +291,33 @@ function adjacentAllies(u,units=publicState?.units||[]){return adjacentUnits(u,u
 function isBasicUnit(u){return !!u&&!u.leader&&!u.special&&String(u.rarity||"Básica").toLowerCase().includes("bás")}
 function isRangedAttack(attacker,defender){return !!attacker&&!!defender&&dist(attacker,defender)>1&&(attacker.range||1)>1}
 function isHalfHpOrLess(u){return !!u&&(u.hp||0)<=Math.ceil(effectiveMaxHp(u)/2)}
-function richardBonusHp(u,units=publicState?.units||[]){
-  const active=!!(u?.richardBuffSource&&unitsInPlay(units).some(r=>r.id===u.richardBuffSource&&r.key==="richard_lionheart"&&r.hp>0));
-  return active?Math.max(1,Number(u.richardBuffStacks||1))*2:0;
+const HALLVALLA_LONG_GROWTH_CYCLES=3;
+function getLongGrowthWindowIndex(state=publicState){return Math.max(0,Number(state?.combatWindowIndex||0));}
+function isLongGrowthReady(source,marker,cycles=HALLVALLA_LONG_GROWTH_CYCLES,state=publicState){
+  if(!source)return false;
+  const current=getLongGrowthWindowIndex(state);
+  const marked=Number(source?.[marker]);
+  const anchor=Number.isFinite(marked)?marked:Math.max(0,Number(source?.summonedWindowIndex||0));
+  return current-anchor>=Math.max(1,Number(cycles)||HALLVALLA_LONG_GROWTH_CYCLES);
+}
+function richardBonusHp(u){
+  if(!u||u.leader)return 0;
+  const legacy=u.richardBuffSource?2:0;
+  return Math.min(2,Math.max(0,Number(u.richardHpGrowth||legacy)));
+}
+function alexanderBonusHp(u){
+  if(!u||u.leader)return 0;
+  return Math.min(1,Math.max(0,Number(u.alexanderHpGrowth||0)));
+}
+function getJoanGuardBuff(u,state=publicState){
+  if(!u||u.leader)return 0;
+  const current=getLongGrowthWindowIndex(state);
+  return Number(u.joanGuardUntilWindowIndex??-1)>=current?Math.min(8,Math.max(0,Number(u.joanGuardBuff||0))):0;
+}
+function getGenghisGuardDebuff(u,state=publicState){
+  if(!u||u.leader)return 0;
+  const current=getLongGrowthWindowIndex(state);
+  return Number(u.genghisGuardUntilWindowIndex??-1)>=current?Math.min(2,Math.max(0,Number(u.genghisGuardDebuff||0))):0;
 }
 function gilgameshEnemyAura(u,units=publicState?.units||[]){return u?.leader?0:unitsInPlay(units).some(g=>g.key==="gilgamesh"&&g.owner!==u.owner&&g.hp>0&&dist(g,u)<=1)?-3:0}
 function blackRavenAgiAura(u,units=publicState?.units||[]){return u?.leader?0:unitsInPlay(units).some(r=>r.key==="black_raven"&&r.owner!==u.owner&&r.hp>0&&dist(r,u)<=2)?-2:0}
@@ -450,7 +474,7 @@ function isRhinoStunnedNow(u){return !!(u&&u.rhinoStunnedWindowKey&&u.rhinoStunn
 function halveForRhinoStun(v,u){v=Math.max(0,Number(v)||0);return isRhinoStunnedNow(u)?Math.floor(v/2):v}
 function effectiveDex(u){const forcedZero=!!(u?.saboteadorDexZeroWindowKey&&u.saboteadorDexZeroWindowKey===publicState?.combatWindowKey);const burnPanic=!!u&&!u.leader&&Number(u?.burnDamage||0)>0&&(Number(u?.burnTurns||0)>0||u?.burnPersistent===true);if(forcedZero||burnPanic)return 0;const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);const rawTempDebuff=Number(u?.tempDexDebuff||0);const legacyIgaHack=!!(u?.saboteadorDexZeroWindowKey&&rawTempDebuff>=90);const tempDebuff=legacyIgaHack?0:rawTempDebuff;let v=(u?.dex||0)+(u?.tempDexBuff||0)-tempDebuff-getRtTrapDebuff(u,"dex")+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
 function effectiveAgi(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)-getRtTrapDebuff(u,"agi")+b+(arcaneLink.agi||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return applyHallvallaValueHooks("unit.effectiveAgi",Math.max(0,halveForRhinoStun(v,u)),{unit:u})}
-function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(1,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u)-Number(u?.tempHpDebuff||0)-getRtTrapDebuff(u,"hp"))}
+function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(1,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u)+alexanderBonusHp(u)-Number(u?.tempHpDebuff||0)-getRtTrapDebuff(u,"hp"))}
 function isSkiparSummonMoveActive(u,state=publicState){return !!(u&&u.key==="skipar_del_drakkar"&&state&&u.summonedWindowKey&&u.summonedWindowKey===state.combatWindowKey);}
 function getCanonicalNaturalMovement(u){
   const movement=typeof getHallvallaUnitMovementProfile==="function"?getHallvallaUnitMovementProfile(u):null;
@@ -481,7 +505,7 @@ function maxWindowGuard(u){
   const base=typeof u.baseGuard==="number"?u.baseGuard:(u.guard||0);
   return Math.max(0,base+(getLeaderBonus(u).guard||0));
 }
-function effectiveGuard(u){return Math.max(0,(u?.guard||0)+(u?.tempGuardBuff||0)-getRtTrapDebuff(u,"guard")+hectorGuardAura(u)+achillesConcentrationGuard(u)+attilaEnemyAura(u).guard+solomonJinnGuardAura(u)+hoplitePhalanxGuard(u))}
+function effectiveGuard(u){return Math.max(0,(u?.guard||0)+(u?.tempGuardBuff||0)+getJoanGuardBuff(u)-getGenghisGuardDebuff(u)-getRtTrapDebuff(u,"guard")+hectorGuardAura(u)+achillesConcentrationGuard(u)+attilaEnemyAura(u).guard+solomonJinnGuardAura(u)+hoplitePhalanxGuard(u))}
 function displayEffectiveGuard(u){return Math.max(0,effectiveGuard(u)+(u?.defenseModeReady?2:0))}
 function getEvasionPressure(u){return Math.max(0,Number(u?.evasionSpent||0))}
 function getBaseEvasionScore(u){return Math.max(0,effectiveDex(u)+effectiveAgi(u))}
@@ -607,7 +631,7 @@ function getCombatMods(attacker,defender,attackContext=null){
   const caesar=firstOwnerUnit(defender.owner,"julius_caesar");
   if(caesar&&!caesar.caesarUsedWindow){mods.attackerAtk-=4;mods.attackerDex-=3;mods.caesarId=caesar.id;mods.notes.push(`${attacker.name} -4 AT/-3 DX por Disciplina de las Legiones.`);}
   const joan=firstOwnerUnit(defender.owner,"joan_of_arc");
-  if(joan&&!joan.joanUsedWindow&&defender.noReductionWindowKey!==publicState?.combatWindowKey&&!isRtTrapLocked(defender,"reduction")){mods.damageReduction+=3;mods.joanId=joan.id;mods.notes.push(`Juana de Arco reduce 3 daño recibido por un aliado.`);}
+  if(joan&&!defender.leader&&defender.id!==joan.id&&isLongGrowthReady(joan,"joanLastProcWindowIndex")&&defender.noReductionWindowKey!==publicState?.combatWindowKey&&!isRtTrapLocked(defender,"reduction")){mods.damageReduction+=3;mods.joanId=joan.id;mods.notes.push(`Juana de Arco reduce 3 daño recibido por un aliado.`);}
   if(defender.key==="gilgamesh"&&isRangedAttack(attacker,defender)&&defender.noReductionWindowKey!==publicState?.combatWindowKey&&!isRtTrapLocked(defender,"reduction")){mods.damageReduction+=2;mods.notes.push(`Gilgamesh reduce 2 daño de proyectiles o magia a distancia.`);}
   if(melee&&attacker.key==="bengal_tiger"&&isAttackFromStealth(attacker,attackContext)){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Emboscada desde Sigilo.`);}
   if(melee&&attacker.key==="bengal_tiger"&&adjacentAllies(defender).some(a=>a.owner===attacker.owner&&isBeastUnit(a))){mods.defenderAgi-=2;mods.notes.push(`${defender.name} -2 AGI por Ataque por la espalda de la manada.`);}

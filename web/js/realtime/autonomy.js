@@ -153,6 +153,9 @@ async function hallvallaRtAttackUnit(attacker,target){
     const attackerNow=units.find(u=>u.id===a.id)||a;
     const defenderNow=units.find(u=>u.id===d.id)||d;
     const battleFxEvent=typeof makeBattleFxEvent==="function"?makeBattleFxEvent("attack",attackerNow,defenderNow,{stealthAttack:!!prep.attackContext?.startedFromStealth,hit:!!prep.hit?.hit}):null;
+    const defenseFxEvent=prep.hit?.hit&&Number(outcome.guardLoss||0)>0&&Number(outcome.hpLoss||0)<=0&&units.some(u=>u.id===d.id)&&typeof makeDefenseFxEvent==="function"
+      ?makeDefenseFxEvent("guard_block",defenderNow,{guardLoss:outcome.guardLoss,hpLoss:0,combatResult:"blocked"})
+      :null;
     let floatFxEvent=null;
     if(typeof makeFloatFxEvent==="function"){
       if(prep.hit?.hit&&units.some(u=>u.id===d.id))floatFxEvent=outcome.hpLoss>0?makeFloatFxEvent("damage",defenderNow,outcome.hpLoss):(outcome.guardLoss>0?makeFloatFxEvent("debuff",defenderNow,outcome.guardLoss,{iconText:"🛡"}):null);
@@ -168,7 +171,7 @@ async function hallvallaRtAttackUnit(attacker,target){
         globalThis.hvPlayUnitReactionMotion(defenderNow,reaction,attackerNow);
       }catch(_){}
     }
-    await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:prep.beastTraps||publicState?.beastTraps||[],legendaryTraps,battleFxEvent,floatFxEvent,statusFxEvent:outcome.statusFxEvent||outcome.dragonCompanionResult?.statusFxEvent||outcome.veilCurseResult?.statusFxEvent||outcome.arcaneAdeptStatusEvent||outcome.poisonStatusEvent||outcome.unitSkillStatusEvent||outcome.miyamotoCounterBleedEvent||outcome.lionFearCombat?.statusFxEvent||outcome.porcupineResult?.statusFxEvent||outcome.genghisDebuffResult?.statusFxEvent||null});
+    await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:prep.beastTraps||publicState?.beastTraps||[],legendaryTraps,battleFxEvent,defenseFxEvent,floatFxEvent,statusFxEvent:outcome.statusFxEvent||outcome.dragonCompanionResult?.statusFxEvent||outcome.veilCurseResult?.statusFxEvent||outcome.arcaneAdeptStatusEvent||outcome.poisonStatusEvent||outcome.unitSkillStatusEvent||outcome.miyamotoCounterBleedEvent||outcome.lionFearCombat?.statusFxEvent||outcome.porcupineResult?.statusFxEvent||outcome.genghisDebuffResult?.statusFxEvent||null});
     // Espada Invicta: una baja habilita el siguiente ataque sin esperar el cooldown normal.
     // No se serializa un "khalidChainReady": la única memoria persistente es la penalización AT acumulada.
     if(outcome.khalidChainTriggered===true)hallvallaRtState.attackAt.set(a.id,0);

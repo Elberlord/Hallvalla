@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 /* HallValla 7BOARDCTRL8U · FX, audio y progreso local */
 
 
@@ -417,6 +417,22 @@ function makeFloatFxEvent(type,unit,amount=0,extra={}){
     ...(extra||{})
   };
 }
+function makeDefenseFxEvent(type,unit,meta={}){
+  if(!unit)return null;
+  return {
+    eventId:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+    type:type||"guard_block",
+    unitId:unit.id||"",
+    unitOwner:unit.owner||0,
+    unitName:unit.name||"",
+    at:{x:Number(unit.x||0),y:Number(unit.y||0)},
+    rarityClass:getFxRarityClass(unit),
+    guardLoss:Math.max(0,Number(meta.guardLoss||0)),
+    hpLoss:Math.max(0,Number(meta.hpLoss||0)),
+    combatResult:String(meta.combatResult||"blocked")
+  };
+}
+
 function spawnBattleFxNode(className,left,top,cssVars={},ttl=900,html=""){
   const layer=$("battleFxLayer");
   if(!layer)return null;
@@ -746,8 +762,9 @@ function playDefenseFxEvent(fx){
   const typeClass=fx.type==="guard_break"?"break":"block";
   const shardMarkup=fx.type==="guard_break"?'<span class="battle-fx-guard-shard shard-1"></span><span class="battle-fx-guard-shard shard-2"></span><span class="battle-fx-guard-shard shard-3"></span><span class="battle-fx-guard-shard shard-4"></span>':'';
   const crackMarkup=fx.type==="guard_break"?'<span class="battle-fx-guard-crack crack-1"></span><span class="battle-fx-guard-crack crack-2"></span><span class="battle-fx-guard-crack crack-3"></span>':'';
-  const ttl=fx.type==="guard_break"?960:780;
-  spawnBattleFxNode(`battle-fx-guard ${typeClass} ${sideClass} ${rarityClass}`,point.x,point.y,{},ttl,`<div class="battle-fx-guard-ring"></div><div class="battle-fx-guard-glow"></div><div class="battle-fx-guard-shield"></div>${crackMarkup}${shardMarkup}`);
+  const bubbleMarkup=fx.type==="guard_block"?'<div class="battle-fx-guard-bubble" aria-hidden="true"></div>':'';
+  const ttl=fx.type==="guard_break"?960:620;
+  spawnBattleFxNode(`battle-fx-guard ${typeClass} ${sideClass} ${rarityClass}`,point.x,point.y,{},ttl,`${bubbleMarkup}<div class="battle-fx-guard-ring"></div><div class="battle-fx-guard-glow"></div><div class="battle-fx-guard-shield"></div>${crackMarkup}${shardMarkup}`);
 }
 function playDodgeFxEvent(fx){
   if(!fx||!fx.at)return;
@@ -1233,25 +1250,34 @@ function getUnitWeaponKind(unit){
   if(!unit)return "sword";
   const explicit=String(unit.weaponKind||unit.attackWeapon||"").toLowerCase();
   if(["sword","axe","arrow","spear","fire_magic"].includes(explicit))return explicit;
-
   const key=String(unit.key||"").toLowerCase();
   const name=String(unit.name||"").toLowerCase();
-  const text=String(unit.text||unit.effectText||unit.ability||"").toLowerCase();
   const icon=String(unit.icon||"");
   const leaderType=String(unit.leaderType||"").toLowerCase();
   const tactical=String(unit.weaponClass||getWeaponClassForCard(unit)||"").toLowerCase();
+  const dragonElement=String(unit.dragonElement||unit.element||unit.elementalType||"").toLowerCase();
 
-  const isMage=leaderType==="mage"||tactical==="mage"||key.includes("mage")||key.includes("adept")||key.includes("arcane")||name.includes("mago")||name.includes("maga")||name.includes("arcano")||name.includes("arcana")||name.includes("hechic")||text.includes("arcana")||text.includes("arcano")||text.includes("fuego")||text.includes("llama")||text.includes("hechic")||icon.includes("🜁")||icon.includes("🔥");
+  const isMage=leaderType==="mage"||tactical==="mage"||unit.caster||unit.hechicero||unit.hechicera||unit.nigromante||
+    key.includes("mage")||key.includes("adept")||key.includes("arcane")||key.includes("ifrit")||
+    key.includes("fire_dragon")||(unit.dragonCompanion&&dragonElement==="fire");
   if(isMage)return "fire_magic";
 
-  // El arma visual tiene prioridad sobre la clase táctica. Por ejemplo,
-  // Yabusame es Caballería tácticamente, pero dispara un arco.
-  if(leaderType==="archer"||tactical==="bow"||(typeof isArcherWeaponUnitCardLike==="function"&&isArcherWeaponUnitCardLike(unit))||key.includes("archer")||key.includes("yabusame")||key.includes("bow")||key.includes("arrow")||name.includes("arquera")||name.includes("arquero")||name.includes("arco")||name.includes("flecha")||name.includes("tirador")||name.includes("simo")||icon.includes("🏹"))return "arrow";
-  if(leaderType==="axe"||tactical==="axe"||key.includes("axe")||key.includes("hacha")||key.includes("ulfhednar")||key.includes("berserker")||name.includes("hacha")||name.includes("ulfhednar")||name.includes("berserker")||text.includes("hacha")||icon.includes("🪓"))return "axe";
-  if(tactical==="spear"||key.includes("spearman")||key.includes("spear")||key.includes("lance")||key.includes("lanza")||key.includes("naginata")||name.includes("lancero")||name.includes("lanza")||name.includes("pica")||name.includes("naginata")||text.includes("lanza")||text.includes("pica"))return "spear";
+  if(leaderType==="archer"||tactical==="bow"||(typeof isArcherWeaponUnitCardLike==="function"&&isArcherWeaponUnitCardLike(unit))||
+    key.includes("archer")||key.includes("yabusame")||key.includes("bow")||key.includes("arrow")||
+    name.includes("arquera")||name.includes("arquero")||name.includes("arco")||name.includes("flecha")||name.includes("tirador")||
+    name.includes("simo")||icon.includes("🏹"))return "arrow";
 
-  // La caballería ligera y demás clases de Caballería usan espada salvo que
-  // su arte/nombre haya sido detectado arriba como arco, lanza o hacha.
+  if(leaderType==="axe"||tactical==="axe"||(typeof isAxeUnitCardLike==="function"&&isAxeUnitCardLike(unit))||
+    key.includes("axe")||key.includes("hacha")||key.includes("ulfhednar")||key.includes("berserker")||
+    name.includes("hacha")||name.includes("ulfhednar")||name.includes("berserker")||icon.includes("🪓"))return "axe";
+
+  if(tactical==="spear"||(typeof isLanceUnitCardLike==="function"&&isLanceUnitCardLike(unit))||
+    key.includes("spearman")||key.includes("spear")||key.includes("lance")||key.includes("lanza")||key.includes("naginata")||
+    name.includes("lancero")||name.includes("lanza")||name.includes("naginata"))return "spear";
+
+  if(tactical==="sword"||tactical==="cavalry"||tactical==="beast"||tactical==="neutral")return "sword";
+  if(icon.includes("🏹"))return "arrow";
+  if(icon.includes("🪓"))return "axe";
   return "sword";
 }
 function getWeaponKindFromSoundName(soundName){

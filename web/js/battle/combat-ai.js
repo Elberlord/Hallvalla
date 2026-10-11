@@ -328,7 +328,7 @@ function applyLeonidasLastStand(units,leonidasId,attackerId){
   }
   return {units:out,triggered:true,killerFell,saved:killerFell};
 }
-function applyAfterDamageBonuses(units,attackerBefore,defenderBefore,hpLoss,defenderFell,mods={}){
+function applyAfterDamageBonuses(units,attackerBefore,defenderBefore,hpLoss,defenderFell,mods={},attackHit=true){
   let out=[...(units||[])];
   const attacker=out.find(u=>u.id===attackerBefore.id);
   if(attacker){
@@ -346,9 +346,10 @@ function applyAfterDamageBonuses(units,attackerBefore,defenderBefore,hpLoss,defe
     });
   }
   if(mods.caesarId)out=out.map(u=>u.id===mods.caesarId?{...u,caesarUsedWindow:true}:u);
-  if(mods.joanId){
-    out=out.map(u=>u.id===mods.joanId?{...u,joanUsedWindow:true}:u);
-    out=out.map(u=>u.id===defenderBefore.id&&u.hp>0?{...u,guard:(u.guard||0)+8}:u);
+  if(mods.joanId&&attackHit){
+    const growthWindow=typeof getLongGrowthWindowIndex==="function"?getLongGrowthWindowIndex():Math.max(0,Number(publicState?.combatWindowIndex||0));
+    out=out.map(u=>u.id===mods.joanId?{...u,joanUsedWindow:true,joanLastProcWindowIndex:growthWindow}:u);
+    out=out.map(u=>u.id===defenderBefore.id&&u.hp>0&&!u.leader?{...u,joanGuardBuff:Math.max(8,Number(u.joanGuardBuff||0)),joanGuardUntilWindowIndex:Math.max(growthWindow+1,Number(u.joanGuardUntilWindowIndex||-1))}:u);
   }
   if(defenderFell){
     const owner=attackerBefore.owner;
@@ -472,7 +473,8 @@ function applyGenghisKhanKillDebuff(units,attackerBefore,defenderBefore,defender
   out=out.map(u=>{
     if(!affectedIds.has(u.id))return u;
     const nextKey=nextWindowKeyForOwner(u.owner);
-    return {...u,guard:Math.max(0,Number(u.guard||0)-2),genghisMovDebuff:Math.max(1,Number(u.genghisMovDebuff||0),1),genghisMovDebuffWindowKey:nextKey,genghisMovDebuffSource:genghis.name||"Gengis Kan"};
+    const currentWindow=typeof getLongGrowthWindowIndex==="function"?getLongGrowthWindowIndex():Math.max(0,Number(publicState?.combatWindowIndex||0));
+    return {...u,genghisGuardDebuff:Math.max(2,Number(u.genghisGuardDebuff||0)),genghisGuardUntilWindowIndex:Math.max(currentWindow+1,Number(u.genghisGuardUntilWindowIndex||-1)),genghisMovDebuff:Math.max(1,Number(u.genghisMovDebuff||0),1),genghisMovDebuffWindowKey:nextKey,genghisMovDebuffSource:genghis.name||"Gengis Kan"};
   });
   const first=out.find(u=>affectedIds.has(u.id))||affected[0];
   return{units:out,affected,log:` Horda de la Estepa: ${affected.length} unidad${affected.length===1?" enemiga pierde":"es enemigas pierden"} 2 Guardia y 1 MOV en radio 2 de ${genghis.name}.`,statusFxEvent:makeStatusFxEvent("debuff",first,2),floatFxEvent:makeFloatFxEvent("debuff",first,2,{iconText:"🛡",labelText:"-2 GD"})};
@@ -720,7 +722,7 @@ async function resolveSharedAttackOutcome({
   const berserkerOsoResult=hit.hit&&hpLoss>0?applyBerserkerOsoGuardShatter(units,a,d,hpLoss):{units,triggered:false,text:""};
   units=berserkerOsoResult.units;
   berserkerOsoText=berserkerOsoResult.text||"";
-  units=applyAfterDamageBonuses(units,a,d,hpLoss,defenderFell,mods);
+  units=applyAfterDamageBonuses(units,a,d,hpLoss,defenderFell,mods,!!hit.hit);
   const skiparWarLootResult=defenderFell?await resolveSkiparWarLoot(a,d.owner):{triggered:false,text:""};
   skiparWarLootText=skiparWarLootResult.text||"";
   const saboteadorEscapeResult=hit.hit?applySaboteadorEscapeForzado(units,d.id):{units,triggered:false,text:""};
@@ -803,15 +805,17 @@ async function resolveSharedAttackOutcome({
     units=pushUnitBackIfPossible(units,d,a,1);
   }
   let alexanderWallText="";
-  if(d&&!d.leader&&units.some(u=>u.id===d.id)&&ownerHasUnit(d.owner,"alexander_magnus",units)&&hpLoss<=0){
+  const alexander=d&&!d.leader?firstOwnerUnit(d.owner,"alexander_magnus",units):null;
+  if(d&&!d.leader&&alexander&&d.id!==alexander.id&&units.some(u=>u.id===d.id)&&hit.hit&&Number(guardLoss||0)>0&&hpLoss<=0&&Number((units.find(u=>u.id===d.id)||d).alexanderHpGrowth||0)<=0&&isLongGrowthReady(alexander,"alexanderGrowthLastWindowIndex")){
+    const growthWindow=getLongGrowthWindowIndex();
     units=units.map(u=>{
+      if(u.id===alexander.id)return {...u,alexanderGrowthLastWindowIndex:growthWindow};
       if(u.id!==d.id)return u;
-      const nextMaxHp=Number(u.maxHp||u.hp||0)+1;
-      const boosted={...u,maxHp:nextMaxHp};
+      const boosted={...u,alexanderHpGrowth:1};
       return {...boosted,hp:Math.min(effectiveMaxHp(boosted),Number(u.hp||0)+1)};
     });
     const alexTarget=units.find(u=>u.id===d.id)||d;
-    alexanderWallText=` Muro de Macedonia: ${alexTarget.name} bloquea sin recibir daño y gana +1 Vida máxima.`;
+    alexanderWallText=` Muro de Macedonia: ${alexTarget.name} gana +1 Vida máxima. No acumulable.`;
   }
   if(d&&units.some(u=>u.id===d.id&&u.bloodBaitReadyWindowKey)){
     units=units.map(u=>u.id===d.id?(()=>{const n={...u};delete n.bloodBaitReadyWindowKey;delete n.bloodBaitOwner;return n;})():u);

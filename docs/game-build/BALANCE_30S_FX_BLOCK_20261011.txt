@@ -1,0 +1,16 @@
+HALLVALLA · BALANCE + FX · 2026-10-11
+
+DET
+- Richard: cada 30 s da +2 Vida máxima/actual a un aliado no líder. No acumulable.
+- Alejandro: cada 30 s un bloqueo válido da +1 Vida máxima/actual. No acumulable.
+- Juana: cada 30 s reduce 3 daño a otro aliado no líder; +8 GD temporal. No acumulable.
+- Gengis: -2 GD y -1 MOV temporales. No acumulable.
+
+REGLAS
+- Los aumentos de Vida máxima duran mientras la unidad beneficiada siga viva.
+- Las cartas de héroe pueden recibirlos; el Líder principal no.
+- Una unidad no puede acumular varias veces el mismo aumento.
+
+FX
+- El arma canónica decide el ataque visual; el texto del DET no reclasifica el arma.
+- Un bloqueo completo muestra una burbuja celeste semitransparente alrededor de la unidad.

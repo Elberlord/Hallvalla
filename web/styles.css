@@ -30095,3 +30095,25 @@ html.hv-document-hidden .hv-rig-2d[data-hv-rig-family] .hv-rig-part{animation-pl
 @keyframes hvRigDodgeDragonTail{0%,100%{transform:none}43%{transform:rotate(-12deg) translate(-3%,2%)}}
 
 /* === END STAGE 5C-C2 · DODGE ARTICULADO ================================ */
+
+/* === HALLVALLA · FX BLOQUEO CELESTE · 2026-10-11 ===================== */
+#battleFxLayer .battle-fx-guard{position:absolute;width:0;height:0;pointer-events:none;z-index:36}
+#battleFxLayer .battle-fx-guard-bubble{
+  position:absolute;left:0;top:0;width:90px;height:118px;border-radius:50%;
+  transform:translate(-50%,-50%) scale(.72);transform-origin:center;
+  border:2px solid rgba(164,235,255,.88);
+  background:radial-gradient(ellipse at 38% 28%,rgba(230,251,255,.34) 0%,rgba(137,222,255,.18) 38%,rgba(80,190,238,.10) 68%,rgba(60,168,222,.04) 100%);
+  box-shadow:inset 0 0 18px rgba(203,246,255,.40),inset 0 0 34px rgba(86,197,242,.18),0 0 14px rgba(115,218,255,.46);
+  opacity:0;animation:hvGuardBlockBubble 520ms cubic-bezier(.18,.76,.26,1) both
+}
+#battleFxLayer .battle-fx-guard-bubble::after{
+  content:"";position:absolute;left:18%;top:10%;width:26%;height:34%;border-radius:50%;
+  border-left:2px solid rgba(238,253,255,.62);opacity:.72;transform:rotate(18deg)
+}
+@keyframes hvGuardBlockBubble{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.68)}
+  22%{opacity:.82;transform:translate(-50%,-50%) scale(1.05)}
+  58%{opacity:.58;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.11)}
+}
+/* === END FX BLOQUEO CELESTE ========================================== */

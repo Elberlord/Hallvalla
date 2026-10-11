@@ -519,7 +519,8 @@ function getEffectTargetOptions(caster,units=publicState?.units||[]){
     return getErictoEligibleCorpses(caster,publicState?.erictoGraveyard||[]).length?[caster]:[];
   }
   if(caster.key==="richard_lionheart"){
-    return adjacentAllies(caster,units).filter(a=>a.id!==caster.id);
+    if(typeof isLongGrowthReady==="function"&&!isLongGrowthReady(caster,"richardGrowthLastWindowIndex"))return[];
+    return adjacentAllies(caster,units).filter(a=>a.id!==caster.id&&!a.leader&&Number(a.richardHpGrowth||0)<=0&&!a.richardBuffSource);
   }
   if(caster.key==="saladin"){
     if(units.some(it=>it.owner===owner&&it.key==="saladin_archer_cavalry"))return[];
@@ -621,14 +622,16 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     log=`${liveCaster.name} usa Necromancia de Farsalia: ${record.name} regresa con ${revived.hp}/${revived.maxHp} Vida bajo su control.`;
     return{success:true,units:out,log,erictoGraveyard:nextGraveyard};
   }else if(liveCaster.key==="richard_lionheart"){
+    if(target.leader||Number(target.richardHpGrowth||0)>0||target.richardBuffSource)return{success:false,reason:"Corazón Indomable no se acumula sobre la misma unidad."};
+    const growthWindow=typeof getLongGrowthWindowIndex==="function"?getLongGrowthWindowIndex():Math.max(0,Number(publicState?.combatWindowIndex||0));
     out=out.map(it=>{
       if(it.id===target.id){
-        const previousStacks=it.richardBuffSource===liveCaster.id?Math.max(0,Number(it.richardBuffStacks||1)):0;
-        return {...it,richardBuffSource:liveCaster.id,richardBuffStacks:previousStacks+1,hp:(it.hp||0)+2};
+        const boosted={...it,richardHpGrowth:2};
+        return {...boosted,hp:Math.min(effectiveMaxHp(boosted),Number(it.hp||0)+2)};
       }
-      return it.id===liveCaster.id?{...it,acted:true}:it;
+      return it.id===liveCaster.id?{...it,acted:true,richardGrowthLastWindowIndex:growthWindow}:it;
     });
-    log=`${liveCaster.name} activa Corazón Indomable: ${target.name} gana +2 Vida máxima y +2 Vida actual mientras Richard siga en campo.`;
+    log=`${liveCaster.name} activa Corazón Indomable: ${target.name} gana +2 Vida máxima y +2 Vida actual. No acumulable.`;
   }else if(liveCaster.key==="saladin"){
     const token=makeUnit({...makeCard(SALADIN_TOKEN_CARD,owner),summonOrigin:"field_effect",fieldGeneratedSummon:true,tokenSummon:true},target.x,target.y);
     out=out.map(it=>it.id===liveCaster.id?{...it,acted:true}:it).concat(token);

@@ -64,7 +64,12 @@ function getUnitStatusEntries(u){
   if(u.ignoreGuardNextDamageWindowKey&&u.ignoreGuardNextDamageWindowKey===publicState?.combatWindowKey)add(`Sin guardia`,`Guardia ignorada`,`El próximo daño contra esta unidad ignora Guardia.`,"debuff guard-debuff","debuff");
   if(u.doubleNextDamageWindowKey&&u.doubleNextDamageWindowKey===publicState?.combatWindowKey)add(`Daño x2`,`Daño duplicado`,`El próximo daño recibido se duplica.`,"debuff curse","curse");
   if(u.noHealWhilePoisoned)add(`No cura`,`Curación bloqueada`,`No puede curarse mientras dure el veneno.`,"debuff poison","poison");
-  if(u.richardBuffSource)add(`+2 Vida`,`Vida aumentada`,`Vida máxima y actual aumentada mientras Richard siga en campo.`,"buff hp-buff","hp");
+  if(Number(u.richardHpGrowth||0)>0||u.richardBuffSource)add(`+2 Vida`,`Corazón Indomable`,`+2 Vida máxima mientras la unidad siga viva. No acumulable.`,"buff hp-buff","hp");
+  if(Number(u.alexanderHpGrowth||0)>0)add(`+1 Vida`,`Muro de Macedonia`,`+1 Vida máxima mientras la unidad siga viva. No acumulable.`,"buff hp-buff","hp");
+  const joanGuard=typeof getJoanGuardBuff==="function"?getJoanGuardBuff(u):0;
+  if(joanGuard>0)add(`+${joanGuard} GD`,`Llama de Orléans`,`Guardia temporal. No acumulable.`,"buff guard-buff","buff");
+  const genghisGuard=typeof getGenghisGuardDebuff==="function"?getGenghisGuardDebuff(u):0;
+  if(genghisGuard>0)add(`-${genghisGuard} GD`,`Horda de la Estepa`,`Guardia reducida temporalmente. No acumulable.`,"debuff guard-debuff","debuff");
   if(u.convertedByTrap)add(`Control`,`Control alterado`,`Unidad convertida temporalmente por trampa legendaria.`,"debuff curse","control");
   if(hasVeilCurse(u)){const count=Math.max(1,Number(u.veilCurseCyclesRemaining||1));add(`Cuenta ${count}`,`Cuenta regresiva mortal`,`El contador baja periódicamente. Cuando llegue a 0, esta unidad caerá derrotada. Puede eliminarse con Purificación. Fuente: ${u.veilCurseSourceName||"Morgana"}.`,"debuff curse","curse",{hiddenOnBoard:true});}
   return applyHallvallaValueHooks("unit.statusEntries",entries,{unit:u});
