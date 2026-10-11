@@ -127,9 +127,13 @@ async function hallvallaRtAttackUnit(attacker,target){
     if(prep.preTrap.logs?.length)await pushLog(prep.preTrap.logs.join(" "));
     return true;
   }
-  if(prep.terminal==="buffalo_attacker_fell"||prep.terminal==="lance_attacker_fell"){
+  if(prep.terminal==="buffalo_attacker_fell"||prep.terminal==="lance_attacker_fell"||prep.terminal==="pike_wall_attacker_fell"){
     units=prep.units||units;
-    const log=prep.terminal==="buffalo_attacker_fell"?`${d.name} intercepta a ${a.name} antes de completar el ataque.`:`${a.name} cae antes de completar el ataque contra ${d.name}.`;
+    const log=prep.terminal==="buffalo_attacker_fell"
+      ?`${d.name} intercepta a ${a.name} antes de completar el ataque.`
+      :prep.terminal==="pike_wall_attacker_fell"
+        ?`${prep.pikeWall?.text||"Muro de Picas detiene la carga."} ${a.name} cae antes de completar el ataque contra ${d.name}.`
+        :`${a.name} cae antes de completar el ataque contra ${d.name}.`;
     await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:prep.beastTraps||publicState?.beastTraps||[],legendaryTraps:prep.preTrap?.traps||publicState?.legendaryTraps||[]});
     if(!(await finalizeBattle(units,log)))await pushLog(log);
     return true;

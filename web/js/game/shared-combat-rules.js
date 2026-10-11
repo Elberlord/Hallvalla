@@ -328,8 +328,8 @@ function cuChulainnFearAura(u,units=publicState?.units||[]){
 }
 function attilaEnemyAura(u,units=publicState?.units||[]){return u?.leader?{guard:0,agi:0}:unitsInPlay(units).some(a=>a.key==="attila_hun"&&a.owner!==u.owner&&a.hp>0)&&isHalfHpOrLess(u)?{guard:-3,agi:-3}:{guard:0,agi:0}}
 function hectorGuardAura(u,units=publicState?.units||[]){
-  if(!u||u.leader||!isBasicUnit(u))return 0;
-  return unitsInPlay(units).some(l=>l.key==="leonidas"&&l.owner===u.owner&&l.hp>0&&dist(l,u)<=1)?4:0;
+  if(!u||u.leader||u.key==="leonidas"||!isBasicUnit(u))return 0;
+  return unitsInPlay(units).some(l=>l.key==="leonidas"&&l.id!==u.id&&l.owner===u.owner&&l.hp>0&&dist(l,u)<=1)?4:0;
 }
 function hectorEnemyAtkAura(u,units=publicState?.units||[]){
   if(!u||u.leader)return 0;
@@ -480,6 +480,9 @@ function getCanonicalNaturalMovement(u){
   const movement=typeof getHallvallaUnitMovementProfile==="function"?getHallvallaUnitMovementProfile(u):null;
   return movement||null;
 }
+function getPikeWallMovDebuff(u,now=Date.now()){
+  return Number(u?.pikeWallMovDebuffUntil||0)>now?1:0;
+}
 function effectiveMov(u){
   const bonus=getLeaderBonus(u);
   const summonBonus=isSkiparSummonMoveActive(u)?1:0;
@@ -487,7 +490,7 @@ function effectiveMov(u){
   const canonical=getCanonicalNaturalMovement(u);
   const hasFixedMov=u?.fixedMov!==null&&u?.fixedMov!==undefined&&u?.fixedMov!==""&&Number.isFinite(Number(u.fixedMov));
   const canonicalBaseMov=hasFixedMov?Math.max(0,Number(u.fixedMov)):(canonical?canonical.finalMov:(u?.mov||0));
-  const base=u?.leader?0:Math.max(0,canonicalBaseMov+(u?.permMov||0)+summonBonus+equipmentMoveBonus+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getRtTrapDebuff(u,"mov")-getGenghisMovDebuff(u)-getHannibalMovDebuff(u));
+  const base=u?.leader?0:Math.max(0,canonicalBaseMov+(u?.permMov||0)+summonBonus+equipmentMoveBonus+(u?.tempMovBuff||0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getRtTrapDebuff(u,"mov")-getGenghisMovDebuff(u)-getHannibalMovDebuff(u)-getPikeWallMovDebuff(u));
   return applyHallvallaValueHooks("unit.effectiveMov",base,{unit:u});
 }function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
 function isAfricanElephantChargeReady(u,target){
@@ -957,10 +960,12 @@ function prepareMiyamotoCounterMods(counterAttacker,baseMods={},defenseRemainder
 }
 function counterDefenseText(defenseRemainder){return typeof defenseRemainder==="number"?` Defensa restante del atacante: ${Math.max(0,defenseRemainder)}.`:""}
 
+const HALLVALLA_LANCE_FIRST_STRIKE_COOLDOWN_MS=30000;
 function canLanceFirstStrike(attacker,defender,mods={}){
   if(!attacker||!defender||attacker.leader||defender.leader)return false;
   if(mods&&mods.falconDive)return false;
   if(!isLanceUnitCardLike(defender))return false;
+  if(Number(defender.lanceFirstStrikeCooldownUntil||0)>Date.now())return false;
   if(defender.lanceFirstStrikeUsedWindow)return false;
   if((defender.noCounterWindowKey&&defender.noCounterWindowKey===publicState?.combatWindowKey)||isRtTrapLocked(defender,"counter"))return false;
 
@@ -979,7 +984,7 @@ function resolveLanceFirstStrike(attacker,defender,units){
   let currentDefender=(units||[]).find(u=>u.id===defender?.id)||defender;
   if(!currentAttacker||!currentDefender)return {triggered:false,units,attacker:currentAttacker,defender:currentDefender,text:"",attackerFell:false};
 
-  const fsMods=getCombatMods(currentDefender,currentAttacker);
+  const fsMods=getCombatMods(currentDefender,currentAttacker,{lanceFirstStrike:true});
   const fsDefenseNeeded=getDefenseEvasionScore(currentAttacker,fsMods);
   const fsAttackAvailable=getAttackPrecisionScore(currentDefender,fsMods);
 
@@ -1023,7 +1028,8 @@ function resolveLanceFirstStrike(attacker,defender,units){
   }
 
   // Atacar Primero ES el Contraataque de Lanza. Se marcan ambos flags legacy para registrar una sola reacción gastada y evitar un segundo golpe posterior.
-  units=(units||[]).map(u=>u.id===currentDefender.id?{...u,lanceFirstStrikeUsedWindow:true,counterUsedWindow:true}:u);
+  const firstStrikeCooldownUntil=Date.now()+HALLVALLA_LANCE_FIRST_STRIKE_COOLDOWN_MS;
+  units=(units||[]).map(u=>u.id===currentDefender.id?{...u,lanceFirstStrikeUsedWindow:true,counterUsedWindow:true,lanceFirstStrikeCooldownUntil:firstStrikeCooldownUntil}:u);
   currentAttacker=(units||[]).find(u=>u.id===currentAttacker.id)||currentAttacker;
   currentDefender=(units||[]).find(u=>u.id===currentDefender.id)||currentDefender;
   const attackerFell=!(units||[]).some(u=>u.id===attacker.id);

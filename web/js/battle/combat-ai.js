@@ -570,6 +570,220 @@ function applyGenghisKhanKillDebuff(units,attackerBefore,defenderBefore,defender
   const first=out.find(u=>affectedIds.has(u.id))||affected[0];
   return{units:out,affected,log:` Horda de la Estepa: ${affected.length} unidad${affected.length===1?" enemiga pierde":"es enemigas pierden"} 2 Guardia y 1 MOV en radio 2 de ${genghis.name}.`,statusFxEvent:makeStatusFxEvent("debuff",first,2),floatFxEvent:makeFloatFxEvent("debuff",first,2,{iconText:"🛡",labelText:"-2 GD"})};
 }
+const HALLVALLA_PIKE_WALL_SKILL_ID="HV-034";
+const HALLVALLA_PIKE_WALL_COOLDOWN_MS=30000;
+
+function hallvallaCombatRuntimeSkill(unit,skillId){
+  try{
+    if(typeof globalThis.hvSkillEntries!=="function")return null;
+    return (globalThis.hvSkillEntries(unit)||[]).find(skill=>skill?.id===skillId)||null;
+  }catch(_){
+    return null;
+  }
+}
+
+function hallvallaHasAdjacentLanceAlly(unit,units){
+  if(!unit)return false;
+
+  return (units||[]).some(other=>
+    other&&
+    other.id!==unit.id&&
+    other.owner===unit.owner&&
+    !other.leader&&
+    Number(other.hp||0)>0&&
+    dist(unit,other)<=1&&
+    isLanceUnitCardLike(other)
+  );
+}
+
+function hallvallaIsFrontalCharge(attacker,defender){
+  if(
+    !attacker||
+    !defender||
+    dist(attacker,defender)!==1||
+    Number(attacker.movedSpaces||0)<2
+  )return false;
+
+  const lastDx=Number(attacker.lastMoveDx||0);
+  const lastDy=Number(attacker.lastMoveDy||0);
+
+  if(lastDx===0&&lastDy===0)return true;
+
+  return (
+    lastDx===Math.sign(Number(defender.x)-Number(attacker.x))&&
+    lastDy===Math.sign(Number(defender.y)-Number(attacker.y))
+  );
+}
+
+function resolveHallvallaPikeWall(attacker,defender,units,now=Date.now()){
+  let out=[...(units||[])];
+
+  const skill=hallvallaCombatRuntimeSkill(
+    defender,
+    HALLVALLA_PIKE_WALL_SKILL_ID
+  );
+
+  if(!skill){
+    return{
+      triggered:false,
+      units:out,
+      attacker,
+      defender,
+      text:"",
+      attackerFell:false
+    };
+  }
+
+  if(
+    Number(
+      defender?.unitSkillCooldowns?.[
+        HALLVALLA_PIKE_WALL_SKILL_ID
+      ]||0
+    )>now
+  ){
+    return{
+      triggered:false,
+      units:out,
+      attacker,
+      defender,
+      text:"",
+      attackerFell:false
+    };
+  }
+
+  if(
+    !hallvallaHasAdjacentLanceAlly(defender,out)||
+    !hallvallaIsFrontalCharge(attacker,defender)
+  ){
+    return{
+      triggered:false,
+      units:out,
+      attacker,
+      defender,
+      text:"",
+      attackerFell:false
+    };
+  }
+
+  const scaled=
+    typeof globalThis.hvSkillScale==="function"
+      ?globalThis.hvSkillScale(skill,defender)
+      :{value:2,duration:2};
+
+  const damage=Math.max(
+    1,
+    Math.round(Number(scaled?.value||2))
+  );
+
+  const slowMs=Math.max(
+    1000,
+    Math.round(
+      Number(scaled?.duration||2)*1000
+    )
+  );
+
+  let guardLoss=0;
+  let hpLoss=0;
+
+  out=out.map(unit=>{
+    if(unit.id===attacker.id){
+      let damaged=applyGuardDamage(
+        unit,
+        damage,
+        0,
+        0
+      );
+
+      guardLoss=Number(
+        damaged.lastGuardLoss||0
+      );
+
+      hpLoss=Number(
+        damaged.lastHpLoss||0
+      );
+
+      damaged={
+        ...damaged,
+        movedSpaces:0,
+        lastMoveDistance:0,
+        lastMoveStraightDistance:0
+      };
+
+      if(isAntiCavalryTargetUnit(unit)){
+        damaged.pikeWallMovDebuffUntil=
+          now+slowMs;
+      }
+
+      delete damaged.lastGuardLoss;
+      delete damaged.lastHpLoss;
+
+      return damaged;
+    }
+
+    if(unit.id===defender.id){
+      return{
+        ...unit,
+        unitSkillCooldowns:{
+          ...(unit.unitSkillCooldowns||{}),
+          [HALLVALLA_PIKE_WALL_SKILL_ID]:
+            now+HALLVALLA_PIKE_WALL_COOLDOWN_MS
+        }
+      };
+    }
+
+    return unit;
+  });
+
+  const attackerFell=
+    Number(
+      out.find(
+        unit=>unit.id===attacker.id
+      )?.hp||0
+    )<=0;
+
+  if(attackerFell){
+    out=applyLegendaryFatalSaves(
+      out,
+      [attacker.id]
+    ).filter(
+      unit=>Number(unit.hp||0)>0
+    );
+  }
+
+  const liveAttacker=
+    out.find(unit=>unit.id===attacker.id)||
+    attacker;
+
+  const liveDefender=
+    out.find(unit=>unit.id===defender.id)||
+    defender;
+
+  const cavalrySlow=
+    isAntiCavalryTargetUnit(attacker)
+      ?" La Caballería pierde 1 MOV durante 2 s."
+      :"";
+
+  const text=
+    ` Muro de Picas: ${liveDefender.name} intercepta la carga de ${attacker.name}, inflige ${damage} de daño`+
+    `${guardLoss>0?` (${guardLoss} GD)`:""}`+
+    `${hpLoss>0?` (${hpLoss} HP)`:""}`+
+    ` y cancela sus bonificaciones de carga.${cavalrySlow}`;
+
+  return{
+    triggered:true,
+    units:out,
+    attacker:liveAttacker,
+    defender:liveDefender,
+    text,
+    attackerFell:
+      !out.some(
+        unit=>unit.id===attacker.id
+      ),
+    damage,
+    guardLoss,
+    hpLoss
+  };
+}
 /* E41 · Etapa 4B · declaración y preparación canónica del ataque ----------
    El jugador y la IA conservan sus decisiones/UI/persistencia, pero comparten
    una sola ruta para validar la declaración común y resolver todo lo que ocurre
@@ -635,6 +849,31 @@ function resolveSharedAttackPreparation({
     a=units.find(u=>u.id===a.id)||a;
   }
 
+  const pikeWall=resolveHallvallaPikeWall(a,d,units);
+  units=pikeWall.units||units;
+
+  a=units.find(u=>u.id===a.id)||a;
+  d=units.find(u=>u.id===d.id)||d;
+
+  if(pikeWall.attackerFell){
+    const bloodVictoryResult=applyBloodVictoryForDeaths(liveUnits,units);
+    units=bloodVictoryResult.units;
+
+    return{
+      terminal:"pike_wall_attacker_fell",
+      a,
+      d,
+      units,
+      liveUnits,
+      preTrap,
+      beastTraps,
+      attackContext,
+      tigerFromStealthBefore,
+      pikeWall,
+      bloodVictoryResult
+    };
+  }
+
   const warningRune=consumeWarningRuneOnAttack(units,d);
   units=warningRune.units;
   d=warningRune.defender;
@@ -656,13 +895,13 @@ function resolveSharedAttackPreparation({
   mods=equipmentDefense.mods;
   d=equipmentDefense.defender;
 
-  let firstStrikeText="";
+  let firstStrikeText=pikeWall.text||"";
   if(canLanceFirstStrike(a,d,mods)){
     const firstStrike=resolveLanceFirstStrike(a,d,units);
     units=firstStrike.units;
     a=units.find(u=>u.id===a.id)||a;
     d=units.find(u=>u.id===d.id)||d;
-    firstStrikeText=firstStrike.text||"";
+    firstStrikeText+=firstStrike.text||"";
     if(firstStrike.attackerFell){
       const bloodVictoryResult=applyBloodVictoryForDeaths(liveUnits,units);
       units=bloodVictoryResult.units;
@@ -697,7 +936,7 @@ function resolveSharedAttackPreparation({
   return{
     terminal:"",
     a,d,units,liveUnits,preTrap,beastTraps,attackContext,tigerFromStealthBefore,
-    warningRune,bloodBaitBonus,mods,firstStrikeText,evasionPressure,hit,rerollText,arjunaDharmaPoison
+    warningRune,bloodBaitBonus,pikeWall,mods,firstStrikeText,evasionPressure,hit,rerollText,arjunaDharmaPoison
   };
 }
 

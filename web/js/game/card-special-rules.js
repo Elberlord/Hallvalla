@@ -990,7 +990,7 @@ function applyLanceWeaponRule(card){
   // no hereda bonos de Arco, líder, vínculos ni rangos impresos antiguos.
   card.range=1;
   card.archerRangeBonusApplied=false;
-  const firstStrikeText=" Regla de lanza — Atacar primero: la primera vez por ciclo táctico (10 s) que una unidad enemiga de cuerpo a cuerpo con RG 1 la ataque desde una casilla adyacente, ataca antes que ella. No funciona contra unidades con RG 2 o más ni contra Ataque en Picada del halcón.";
+  const firstStrikeText=" Regla de lanza — Atacar primero: cuando una unidad enemiga de cuerpo a cuerpo con RG 1 la ataque desde una casilla adyacente, ataca antes que ella. Después de activarse entra en cooldown durante 30 s. No funciona contra unidades con RG 2 o más ni contra Ataque en Picada del halcón.";
   const antiCavalryText=" Anticaballería: cuando combate cuerpo a cuerpo contra una unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate.";
   const appendInnateRules=value=>{
     let out=String(value||"");
@@ -1859,7 +1859,7 @@ function isDemigodLanceUnitCardLike(card){
 }
 function applyDemigodLanceFirstStrikeText(card){
   if(!isDemigodLanceUnitCardLike(card))return card;
-  const ruleText=" Regla de semidiós lancero: como unidad de lanza tiene RG 1 fijo y, la primera vez por ciclo táctico (10 s) que una unidad enemiga de cuerpo a cuerpo con RG 1 lo ataque desde una casilla adyacente, ataca antes que ella; si derrota al atacante, cancela ese ataque.";
+  const ruleText=" Regla de semidiós lancero: como unidad de lanza tiene RG 1 fijo y, cuando una unidad enemiga de cuerpo a cuerpo con RG 1 lo ataque desde una casilla adyacente, ataca antes que ella; después espera 30 s antes de repetir la reacción. Si derrota al atacante, cancela ese ataque.";
   const current=String(card.text||card.effectText||card.ability||"");
   if(!current.includes("Regla de semidiós lancero"))card.text=(current+ruleText).trim();
   if(card.effectText&&!String(card.effectText).includes("Regla de semidiós lancero"))card.effectText=(String(card.effectText)+ruleText).trim();
