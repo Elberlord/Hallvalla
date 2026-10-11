@@ -953,6 +953,15 @@ function getDeckBuilderMiniImageHtml(card){
   }
   return `<span class="deck-mini-fallback">${escapeHtml(card?.icon||"✦")}</span>`;
 }
+
+function hvDeckEnsureSkillBadgeStyle(){
+  if(document.getElementById("hvDeckSkillBadgeStyle"))return;
+  const style=document.createElement("style");
+  style.id="hvDeckSkillBadgeStyle";
+  style.textContent=".deck-mini-card{position:relative}.deck-skill-choose{position:absolute;z-index:8;bottom:4px;left:4px;right:4px;width:calc(100% - 8px);border:1px solid #d9bc64;border-radius:7px;background:rgba(21,47,56,.94);color:#fff2bf;font:700 10px/1.2 Arial,sans-serif;padding:5px 2px;cursor:pointer;box-sizing:border-box;box-shadow:0 1px 6px #0009}.deck-skill-choose:hover,.deck-skill-choose:focus-visible{background:rgba(48,88,96,.98);outline:1px solid #f2d783}";
+  document.head.appendChild(style);
+}
+
 function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,addDisabled=false,addLockReason="",used=0,maxAllowed=1,readOnly=false,collectionLocked=false,gameplayLocked=false}={}){
   const cls=`deck-mini-card ${getCardVisualClass(card)} ${disabled?"disabled":""} ${mode==="deck"?"in-deck":"in-collection"} ${card?.craftableMissing?"craft-missing":""} ${collectionLocked?"collection-locked":""} ${gameplayLocked?"gameplay-locked":""} ${readOnly?"read-only":""}`;
   const name=escapeHtml(card?.name||"Carta");
@@ -967,6 +976,10 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
     ? `<button class="deck-mini-remove" type="button" data-remove-index="${index}" aria-label="Quitar ${name}">×</button>`
     : (readOnly?"":`<button class="deck-mini-plus${addDisabled?" is-add-locked":""}" type="button" data-add-card="${escapeHtml(card.key||"")}" ${addStateAttrs} aria-label="Añadir ${name} al mazo">+</button>`);
   const principalBtn="";
+  const pendingSkills=card?.type==="unit"&&typeof globalThis.hvSkillDeckUnclaimedCount==="function"
+    ?globalThis.hvSkillDeckUnclaimedCount(card.key,mode==="deck"?card.unitCopyId||"":""):0;
+  const skillButton=pendingSkills>0
+    ?`<button class="deck-skill-choose" type="button" data-skill-choice-key="${escapeHtml(card.key||"")}" data-skill-copy-id="${escapeHtml(mode==="deck"?card.unitCopyId||"":"")}" aria-label="Elegir habilidad gratis para ${name}">Habilidad disponible${pendingSkills>1?` (${pendingSkills})`:""} · Gratis</button>`:"";
   const isNew=mode==="collection"&&typeof isCollectionCardNew==="function"&&isCollectionCardNew(card);
   const newBadge=isNew?`<span class="deck-new-badge" aria-label="Carta nueva">New</span>`:"";
   const detailTitle=collectionLocked?`${name} · bloqueada · clic/tap para ver detalles`:`${name} · clic/tap para ver detalles`;
@@ -975,6 +988,7 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
     ${newBadge}
     ${actionBtn}
     ${principalBtn}
+    ${skillButton}
   </div>`;
 }
 
@@ -1074,9 +1088,15 @@ function bindDeckBuilderDragAndClick(collectionGrid,...deckContainers){
   const lists=deckContainers.filter(Boolean);
   if(!collectionGrid||!lists.length)return;
   const clearDrop=clearDeckBuilderDropActive;
+  const skillButtons=[...collectionGrid.querySelectorAll(".deck-skill-choose"),...lists.flatMap(node=>[...node.querySelectorAll(".deck-skill-choose")])];
+  skillButtons.forEach(button=>button.addEventListener("click",event=>{
+    event.preventDefault();event.stopPropagation();
+    if(typeof globalThis.hvSkillStartDeckChoice!=="function")return;
+    globalThis.hvSkillStartDeckChoice(button.dataset.skillChoiceKey,button.dataset.skillCopyId||"");
+  }));
   collectionGrid.querySelectorAll(".deck-mini-card.in-collection").forEach(el=>{
     const openDetail=ev=>{
-      if(ev.target.closest(".deck-mini-plus,.deck-mini-craft,.deck-mini-dust"))return;
+      if(ev.target.closest(".deck-mini-plus,.deck-mini-craft,.deck-mini-dust,.deck-skill-choose"))return;
       if(Date.now()-deckBuilderDragStartedAt<160)return;
       const card=getDeckBuilderCollectionCard(el.dataset.deckCardKey);
       if(card){
@@ -1101,7 +1121,7 @@ function bindDeckBuilderDragAndClick(collectionGrid,...deckContainers){
   lists.forEach(deckList=>{
     deckList.querySelectorAll(".deck-mini-card.in-deck").forEach(el=>{
       const openDetail=ev=>{
-        if(ev.target.closest(".deck-mini-remove,.deck-mini-craft,.deck-mini-dust"))return;
+        if(ev.target.closest(".deck-mini-remove,.deck-mini-craft,.deck-mini-dust,.deck-skill-choose"))return;
         if(Date.now()-deckBuilderDragStartedAt<160)return;
         const idx=Number(el.dataset.draftIndex);
         showDeckBuilderCardDetail(currentDeckDraft[idx]);
@@ -1188,6 +1208,7 @@ function syncDeckBuilderUnitTabs(){
 }
 function renderDeckBuilder(){
   syncDeckBuilderUnitTabs();
+  hvDeckEnsureSkillBadgeStyle();
   const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList");
   if(!collectionGrid||!deckList)return;
   const browseOnly=isCollectionBrowseOnly();

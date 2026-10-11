@@ -255,6 +255,8 @@ function hvSkillChoose(pendingId,skillId){
   const profile=hvSkillGetProfile(),book=hvSkillNormalizeCopyBook(profile),pending=hvSkillNormalizePending(profile);
   const item=pending.find(row=>String(row.id)===String(pendingId));if(!item||!item.options.includes(skillId))return false;
   const rec=hvSkillFindCopyMutable(item.copyId,book);if(!rec)return false;
+  const meta=hvSkillUnitMeta(rec.key)||{innate:[]};
+  if((meta.innate||[]).includes(skillId)||(rec.learnedSkillIds||[]).includes(skillId))return false;
   rec.learnedSkillIds=hvSkillUnique([...(rec.learnedSkillIds||[]),skillId]);
   const nextPending=pending.filter(row=>String(row.id)!==String(item.id));
   hvSkillSaveProfile({...profile,unitSkillCopies:book,unitSkillPendingChoices:nextPending},"unit_skill_choice");
@@ -300,13 +302,26 @@ function hvSkillEnsureUi(){
   document.body.appendChild(overlay);
   overlay.querySelector(".hv-skill-later")?.addEventListener("click",()=>overlay.classList.add("hidden"));
 }
-function maybeShowHallvallaUnitSkillChoice(){
+function maybeShowHallvallaUnitSkillChoice(preferredCopyId=""){
   hvSkillEnsureUi();
   const overlay=document.getElementById("hvUnitSkillChoiceOverlay");if(!overlay||!overlay.classList.contains("hidden"))return false;
-  const profile=hvSkillGetProfile(),pending=hvSkillNormalizePending(profile),item=pending[0];if(!item)return false;
+  const profile=hvSkillGetProfile(),pending=hvSkillNormalizePending(profile);
+  const eligible=preferredCopyId?pending.filter(row=>String(row.copyId)===String(preferredCopyId)):pending;
+  let item=[...eligible].sort((a,b)=>Number(a.tier)-Number(b.tier))[0];if(!item)return false;
   const meta=hvSkillUnitMeta(item.unitKey)||{rarity:item.rarity,innate:[]};
-  overlay.querySelector(".hv-skill-title").textContent=`${item.unitName} alcanzó Tier ${hvSkillRoman(item.tier)}`;
-  overlay.querySelector(".hv-skill-subtitle").textContent=`${item.rarity} · ${(meta.innate||[]).length} habilidad${(meta.innate||[]).length===1?"":"es"} innata${(meta.innate||[]).length===1?"":"s"} · elige 1 de 3 habilidades nuevas`;
+  const rec=hvSkillFindCopy(item.copyId,profile);
+  if(rec){
+    const blocked=new Set([...(meta.innate||[]),...(rec.learnedSkillIds||[])]);
+    if(item.options?.length!==3||item.options.some(id=>blocked.has(id)||!HALLVALLA_UNIT_SKILL_BANK[id])){
+      const fresh=hvSkillOptionsForCopy(rec,item.tier);if(fresh.length!==3)return false;
+      const repaired=pending.map(row=>row.id===item.id?{...row,options:fresh}:row);
+      hvSkillSaveProfile({...profile,unitSkillPendingChoices:repaired},"unit_skill_options_repaired");
+      item={...item,options:fresh};
+    }
+  }
+  const copyLabel=hvSkillDeckAvailableCopies(item.unitKey).find(row=>row.copyId===item.copyId);
+  overlay.querySelector(".hv-skill-title").textContent=`${item.unitName} · Copia ${copyLabel?.index||1} · Tier ${hvSkillRoman(item.tier)}`;
+  overlay.querySelector(".hv-skill-subtitle").textContent=`${item.rarity} · ${(meta.innate||[]).length} habilidad${(meta.innate||[]).length===1?"":"es"} innata${(meta.innate||[]).length===1?"":"s"} · Gratis · elige 1 de 3 habilidades nuevas`;
   const options=overlay.querySelector(".hv-skill-options");options.innerHTML="";
   for(const id of item.options){
     const skill=HALLVALLA_UNIT_SKILL_BANK[id];if(!skill)continue;
@@ -317,7 +332,10 @@ function maybeShowHallvallaUnitSkillChoice(){
       if(!hvSkillChoose(item.id,id))return;
       overlay.classList.add("hidden");
       try{if(typeof setHint==="function")setHint(`${item.unitName} aprendió ${skill.name}.`);}catch(_){}
-      setTimeout(()=>maybeShowHallvallaUnitSkillChoice(),350);
+      try{if(typeof renderDeckBuilder==="function")renderDeckBuilder();}catch(_){}
+      setTimeout(()=>{
+        if(!hvSkillStartDeckChoice(item.unitKey,item.copyId))maybeShowHallvallaUnitSkillChoice();
+      },350);
     });
     options.appendChild(button);
   }
@@ -634,6 +652,75 @@ function hvSkillAttachToUnit(unit,{card}={}){
   const runtime=hvSkillUnique([...innate.slice(1),...learned]);
   return {...unit,unitCopyId:copyId,unitInnateSkillIds:innate,unitLearnedSkillIds:learned,unitSkillIds:hvSkillUnique([...innate,...learned]),unitSkillRuntimeIds:runtime,unitWeaponTags:[...(meta.weaponTags||[])],unitClassTags:[...(meta.classTags||[])]};
 }
+
+/* RECUPERACION DE HABILIDADES DE TIER: por copia, sin modificar combate. */
+function hvSkillTierEarnedForCopy(rec,profile=hvSkillGetProfile()){
+  if(!rec||String(rec.key)==="acolyte_healer")return 1;
+  let rank=1;
+  try{
+    const book=typeof normalizeUnitMasteryBook==="function"?normalizeUnitMasteryBook(profile?.unitMastery||{}):(profile?.unitMastery||{});
+    const copyKey="copy:"+String(rec.id||"").toLowerCase();
+    const legacyKey=hvSkillLegacyMasteryKey(rec);
+    const kills=Number(book?.[copyKey]?.kills??book?.[legacyKey]?.kills??0);
+    rank=typeof getUnitMasteryRankFromKills==="function"?getUnitMasteryRankFromKills(kills):1;
+  }catch(error){console.warn("[HallValla][Skills] Fallo consulta de Tier:",error);}
+  return hvSkillTierFromRank(rank);
+}
+function hvSkillUnclaimedTiersForCopy(rec,profile=hvSkillGetProfile()){
+  const top=hvSkillTierEarnedForCopy(rec,profile);
+  const tiers=Array.from({length:Math.max(0,top-1)},(_,i)=>i+2);
+  const meta=hvSkillUnitMeta(rec?.key)||{innate:[]};
+  const innate=new Set(meta.innate||[]);
+  const learned=hvSkillUnique(rec?.learnedSkillIds||[]).filter(id=>!innate.has(id)&&!!HALLVALLA_UNIT_SKILL_BANK[id]);
+  const pending=hvSkillNormalizePending(profile).filter(row=>String(row.copyId)===String(rec?.id)&&tiers.includes(Number(row.tier)));
+  const occupied=new Set(pending.map(row=>Number(row.tier)));
+  let claimed=learned.length;
+  for(const tier of tiers){if(occupied.has(tier))continue;if(claimed>0){occupied.add(tier);claimed--;}}
+  return tiers.filter(tier=>!occupied.has(tier));
+}
+function hvSkillDeckAvailableCopies(unitKey){
+  const key=String(unitKey||"");if(!key||key==="acolyte_healer")return [];
+  const profile=hvSkillGetProfile(),book=hvSkillNormalizeCopyBook(profile);
+  return (book.byKey[key]||[]).filter(rec=>rec.active!==false).map((rec,i)=>{
+    const missing=hvSkillUnclaimedTiersForCopy(rec,profile);
+    const pending=hvSkillNormalizePending(profile).filter(row=>row.copyId===rec.id&&Number(row.tier)<=hvSkillTierEarnedForCopy(rec,profile));
+    return {copyId:rec.id,key,index:i+1,count:missing.length+pending.length};
+  });
+}
+function hvSkillDeckUnclaimedCount(unitKey,copyId=""){
+  return hvSkillDeckAvailableCopies(unitKey).filter(row=>!copyId||row.copyId===String(copyId))
+    .reduce((sum,row)=>sum+row.count,0);
+}
+function hvSkillStartDeckChoice(unitKey,requestedCopyId=""){
+  try{
+    ensureHallvallaUnitSkillCopies();
+    const key=String(unitKey||""),profile=hvSkillGetProfile(),book=hvSkillNormalizeCopyBook(profile);
+    const active=(book.byKey[key]||[]).filter(rec=>rec.active!==false);
+    const preferred=active.find(rec=>rec.id===String(requestedCopyId||""));
+    const candidates=preferred?[preferred]:active;
+    const pending=hvSkillNormalizePending(profile);
+    const rec=candidates.find(copy=>hvSkillUnclaimedTiersForCopy(copy,profile).length||pending.some(row=>row.copyId===copy.id));
+    if(!rec)return false;
+    const existing=pending.filter(row=>row.copyId===rec.id).sort((a,b)=>Number(a.tier)-Number(b.tier));
+    const missing=hvSkillUnclaimedTiersForCopy(rec,profile);
+    if(missing.length&&(!existing.length||missing[0]<Number(existing[0].tier))){
+      const tier=missing[0],options=hvSkillOptionsForCopy(rec,tier);
+      if(options.length!==3){
+        console.warn("[HallValla][Skills] Sin tres habilidades compatibles:",key,rec.id,tier);
+        try{if(typeof setHint==="function")setHint("No se encontraron tres habilidades compatibles.");}catch(_){}
+        return false;
+      }
+      pending.push({id:"skill-choice:"+rec.id+":"+tier,copyId:rec.id,unitKey:rec.key,
+        unitName:rec.name,rarity:rec.rarity,tier,options,createdAt:Date.now()});
+      rec.talentTierReached=Math.max(Number(rec.talentTierReached||1),tier);
+      hvSkillSaveProfile({...profile,unitSkillCopies:book,unitSkillPendingChoices:pending},"unit_skill_tier_recovery");
+    }
+    return maybeShowHallvallaUnitSkillChoice(rec.id);
+  }catch(error){console.warn("[HallValla][Skills] Fallo recuperacion:",error);return false;}
+}
+globalThis.hvSkillDeckUnclaimedCount=hvSkillDeckUnclaimedCount;
+globalThis.hvSkillStartDeckChoice=hvSkillStartDeckChoice;
+
 function hvSkillInstallMasteryWrappers(){
   if(globalThis.__HALLVALLA_UNIT_SKILL_MASTERY_WRAPPED__)return;
   globalThis.__HALLVALLA_UNIT_SKILL_MASTERY_WRAPPED__=true;
