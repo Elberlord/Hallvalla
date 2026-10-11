@@ -347,6 +347,14 @@ function applyAfterDamageBonuses(units,attackerBefore,defenderBefore,hpLoss,defe
     });
   }
   if(mods.caesarId)out=out.map(u=>u.id===mods.caesarId?{...u,caesarUsedWindow:true}:u);
+  if(mods.joanOrleansId&&attackHit){
+    const targetId=String(mods.joanOrleansTargetId||"");
+    const growthWindow=typeof getLongGrowthWindowIndex==="function"?getLongGrowthWindowIndex():Math.max(0,Number(publicState?.combatWindowIndex||0));
+    out=out.map(u=>{
+      if(!targetId||u.id!==targetId||u.leader||u.id===mods.joanOrleansId||u.key==="joan_of_arc"||Number(u.hp||0)<=0)return u;
+      return {...u,joanGuardBuff:Math.max(8,Number(u.joanGuardBuff||0)),joanGuardUntilWindowIndex:Math.max(growthWindow+1,Number(u.joanGuardUntilWindowIndex||-1))};
+    });
+  }
 
   if(defenderFell){
     const owner=attackerBefore.owner;
@@ -413,6 +421,15 @@ function applyGuardOfIronCooldownFromMods(units,mods){
   return (units||[]).map(unit=>unit.id===defenderId?{
     ...unit,
     unitSkillCooldowns:{...(unit.unitSkillCooldowns||{}),[skillId]:Math.max(cooldownUntil,Number(unit?.unitSkillCooldowns?.[skillId]||0))}
+  }:unit);
+}
+function applyJoanOrleansCooldownFromMods(units,mods){
+  const joanId=String(mods?.joanOrleansId||"");
+  const cooldownUntil=Number(mods?.joanOrleansCooldownUntil||0);
+  if(!joanId||cooldownUntil<=0)return[...(units||[])];
+  return (units||[]).map(unit=>unit.id===joanId?{
+    ...unit,
+    joanOrleansCooldownUntil:Math.max(cooldownUntil,Number(unit?.joanOrleansCooldownUntil||0))
   }:unit);
 }
 function hasAxeLeader(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="axe"&&hasActiveLeader(owner,units)}
@@ -688,6 +705,7 @@ async function resolveSharedAttackOutcome({
 }){
   let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false,dragonCompanionText="";
   const originalDefender=d;
+  if(hit?.hit)units=applyJoanOrleansCooldownFromMods(units,mods);
   const interposition=hit?.hit?activateHallvallaInterposition(d,units):{units:[...(units||[])],defender:d,originalDefender:null,protector:null,text:""};
   units=interposition.units||units;
   if(interposition.protector){
@@ -695,7 +713,7 @@ async function resolveSharedAttackOutcome({
     const redirectMods=runInState(()=>getCombatMods(a,d,attackContext),{units,legendaryTraps:preTrap.traps,beastTraps});
     const baseNotes=(mods?.notes||[]).filter(note=>!/Guardia de Hierro|Protector del Líder|Interposición/.test(String(note)));
     const defenseNotes=(redirectMods?.notes||[]).filter(note=>/Guardia de Hierro|Protector del Líder/.test(String(note)));
-    mods={...mods,defenderGuard:Number(redirectMods?.defenderGuard||0),damageReduction:Number(redirectMods?.damageReduction||0),notes:[...baseNotes,...defenseNotes]};
+    mods={...mods,defenderGuard:Number(redirectMods?.defenderGuard||0),damageReduction:Number(redirectMods?.damageReduction||0)+Math.max(0,Number(mods?.joanOrleansReduction||0)),notes:[...baseNotes,...defenseNotes]};
     delete mods.guardOfIronDefenderId;
     delete mods.guardOfIronSkillId;
     delete mods.guardOfIronCooldownUntil;

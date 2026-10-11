@@ -310,7 +310,7 @@ function alexanderBonusHp(u){
   return Math.min(1,Math.max(0,Number(u.alexanderHpGrowth||0)));
 }
 function getJoanGuardBuff(u,state=publicState){
-  if(!u||u.leader)return 0;
+  if(!u||u.leader||u.key==="joan_of_arc")return 0;
   const current=getLongGrowthWindowIndex(state);
   return Number(u.joanGuardUntilWindowIndex??-1)>=current?Math.min(8,Math.max(0,Number(u.joanGuardBuff||0))):0;
 }
@@ -505,7 +505,7 @@ function maxWindowGuard(u){
   const base=typeof u.baseGuard==="number"?u.baseGuard:(u.guard||0);
   return Math.max(0,base+(getLeaderBonus(u).guard||0));
 }
-function effectiveGuard(u){return Math.max(0,(u?.guard||0)+(u?.tempGuardBuff||0)-getGenghisGuardDebuff(u)-getRtTrapDebuff(u,"guard")+hectorGuardAura(u)+achillesConcentrationGuard(u)+attilaEnemyAura(u).guard+solomonJinnGuardAura(u)+hoplitePhalanxGuard(u))}
+function effectiveGuard(u){return Math.max(0,(u?.guard||0)+(u?.tempGuardBuff||0)+getJoanGuardBuff(u)-getGenghisGuardDebuff(u)-getRtTrapDebuff(u,"guard")+hectorGuardAura(u)+achillesConcentrationGuard(u)+attilaEnemyAura(u).guard+solomonJinnGuardAura(u)+hoplitePhalanxGuard(u))}
 function displayEffectiveGuard(u){return Math.max(0,effectiveGuard(u)+(u?.defenseModeReady?2:0))}
 function getEvasionPressure(u){return Math.max(0,Number(u?.evasionSpent||0))}
 function getBaseEvasionScore(u){return Math.max(0,effectiveDex(u)+effectiveAgi(u))}
@@ -630,6 +630,16 @@ function getCombatMods(attacker,defender,attackContext=null){
   if(isBasicUnit(attacker)&&defender.special&&ownerHasUnit(attacker.owner,"spartacus")){mods.attackerAtk+=5;mods.notes.push(`${attacker.name} +5 AT por Romper Cadenas.`);}
   const caesar=firstOwnerUnit(defender.owner,"julius_caesar");
   if(caesar&&!caesar.caesarUsedWindow){mods.attackerAtk-=4;mods.attackerDex-=3;mods.caesarId=caesar.id;mods.notes.push(`${attacker.name} -4 AT/-3 DX por Disciplina de las Legiones.`);}
+  const joan=firstOwnerUnit(defender.owner,"joan_of_arc");
+  const joanNow=Date.now();
+  if(joan&&Number(joan.hp||0)>0&&!defender.leader&&defender.id!==joan.id&&defender.key!=="joan_of_arc"&&Number(joan.joanOrleansCooldownUntil||0)<=joanNow&&defender.noReductionWindowKey!==publicState?.combatWindowKey&&!isRtTrapLocked(defender,"reduction")){
+    mods.damageReduction+=3;
+    mods.joanOrleansId=joan.id;
+    mods.joanOrleansTargetId=defender.id;
+    mods.joanOrleansReduction=3;
+    mods.joanOrleansCooldownUntil=joanNow+30000;
+    mods.notes.push(`Llama de Orleans: Juana de Arco reduce 3 de dano a ${defender.name}.`);
+  }
 
   if(defender.key==="gilgamesh"&&isRangedAttack(attacker,defender)&&defender.noReductionWindowKey!==publicState?.combatWindowKey&&!isRtTrapLocked(defender,"reduction")){mods.damageReduction+=2;mods.notes.push(`Gilgamesh reduce 2 daño de proyectiles o magia a distancia.`);}
   if(melee&&attacker.key==="bengal_tiger"&&isAttackFromStealth(attacker,attackContext)){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Emboscada desde Sigilo.`);}
