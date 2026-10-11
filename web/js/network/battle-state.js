@@ -674,10 +674,33 @@ function showBattleOutcomeSplash(result,{adventure=false,online=false,botPvp=fal
     showBattleOutcomeSplash._timer=battleSetTimeout(()=>{showBattleOutcomeSplash._timer=null;hideBattleOutcomeSplash(false);},BATTLE_RESULT_SPLASH_DURATION_MS+120,"battle-outcome-splash");
   }
 }
+
+// HV30: al guardar la batalla, detectar activaciones reales y conservar su bloqueo 30 s
+// incluso si clearCycleTempStatsForUnit() limpia banderas cada 10 s.
+function hvReconcileLegacyTriggerWindows(beforeUnits,afterUnits,now=Date.now()){
+  const names=["caesarUsedWindow","hannibalUsedWindow","boudicaUsedWindow","ragnarUsedWindow","achillesFuryUsedWindow","arjunaRerollUsedWindow","sunTzuUsedWindow","subotaiUsedWindow","ulyssesUsedWindow","genghisUsedWindow","alexanderUsedWindow"];
+  const before=new Map((beforeUnits||[]).map(u=>[u.id,u]));
+  return (afterUnits||[]).map(u=>{
+    const prev=before.get(u.id);if(!prev)return u;
+    const expiry={...(prev.hvWindowExpiry||{}),...(u.hvWindowExpiry||{})};
+    let next=u,dirty=false;
+    for(const key of names){
+      const t=Number(expiry[key]||0);
+      const activated=!!u[key]&&!prev[key];
+      if(activated&&t<=now){expiry[key]=now+30000;dirty=true;}
+      const active=Number(expiry[key]||0)>now;
+      if(active&&!next[key]){next={...next,[key]:true};dirty=true;}
+      if(!active&&!!next[key]&&!activated&&!!prev[key]){next={...next,[key]:false};dirty=true;}
+    }
+    return dirty?{...next,hvWindowExpiry:expiry}:next;
+  });
+}
 async function normalizePublicPatchBeforeCommit(sourcePatch={},options={}){
+
   const beforeUnits=Array.isArray(publicState?.units)?publicState.units:[];
   let cleanPatch=typeof normalizeHallvallaRuntimePatch==="function"?normalizeHallvallaRuntimePatch(sourcePatch||{}):{...(sourcePatch||{})};
   if(Array.isArray(cleanPatch.units)){
+    cleanPatch.units=hvReconcileLegacyTriggerWindows(beforeUnits,cleanPatch.units);
     const baseGraveyard=Array.isArray(cleanPatch.erictoGraveyard)?cleanPatch.erictoGraveyard:(publicState?.erictoGraveyard||[]);
     cleanPatch.erictoGraveyard=captureErictoGraveyard(baseGraveyard,beforeUnits,cleanPatch.units);
     const baseUndeadRemains=Array.isArray(cleanPatch.undeadRemains)?cleanPatch.undeadRemains:(publicState?.undeadRemains||[]);

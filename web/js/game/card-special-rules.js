@@ -395,16 +395,24 @@ async function resolveSolomonLifecycle(beforeUnits=[],afterUnits=[]){
       if(active)continue;
       const used=Array.isArray(solomon.solomonUsedEntities)?solomon.solomonUsedEntities:[];
       const nextKey=order.find(k=>!used.includes(k));if(!nextKey)continue;
+      const now=Date.now();
+      if(used.length>0&&Number(solomon.solomonNextEntityAt||0)>now){
+        if(!solomon.solomonPending)units=units.map(u=>u.id===solomon.id?{...u,solomonPending:true}:u);
+        continue;
+      }
       const spawn=spawnSolomonEntity(units,solomon,nextKey);
-      if(spawn.spawned){units=spawn.units.map(u=>u.id===solomon.id?{...u,solomonUsedEntities:[...used,nextKey],solomonCurrentEntity:nextKey}:u);logs.push(`${solomon.name} manifiesta a ${spawn.spawned.name}.`);}else units=units.map(u=>u.id===solomon.id?{...u,solomonPending:true}:u);
+      if(spawn.spawned){
+        units=spawn.units.map(u=>u.id===solomon.id?{...u,solomonUsedEntities:[...used,nextKey],solomonCurrentEntity:nextKey,solomonPending:false,solomonNextEntityAt:now+30000}:u);
+        logs.push(`${solomon.name} manifiesta a ${spawn.spawned.name}.`);
+      }else units=units.map(u=>u.id===solomon.id?{...u,solomonPending:true}:u);
     }
   }
   return {units,logs};
 }
 function solomonJinnGuardAura(u,units=publicState?.units||[]){return (units||[]).some(j=>j.key==="solomon_jinn"&&j.owner===u?.owner&&j.hp>0&&dist(j,u)<=1)?3:0;}
 function applySolomonIfritAfterHit(units,attacker,target,hit,hpLoss){
-  if(attacker?.key!=="solomon_ifrit"||!hit?.hit||hpLoss<=0)return {units,logs:[],stealthAreaDamageEvent:null};
-  let out=[...(units||[])],logs=[];
+  if(attacker?.key!=="solomon_ifrit"||!hit?.hit||hpLoss<=0||!hvCardReady(attacker,"fuego_mandato"))return {units,logs:[],stealthAreaDamageEvent:null,triggered:false};
+  let out=[...(units||[])].map(u=>u.id===attacker.id?hvCardMark(u,"fuego_mandato"):u),logs=[];
   const targetState=out.find(u=>u.id===target.id);
   if(targetState&&Number(targetState.hp||0)>0)out=out.map(u=>u.id===target.id?applyBurnToUnit(u,attacker.name,2,2):u);
   const splashIds=out.filter(u=>u.owner!==attacker.owner&&!u.leader&&u.id!==target.id&&canReceiveUntargetedAreaEffect(u)&&dist(u,target)<=1).map(u=>u.id);
@@ -418,7 +426,7 @@ function applySolomonIfritAfterHit(units,attacker,target,hit,hpLoss){
   const stealthAreaDamageEvent=typeof makeStage8StealthAreaDamageEvent==="function"
     ?makeStage8StealthAreaDamageEvent(attacker.owner,target.owner,{kind:"cell_direct_hp",label:"Fuego del Mandato",cells,sourceName:attacker.name,sourceKey:attacker.key})
     :null;
-  return {units:out,logs,stealthAreaDamageEvent};
+  return {units:out,logs,stealthAreaDamageEvent,triggered:true};
 }
 
 
@@ -1284,9 +1292,9 @@ function resolveBlessedArmorTransition(previous,next,combatWindowKey=publicState
   const prevHp=Number(previous.hp||0);
   let nextHp=Number(next.hp||0);
   let resolved={...next};
-  if(previous.key==="armored_man_at_arms"&&nextHp<prevHp&&previous.fullPlateReductionWindowKey!==combatWindowKey){
+  if(previous.key==="armored_man_at_arms"&&nextHp<prevHp&&hvCardReady(previous,"armadura_completa")){
     nextHp=Math.min(prevHp,nextHp+1);
-    resolved={...resolved,hp:nextHp,fullPlateReductionWindowKey:combatWindowKey,fullPlateReducedDamage:1};
+    resolved=hvCardMark({...resolved,hp:nextHp,fullPlateReductionWindowKey:combatWindowKey,fullPlateReducedDamage:1},"armadura_completa");
     if(Number.isFinite(Number(resolved.lastHpLoss)))resolved.lastHpLoss=Math.max(0,Number(resolved.lastHpLoss||0)-1);
   }
   if(hasActiveBlessedArmor(previous,combatWindowKey)&&nextHp<prevHp)return {...resolved,hp:prevHp};
@@ -1503,7 +1511,8 @@ function clearCycleTempStatsForUnit(u,combatWindowKey){
 function applyPorcupineSpinesAndFear(attackerBefore,defenderBefore,units){
   let out=[...(units||[])],logs=[],statusFxEvent=null,floatFxEvent=null;
   if(!attackerBefore||!defenderBefore||defenderBefore.key!=="porcupine")return {units:out,logs,statusFxEvent,floatFxEvent};
-  if(attackerBefore.owner===defenderBefore.owner||dist(attackerBefore,defenderBefore)>1)return {units:out,logs,statusFxEvent,floatFxEvent};
+  if(attackerBefore.owner===defenderBefore.owner||dist(attackerBefore,defenderBefore)>1||!hvCardReady(defenderBefore,"espinas_defensivas"))return {units:out,logs,statusFxEvent,floatFxEvent};
+  out=out.map(u=>u.id===defenderBefore.id?hvCardMark(u,"espinas_defensivas"):u);
   const attackerAlive=out.some(u=>u.id===attackerBefore.id&&u.hp>0);
   if(attackerAlive){
     out=out.map(u=>u.id===attackerBefore.id?applyDirectHpDamage(u,2):u);

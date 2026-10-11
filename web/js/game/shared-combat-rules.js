@@ -582,7 +582,34 @@ function isMulanOpeningAttack(attacker){
   return !!attacker&&attacker.key==="mulan"&&attacker.mulanFirstAttackUsed!==true;
 }
 
+
+// HV30 v1: cooldowns persistentes de efectos de carta.
+const HALLVALLA_CARD_TRIGGER_COOLDOWN_MS=30000;
+const HALLVALLA_CARD_ONCE_UNTIL=8640000000000000;
+function hvCardReady(unit,id,now=Date.now()){
+  return !!unit&&Number(unit?.hvCardCooldowns?.[id]||0)<=now;
+}
+function hvCardMark(unit,id,once=false,now=Date.now()){
+  if(!unit)return unit;
+  return {...unit,hvCardCooldowns:{...(unit.hvCardCooldowns||{}),[id]:once?HALLVALLA_CARD_ONCE_UNTIL:now+HALLVALLA_CARD_TRIGGER_COOLDOWN_MS}};
+}
+function hvCardMarksFromMods(units,mods,now=Date.now()){
+  const marks=Array.isArray(mods?.hvCardMarks)?mods.hvCardMarks:[];
+  if(!marks.length)return units;
+  return (units||[]).map(unit=>{
+    let next=unit;
+    for(const mark of marks)if(mark?.unitId===unit.id&&hvCardReady(next,mark.name,now))next=hvCardMark(next,mark.name,!!mark.once,now);
+    return next;
+  });
+}
+function hvCardTryMod(mods,unit,name,once=false){
+  if(!hvCardReady(unit,name))return false;
+  const list=mods.hvCardMarks||(mods.hvCardMarks=[]);
+  if(!list.some(m=>m.unitId===unit.id&&m.name===name))list.push({unitId:unit.id,name,once});
+  return true;
+}
 function getCombatMods(attacker,defender,attackContext=null){
+
   const mods={attackerAtk:0,attackerAgi:0,attackerDex:0,attackerGuard:0,defenderAgi:0,defenderDex:0,defenderGuard:0,damageReduction:0,reroll:false,notes:[]};
   if(!attacker||!defender)return applyHallvallaValueHooks("combat.mods",mods,{attacker,defender,attackContext});
   const weaponAdvantage=getWeaponAdvantage(attacker,defender);
@@ -597,15 +624,15 @@ function getCombatMods(attacker,defender,attackContext=null){
   const combatUnits=publicState?.units||[];
   if(isRangedAttack(attacker,defender)&&attacker.key==="egyptian_line_archer"){
     const bonus=Math.min(2,countAdjacentUnitsByKey(attacker,"egyptian_line_archer",combatUnits));
-    if(bonus>0){mods.attackerDex+=bonus;mods.notes.push(`${attacker.name} +${bonus} DX por Descarga coordinada.`);}
+    if(bonus>0&&hvCardTryMod(mods,attacker,"descarga_coordinada")){mods.attackerDex+=bonus;mods.notes.push(`${attacker.name} +${bonus} DX por Descarga coordinada.`);}
   }
-  if(isRangedAttack(attacker,defender)&&attacker.key==="new_kingdom_archer"&&!attacker.moved&&Number(attacker.movedSpaces||0)===0){
+  if(isRangedAttack(attacker,defender)&&attacker.key==="new_kingdom_archer"&&!attacker.moved&&Number(attacker.movedSpaces||0)===0&&hvCardTryMod(mods,attacker,"tiro_preparado")){
     mods.defenderGuard-=2;mods.notes.push(`${defender.name} -2 Guardia por Tiro preparado.`);
   }
-  if(isRangedAttack(attacker,defender)&&attacker.key==="roman_auxiliary_sagittarius"&&enemyHasAdjacentAllyOfAttacker(attacker,defender,combatUnits)){
+  if(isRangedAttack(attacker,defender)&&attacker.key==="roman_auxiliary_sagittarius"&&enemyHasAdjacentAllyOfAttacker(attacker,defender,combatUnits)&&hvCardTryMod(mods,attacker,"cobertura_auxiliar",true)){
     mods.attackerDex+=2;mods.notes.push(`${attacker.name} +2 DX por Cobertura auxiliar.`);
   }
-  if(melee&&attacker.key==="roman_legionary"&&enemyHasAdjacentHeavyInfantryOfAttacker(attacker,defender,combatUnits)){
+  if(melee&&attacker.key==="roman_legionary"&&enemyHasAdjacentHeavyInfantryOfAttacker(attacker,defender,combatUnits)&&hvCardTryMod(mods,attacker,"disciplina_cohorte",true)){
     mods.attackerDex+=2;mods.notes.push(`${attacker.name} +2 DX por Disciplina de cohorte.`);
   }
   if(defender.key==="greek_hoplite"&&hoplitePhalanxGuard(defender,combatUnits)>0){
@@ -623,16 +650,16 @@ function getCombatMods(attacker,defender,attackContext=null){
   const khalidPenalty=getKhalidAttackPenalty(attacker);
   if(khalidPenalty>0)mods.notes.push(`${attacker.name} -${khalidPenalty} AT por Espada Invicta.`);
   if(isMulanOpeningAttack(attacker)){mods.attackerAtk+=6;mods.notes.push(`${attacker.name} +6 AT por Golpe de Apertura.`);}
-  if(ownerHasUnit(attacker.owner,"shaka_zulu")&&adjacentAllies(defender).some(a=>a.owner===attacker.owner)){mods.attackerAtk+=3;mods.notes.push(`${attacker.name} +3 AT por Cuernos del Búfalo.`);if(adjacentAllies(defender).filter(a=>a.owner===attacker.owner).length>=2){mods.defenderAgi-=4;mods.notes.push(`${defender.name} -4 AGI por estar rodeado.`);}}
-  if(attacker.key==="nasu_no_yoichi"&&isRangedAttack(attacker,defender)&&dist(attacker,defender)>=3){mods.defenderGuard-=4;mods.notes.push(`${defender.name} -4 Guardia por Marca del Abanico.`);}
-  if(attacker.key==="tomoe_gozen"&&(attacker.movedSpaces||0)>=2){mods.defenderAgi-=6;mods.notes.push(`${defender.name} -6 AGI por Jinete de la Luna Cortante.`);if((defender.range||1)>=2){mods.attackerAtk+=8;mods.notes.push(`${attacker.name} +8 AT contra unidades de rango.`);}}
+  if(ownerHasUnit(attacker.owner,"shaka_zulu")&&adjacentAllies(defender).some(a=>a.owner===attacker.owner)&&hvCardTryMod(mods,firstOwnerUnit(attacker.owner,"shaka_zulu"),"cuernos_buffalo")){mods.attackerAtk+=3;mods.notes.push(`${attacker.name} +3 AT por Cuernos del Búfalo.`);if(adjacentAllies(defender).filter(a=>a.owner===attacker.owner).length>=2){mods.defenderAgi-=4;mods.notes.push(`${defender.name} -4 AGI por estar rodeado.`);}}
+  if(attacker.key==="nasu_no_yoichi"&&isRangedAttack(attacker,defender)&&dist(attacker,defender)>=3&&hvCardTryMod(mods,attacker,"marca_abanico")){mods.defenderGuard-=4;mods.notes.push(`${defender.name} -4 Guardia por Marca del Abanico.`);}
+  if(attacker.key==="tomoe_gozen"&&(attacker.movedSpaces||0)>=2&&hvCardTryMod(mods,attacker,"jinete_luna")){mods.defenderAgi-=6;mods.notes.push(`${defender.name} -6 AGI por Jinete de la Luna Cortante.`);if((defender.range||1)>=2){mods.attackerAtk+=8;mods.notes.push(`${attacker.name} +8 AT contra unidades de rango.`);}}
   if(attacker.key==="solomon_ifrit"){mods.defenderGuard-=4;mods.notes.push(`${defender.name} -4 Guardia por Fuego del Mandato.`);}
-  if(attacker.key==="beowulf"&&effectiveMaxHp(defender)>effectiveMaxHp(attacker)){mods.attackerAtk+=3;mods.notes.push(`${attacker.name} +3 AT contra enemigos de mayor Vida.`);}
-  if(attacker.key==="achilles"&&!attacker.achillesFuryUsedWindow){mods.attackerAtk+=5;mods.notes.push(`${attacker.name} +5 AT por Cólera del Pélida.`);}
-  if(defender.key==="el_cid"&&effectiveAtk(attacker)>effectiveAtk(defender)){mods.defenderDex+=4;mods.defenderGuard+=4;mods.notes.push(`${defender.name} +4 DX/+4 GD por Campeador.`);}
+  if(attacker.key==="beowulf"&&effectiveMaxHp(defender)>effectiveMaxHp(attacker)&&hvCardTryMod(mods,attacker,"matador_monstruos")){mods.attackerAtk+=3;mods.notes.push(`${attacker.name} +3 AT contra enemigos de mayor Vida.`);}
+  if(attacker.key==="achilles"&&hvCardTryMod(mods,attacker,"colera_pelida")){mods.attackerAtk+=5;mods.notes.push(`${attacker.name} +5 AT por Cólera del Pélida.`);}
+  if(defender.key==="el_cid"&&effectiveAtk(attacker)>effectiveAtk(defender)&&hvCardTryMod(mods,defender,"campeador")){mods.defenderDex+=4;mods.defenderGuard+=4;mods.notes.push(`${defender.name} +4 DX/+4 GD por Campeador.`);}
   if(isBasicUnit(attacker)&&defender.special&&ownerHasUnit(attacker.owner,"spartacus")){mods.attackerAtk+=5;mods.notes.push(`${attacker.name} +5 AT por Romper Cadenas.`);}
   const caesar=firstOwnerUnit(defender.owner,"julius_caesar");
-  if(caesar&&!caesar.caesarUsedWindow){mods.attackerAtk-=4;mods.attackerDex-=3;mods.caesarId=caesar.id;mods.notes.push(`${attacker.name} -4 AT/-3 DX por Disciplina de las Legiones.`);}
+  if(caesar&&hvCardTryMod(mods,caesar,"disciplina_cesar")){mods.attackerAtk-=4;mods.attackerDex-=3;mods.caesarId=caesar.id;mods.notes.push(`${attacker.name} -4 AT/-3 DX por Disciplina de las Legiones.`);}
   const joan=firstOwnerUnit(defender.owner,"joan_of_arc");
   const joanNow=Date.now();
   if(joan&&Number(joan.hp||0)>0&&!defender.leader&&defender.id!==joan.id&&defender.key!=="joan_of_arc"&&Number(joan.joanOrleansCooldownUntil||0)<=joanNow&&defender.noReductionWindowKey!==publicState?.combatWindowKey&&!isRtTrapLocked(defender,"reduction")){
@@ -648,23 +675,23 @@ function getCombatMods(attacker,defender,attackContext=null){
   if(melee&&attacker.key==="bengal_tiger"&&isAttackFromStealth(attacker,attackContext)){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Emboscada desde Sigilo.`);}
   if(melee&&attacker.key==="bengal_tiger"&&adjacentAllies(defender).some(a=>a.owner===attacker.owner&&isBeastUnit(a))){mods.defenderAgi-=2;mods.notes.push(`${defender.name} -2 AGI por Ataque por la espalda de la manada.`);}
   if(melee&&attacker.key==="wild_boar"&&(attacker.movedSpaces||0)>=2){mods.attackerAtk+=1;mods.notes.push(`${attacker.name} +1 AT por Carga Brusca.`);}
-  if(melee&&isWhiteRhinoChargeReady(attacker)){mods.attackerAtk+=8;mods.rhinoCharge=true;mods.notes.push(`${attacker.name} usa Embestida Devastadora: AT 22.`);}
+  if(melee&&isWhiteRhinoChargeReady(attacker)&&hvCardTryMod(mods,attacker,"embestida_rino")){mods.attackerAtk+=8;mods.rhinoCharge=true;mods.notes.push(`${attacker.name} usa Embestida Devastadora: AT 22.`);}
   if(melee&&isHannibalMountedUnit(attacker)){mods.attackerAtk+=12;mods.hannibalElephantMelee=true;mods.notes.push(`${attacker.name} combate con la fuerza del elefante: AT 16.`);}
-  if(melee&&isAfricanElephantChargeReady(attacker,defender)){mods.attackerAtk+=6;mods.defenderAgi-=4;mods.elephantCharge=true;mods.notes.push(`${attacker.name} usa Arremetida Colosal: +6 AT (AT 22) y ${defender.name} -4 AGI para evadir.`);}
-  if(attacker.key==="peregrine_falcon"&&(attacker.movedSpaces||0)>=3){mods.attackerAtk+=2;mods.falconDive=true;mods.notes.push(`${attacker.name} usa Ataque en Picada: golpe seguro, AT 3.`);}
+  if(melee&&isAfricanElephantChargeReady(attacker,defender)&&hvCardTryMod(mods,attacker,"arremetida_elephant")){mods.attackerAtk+=6;mods.defenderAgi-=4;mods.elephantCharge=true;mods.notes.push(`${attacker.name} usa Arremetida Colosal: +6 AT (AT 22) y ${defender.name} -4 AGI para evadir.`);}
+  if(attacker.key==="peregrine_falcon"&&(attacker.movedSpaces||0)>=3&&hvCardTryMod(mods,attacker,"picada_falcon")){mods.attackerAtk+=2;mods.falconDive=true;mods.notes.push(`${attacker.name} usa Ataque en Picada: golpe seguro, AT 3.`);}
   if(defender.key==="honey_badger"){mods.damageReduction+=1;mods.honeyBadgerReduction=true;mods.notes.push(`${defender.name} reduce 1 daño por Armadura Natural.`);}
   if(melee&&attacker.key==="cavalry"&&(attacker.movedSpaces||0)>=3&&defenderUsesEvasion){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Carga desestabilizadora.`);}
   if(isRangedAttack(attacker,defender)&&attacker.key==="numidian_javelin_rider"&&Number(attacker.movedSpaces||0)>=1){mods.attackerDex+=2;mods.notes.push(`${attacker.name} +2 DX por Jabalinas de hostigamiento.`);}
   if(isRangedAttack(attacker,defender)&&attacker.key==="mongol_explorer"&&Number(attacker.movedSpaces||0)>=2){mods.attackerDex+=1;mods.notes.push(`${attacker.name} +1 DX por Tiro en carrera.`);}
-  if(melee&&attacker.key==="hungarian_hussar"&&Number(attacker.movedSpaces||0)>=2){mods.attackerAtk+=2;mods.attackerDex+=2;mods.notes.push(`${attacker.name} usa Carga de sable: +2 AT y +2 DX.`);}
+  if(melee&&attacker.key==="hungarian_hussar"&&Number(attacker.movedSpaces||0)>=2&&hvCardTryMod(mods,attacker,"carga_sable")){mods.attackerAtk+=2;mods.attackerDex+=2;mods.notes.push(`${attacker.name} usa Carga de sable: +2 AT y +2 DX.`);}
   if(melee&&attacker.key==="cossack_rider"&&Number(defender.hp||0)<Number(effectiveMaxHp(defender)||defender.maxHp||defender.hp||0)){mods.attackerDex+=2;mods.notes.push(`${attacker.name} +2 DX por Persecución cosaca.`);}
   if(hasUnitEquipment(attacker,"rupture_bracers")&&isAttackFromStealth(attacker,attackContext)){mods.defenderGuard-=5;mods.notes.push(`${defender.name} -5 Guardia por Guardabrazos de Ruptura.`);}
   if(hasUnitEquipment(attacker,"counterweighted_grip")&&effectiveGuard(defender)>0){mods.attackerAtk+=5;mods.notes.push(`${attacker.name} +5 AT por Mango Contrapesado.`);}
   if(hasUnitEquipment(attacker,"hunting_harness")&&Number(defender.hp||0)<Number(effectiveMaxHp(defender)||defender.maxHp||defender.hp||0)){mods.attackerDex+=5;mods.notes.push(`${attacker.name} +5 DX por Arnés de Cacería.`);}
   if(hasUnitEquipment(defender,"war_visor")&&dist(attacker,defender)>=2){mods.attackerPrecisionPenalty=(mods.attackerPrecisionPenalty||0)+5;mods.notes.push(`${attacker.name} -5 PREC por Visera de Guerra.`);}
-  if(melee&&attacker.key==="berserker"){mods.defenderGuard-=3;mods.notes.push(`${defender.name} -3 Guardia por Ruptura brutal.`);}
-  if(melee&&attacker.key==="samurai_katana"){mods.attackerAtk+=6;mods.notes.push(`${attacker.name} +6 AT por Dos Manos.`);}
-  if(defender.key==="samurai_katana"||defender.key==="miyamoto_musashi"){const shirahadoriCount=countEnemyUnitsInCardRange(defender,publicState?.units||[]);if(shirahadoriCount>0){mods.defenderDex+=(shirahadoriCount*2);mods.notes.push(`${defender.name} +${shirahadoriCount*2} DX por Shirahadori (${shirahadoriCount} rival${shirahadoriCount===1?"":"es"} en su rango).`);}}
+  if(melee&&attacker.key==="berserker"&&hvCardTryMod(mods,attacker,"ruptura_brutal")){mods.defenderGuard-=3;mods.notes.push(`${defender.name} -3 Guardia por Ruptura brutal.`);}
+  if(melee&&attacker.key==="samurai_katana"&&hvCardTryMod(mods,attacker,"dos_manos")){mods.attackerAtk+=6;mods.notes.push(`${attacker.name} +6 AT por Dos Manos.`);}
+  if(defender.key==="samurai_katana"||defender.key==="miyamoto_musashi"){const shirahadoriCount=countEnemyUnitsInCardRange(defender,publicState?.units||[]);if(shirahadoriCount>0&&hvCardTryMod(mods,defender,"shirahadori")){mods.defenderDex+=(shirahadoriCount*2);mods.notes.push(`${defender.name} +${shirahadoriCount*2} DX por Shirahadori (${shirahadoriCount} rival${shirahadoriCount===1?"":"es"} en su rango).`);}}
   if(melee&&attacker.key==="guardian"){if(defenderUsesEvasion){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Golpe de escudo.`);}if((defender.guard||0)<=2){mods.notes.push(`${defender.name} -1 AT y -1 MOV por Aplastamiento.`)}}
   if(melee&&defender.key==="huscarl_anglosajon_hacha"&&!defender.moved&&Number(defender.movedSpaces||0)===0){mods.defenderGuard+=2;mods.notes.push(`${defender.name} +2 Guardia por Muro sajón.`);}
   if(attacker.key==="guardia_varega_hacha"&&isAdjacentToOwnLeader(attacker,combatUnits)){mods.attackerGuard+=2;mods.notes.push(`${attacker.name} +2 Guardia por Juramento imperial.`);}
@@ -738,65 +765,42 @@ function applyNaginataDaimyoPunishment(units,fallenUnit,killerId,isMelee){
 }
 function applyBerserkerOsoGuardShatter(units,attacker,defender,hpLoss){
   const list=[...(units||[])];
-  if(!attacker||!defender||attacker.key!=="berserker_de_oso"||Number(hpLoss||0)<=0)return{units:list,triggered:false,text:""};
+  if(!attacker||!defender||attacker.key!=="berserker_de_oso"||Number(hpLoss||0)<=0||!hvCardReady(attacker,"furia_oso"))return{units:list,triggered:false,text:""};
   let triggered=false;
   const next=list.map(u=>{
     if(u.id!==defender.id)return u;
     triggered=true;
     return {...u,guard:0,baseGuard:0,tempGuardBuff:Math.min(0,Number(u.tempGuardBuff||0)),berserkerOsoGuardShattered:true};
   });
-  return{units:next,triggered,text:triggered?` Furia de Oso: ${defender.name} pierde toda su Guardia base y ya no la regenerará.`:""};
+  const finalUnits=triggered?next.map(u=>u.id===attacker.id?hvCardMark(u,"furia_oso",true):u):next;
+  return{units:finalUnits,triggered,text:triggered?` Furia de Oso: ${defender.name} pierde toda su Guardia base y ya no la regenerará.`:""};
 }
 function rollUlfhednarCritical(attacker,hit){
   if(!attacker||attacker.key!=="ulfhednar"||!hit?.hit)return{triggered:false,multiplier:1,text:""};
   const triggered=Math.random()<0.5;
   return triggered?{triggered:true,multiplier:2,text:` Golpe Crítico: ${attacker.name} duplica su daño.`}:{triggered:false,multiplier:1,text:""};
 }
-const SKIPAR_DISCARD_TYPE_PRIORITY={spell:0,trap:0,unit:1};
-function getSkiparDiscardScore(card){
-  const rarity=String(card?.rarity||"Básica").toLowerCase();
-  const rarityScore=rarity.includes("mít")||rarity.includes("mit")?4:rarity.includes("glor")?3:rarity.includes("hero")?2:rarity.includes("extra")||rarity.includes("especial")?1:0;
-  const typeScore=SKIPAR_DISCARD_TYPE_PRIORITY[String(card?.type||"unit").toLowerCase()]??1;
-  return (Number(card?.cost||0)*10)+(rarityScore*5)+(typeScore*2);
+function resolveSkiparWarLoot(attacker,targetOwner,units,now=Date.now()){
+  const list=[...(units||[])];
+  if(!attacker||attacker.key!=="skipar_del_drakkar"||!targetOwner||!hvCardReady(attacker,"saqueo_guerra",now))
+    return{units:list,triggered:false,text:""};
+  const pushFiveSeconds=until=>{const n=Number(until||0);return n>now?n+5000:n;};
+  const next=list.map(u=>{
+    if(u.id===attacker.id)return hvCardMark(u,"saqueo_guerra",false,now);
+    if(String(u.owner)!==String(targetOwner))return u;
+    const card={};for(const [k,v] of Object.entries(u.hvCardCooldowns||{}))card[k]=pushFiveSeconds(v);
+    const skills={};for(const [k,v] of Object.entries(u.unitSkillCooldowns||{}))skills[k]=pushFiveSeconds(v);
+    const windows={};for(const [k,v] of Object.entries(u.hvWindowExpiry||{}))windows[k]=pushFiveSeconds(v);
+    return{...u,hvCardCooldowns:card,unitSkillCooldowns:skills,hvWindowExpiry:windows,
+      erictoNecromancyCooldownUntil:pushFiveSeconds(u.erictoNecromancyCooldownUntil),
+      solomonNextEntityAt:pushFiveSeconds(u.solomonNextEntityAt),
+      lanceFirstStrikeCooldownUntil:pushFiveSeconds(u.lanceFirstStrikeCooldownUntil),
+      joanOrleansCooldownUntil:pushFiveSeconds(u.joanOrleansCooldownUntil)};
+  });
+  // Las recargas nativas de soporte se registran fuera del estado público.
+  try{if(typeof hallvallaRtPauseEnemySupportCooldowns==="function")hallvallaRtPauseEnemySupportCooldowns(targetOwner,now,5000,next);}catch(_){}
+  return{units:next,triggered:true,text:" Saqueo de Guerra: los cooldowns enemigos que estaban activos se prolongan 5 s. Próximo saqueo en 30 s."};
 }
-function chooseSkiparDiscardCards(hand,count=2){
-  const list=[...(hand||[])];
-  if(!list.length||count<=0)return{discarded:[],remaining:list};
-  const indexed=list.map((card,index)=>({card,index,score:getSkiparDiscardScore(card)})).sort((a,b)=>(a.score-b.score)||(a.index-b.index));
-  const chosen=indexed.slice(0,Math.min(count,indexed.length));
-  const chosenSet=new Set(chosen.map(it=>it.index));
-  return{discarded:chosen.map(it=>it.card),remaining:list.filter((_,index)=>!chosenSet.has(index))};
-}
-async function resolveSkiparWarLoot(attacker,targetOwner){
-  if(!attacker||attacker.key!=="skipar_del_drakkar"||!targetOwner)return{triggered:false,text:""};
-  const buildText=(discarded)=>{
-    if(!discarded.length)return ` Saqueo del Drakkar: el rival no tenía cartas para descartar.`;
-    const names=discarded.map(c=>c?.name||"Carta").join(", ");
-    return ` Saqueo del Drakkar: el rival descarta ${discarded.length} carta${discarded.length===1?"":"s"} (${names}).`;
-  };
-  if(publicState?.mode==="adventure"){
-    if(Number(targetOwner)===1){
-      const choice=chooseSkiparDiscardCards(privateState?.hand||[],2);
-      if(choice.discarded.length){await updatePrivate({hand:choice.remaining});}
-      return{triggered:choice.discarded.length>0,text:buildText(choice.discarded)};
-    }
-    if(Number(targetOwner)===2){
-      const aiState={...(publicState?.adventureAiState||{})};
-      const choice=chooseSkiparDiscardCards(aiState.hand||[],2);
-      if(choice.discarded.length){
-        await updatePublic({adventureAiState:{...aiState,hand:choice.remaining},[`playerStats/2/hand`]:choice.remaining.length});
-      }
-      return{triggered:choice.discarded.length>0,text:buildText(choice.discarded)};
-    }
-  }
-  if(Number(targetOwner)===Number(myPlayer)){
-    const choice=chooseSkiparDiscardCards(privateState?.hand||[],2);
-    if(choice.discarded.length){await updatePrivate({hand:choice.remaining});}
-    return{triggered:choice.discarded.length>0,text:buildText(choice.discarded)};
-  }
-  return{triggered:false,text:""};
-}
-
 
 
 function createAttackContext(attacker,defender){
@@ -834,9 +838,9 @@ function clearStealthAfterAttackIfNeeded(units,attackerId,keep=false){
   return (units||[]).map(u=>u.id===attackerId?{...u,stealth:false,revealed:true}:u);
 }
 function grantSimoStealthAfterKill(units,attacker,defender,defenderFell){
-  const triggered=!!(defenderFell&&attacker?.key==="simo_hayha"&&defender&&!defender.leader&&(units||[]).some(u=>u.id===attacker.id&&u.hp>0));
+  const triggered=!!(defenderFell&&attacker?.key==="simo_hayha"&&defender&&!defender.leader&&hvCardReady(attacker,"muerte_blanca")&&(units||[]).some(u=>u.id===attacker.id&&u.hp>0));
   if(!triggered)return{units:units||[],triggered:false,text:""};
-  const out=(units||[]).map(u=>u.id===attacker.id?{...u,stealth:true,hidden:false,revealed:false}:u);
+  const out=(units||[]).map(u=>u.id===attacker.id?hvCardMark({...u,stealth:true,hidden:false,revealed:false},"muerte_blanca"):u);
   return{units:out,triggered:true,text:` Muerte Blanca: ${attacker.name} consigue el golpe final y obtiene Sigilo.`};
 }
 function canUnitAttackTarget(attacker,target){
@@ -890,13 +894,13 @@ function consumeEquipmentPrecisionDefenseForAttack(defender,attacker,units,mods=
   if(!defender||!attacker||defender.leader)return{defender,units,mods,consumed:false};
   const combatWindowKey=publicState?.combatWindowKey||"";
   let penalty=0,markKey="",label="";
-  if(hasUnitEquipment(defender,"executioner_mantle")&&defender.executionerMantleUsedWindowKey!==combatWindowKey){penalty=5;markKey="executionerMantleUsedWindowKey";label="Manto del Ejecutor";}
-  if(!penalty&&hasUnitEquipment(defender,"skirmisher_cloak")&&dist(attacker,defender)<=1&&defender.skirmisherCloakUsedWindowKey!==combatWindowKey){penalty=5;markKey="skirmisherCloakUsedWindowKey";label="Capa de Escaramuza";}
-  if(!penalty&&hasUnitEquipment(defender,"light_barding")&&dist(attacker,defender)>=2&&defender.lightBardingUsedWindowKey!==combatWindowKey){penalty=5;markKey="lightBardingUsedWindowKey";label="Barda Ligera";}
+  if(hasUnitEquipment(defender,"executioner_mantle")&&defender.executionerMantleUsedWindowKey!==combatWindowKey&&hvCardReady(defender,"eq_executioner_mantle")){penalty=5;markKey="executionerMantleUsedWindowKey";label="Manto del Ejecutor";}
+  if(!penalty&&hasUnitEquipment(defender,"skirmisher_cloak")&&dist(attacker,defender)<=1&&defender.skirmisherCloakUsedWindowKey!==combatWindowKey&&hvCardReady(defender,"eq_skirmisher_cloak")){penalty=5;markKey="skirmisherCloakUsedWindowKey";label="Capa de Escaramuza";}
+  if(!penalty&&hasUnitEquipment(defender,"light_barding")&&dist(attacker,defender)>=2&&defender.lightBardingUsedWindowKey!==combatWindowKey&&hvCardReady(defender,"eq_light_barding")){penalty=5;markKey="lightBardingUsedWindowKey";label="Barda Ligera";}
   if(!penalty)return{defender,units,mods,consumed:false};
   const nextMods={...mods,attackerPrecisionPenalty:(mods.attackerPrecisionPenalty||0)+penalty,notes:[...(mods.notes||[]),`${attacker.name} -${penalty} PREC por ${label}.`]};
-  const nextUnits=(units||[]).map(u=>u.id===defender.id?{...u,[markKey]:combatWindowKey}:u);
-  return{defender:nextUnits.find(u=>u.id===defender.id)||{...defender,[markKey]:combatWindowKey},units:nextUnits,mods:nextMods,consumed:true};
+  const nextUnits=(units||[]).map(u=>u.id===defender.id?hvCardMark({...u,[markKey]:combatWindowKey},"eq_"+({executionerMantleUsedWindowKey:"executioner_mantle",skirmisherCloakUsedWindowKey:"skirmisher_cloak",lightBardingUsedWindowKey:"light_barding"}[markKey])):u);
+  return{defender:nextUnits.find(u=>u.id===defender.id)||defender,units:nextUnits,mods:nextMods,consumed:true};
 }
 function applyCombatPrecisionPercentPenalty(score,mods={}){
   const raw=Math.max(0,Number(score)||0);
@@ -1322,27 +1326,31 @@ function applyAttackSideEffects(attacker,defender,units,options={}){
   const melee=dist(attacker,defender)<=1;
   const ranged=!melee&&(attacker.range||1)>1;
   const hpLoss=Number(options.hpLoss||0);
-  const allowArcherSuppression=hpLoss>0;
-  const allowGuardianSlow=options.allowGuardian!==false;
-  return (units||[]).map(u=>{
+  const allowArcher=attacker.key==="archer"&&ranged&&hpLoss>0&&hvCardReady(attacker,"disparo_supresion");
+  const allowGuardian=options.allowGuardian!==false&&attacker.key==="guardian"&&melee&&hvCardReady(attacker,"golpe_escudo");
+  let usedArcher=false,usedGuardian=false;
+  let out=(units||[]).map(u=>{
     if(u.id!==defender.id)return u;
     let next={...u};
-    if(attacker.key==="archer"&&ranged&&allowArcherSuppression){
-      const amount=1;
-      const current=Number(next.tempMovDebuff||0);
+    if(allowArcher){
+      const amount=1,current=Number(next.tempMovDebuff||0);
       next.tempMovDebuff=Math.max(current,amount);
       if(amount>=current)next.tempMovDebuffSource=`Disparo de supresión de ${attacker.name||"Arquera"}`;
+      usedArcher=true;
     }
-    if(allowGuardianSlow&&attacker.key==="guardian"&&melee&&(u.guard||0)<=2){
-      const amount=1;
-      const current=Number(next.tempMovDebuff||0);
+    if(allowGuardian&&(u.guard||0)<=2){
+      const amount=1,current=Number(next.tempMovDebuff||0);
       next.tempMovDebuff=Math.max(current,amount);
       if(amount>=current)next.tempMovDebuffSource=`Golpe de escudo de ${attacker.name||"Guardián"}`;
       next.tempAtkDebuff=Math.max(Number(next.tempAtkDebuff||0),1);
+      usedGuardian=true;
     }
     return next;
   });
+  if(usedArcher||usedGuardian)out=out.map(u=>u.id===attacker.id?(usedArcher?hvCardMark(u,"disparo_supresion"):hvCardMark(u,"golpe_escudo")):u);
+  return out;
 }
+
 function getUnitTrapTier(u){
   if(!u)return "basic";
   const rarity=String(u.rarity||"").toLowerCase();

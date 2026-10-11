@@ -245,7 +245,7 @@ async function hallvallaRtCombatRefreshTick(now){
   let legendaryTraps=[...(publicState?.legendaryTraps||[])],undeadRemains=[...(publicState?.undeadRemains||[])],logs=[];
 
   // Sangre del Pélida: la antigua curación de inicio de turno pasa a cada ciclo TR de 10 s.
-  units=units.map(u=>u&&u.key==="achilles"&&Number(u.hp||0)>0?{...u,hp:Math.min(effectiveMaxHp(u),Number(u.hp||0)+1)}:u);
+  units=units.map(u=>u&&u.key==="achilles"&&Number(u.hp||0)>0&&hvCardReady(u,"sangre_pelida")?hvCardMark({...u,hp:Math.min(effectiveMaxHp(u),Number(u.hp||0)+1)},"sangre_pelida"):u);
 
   // Restos Persistentes: cada ciclo equivale a una cuenta de reanimación. 3 ciclos ≈ 30 s; congelado 5 ≈ 50 s.
   if(typeof advanceUndeadRemainsForOwner==="function"){
@@ -638,9 +638,20 @@ const HALLVALLA_RT_RECOVERY_DURATION_MS=10000;
 const HALLVALLA_RT_RECOVERY_TICK_MS=1000;
 const HALLVALLA_RT_RECOVERY_HP_PER_TICK=3;
 
+
+function hallvallaRtPauseEnemySupportCooldowns(targetOwner,now=Date.now(),ms=5000,units=publicState?.units||[]){
+  const ids=new Set((units||[]).filter(u=>String(u.owner)===String(targetOwner)).map(u=>String(u.id)));
+  for(const [key,last] of hallvallaRtState.supportAt){
+    const id=String(key).split(':').pop();
+    if(!ids.has(id))continue;
+    const maxMs=key.startsWith('fx:')?Math.max(30000,Number(HALLVALLA_RT_CFG.supportEffectEveryMs||0)):30000;
+    if(Number(last||0)+maxMs>now)hallvallaRtState.supportAt.set(key,Number(last)+ms);
+  }
+}
 function hallvallaRtIsRearSupportUnit(unit){
+
   const key=String(unit?.key||"");
-  return key==="acolyte_healer"||key==="ericto";
+  return key==="acolyte_healer"||key==="ericto"||key==="king_solomon"||key==="sun_tzu";
 }
 
 function hallvallaRtInstallRecovery(caster,units,now){
@@ -872,7 +883,9 @@ async function hallvallaRtRecoveryTick(now){
 async function hallvallaRtAutoGenericEffect(caster,now){
   if(!caster||caster.leader||Number(caster.hp||0)<=0)return false;
   const mode=typeof getUnitEffectMode==="function"?getUnitEffectMode(caster):"passive";if(mode==="passive"||mode==="choice"||caster.key==="ericto")return false;
-  const last=Number(hallvallaRtState.supportAt.get(`fx:${caster.id}`)||0);if(now-last<HALLVALLA_RT_CFG.supportEffectEveryMs)return false;
+  const last=Number(hallvallaRtState.supportAt.get(`fx:${caster.id}`)||0);
+  const effectCooldown=Math.max(30000,Number(HALLVALLA_RT_CFG.supportEffectEveryMs||0));
+  if(now-last<effectCooldown)return false;
   let units=[...(publicState?.units||[])].map(u=>u.id===caster.id?{...u,acted:false}:u);
   const live=units.find(u=>u.id===caster.id)||caster;
   const choice=mode==="self"?live:(typeof chooseSmartEffectTarget==="function"?chooseSmartEffectTarget(live,units):null);if(!choice)return false;
@@ -886,6 +899,15 @@ async function hallvallaRtSupportTick(now){
   const units=[...(publicState?.units||[])];
   for(const unit of units){
     if(!unit||unit.leader||Number(unit.hp||0)<=0)continue;
+    // Revisión periódica para que Salomón no espere eternamente tras 30 s.
+    if(unit.key==="king_solomon"&&unit.solomonPending){
+      const liveUnits=[...(publicState?.units||[])];
+      const active=liveUnits.some(u=>u.solomonSummon&&u.solomonSourceId===unit.id&&Number(u.hp||0)>0);
+      if(!active&&Number(unit.solomonNextEntityAt||0)<=now){
+        const retryKey=`solomon-retry:${unit.id}`,last=Number(hallvallaRtState.supportAt.get(retryKey)||0);
+        if(now-last>=1000){hallvallaRtState.supportAt.set(retryKey,now);await updatePublic({units:liveUnits});}
+      }
+    }
     if(unit.key==="acolyte_healer"||unit.healer){await hallvallaRtAutoAcolyte(unit,now);continue;}
     if(unit.key==="ericto"||unit.nigromante){await hallvallaRtAutoEricto(unit,now);continue;}
     if(typeof globalThis.hallvallaRtAutoUnitSkills==="function"&&await globalThis.hallvallaRtAutoUnitSkills(unit,now))continue;

@@ -337,13 +337,13 @@ function applyAfterDamageBonuses(units,attackerBefore,defenderBefore,hpLoss,defe
     out=out.map(u=>{
       if(u.id!==attacker.id)return u;
       let n={...u};
-      if(attackerBefore.key==="achilles")n.achillesFuryUsedWindow=true;
-      if(hpLoss>0&&attackerBefore.key==="nasu_no_yoichi"&&isRangedAttack(attackerBefore,defenderBefore)&&dist(attackerBefore,defenderBefore)>=3){
+      if(attackerBefore.key==="achilles"&&!hvCardReady(attackerBefore,"colera_pelida"))n.achillesFuryUsedWindow=true;
+      if(hpLoss>0&&attackerBefore.key==="nasu_no_yoichi"&&isRangedAttack(attackerBefore,defenderBefore)&&dist(attackerBefore,defenderBefore)>=3&&(mods.hvCardMarks||[]).some(m=>m.name==="marca_abanico"&&m.unitId===attackerBefore.id)){
         out=out.map(t=>t.id===defenderBefore.id?{...t,tempGuardBuff:(t.tempGuardBuff||0)-4}:t);
       }
-      if(hpLoss>0&&attackerBefore.key==="ragnar_lodbrok"&&!attackerBefore.ragnarUsedWindow&&(defenderBefore.leader||effectiveMaxHp(defenderBefore)>effectiveMaxHp(attackerBefore))){n.hp=Math.min(effectiveMaxHp(n),n.hp+1);n.ragnarUsedWindow=true;}
-      if(defenderFell&&attackerBefore.key==="beowulf"&&effectiveMaxHp(defenderBefore)>effectiveMaxHp(attackerBefore))n.hp=Math.min(effectiveMaxHp(n),n.hp+2);
-      if(defenderFell&&attackerBefore.key==="lu_bu"&&!defenderBefore.leader){n.permAtk=(n.permAtk||0)+3;}
+      if(hpLoss>0&&attackerBefore.key==="ragnar_lodbrok"&&hvCardReady(n,"saqueo_norte")&&(defenderBefore.leader||effectiveMaxHp(defenderBefore)>effectiveMaxHp(attackerBefore))){n=hvCardMark(n,"saqueo_norte");n.hp=Math.min(effectiveMaxHp(n),n.hp+1);n.ragnarUsedWindow=true;}
+      if(defenderFell&&attackerBefore.key==="beowulf"&&effectiveMaxHp(defenderBefore)>effectiveMaxHp(attackerBefore)&&(mods.hvCardMarks||[]).some(m=>m.name==="matador_monstruos"&&m.unitId===attackerBefore.id)){n.hp=Math.min(effectiveMaxHp(n),n.hp+2);}
+      if(defenderFell&&attackerBefore.key==="lu_bu"&&!defenderBefore.leader&&hvCardReady(n,"furia_alabarda")){n=hvCardMark(n,"furia_alabarda");n.permAtk=(n.permAtk||0)+3;}
       return n;
     });
   }
@@ -361,7 +361,7 @@ function applyAfterDamageBonuses(units,attackerBefore,defenderBefore,hpLoss,defe
     const owner=attackerBefore.owner;
     out=out.map(u=>{
       let n={...u};
-      if(u.owner!==owner&&u.key==="boudica"&&!u.boudicaUsedWindow){n.permAtk=(n.permAtk||0)+2;n.boudicaUsedWindow=true;if(defenderBefore.special)n.permMov=(n.permMov||0)+1;}
+      if(u.owner!==owner&&u.key==="boudica"&&hvCardReady(n,"ira_iceni")){n=hvCardMark(n,"ira_iceni");n.permAtk=(n.permAtk||0)+2;n.boudicaUsedWindow=true;if(defenderBefore.special)n.permMov=(n.permMov||0)+1;}
       return n;
     });
   }
@@ -498,13 +498,14 @@ function applyBloodVictoryForDeaths(beforeUnits,afterUnits){
 }
 function resolveTaipanPoisonAfterHit(units,attacker,target,hit,hpLoss){
   let out=[...(units||[])];
-  if(!attacker||attacker.key!=="inland_taipan"||!target||!hit?.hit||Number(hpLoss||0)<=0)return{units:out,text:"",statusFxEvent:null,lethal:false};
+  if(!attacker||attacker.key!=="inland_taipan"||!target||!hit?.hit||Number(hpLoss||0)<=0||!hvCardReady(attacker,"mordida_letal"))return{units:out,text:"",statusFxEvent:null,lethal:false};
   const current=out.find(u=>u.id===target.id&&Number(u.hp||0)>0);
   if(!current)return{units:out,text:"",statusFxEvent:null,lethal:false};
   if(isPoisonImmuneUnit(current)){
     out=out.map(u=>u.id===current.id?clearPoisonStatus(u):u);
     return{units:out,text:` ${current.name} ignora el Veneno.`,statusFxEvent:null,lethal:false};
   }
+  out=out.map(u=>u.id===attacker.id?hvCardMark(u,"mordida_letal"):u);
   const alreadyPoisoned=Number(current.poisonTurns||0)>0||Number(current.poisonDamage||0)>0;
   if(alreadyPoisoned&&!current.leader){
     out=out.map(u=>u.id===current.id?resolveBlessedArmorTransition(u,{...u,hp:0,damagedThisWindow:true}):u);
@@ -546,16 +547,16 @@ function applyCoverFire(units,owner,sourceId){
   });
 }
 function applyUlyssesAttackTactic(units,attacker){
-  if(!attacker||attacker.key!=="ulysses")return{units,affected:[],log:""};
+  if(!attacker||attacker.key!=="ulysses"||!hvCardReady(attacker,"estratega_itaca"))return{units,affected:[],log:""};
   const affected=(units||[]).filter(u=>u.owner===attacker.owner&&!u.leader&&u.id!==attacker.id&&u.hp>0&&dist(attacker,u)<=2);
   if(!affected.length)return{units,affected:[],log:""};
   const affectedIds=new Set(affected.map(u=>u.id));
-  const out=(units||[]).map(u=>affectedIds.has(u.id)?{...u,tempGuardBuff:(u.tempGuardBuff||0)+3,tempMovBuff:(u.tempMovBuff||0)+1,ulyssesTacticBuffWindowKey:publicState?.combatWindowKey||""}:u);
+  const out=(units||[]).map(u=>u.id===attacker.id?hvCardMark(u,"estratega_itaca"):affectedIds.has(u.id)?{...u,tempGuardBuff:(u.tempGuardBuff||0)+3,tempMovBuff:(u.tempMovBuff||0)+1,ulyssesTacticBuffWindowKey:publicState?.combatWindowKey||""}:u);
   return{units:out,affected,log:` Estratega de Ítaca: ${affected.length} unidad${affected.length===1?" aliada gana":"es aliadas ganan"} +3 Guardia y +1 MOV en radio 2.`};
 }
 function applyGenghisKhanKillDebuff(units,attackerBefore,defenderBefore,defenderFell){
   let out=[...(units||[])];
-  if(!defenderFell||!attackerBefore||attackerBefore.key!=="genghis_khan"||!defenderBefore||defenderBefore.leader)return{units:out,affected:[],log:"",statusFxEvent:null,floatFxEvent:null};
+  if(!defenderFell||!attackerBefore||attackerBefore.key!=="genghis_khan"||!defenderBefore||defenderBefore.leader||!hvCardReady(attackerBefore,"horda_estepa"))return{units:out,affected:[],log:"",statusFxEvent:null,floatFxEvent:null};
   const genghis=out.find(u=>u.id===attackerBefore.id&&u.hp>0)||attackerBefore;
   if(!out.some(u=>u.id===genghis.id&&u.hp>0))return{units:out,affected:[],log:"",statusFxEvent:null,floatFxEvent:null};
   const affected=out.filter(u=>u.owner!==genghis.owner&&!u.leader&&u.hp>0&&dist(genghis,u)<=2);
@@ -567,6 +568,7 @@ function applyGenghisKhanKillDebuff(units,attackerBefore,defenderBefore,defender
     const currentWindow=typeof getLongGrowthWindowIndex==="function"?getLongGrowthWindowIndex():Math.max(0,Number(publicState?.combatWindowIndex||0));
     return {...u,genghisGuardDebuff:Math.max(2,Number(u.genghisGuardDebuff||0)),genghisGuardUntilWindowIndex:Math.max(currentWindow+1,Number(u.genghisGuardUntilWindowIndex||-1)),genghisMovDebuff:Math.max(1,Number(u.genghisMovDebuff||0),1),genghisMovDebuffWindowKey:nextKey,genghisMovDebuffSource:genghis.name||"Gengis Kan"};
   });
+  out=out.map(u=>u.id===genghis.id?hvCardMark(u,"horda_estepa"):u);
   const first=out.find(u=>affectedIds.has(u.id))||affected[0];
   return{units:out,affected,log:` Horda de la Estepa: ${affected.length} unidad${affected.length===1?" enemiga pierde":"es enemigas pierden"} 2 Guardia y 1 MOV en radio 2 de ${genghis.name}.`,statusFxEvent:makeStatusFxEvent("debuff",first,2),floatFxEvent:makeFloatFxEvent("debuff",first,2,{iconText:"🛡",labelText:"-2 GD"})};
 }
@@ -839,8 +841,8 @@ function resolveSharedAttackPreparation({
     a=units.find(u=>u.id===a.id)||revealedAttacker;
   }
 
-  if(distanceFn(a,d)<=1&&d.key==="african_buffalo"){
-    units=units.map(u=>u.id===a.id?applyDirectHpDamage(u,2):u).filter(u=>u.hp>0);
+  if(distanceFn(a,d)<=1&&d.key==="african_buffalo"&&hvCardReady(d,"cornada_buffalo")){
+    units=units.map(u=>u.id===d.id?hvCardMark(u,"cornada_buffalo"):u.id===a.id?applyDirectHpDamage(u,2):u).filter(u=>u.hp>0);
     if(!units.some(u=>u.id===a.id)){
       const bloodVictoryResult=applyBloodVictoryForDeaths(liveUnits,units);
       units=bloodVictoryResult.units;
@@ -921,7 +923,8 @@ function resolveSharedAttackPreparation({
   let hit=mods.falconDive?{hit:true,roll:"PREC ∞",chance:"Golpe seguro"}:rollHit(a,d,mods);
   hit={...hit,defenseSpendNeeded:actionSpendDefenseNeeded,attackSpendAvailable:actionSpendAttackAvailable,defenderEvasionSpent:evasionPressure.spent};
   let rerollText="",arjunaDharmaPoison=false;
-  if(!hit.hit&&a.key==="arjuna"&&isRangedAttack(a,d)&&!a.arjunaRerollUsedWindow){
+  if(!hit.hit&&a.key==="arjuna"&&isRangedAttack(a,d)&&hvCardReady(a,"flecha_dharma")){
+    mods.hvArjunaRerollUsed=true;
     const first=hit;
     const dharmaMods={...mods,attackerDex:(mods.attackerDex||0)+6};
     hit=rollHit(a,d,dharmaMods);
@@ -964,6 +967,7 @@ async function resolveSharedAttackOutcome({
 }){
   let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false,dragonCompanionText="";
   units=applySkillCooldownMarksFromMods(units,mods);
+  units=hvCardMarksFromMods(units,mods);
   a=units.find(unit=>unit.id===a.id)||a;
   const originalDefender=d;
   if(hit?.hit)units=applyJoanOrleansCooldownFromMods(units,mods);
@@ -1006,9 +1010,11 @@ async function resolveSharedAttackOutcome({
   const battleAtk=Math.max(0,Math.round((dmgTrap.damage||0)*(ulfhednarCritResult.multiplier||1)));
   let hannibalSplitText="";
   let berserkerOsoText="",skiparWarLootText="";
+  const arjunaRerollSpent=!!mods.hvArjunaRerollUsed;
   units=units.map(u=>{
     if(u.id===a.id){
-      const nextAttacker={...u,acted:true,arjunaRerollUsedWindow:u.key==="arjuna"&&isRangedAttack(a,d)?true:!!u.arjunaRerollUsedWindow};
+      let nextAttacker={...u,acted:true,arjunaRerollUsedWindow:u.key==="arjuna"&&arjunaRerollSpent?true:!!u.arjunaRerollUsedWindow};
+      if(u.key==="arjuna"&&arjunaRerollSpent)nextAttacker=hvCardMark(nextAttacker,"flecha_dharma");
       // v220: limpiar estado manual legacy. Hua Lan usa únicamente dos flags
       // automáticos de seguimiento y Khalid no necesita un flag serializado de cadena.
       delete nextAttacker.khalidChainReady;
@@ -1069,7 +1075,7 @@ async function resolveSharedAttackOutcome({
   units=applyLegendaryFatalSaves(units,[d.id]);
   defenderFell=!!units.find(u=>u.id===d.id&&u.hp<=0);
   units=units.filter(u=>u.hp>0);
-  if(defenderFell&&a.key==="solomon_ifrit"&&hit.hit&&hpLoss>0){
+  if(defenderFell&&a.key==="solomon_ifrit"&&hit.hit&&hpLoss>0&&solomonIfritResult.triggered){
     units=units.map(u=>u.id===a.id?{...u,hp:Math.min(effectiveMaxHp(u),Number(u.hp||0)+2)}:u);
   }
   const masteryKillResult=defenderFell?registerLocalUnitMasteryKill(a,d):null;
@@ -1080,7 +1086,8 @@ async function resolveSharedAttackOutcome({
   units=berserkerOsoResult.units;
   berserkerOsoText=berserkerOsoResult.text||"";
   units=applyAfterDamageBonuses(units,a,d,hpLoss,defenderFell,mods,!!hit.hit);
-  const skiparWarLootResult=defenderFell?await resolveSkiparWarLoot(a,d.owner):{triggered:false,text:""};
+  const skiparWarLootResult=defenderFell?resolveSkiparWarLoot(a,d.owner,units):{units,triggered:false,text:""};
+  units=skiparWarLootResult.units||units;
   skiparWarLootText=skiparWarLootResult.text||"";
   const saboteadorEscapeResult=hit.hit?applySaboteadorEscapeForzado(units,d.id):{units,triggered:false,text:""};
   units=saboteadorEscapeResult.units;
@@ -1198,7 +1205,7 @@ async function resolveSharedAttackOutcome({
   const rhinoStunText=rhinoStunTriggered?` Aturdido por Embestida: ${a.name} queda aturdido hasta el final del siguiente ciclo táctico; no podrá moverse, defenderse ni atacar. Su DX/AGI quedan a la mitad y su Guardia no cambia.`:"";
   const warriorShieldText=warriorShieldBlocked?` Muralla del Warrior: mientras conserve unidades aliadas, ${d.name} no pierde Vida por ataques de unidades.`:"";
   const mulanExecutionTriggered=hit.hit&&defenderFell&&a.key==="mulan"&&!mulanFollowupAttack&&!d.leader&&units.some(u=>u.id===a.id);
-  const khalidChainTriggered=hit.hit&&defenderFell&&a.key==="khalid_ibn_al_walid"&&!d.leader&&units.some(u=>u.id===a.id);
+  const khalidChainTriggered=hit.hit&&defenderFell&&a.key==="khalid_ibn_al_walid"&&!d.leader&&hvCardReady(a,"espada_invicta")&&units.some(u=>u.id===a.id);
   const exileTrap=defenderFell?runInState(()=>resolveAfterKillLegendaryTraps(a,d,units,dmgTrap.traps),{units,legendaryTraps:resolvedLegendaryTraps,beastTraps}):{units,traps:dmgTrap.traps,logs:[]};
   resolvedLegendaryTraps=exileTrap.traps||resolvedLegendaryTraps;
   units=exileTrap.units;
@@ -1208,7 +1215,7 @@ async function resolveSharedAttackOutcome({
     units=units.map(u=>u.id===a.id?{...u,mulanRepositionReady:true,mulanFollowupReady:false}:u);
   }
   if(khalidChainTriggered&&units.some(u=>u.id===a.id)){
-    units=units.map(u=>u.id===a.id?{...u,acted:false,khalidAttackPenalty:getKhalidAttackPenalty(u)+2}:u);
+    units=units.map(u=>u.id===a.id?hvCardMark({...u,acted:false,khalidAttackPenalty:getKhalidAttackPenalty(u)+2},"espada_invicta"):u);
   }
   const hanzoContractResult=resolveHanzoContractAfterAttack(units,a,d,!!mods.hanzoContract,defenderFell);
   units=hanzoContractResult.units;
@@ -1217,7 +1224,7 @@ async function resolveSharedAttackOutcome({
   const arcaneAdeptRangedCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="arcane_adept"&&declaredRanged;
   const miyamotoMeleeCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="miyamoto_musashi"&&declaredMelee&&(!hit.hit||hpLoss>0);
   const counterLocked=!!((defenderAfter?.noCounterWindowKey&&defenderAfter.noCounterWindowKey===combatWindowKey)||isRtTrapLocked(defenderAfter,"counter"));
-  const canSpecialCounter=defenderAfter&&attackerAfter&&!mods.noCounter&&!counterLocked&&!defenderAfter.counterUsedWindow&&(arcaneAdeptRangedCounter||miyamotoMeleeCounter);
+  const canSpecialCounter=defenderAfter&&attackerAfter&&!mods.noCounter&&!counterLocked&&hvCardReady(defenderAfter,"respuesta_contra")&&(arcaneAdeptRangedCounter||miyamotoMeleeCounter);
   if(defenderAfter&&attackerAfter&&canSpecialCounter){
     const counterDefenseRemainder=runInState(()=>getCounterDefenseRemainder(a,d,mods),{units,legendaryTraps:resolvedLegendaryTraps,beastTraps});
     const isMiyamotoCounter=!!miyamotoMeleeCounter;
@@ -1237,7 +1244,7 @@ async function resolveSharedAttackOutcome({
       const ulfhednarCounterCrit=rollUlfhednarCritical(defenderAfter,cHit);
       const cAtk=Math.max(0,Math.round(getBattleDamage(defenderAfter,cMods)*(ulfhednarCounterCrit.multiplier||1)));
       units=units.map(u=>{
-        if(u.id===defenderAfter.id)return{...u,counterUsedWindow:true};
+        if(u.id===defenderAfter.id)returnhvCardMark({...u,counterUsedWindow:true},"respuesta_contra");
         if(u.id===attackerAfter.id){
           let damaged=applyGuardDamage(u,cAtk,cMods.defenderGuard||0,0);
           const warriorShield=applyWarriorLeaderUnitShield(attackerAfter,defenderAfter,damaged,units);
@@ -1289,7 +1296,7 @@ async function resolveSharedAttackOutcome({
       const guardText=`${cGuard>0?`consume ${cGuard} GD y `:""}${cHp>0?`inflige ${cHp} daño a HP`:"no atraviesa la Guardia"}`;
       counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${ulfhednarCounterCrit.text||""}${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${counterVenomText}${counterBleedText}${miyamotoBleedText}${counterHannibalSplitText}${unitMasteryRankUpText(counterMasteryResult)}${counterDefenseText(counterDefenseRemainder)}`;
     }else{
-      units=units.map(u=>u.id===defenderAfter.id?{...u,counterUsedWindow:true}:u);
+      units=units.map(u=>u.id===defenderAfter.id?hvCardMark({...u,counterUsedWindow:true},"respuesta_contra"):u);
       counterText=` Contraataque: falla (${cHit.roll}/${cHit.chance}).${counterDefenseText(counterDefenseRemainder)}`;
     }
   }
