@@ -581,6 +581,11 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
   function renderRoomSnapshot(room,code=activeCode){
     room=room&&typeof room==="object"?room:{}; roomCache=room;
     const roomPhase=String(room?.phase||"");
+    if(roomPhase==="active"){
+      clearStep5ArenaPreview();
+      $("onlineLobby")?.classList.add("hidden");
+      return;
+    }
     if(roomPhase!=="arena_ready"){
       clearStep5ArenaPreview();
       $("onlineLobby")?.classList.remove("hidden");

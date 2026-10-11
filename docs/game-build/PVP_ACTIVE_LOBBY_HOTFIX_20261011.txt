@@ -1,0 +1,9 @@
+HALLVALLA · HOTFIX PvP ACTIVE LOBBY · 2026-10-11
+
+Problema:
+El duelo podía comenzar y sonar detrás del matchmaking porque una actualización tardía
+de la sala con phase="active" volvía a mostrar onlineLobby.
+
+Corrección:
+- Si la sala ya está active, el lobby permanece oculto.
+- No cambia combate, matchmaking, Firebase, balance ni FX.
