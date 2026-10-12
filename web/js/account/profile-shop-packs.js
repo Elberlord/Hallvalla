@@ -190,7 +190,70 @@ function getStoredCollectionCardTotalForMastery(){
   }catch(_){return 0;}
 }
 
+// Fragmentos de HallValla: una sola cartera por rareza. La migración vive en
+// datos de colección que también viajan en cloudSaveV2 (no en localStorage aislado).
+const HALLVALLA_FRAGMENT_RARITIES=Object.freeze(["basic","rare","epic","glorious","mythic","legendary"]);
+const HALLVALLA_FRAGMENT_LABELS=Object.freeze({basic:"Básicos",rare:"Raros",epic:"Épicos",glorious:"Gloriosos",mythic:"Míticos",legendary:"Legendarios"});
+function hallvallaFragmentRarityLabel(rarity){return HALLVALLA_FRAGMENT_LABELS[String(rarity||"basic")]||HALLVALLA_FRAGMENT_LABELS.basic;}
+function hallvallaMigrateLegacyFragmentBalances(){
+  // El marcador y los materiales se guardan PRIMERO en la misma clave; una
+  // interrupción antes de limpiar profile.fragments NO vuelve a acreditarlos.
+  const source=localStorage.getItem("hallvalla_player_profile");
+  if(!source)return false;
+  const profile=JSON.parse(source)||{};
+  const stored=JSON.parse(localStorage.getItem("hallvalla_player_collection")||"null")||{};
+  const legacy=Math.max(0,Math.floor(Number(profile.fragments||0)));
+  const migrated=Number(stored.hvFragmentsLegacyMigrationVersion||0)===1;
+  if(migrated){
+    // Completar un guardado interrumpido, sin volver a sumar.
+    if(legacy>0){profile.fragments=0;localStorage.setItem("hallvalla_player_profile",JSON.stringify(profile));}
+    return false;
+  }
+  const collection={...stored,cards:Array.isArray(stored.cards)?stored.cards:[],materials:{...(stored.materials||{})}};
+  if(legacy>0)collection.materials.legendary=Math.max(0,Math.floor(Number(collection.materials.legendary||0)))+legacy;
+  collection.hvFragmentsLegacyMigrationVersion=1;
+  collection.hvFragmentsLegacyConverted=legacy;
+  collection.hvFragmentsLegacyConvertedAt=Date.now();
+  localStorage.setItem("hallvalla_player_collection",JSON.stringify(collection));
+  if(legacy>0){profile.fragments=0;localStorage.setItem("hallvalla_player_profile",JSON.stringify(profile));}
+  return legacy>0;
+}
+function hallvallaFragmentWalletTotal(){
+  hallvallaMigrateLegacyFragmentBalances();
+  const c=JSON.parse(localStorage.getItem("hallvalla_player_collection")||"null")||{};
+  return HALLVALLA_FRAGMENT_RARITIES.reduce((sum,key)=>sum+Math.max(0,Math.floor(Number(c?.materials?.[key]||0))),0);
+}
+function hallvallaAwardFragments(amount,rarity="basic"){
+  const count=Math.max(0,Math.floor(Number(amount||0)));
+  const key=String(rarity||"basic");
+  if(!HALLVALLA_FRAGMENT_RARITIES.includes(key))throw new Error("Rareza de fragmentos desconocida: "+key);
+  if(!count)return 0;
+  const collection=getPlayerCollection();
+  collection.materials=normalizeCraftMaterials(collection.materials||{});
+  collection.materials[key]=Math.max(0,Math.floor(Number(collection.materials[key]||0)))+count;
+  savePlayerCollection(collection);
+  return count;
+}
+function hallvallaLoseFragments(amount,rarity="basic"){
+  const requested=Math.max(0,Math.floor(Number(amount||0)));
+  const key=String(rarity||"basic");
+  if(!HALLVALLA_FRAGMENT_RARITIES.includes(key))throw new Error("Rareza de fragmentos desconocida: "+key);
+  if(!requested)return 0;
+  const collection=getPlayerCollection();
+  collection.materials=normalizeCraftMaterials(collection.materials||{});
+  const available=Math.max(0,Math.floor(Number(collection.materials[key]||0)));
+  const lost=Math.min(available,requested);
+  if(lost){collection.materials[key]=available-lost;savePlayerCollection(collection);}
+  return lost;
+}
+function hallvallaMasteryFragmentRarity(reward){
+  if(HALLVALLA_FRAGMENT_RARITIES.includes(reward?.rarity))return reward.rarity;
+  const amount=Math.max(0,Number(reward?.amount||0));
+  return amount>=1000?"legendary":amount>=600?"mythic":amount>=350?"glorious":amount>=100?"epic":amount>=25?"rare":"basic";
+}
+
 function getPlayerProfile(){
+  hallvallaMigrateLegacyFragmentBalances();
   try{
     const saved = JSON.parse(localStorage.getItem("hallvalla_player_profile") || "null");
     const profile={...defaultPlayerProfile, ...(saved || {})};
@@ -520,7 +583,7 @@ function formatAccountMasteryReward(reward){
   const amount=Math.max(0,Math.floor(Number(reward.amount||0)));
   if(reward.type==="gold")return `${amount} Oro`;
   if(reward.type==="gems")return `${amount} Gema${amount===1?"":"s"}`;
-  if(reward.type==="fragments")return `${amount} Fragmento${amount===1?"":"s"}`;
+  if(reward.type==="fragments")return `${amount} Fragmento${amount===1?"":"s"} ${hallvallaFragmentRarityLabel(hallvallaMasteryFragmentRarity(reward))}`;
   if(reward.type==="mine_piece")return `${amount} Pieza${amount===1?"":"s"} de rompecabezas de Mina`;
   if(reward.type==="mine_disaster_clear")return `${amount} eliminación${amount===1?"":"es"} gratis de desastre`;
   if(reward.type==="pack"){
@@ -552,13 +615,18 @@ function claimAccountMasteryRewards(requests=[]){
     const {profile,book,valid}=collectAccountMasteryClaimRequests(requests);
     if(!valid.length)return{claimed:0,gold:0,gems:0,fragments:0,minePieces:0,freeDisasterClears:0,packs:0};
     let goldGain=0,gemsGain=0,fragmentsGain=0,minePieceGain=0,freeDisasterClearGain=0,packGain=0;
+    const fragmentGrants=[];
     const pendingPacks=typeof getPendingPacks==="function"?getPendingPacks():[];
     const pendingIds=new Set(pendingPacks.map(p=>p?.id).filter(Boolean));
     valid.forEach(({key,target,milestone})=>{
       (milestone.rewards||[]).forEach((reward,index)=>{
         if(reward.type==="gold")goldGain+=Math.max(0,Number(reward.amount||0));
         if(reward.type==="gems")gemsGain+=Math.max(0,Math.floor(Number(reward.amount||0)));
-        if(reward.type==="fragments")fragmentsGain+=Math.max(0,Math.floor(Number(reward.amount||0)));
+        if(reward.type==="fragments"){
+          const amount=Math.max(0,Math.floor(Number(reward.amount||0)));
+          fragmentsGain+=amount;
+          if(amount>0)fragmentGrants.push({amount,rarity:hallvallaMasteryFragmentRarity(reward)});
+        }
         if(reward.type==="mine_piece")minePieceGain+=Math.max(0,Math.floor(Number(reward.amount||0)));
         if(reward.type==="mine_disaster_clear")freeDisasterClearGain+=Math.max(0,Math.floor(Number(reward.amount||0)));
         if(reward.type==="pack"){
@@ -577,7 +645,8 @@ function claimAccountMasteryRewards(requests=[]){
     if(packGain>0&&typeof savePendingPacks==="function")savePendingPacks(pendingPacks);
     profile.gold=Math.max(0,Number(profile.gold||0))+goldGain;
     profile.gems=Math.max(0,Number(profile.gems||0))+gemsGain;
-    profile.fragments=Math.max(0,Number(profile.fragments||0))+fragmentsGain;
+    // Premios modernos: directamente en la cartera de Construir.
+    for(const fragment of fragmentGrants)hallvallaAwardFragments(fragment.amount,fragment.rarity);
     if(minePieceGain>0){
       if(typeof grantHallvallaMineShopFreePieces==="function")void grantHallvallaMineShopFreePieces(minePieceGain,"account_mastery");
       else profile.minePuzzleVouchers=Math.max(0,Math.floor(Number(profile.minePuzzleVouchers||0)))+minePieceGain;
@@ -1132,6 +1201,7 @@ function markCollectionCardSeen(cardOrKey){
 Object.assign(globalThis,{getNewCollectionCardKeys,isCollectionCardNew,markCollectionCardSeen});
 
 function getPlayerCollection(){
+  hallvallaMigrateLegacyFragmentBalances();
   try{
     const saved = JSON.parse(localStorage.getItem("hallvalla_player_collection") || "null");
     if(saved&&typeof saved === "object"){

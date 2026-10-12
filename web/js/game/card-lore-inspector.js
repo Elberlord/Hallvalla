@@ -395,7 +395,9 @@ function getDetAbilitySectionsForInspector(entity,effectText=""){
     "regla_de_lanza_atacar_primero","formacion_de_picas","atacar_primero","anticaballeria",
     "golpe_final_asesino"
   ]);
-  const nativeSections=getEntityAbilitySections(entity,effectText)
+  const currentEffectText=entity?.key==="skipar_del_drakkar"&&typeof getCardEffectTextByKey==="function"
+    ?getCardEffectTextByKey(entity.key):effectText;
+  const nativeSections=getEntityAbilitySections(entity,currentEffectText)
     .filter(section=>!obsoleteDetHeadings.has(normalizeDetEffectTitle(section?.title||"")));
   const isAssassin=typeof isAssassinUnit==="function"&&isAssassinUnit(entity);
   if(isAssassin){
@@ -414,7 +416,7 @@ function getDetAbilitySectionsForInspector(entity,effectText=""){
   if(!isLanceUnitCardLike(entity))return nativeSections.slice(0,27);
   const unitName=String(entity?.name||"esta unidad");
   const lanceInnateSections=[
-    {title:"ATACAR PRIMERO",body:`Una vez por ciclo táctico (10 s), cuando una unidad enemiga de cuerpo a cuerpo con RG 1 ataca a ${unitName} desde una casilla adyacente, ${unitName} ataca primero. No se activa contra unidades con RG 2 o más ni contra Ataque en Picada del halcón.`},
+    {title:"ATACAR PRIMERO",body:`Una vez cada 30 s, cuando una unidad enemiga de cuerpo a cuerpo con RG 1 ataca a ${unitName} desde una casilla adyacente, ${unitName} ataca primero. No se activa contra unidades con RG 2 o más ni contra Ataque en Picada del halcón.`},
     {title:"ANTICABALLERÍA",body:`Cuando ${unitName} combate cuerpo a cuerpo contra una unidad de Caballería, ya sea atacando o defendiendo, esa Caballería tiene Guardia 0 y AGI 0 durante ese combate.`}
   ];
   return [...lanceInnateSections,...nativeSections].slice(0,27);

@@ -300,7 +300,7 @@ const HALLVALLA_MINE_EVENT_DEFS=Object.freeze({
   derrumbe:Object.freeze({key:"derrumbe",name:"Derrumbe",kind:"negative",scene:"assets/mine/events/event_derrumbe.webp",weight:15,action:"repair",costGold:60,button:"Reparar 60",baseEffect:"Galería dañada"}),
   tesoro:Object.freeze({key:"tesoro",name:"Tesoro",kind:"positive",scene:"assets/mine/events/event_tesoro.webp",weight:20,action:"reward",button:"Reclamar",reward:{gems:2,gold:120},baseEffect:"+2💎 +120🪙"}),
   veta_rica:Object.freeze({key:"veta_rica",name:"Veta rica",kind:"positive",scene:"assets/mine/events/event_veta_rica.webp",weight:17,action:"reward",button:"Reclamar",reward:{gems:3},baseEffect:"+3💎"}),
-  camara_secreta:Object.freeze({key:"camara_secreta",name:"Cámara secreta",kind:"positive",scene:"assets/mine/events/event_camara_secreta.webp",weight:11,action:"reward",button:"Abrir",reward:{gems:2,fragments:60},baseEffect:"+2💎 +60 fragmentos"})
+  camara_secreta:Object.freeze({key:"camara_secreta",name:"Cámara secreta",kind:"positive",scene:"assets/mine/events/event_camara_secreta.webp",weight:11,action:"reward",button:"Abrir",reward:{gems:2,fragments:60,fragmentRarity:"rare"},baseEffect:"+2💎 +60 fragmentos Raros"})
 });
 function normalizeHallvallaMineEventInstance(event={}){
   const key=String(event?.key||"");
@@ -621,7 +621,7 @@ async function handleHallvallaMineEventAction(key,button=null){
   const reward=def.reward||{};
   profile.gems=Math.max(0,Number(profile.gems||0))+Math.max(0,Number(reward.gems||0));
   profile.gold=Math.max(0,Number(profile.gold||0))+Math.max(0,Number(reward.gold||0));
-  profile.fragments=Math.max(0,Number(profile.fragments||0))+Math.max(0,Number(reward.fragments||0));
+  if(Number(reward.fragments||0)>0)hallvallaAwardFragments(reward.fragments,reward.fragmentRarity||"rare");
   savePlayerProfile(profile);
   try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
   renderMineScreen();
@@ -1223,7 +1223,7 @@ const HALLVALLA_MINE_WHEEL_POSITIVE=Object.freeze([
   Object.freeze({id:"p_gems_25",kind:"positive",name:"Bolsa de Cristales",effect:"gems",amount:25}),
   Object.freeze({id:"p_gems_50",kind:"positive",name:"Gran Alijo de Cristales",effect:"gems",amount:50}),
   Object.freeze({id:"p_gold_300",kind:"positive",name:"Tesoro Minero",effect:"gold",amount:300}),
-  Object.freeze({id:"p_fragments_75",kind:"positive",name:"Fragmentos Antiguos",effect:"fragments",amount:75}),
+  Object.freeze({id:"p_fragments_75",kind:"positive",name:"Fragmentos Antiguos",effect:"fragments",amount:75,rarity:"epic"}),
   Object.freeze({id:"p_free_1",kind:"positive",name:"Segundo Intento",effect:"free_spin",amount:1}),
   Object.freeze({id:"p_free_3",kind:"positive",name:"Racha de Fortuna",effect:"free_spin",amount:3}),
   Object.freeze({id:"p_mine_piece_1a",kind:"positive",name:"Pieza del Osario",effect:"mine_piece",amount:1}),
@@ -1246,21 +1246,21 @@ const HALLVALLA_MINE_WHEEL_NEGATIVE=Object.freeze([
   Object.freeze({id:"n_gold_25",kind:"negative",name:"Herramienta Rota",effect:"gold_loss",amount:25}),
   Object.freeze({id:"n_minegem_1b",kind:"negative",name:"Cristal Fracturado",effect:"mine_gems",amount:1}),
   Object.freeze({id:"n_gold_40",kind:"negative",name:"Repuesto Menor",effect:"gold_loss",amount:40}),
-  Object.freeze({id:"n_frag_10",kind:"negative",name:"Fragmentos Dañados",effect:"fragments_loss",amount:10}),
+  Object.freeze({id:"n_frag_10",kind:"negative",name:"Fragmentos Dañados",effect:"fragments_loss",amount:10,rarity:"basic"}),
   Object.freeze({id:"n_minegem_2a",kind:"negative",name:"Carga Perdida",effect:"mine_gems",amount:2}),
   Object.freeze({id:"n_gold_50",kind:"negative",name:"Mantenimiento Forzado",effect:"gold_loss",amount:50}),
   Object.freeze({id:"n_minegem_2b",kind:"negative",name:"Carretilla Volcada",effect:"mine_gems",amount:2}),
   Object.freeze({id:"n_gold_75",kind:"negative",name:"Suministros Perdidos",effect:"gold_loss",amount:75}),
-  Object.freeze({id:"n_frag_20",kind:"negative",name:"Caja Extraviada",effect:"fragments_loss",amount:20}),
+  Object.freeze({id:"n_frag_20",kind:"negative",name:"Caja Extraviada",effect:"fragments_loss",amount:20,rarity:"rare"}),
   Object.freeze({id:"n_free_1a",kind:"negative",name:"Giro Desperdiciado",effect:"free_loss",amount:1}),
   Object.freeze({id:"n_paid_penalty_1",kind:"negative",name:"Mala Racha",effect:"paid_penalty",amount:1}),
   Object.freeze({id:"n_gold_100",kind:"negative",name:"Derrame de Suministros",effect:"gold_loss",amount:100}),
-  Object.freeze({id:"n_frag_30",kind:"negative",name:"Lote Contaminado",effect:"fragments_loss",amount:30}),
+  Object.freeze({id:"n_frag_30",kind:"negative",name:"Lote Contaminado",effect:"fragments_loss",amount:30,rarity:"epic"}),
   Object.freeze({id:"n_minegem_3",kind:"negative",name:"Veta Colapsada",effect:"mine_gems",amount:3}),
   Object.freeze({id:"n_free_2",kind:"negative",name:"Fortuna Quebrada",effect:"free_loss",amount:2}),
   Object.freeze({id:"n_paid_penalty_2",kind:"negative",name:"Deuda de Fortuna",effect:"paid_penalty",amount:2}),
   Object.freeze({id:"n_gold_125",kind:"negative",name:"Reparación Costosa",effect:"gold_loss",amount:125}),
-  Object.freeze({id:"n_frag_40",kind:"negative",name:"Cofre Dañado",effect:"fragments_loss",amount:40}),
+  Object.freeze({id:"n_frag_40",kind:"negative",name:"Cofre Dañado",effect:"fragments_loss",amount:40,rarity:"glorious"}),
   Object.freeze({id:"n_gem_15",kind:"negative",name:"Cristales Perdidos",effect:"gem_loss",amount:15})
 ]);
 const HALLVALLA_MINE_WHEEL_OUTCOMES=Object.freeze((()=>{
@@ -1420,14 +1420,14 @@ function describeHallvallaMineWheelOutcome(def,state=getHallvallaMineWheelState(
   if(def.effect==="advance_all")return `Avanza ${Math.max(1,Number(def.hours||1))}h todas las ranuras`;
   if(def.effect==="gems")return `+${Math.max(0,Number(def.amount||0))}💎`;
   if(def.effect==="gold")return `+${Math.max(0,Number(def.amount||0))} oro`;
-  if(def.effect==="fragments")return `+${Math.max(0,Number(def.amount||0))} fragmentos`;
+  if(def.effect==="fragments")return `+${Math.max(0,Number(def.amount||0))} fragmentos ${hallvallaFragmentRarityLabel(def.rarity||"basic")}`;
   if(def.effect==="free_spin")return `+${Math.max(1,Number(def.amount||1))} tiro(s) gratis`;
   if(def.effect==="mine_piece")return `${Math.max(1,Number(def.amount||1))} pieza(s) de esqueleto a elección`;
   if(def.effect==="mine_disaster_clear")return `${Math.max(1,Number(def.amount||1))} eliminación(es) gratis de desastre`;
   if(def.effect==="pack")return `1 Pack ${String(def.tier||"").toLowerCase()==="legendary"?"Legendario":"Mítico"}`;
   if(def.effect==="mine_gems")return `Pierdes hasta ${Math.max(0,Number(def.amount||0))}💎 de Mina`;
   if(def.effect==="gold_loss")return `Pierdes hasta ${Math.max(0,Number(def.amount||0))} oro`;
-  if(def.effect==="fragments_loss")return `Pierdes hasta ${Math.max(0,Number(def.amount||0))} fragmentos`;
+  if(def.effect==="fragments_loss")return `Pierdes hasta ${Math.max(0,Number(def.amount||0))} fragmentos ${hallvallaFragmentRarityLabel(def.rarity||"basic")}`;
   if(def.effect==="gem_loss")return `Pierdes hasta ${Math.max(0,Number(def.amount||0))}💎 de tu cartera`;
   if(def.effect==="free_loss")return `Pierdes hasta ${Math.max(1,Number(def.amount||1))} tiro(s) gratis acumulado(s)`;
   if(def.effect==="paid_penalty")return `El costo progresivo avanza ${Math.max(1,Number(def.amount||1))} tiro(s) pagado(s)`;
@@ -1671,7 +1671,13 @@ async function applyHallvallaMineWheelOutcome(def,state){
     const profile=getPlayerProfile(),amount=Math.max(HALLVALLA_MINE_WHEEL_JACKPOT_BASE,Number(state?.jackpot||HALLVALLA_MINE_WHEEL_JACKPOT_BASE));profile.gems=Math.max(0,Number(profile.gems||0))+amount;savePlayerProfile(profile);return `¡Premio Mayor! +${amount}💎.`;
   }
   if(def.effect==="gems"||def.effect==="gold"||def.effect==="fragments"){
-    const profile=getPlayerProfile(),amount=Math.max(0,Number(def.amount||0));profile[def.effect]=Math.max(0,Number(profile[def.effect]||0))+amount;savePlayerProfile(profile);return `+${amount}${def.effect==="gems"?"💎":def.effect==="gold"?" de oro":" fragmentos"}.`;
+    const amount=Math.max(0,Number(def.amount||0));
+    if(def.effect==="fragments"){
+      hallvallaAwardFragments(amount,def.rarity||"basic");
+      return `+${amount} fragmentos ${hallvallaFragmentRarityLabel(def.rarity||"basic")}.`;
+    }
+    const profile=getPlayerProfile();profile[def.effect]=Math.max(0,Number(profile[def.effect]||0))+amount;savePlayerProfile(profile);
+    return `+${amount}${def.effect==="gems"?"💎":" de oro"}.`;
   }
   if(def.effect==="mine_piece"){
     const amount=Math.max(1,Math.floor(Number(def.amount||1)));
@@ -1704,7 +1710,13 @@ async function applyHallvallaMineWheelOutcome(def,state){
     return granted>0?`Ganaste ${granted}${granted>1?" ×":""} ${packDef?.name||`Pack ${tier}`}. Está disponible para abrir en tus recompensas.`:`El ${packDef?.name||`Pack ${tier}`} ya había sido acreditado.`;
   }
   if(def.effect==="gold_loss"||def.effect==="gem_loss"||def.effect==="fragments_loss"){
-    const profile=getPlayerProfile(),field=def.effect==="gold_loss"?"gold":def.effect==="gem_loss"?"gems":"fragments",amount=Math.min(Math.max(0,Number(def.amount||0)),Math.max(0,Number(profile[field]||0)));profile[field]=Math.max(0,Number(profile[field]||0)-amount);savePlayerProfile(profile);return amount>0?`Perdiste ${amount}${field==="gems"?"💎":field==="gold"?" de oro":" fragmentos"}.`:"No tenías recursos de ese tipo para perder.";
+    if(def.effect==="fragments_loss"){
+      const rarity=def.rarity||"basic",lost=hallvallaLoseFragments(def.amount,rarity);
+      return lost>0?`Perdiste ${lost} fragmentos ${hallvallaFragmentRarityLabel(rarity)}.`:"No tenías fragmentos de esa rareza para perder.";
+    }
+    const profile=getPlayerProfile(),field=def.effect==="gold_loss"?"gold":"gems",amount=Math.min(Math.max(0,Number(def.amount||0)),Math.max(0,Number(profile[field]||0)));
+    profile[field]=Math.max(0,Number(profile[field]||0)-amount);savePlayerProfile(profile);
+    return amount>0?`Perdiste ${amount}${field==="gems"?"💎":" de oro"}.`:"No tenías recursos de ese tipo para perder.";
   }
   if(def.effect==="mine_gems"){
     const loss=hallvallaMineLoseGems(Math.max(0,Number(def.amount||0))).total;return loss>0?`Perdiste ${loss}💎 de la producción/cartera.`:"No había diamantes disponibles para perder.";
@@ -1824,7 +1836,10 @@ function getHallvallaMineMissionTierReward(def,tierIndex=0){
   const factor=getHallvallaMineMissionRewardFactor(tierIndex),base=def?.reward||{},out={};
   if(Number(base.gold||0)>0)out.gold=Math.max(1,Math.floor(Number(base.gold)*factor));
   if(Number(base.gems||0)>0)out.gems=Math.max(1,Math.floor(Number(base.gems)*factor));
-  if(Number(base.fragments||0)>0)out.fragments=Math.max(1,Math.floor(Number(base.fragments)*factor));
+  if(Number(base.fragments||0)>0){
+    out.fragments=Math.max(1,Math.floor(Number(base.fragments)*factor));
+    out.fragmentRarity=["basic","rare","epic","glorious","mythic","legendary"][Math.min(5,Math.max(0,Math.floor(Number(tierIndex)||0)))];
+  }
   return out;
 }
 function getHallvallaMineMissionTierDescription(def,target){
@@ -1868,7 +1883,7 @@ function getHallvallaMineMissionRewardText(reward={}){
   const parts=[];
   if(Number(reward.gold||0)>0)parts.push(`${Math.floor(Number(reward.gold))} de oro`);
   if(Number(reward.gems||0)>0)parts.push(`${Math.floor(Number(reward.gems))}💎`);
-  if(Number(reward.fragments||0)>0)parts.push(`${Math.floor(Number(reward.fragments))} fragmentos`);
+  if(Number(reward.fragments||0)>0)parts.push(`${Math.floor(Number(reward.fragments))} fragmentos ${hallvallaFragmentRarityLabel(reward.fragmentRarity||"basic")}`);
   return parts.join(" + ")||"Recompensa";
 }
 function seedHallvallaMineMissionFacts(state=getHallvallaMineMissionsState()){
@@ -1936,7 +1951,7 @@ function applyHallvallaMineMissionReward(reward={}){
   const profile=getPlayerProfile();
   if(Number(reward.gold||0)>0)profile.gold=Math.max(0,Number(profile.gold||0))+Math.floor(Number(reward.gold));
   if(Number(reward.gems||0)>0)profile.gems=Math.max(0,Number(profile.gems||0))+Math.floor(Number(reward.gems));
-  if(Number(reward.fragments||0)>0)profile.fragments=Math.max(0,Number(profile.fragments||0))+Math.floor(Number(reward.fragments));
+  if(Number(reward.fragments||0)>0)hallvallaAwardFragments(reward.fragments,reward.fragmentRarity||"basic");
   savePlayerProfile(profile);
   try{if(typeof renderHomeProgress==="function")renderHomeProgress();else if(typeof renderPlayerProfile==="function")renderPlayerProfile(profile);}catch(_){ }
   const gold=$("mineGoldValue"),gems=$("mineGemsValue");

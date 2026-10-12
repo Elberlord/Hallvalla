@@ -61,7 +61,11 @@ function hydrateCardVisualData(card){
   // recupera reglas, texto y arte canónicos. Evita cartas antiguas con DET vacío o
   // un portrait obsoleto que termine mostrando FALTA ASSET.
   const merged={...(canonical||{}),...card,...(visual||{})};
-  if(canonical?.text&&!String(card?.text||"").trim())merged.text=canonical.text;
+  if(canonical?.text&&(String(card?.key||"")==="skipar_del_drakkar"||!String(card?.text||"").trim()))merged.text=canonical.text;
+  if(canonical?.text&&String(card?.key||"")==="skipar_del_drakkar"){
+    merged.effectText=canonical.text;
+    merged.ability=canonical.text;
+  }
   if(canonical?.portrait)merged.portrait=canonical.portrait;
   if(canonical?.fieldFigure&&merged.type==="unit")merged.fieldFigure=canonical.fieldFigure;
   if(!merged.portrait)merged.portrait=getResolvedCardPortraitSource(merged);

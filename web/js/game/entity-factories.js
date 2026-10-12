@@ -30,7 +30,8 @@ function getCardEffectTextByKey(key){
   return "";
 }
 function getUnitEffectText(u){
-  let base=normalizeSaboteadorRuleText(u,u?.text||u?.effectText||u?.ability||getCardEffectTextByKey(u?.key)||"");
+  const canonicalSkillText=u?.key==="skipar_del_drakkar"?getCardEffectTextByKey(u?.key):"";
+  let base=normalizeSaboteadorRuleText(u,canonicalSkillText||u?.text||u?.effectText||u?.ability||getCardEffectTextByKey(u?.key)||"");
   if(typeof isHannibalMountedUnit==="function"&&isHannibalMountedUnit(u)){
     const riderHp=Math.max(0,Number(u?.hannibalRiderHp??HANNIBAL_RIDER_BASE_HP));
     const riderMax=Math.max(1,Number(u?.hannibalRiderMaxHp??HANNIBAL_RIDER_BASE_HP));

@@ -506,7 +506,7 @@ function getBattleOutcomeSplashElement(){
   overlay.setAttribute("aria-modal","true");
   overlay.setAttribute("aria-live","assertive");
   overlay.setAttribute("aria-atomic","true");
-  overlay.innerHTML='<img class="battle-outcome-splash-art" alt=""><div class="battle-outcome-draw-text" aria-hidden="true">EMPATE</div><div class="battle-outcome-rewards" aria-hidden="true"></div><div class="battle-outcome-actions" aria-hidden="true"><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="map">Ir al mapa</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="retry">Volver a intentarlo</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="rematch">Rematch</button><button class="battle-outcome-action ghost" type="button" data-battle-outcome-action="report">Reportar rival</button><button class="battle-outcome-action ghost" type="button" data-battle-outcome-action="home">SALIR A HOME</button></div>';
+  overlay.innerHTML='<img class="battle-outcome-splash-art" alt=""><div class="battle-outcome-draw-text" aria-hidden="true">EMPATE</div><div class="battle-outcome-rewards" aria-hidden="true"></div><div class="battle-outcome-actions" aria-hidden="true"><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="map">Ir al mapa</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="retry">Volver a intentarlo</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="rematch">Rematch</button><button class="battle-outcome-action primary" type="button" data-battle-outcome-action="search-rival">Buscar rival</button><button class="battle-outcome-action ghost" type="button" data-battle-outcome-action="report">Reportar rival</button><button class="battle-outcome-action ghost" type="button" data-battle-outcome-action="home">SALIR A HOME</button></div>';
   const actions=overlay.querySelector(".battle-outcome-actions");
   if(actions){
     actions.addEventListener("click",ev=>{
@@ -516,6 +516,17 @@ function getBattleOutcomeSplashElement(){
       btn.disabled=true;
       if(action==="map")showAdventureMapFromResult();
       else if(action==="retry")retryCurrentAdventureBattle();
+      else if(action==="search-rival"){
+        const search=globalThis.hvPvpBattleResultSearchRival;
+        if(typeof search==="function"){
+          void Promise.resolve().then(()=>search()).then(ok=>{
+            if(!ok)btn.disabled=false;
+          },error=>{
+            btn.disabled=false;
+            console.warn("[HallValla][PvP] No se pudo iniciar nueva busqueda:",error);
+          });
+        }else{btn.disabled=false;void hvAlert("La nueva busqueda PvP no esta disponible.","Buscar rival");}
+      }
       else if(action==="rematch"){
         const rematch=globalThis.hvPvpBattleResultRematch;
         if(typeof rematch==="function")void rematch();
@@ -655,11 +666,13 @@ function showBattleOutcomeSplash(result,{adventure=false,online=false,botPvp=fal
     const mapBtn=actions.querySelector('[data-battle-outcome-action="map"]');
     const retryBtn=actions.querySelector('[data-battle-outcome-action="retry"]');
     const rematchBtn=actions.querySelector('[data-battle-outcome-action="rematch"]');
+    const searchBtn=actions.querySelector('[data-battle-outcome-action="search-rival"]');
     const reportBtn=actions.querySelector('[data-battle-outcome-action="report"]');
     const homeBtn=actions.querySelector('[data-battle-outcome-action="home"]');
     if(mapBtn)mapBtn.hidden=!adventure||result!=="victory";
     if(retryBtn)retryBtn.hidden=!adventure||result==="victory";
     if(rematchBtn)rematchBtn.hidden=!online||botPvp;
+    if(searchBtn)searchBtn.hidden=!online||result!=="victory";
     if(reportBtn)reportBtn.hidden=!online||botPvp;
     if(homeBtn){homeBtn.hidden=false;homeBtn.disabled=false;homeBtn.textContent=online?"SALIR A HOME":"Ir a Home";}
     if(adventure)renderBattleOutcomeRewards(result,adventure);

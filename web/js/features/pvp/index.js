@@ -1508,7 +1508,27 @@ La partida termina sin victoria para ti. El jugador que salió recibe -2 puntos 
     }finally{opponentDisconnectInFlight=false;}
   }
 
-  async function leaveBattleResultToHome(){
+  let searchRivalAfterVictoryBusy=false;
+  async function searchRivalAfterVictory(){
+    if(searchRivalAfterVictoryBusy)return false;
+    const state=(typeof publicState!=="undefined"&&publicState)?publicState:null;
+    const eligible=!!state&&state.battleEnded===true&&String(state.phase)==="ended"&&Number(state.winner||0)===Number(myPlayer||0)&&Number(state.winner||0)>0&&
+      (String(state.mode)==="online"||state.pvpBotMatch===true);
+    if(!eligible){mark("Buscar rival solo se habilita tras una victoria PvP.");return false;}
+    searchRivalAfterVictoryBusy=true;
+    try{
+      // Reusar: confirmar ranking, salir de la sala y limpiar la sesion anterior.
+      const left=await leaveBattleResultToHome({keepOnlineLobby:true});
+      if(left!==true)throw new Error("No se pudo cerrar la partida anterior.");
+      return await openMatchmakingFromSelector();
+    }catch(error){
+      console.warn("[HallValla][PvP] Nueva busqueda:",error);
+      await hvPopup("No se pudo buscar rival: "+String(error?.message||error),"Buscar rival");
+      return false;
+    }finally{searchRivalAfterVictoryBusy=false;}
+  }
+
+  async function leaveBattleResultToHome({keepOnlineLobby=false}={}){
     clearRematchWait();
     // v206 · Nunca borramos la sala que sirve de prueba al ranking antes de que
     // /pvpResults haya quedado confirmado. Esto es especialmente importante con BOT.
@@ -1520,7 +1540,7 @@ La partida termina sin victoria para ti. El jugador que salió recibe -2 puntos 
       }
     }catch(error){console.warn("[HallValla][PvP Ranking] No se pudo reconfirmar el resultado antes de salir:",error);}
     if(typeof resetBattleState==="function")resetBattleState();
-    return leaveRoom();
+    return leaveRoom(keepOnlineLobby?{keepOnlineLobby:true}:{});
   }
 
   async function leaveRoom(options={}){
@@ -1585,7 +1605,7 @@ La partida termina sin victoria para ti. El jugador que salió recibe -2 puntos 
         ]);
       }
     }catch(error){ console.warn(error); }
-    resetUi({resetJoin:true}); $("onlineLobby")?.classList.add("hidden"); $("gameShell")?.classList.add("hidden"); $("gameShell")?.classList.remove("pvp-step5-preview"); $("mainMenu")?.classList.remove("hidden"); try{ if(typeof globalThis.renderHomeProgress==="function") globalThis.renderHomeProgress(); }catch(_){ } try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
+    resetUi({resetJoin:true}); if(opts.keepOnlineLobby){$("onlineLobby")?.classList.remove("hidden");$("mainMenu")?.classList.add("hidden");}else{$("onlineLobby")?.classList.add("hidden");$("mainMenu")?.classList.remove("hidden");} $("gameShell")?.classList.add("hidden"); $("gameShell")?.classList.remove("pvp-step5-preview"); try{ if(typeof globalThis.renderHomeProgress==="function") globalThis.renderHomeProgress(); }catch(_){ } try{ if(typeof globalThis.syncBattleMusic==="function") globalThis.syncBattleMusic(); }catch(_){ } return true;
   }
   function backToMain(){ void leaveRoom(); }
 
@@ -1610,6 +1630,7 @@ La partida termina sin victoria para ti. El jugador que salió recibe -2 puntos 
   globalThis.hvPvpGetReportContext=getPvpReportContext;
   globalThis.hvPvpBattleResultRematch=prepareBattleResultRematch;
   globalThis.hvPvpBattleResultHome=leaveBattleResultToHome;
+  globalThis.hvPvpBattleResultSearchRival=searchRivalAfterVictory;
   globalThis.pvpRebuildStep6eOpen=openCleanRoom;
   globalThis.pvpRebuildStep6eCreate=createMinimalPublicRoom;
   globalThis.pvpRebuildStep6eJoin=joinExistingRoom;

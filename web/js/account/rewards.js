@@ -143,8 +143,8 @@ const HALLVALLA_DAILY_REWARD_POOL=Object.freeze([
   Object.freeze({type:"gold",amount:100,weight:5}),
   Object.freeze({type:"gems",amount:2,weight:10}),
   Object.freeze({type:"gems",amount:3,weight:5}),
-  Object.freeze({type:"fragments",amount:10,weight:7}),
-  Object.freeze({type:"fragments",amount:20,weight:5}),
+  Object.freeze({type:"fragments",amount:10,rarity:"basic",weight:7}),
+  Object.freeze({type:"fragments",amount:20,rarity:"rare",weight:5}),
   Object.freeze({type:"pack",tier:"basic",weight:5}),
   Object.freeze({type:"pack",tier:"rare",weight:1})
 ]);
@@ -158,10 +158,10 @@ function getDailyRewardMonthDays(date=new Date()){
   return new Date(date.getFullYear(),date.getMonth()+1,0).getDate();
 }
 function cloneDailyReward(reward){
-  return reward?{type:reward.type,amount:Number(reward.amount||0),tier:reward.tier||""}:null;
+  return reward?{type:reward.type,amount:Number(reward.amount||0),tier:reward.tier||"",rarity:reward.type==="fragments"?(reward.rarity||((Number(reward.amount)||0)>=20?"rare":"basic")):""}:null;
 }
 function getDailyRewardIdentity(reward){
-  return reward?`${reward.type}:${reward.tier||""}:${Number(reward.amount||0)}`:"";
+  return reward?`${reward.type}:${reward.tier||""}:${reward.rarity||""}:${Number(reward.amount||0)}`:"";
 }
 function pickMonthlyDailyReward(previous=[]){
   const total=HALLVALLA_DAILY_REWARD_POOL.reduce((sum,item)=>sum+Number(item.weight||0),0);
@@ -264,7 +264,7 @@ function getDailyRewardLabel(reward){
   if(!reward)return "—";
   if(reward.type==="gold")return `${reward.amount} Oro`;
   if(reward.type==="gems")return `${reward.amount} Gemas`;
-  if(reward.type==="fragments")return `${reward.amount} Fragmentos`;
+  if(reward.type==="fragments")return `${reward.amount} Fragmentos ${hallvallaFragmentRarityLabel(reward.rarity||((Number(reward.amount)||0)>=20?"rare":"basic"))}`;
   if(reward.type==="pack"){
     const pack=getShopPackDefinition(reward.tier);
     return pack?.name||`Pack ${reward.tier||""}`;
@@ -357,7 +357,7 @@ function grantDailyReward(reward,state,day){
   const profile=getPlayerProfile();
   if(reward.type==="gold")profile.gold=Math.max(0,Number(profile.gold||0))+Math.max(0,Number(reward.amount||0));
   else if(reward.type==="gems")profile.gems=Math.max(0,Number(profile.gems||0))+Math.max(0,Number(reward.amount||0));
-  else if(reward.type==="fragments")profile.fragments=Math.max(0,Number(profile.fragments||0))+Math.max(0,Number(reward.amount||0));
+  else if(reward.type==="fragments")hallvallaAwardFragments(reward.amount,reward.rarity||((Number(reward.amount)||0)>=20?"rare":"basic"));
   else return false;
   savePlayerProfile(profile);
   renderHomeProgress();

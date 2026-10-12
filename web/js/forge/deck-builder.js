@@ -1460,7 +1460,7 @@ function renderPlayerProfile(profile=getPlayerProfile()){
   if($("playerRank"))$("playerRank").textContent = canAccessDecks() ? "Comandante" : "Recluta";
   if($("goldValue"))$("goldValue").textContent = profile.gold || 0;
   if($("gemsValue"))$("gemsValue").textContent = profile.gems || 0;
-  if($("fragmentsValue"))$("fragmentsValue").textContent = profile.fragments || 0;
+  if($("fragmentsValue"))$("fragmentsValue").textContent = hallvallaFragmentWalletTotal();
   const pct = atMax?100:Math.max(0, Math.min(100, ((profile.xp || 0) / Math.max(1,profile.xpToNext)) * 100));
   if($("xpText"))$("xpText").textContent = atMax?"MAX":`${profile.xp || 0}/${profile.xpToNext}`;
   requestAnimationFrame(()=>{if($("xpFill"))$("xpFill").style.width = pct + "%";});

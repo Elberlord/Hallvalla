@@ -397,14 +397,16 @@ function hvGamepadVisibleModal(){
     el mando, igual que tampoco bloquean mouse/touch.
   */
   const selectors=[
-    "[role='dialog']:not(.hidden)","[aria-modal='true']:not(.hidden)",
+    "[role='dialog']:not(.hidden)","[role='alertdialog']:not(.hidden)","[aria-modal='true']:not(.hidden)",
     ".overlay-panel:not(.hidden)",".daily-reward-overlay:not(.hidden)",
     ".leader-select-overlay:not(.hidden)",".leader-info-modal:not(.hidden)",
     ".pvp-room-panel:not(.hidden)",
     ".pvp-ranking-modal:not(.hidden)",".honor-recharge-modal:not(.hidden)",
     ".event-splash-overlay:not(.hidden)",".demigod-summon-modal:not(.hidden)",
     ".card-inspect-modal:not(.hidden)",".battle-menu-panel:not(.hidden)",
-    "#hvModal:not(.hidden)",
+    ".stat-guide-modal:not(.hidden)","#statGuideModal:not(.hidden)",
+    "#hvUnitSkillChoiceOverlay:not(.hidden)","#unitLoreModal:not(.hidden)",
+    "#hvModal:not(.hidden)","[id$='Modal']:not(.hidden)",
     ".battle-outcome-splash.show.awaiting-action",
     ".mobile-rotate-overlay:not(.hidden)",".modal:not(.hidden)"
   ];
@@ -682,6 +684,7 @@ function hvGamepadCloseControlScore(el){
   if(el.matches?.("[data-close],[data-cancel],[data-back],[data-dismiss],[data-modal-close]"))score+=120;
   if(/(^|[^a-z])(cerrar|close|cancelar|cancel|volver|back|regresar|return|salir|exit)([^a-z]|$)/i.test(text))score+=90;
   if(/[×✕✖❌]/.test(el.textContent||""))score+=80;
+  if(/decidir luego|entendido|omitir|cerrar guia|descartar ventana/i.test(text))score+=95;
   if(/[←‹]/.test((el.textContent||"").trim()))score+=30;
   if(/close|back|cancel|return|exit|cerrar|volver|regresar|salir/.test(`${el.id||""} ${el.className||""}`.toLowerCase()))score+=70;
   if(el.tagName==="BUTTON"||el.getAttribute?.("role")==="button")score+=12;
@@ -696,7 +699,7 @@ function hvGamepadFindCloseControl(root){
   const items=[...root.querySelectorAll(selectors)]
     .filter(el=>hvGamepadIsVisible(el)&&!el.matches?.("[disabled],[aria-disabled='true'],[data-hv-dev-tool]")&&!el.closest?.("[data-hv-dev-tool]"))
     .map(el=>({el,score:hvGamepadCloseControlScore(el)}))
-    .filter(x=>x.score>0)
+    .filter(x=>x.score>12)
     .sort((a,b)=>b.score-a.score||hvGamepadUiLayerZ(b.el)-hvGamepadUiLayerZ(a.el));
   return items[0]?.el||null;
 }
