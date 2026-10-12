@@ -452,6 +452,13 @@ function hvGamepadFocusable(root=document){
   const selector="button:not([disabled]),a[href],[role='button']:not([aria-disabled='true']),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])";
   const items=[...root.querySelectorAll(selector)].filter(el=>hvGamepadIsVisible(el)&&!el.matches("[data-hv-dev-tool]")&&!el.closest?.("[data-hv-dev-tool]"));
   const seen=new Set(items);
+  /* Cada carta del mazo es un elemento de selección, no una pulsación de su botón +. */
+  if(root?.id==="deckBuilderPanel"){
+    for(const el of root.querySelectorAll('.deck-mini-card[data-deck-card-key]')){
+      if(seen.has(el)||!hvGamepadIsVisible(el))continue;
+      seen.add(el);items.push(el);
+    }
+  }
   /* Home ya funcionaba con controles semánticos; evita escanear todo el DOM allí. */
   if(root===document)return items;
   /*
@@ -631,9 +638,19 @@ function hvGamepadMineOpen(){
   const mine=document.getElementById("mineScreen");
   return !!(mine&&hvGamepadIsVisible(mine)&&!mine.classList.contains("hidden"));
 }
+function hvGamepadForgeOpen(){
+  const panel=document.getElementById("hallvallaForgeSystem");
+  return !!(panel&&hvGamepadIsVisible(panel));
+}
+function hvGamepadDeckOpen(){
+  const panel=document.getElementById("deckBuilderPanel");
+  return !!(panel&&hvGamepadIsVisible(panel));
+}
 function hvGamepadGetUiRoot(){
   const modal=hvGamepadVisibleModal();
   if(modal)return modal;
+  if(hvGamepadForgeOpen())return document.getElementById("hallvallaForgeSystem");
+  if(hvGamepadDeckOpen())return document.getElementById("deckBuilderPanel");
   /* La Mina es una escena completa superpuesta al Home, no un modal genérico.
      Mientras esté abierta el mando no debe navegar controles del Home que quedan
      detrás de ella. */
@@ -719,9 +736,103 @@ function hvGamepadCloseMine(){
   }
   return false;
 }
+
+/* Navegación con mando canónico: LT página anterior; RT página siguiente.
+   La pulsación es de borde (no se repite mientras se mantiene presionado). */
+function hvGamepadPageButton(direction){
+  const previous=direction<0;
+  const modal=hvGamepadVisibleModal();
+  const root=modal||hvGamepadGetUiRoot();
+  if(!root)return null;
+  const forge=hvGamepadForgeOpen()&&!modal&&root.id==="hallvallaForgeSystem";
+  const deck=hvGamepadDeckOpen()&&!modal&&root.id==="deckBuilderPanel";
+  const exact=forge?(previous?'[data-forge-page-prev]':'[data-forge-page-next]'):
+    deck?(previous?'#deckCollectionPrevBtn':'#deckCollectionNextBtn'):null;
+  if(exact){
+    const button=root.querySelector(exact);
+    return button&&!button.disabled&&hvGamepadIsVisible(button)?button:null;
+  }
+  const selectors=previous
+    ?'[data-page-prev],[data-pager-prev],[data-prev-page],[data-action="prev-page"],.pagination-prev,.page-prev'
+    :'[data-page-next],[data-pager-next],[data-next-page],[data-action="next-page"],.pagination-next,.page-next';
+  const direct=[...root.querySelectorAll(selectors)]
+    .find(el=>!el.disabled&&!el.matches?.('[aria-disabled="true"]')&&hvGamepadIsVisible(el));
+  if(direct)return direct;
+  // Solo botones claramente etiquetados como paginación; nunca X/cerrar ni cartas.
+  const candidates=[...root.querySelectorAll('button:not([disabled]),[role="button"]')]
+    .filter(el=>hvGamepadIsVisible(el)&&!el.matches?.('[aria-disabled="true"]'));
+  const rx=previous?/(página|pagina|page)\s+(anterior|previa|previous|prev)/i:/(página|pagina|page)\s+(siguiente|próxima|proxima|next)/i;
+  return candidates.find(el=>rx.test([el.getAttribute?.('aria-label'),el.getAttribute?.('title')].filter(Boolean).join(' ')))||null;
+}
+function hvGamepadTurnPage(direction){
+  const button=hvGamepadPageButton(direction);
+  if(!button)return false;
+  button.click();
+  hvGamepadClearUiFocus();
+  return true;
+}
+function hvGamepadDeckSelectedCard(){
+  if(!hvGamepadDeckOpen()||hvGamepadVisibleModal())return null;
+  const panel=document.getElementById('deckBuilderPanel');
+  let target=null;
+  if(hvGamepadState.pointerMode&&hvGamepadState.pointerVisible){
+    target=hvGamepadPointerTarget();
+  }else{
+    target=hvGamepadEnsureUiFocus();
+  }
+  const card=target?.closest?.('.deck-mini-card[data-deck-card-key]');
+  if(!card||!panel.contains(card)||!hvGamepadIsVisible(card))return null;
+  return card;
+}
+function hvGamepadSelectDeckCard(){
+  const card=hvGamepadDeckSelectedCard();
+  if(!card||!card.classList.contains('in-collection'))return false;
+  const focused=hvGamepadState.pointerMode&&hvGamepadState.pointerVisible
+    ?hvGamepadPointerTarget():hvGamepadState.uiElement;
+  // Si A está sobre un botón específico (+, Habilidad), su click tiene prioridad.
+  if(focused?.closest?.('button,[role="button"],a[href]'))return false;
+  if(typeof addCardToDeck!=='function')return false;
+  addCardToDeck(card.dataset.deckCardKey);
+  hvGamepadClearUiFocus();
+  return true;
+}
+function hvGamepadDetailsDeck(){
+  const cardNode=hvGamepadDeckSelectedCard();
+  if(!cardNode||typeof showDeckBuilderCardDetail!=='function')return false;
+  const key=cardNode.dataset.deckCardKey;
+  let card=null;
+  if(cardNode.classList.contains('in-deck')){
+    const index=Number(cardNode.dataset.draftIndex);
+    if(Number.isInteger(index)&&index>=0&&typeof currentDeckDraft!=='undefined')card=currentDeckDraft[index];
+  }else if(typeof getDeckBuilderCollectionCard==='function'){
+    card=getDeckBuilderCollectionCard(key);
+  }
+  if(!card)return false;
+  showDeckBuilderCardDetail(card);
+  return true;
+}
+function hvGamepadExitScene(){
+  if(hvGamepadVisibleModal())return false;
+  // Construir/Fundir/Banca de Forja -> Home directamente (equivale a cerrar X).
+  if(hvGamepadForgeOpen()){
+    if(typeof closeForgeHub==='function')closeForgeHub();
+    else document.querySelector('#hallvallaForgeSystem [data-forge-back]')?.click();
+    hvGamepadClearUiFocus();return true;
+  }
+  // La Colección/Mazo tiene su propio cierre; reutilizarlo sin perder el mazo.
+  if(hvGamepadDeckOpen()){
+    if(typeof closeDeckBuilder==='function')closeDeckBuilder();
+    else document.querySelector('#deckBuilderPanel [data-deck-close],#deckBuilderPanel [data-close]')?.click();
+    hvGamepadClearUiFocus();return true;
+  }
+  return false;
+}
+
 function hvGamepadClickUniversalBack(){
   /* Fuera de un modal, B debe comportarse como la X/flecha Atrás de la pantalla visible. */
-  const roots=[document.getElementById("gameShell"),document.querySelector("main"),document.body].filter(Boolean);
+  if(hvGamepadExitScene())return true;
+  const scene=hvGamepadGetUiRoot();
+  const roots=scene&&scene!==document?[scene]:[document.getElementById("gameShell"),document.querySelector("main"),document.body].filter(Boolean);
   for(const root of roots){
     const close=hvGamepadFindCloseControl(root);
     if(close){try{close.click();hvGamepadClearUiFocus();return true;}catch(_){ }}
@@ -748,13 +859,17 @@ function hvGamepadCloseTopUi(){
     const home=modal.querySelector('[data-battle-outcome-action="home"]');
     if(home&&hvGamepadIsVisible(home)){try{home.click();hvGamepadClearUiFocus();return true;}catch(_){ }}
   }
+  if(modal?.id==="hvUnitSkillChoiceOverlay"){
+    const later=modal.querySelector('.hv-skill-later');
+    if(later&&hvGamepadIsVisible(later)){later.click();hvGamepadClearUiFocus();return true;}
+    return true;
+  }
   if(modal){
     const close=hvGamepadFindCloseControl(modal);
     if(close){try{close.click();hvGamepadClearUiFocus();return true;}catch(_){ }}
     /* Muchos overlays cierran con Escape aunque su X sea un icono sin texto. */
     document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",code:"Escape",bubbles:true,cancelable:true}));
-    /* Si el overlay implementa cierre al tocar el fondo, replica ese gesto como último recurso. */
-    try{modal.dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,view:window}));}catch(_){ }
+    /* B jamás dispara un click genérico sobre un modal: podría confirmar una compra o una habilidad. */
     hvGamepadClearUiFocus();
     return true;
   }
@@ -861,13 +976,17 @@ function hvGamepadHandleButtons(gp){
     return;
   }
 
+  if((pressed.LT||pressed.RT)&&(modal||!battle)){
+    hvGamepadTurnPage(pressed.LT?-1:1);
+  }
   if(pressed.A){
-    if(hvGamepadState.pointerMode&&hvGamepadState.pointerVisible)hvGamepadPointerClick(0);
+    if(!modal&&!battle&&hvGamepadDeckOpen()&&hvGamepadSelectDeckCard()){}
+    else if(hvGamepadState.pointerMode&&hvGamepadState.pointerVisible)hvGamepadPointerClick(0);
     else if(modal||!battle)hvGamepadActivateUi();
     else if(hvGamepadState.mode==="hand")hvGamepadPlayHandCard();
     else void hvGamepadActivateBoard();
   }
-  if(pressed.RT&&hvGamepadState.pointerVisible)hvGamepadPointerClick(0);
+  // RT ya no hace click del cursor: avanza página, incluso con puntero visible.
   if(pressed.B){
     /* Escena Mina: B sale directamente de la Mina, salvo que exista un submodal
        propio que deba cerrarse primero. Evita depender del buscador universal. */
@@ -886,7 +1005,8 @@ function hvGamepadHandleButtons(gp){
     }
   }
   if(pressed.Y){
-    if(!modal&&battle&&hvGamepadState.mode==="hand")hvGamepadDetailsHand();
+    if(!modal&&!battle&&hvGamepadDeckOpen())hvGamepadDetailsDeck();
+    else if(!modal&&battle&&hvGamepadState.mode==="hand")hvGamepadDetailsHand();
     else if(!modal&&battle)hvGamepadDetailsBoard();
   }
   if(pressed.VIEW&&battle&&!modal)hvGamepadToggleHand();
