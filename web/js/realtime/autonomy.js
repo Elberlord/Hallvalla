@@ -908,6 +908,7 @@ async function hallvallaRtSupportTick(now){
         if(now-last>=1000){hallvallaRtState.supportAt.set(retryKey,now);await updatePublic({units:liveUnits});}
       }
     }
+    if(typeof globalThis.hvSimpleAutoBuffSkill==="function"&&await globalThis.hvSimpleAutoBuffSkill(unit,now))continue;
     if(unit.key==="acolyte_healer"||unit.healer){await hallvallaRtAutoAcolyte(unit,now);continue;}
     if(unit.key==="ericto"||unit.nigromante){await hallvallaRtAutoEricto(unit,now);continue;}
     if(typeof globalThis.hallvallaRtAutoUnitSkills==="function"&&await globalThis.hallvallaRtAutoUnitSkills(unit,now))continue;
