@@ -998,7 +998,6 @@ function openProfilePanel(){
   if(rule)rule.textContent=cost===0?"Este cambio de nombre es gratis.":`Cambiar el nombre cuesta ${RENAME_COST_GEMS} gemas.`;
   if(gems)gems.textContent=profile.gems||0;
   if(msg){msg.textContent="";msg.className="profile-message";}
-  renderTestPromoProfileUi(profile);
   panel.classList.remove("hidden");
   setTimeout(()=>{if(input){input.focus();input.select();}},40);
 }
