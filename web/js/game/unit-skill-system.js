@@ -328,7 +328,7 @@ function maybeShowHallvallaUnitSkillChoice(preferredCopyId=""){
     const skill=HALLVALLA_UNIT_SKILL_BANK[id];if(!skill)continue;
     const fake={key:item.unitKey,rarity:item.rarity};
     const button=document.createElement("button");button.type="button";button.className="hv-skill-option";
-    button.innerHTML=`<div class="hv-skill-origin">${skill.origin||skill.category}</div><h3>${skill.name}</h3><div class="hv-skill-effect">${skill.effect}${skill.secondary?` ${skill.secondary}`:""}</div><div class="hv-skill-numbers">${hvSkillDescribe(skill,fake)}</div><div class="hv-skill-trigger">${hvSkillActivationLabel(skill)?`Activación: ${hvSkillActivationLabel(skill)}`:"Pasiva / contextual"}</div>`;
+    button.innerHTML=`<h3>${hvGlossaryEsc(skill.name)}</h3><div class="hv-skill-effect">${hvGlossaryEsc(hvSkillPlayerText(skill,fake))}</div>`;
     button.addEventListener("click",()=>{
       if(!hvSkillChoose(item.id,id))return;
       overlay.classList.add("hidden");
@@ -909,7 +909,7 @@ setTimeout(()=>{try{maybeShowHallvallaUnitSkillChoice();hvSkillInstallGlossaryAc
    - El glosario es visible para jugadores desde Configuración.
    - No usa semántica por turnos: las descripciones son TR/segundos/eventos.
    ===================================================================== */
-const HALLVALLA_EFFECT_GLOSSARY_DATE="2026-10-12";
+const HALLVALLA_EFFECT_GLOSSARY_DATE="2026-10-13";
 
 function hvSkillSectionKind(skill){
   const tags=new Set(skill?.tags||[]);
@@ -933,22 +933,163 @@ function hvSkillSectionIcon(skill){
   if(tags.has("mobility"))return "assets/ui/det_icons/trigger.webp";
   return "assets/ui/status_icons/status_generic.webp";
 }
-function hvSkillDetailedText(skill,entity,{source=""}={}){
+/* HallValla — una sola fuente de texto sencillo para DET, elección de Tier y glosario.
+   Esta función no cambia efectos, condiciones, daños ni cooldowns de combate.
+   skill.playerText, cuando exista en habilidades FUTURAS, se prefiere a la
+   conversión automática y admite {poder}, {duracion} y {recarga}. */
+function hvSkillNumberForPlayer(value){
+  const n=Number(value);
+  if(!Number.isFinite(n))return "0";
+  return String(Math.round(n*100)/100).replace(".",",");
+}
+function hvSkillSimplePlayerText(skill,entity){
+  const scaled=hvSkillScale(skill,entity),simple=skill?.simple;
+  if(!simple)return "";
+  const power=Math.max(1,Math.min(6,Math.round(Number(scaled.value||1))));
+  const duration=Math.max(1,Math.round(Number(simple.seconds||scaled.duration||3)));
+  const cd=30;
+  const stats=Array.isArray(simple.stats)?simple.stats:[];
+  const atkLabels={atk:"AT",dex:"DX",agi:"AGI",guard:"GD",mov:"MOV"};
+  const strikeLabels={atk:"AT",dex:"DX",guard_pierce:"GD",agi_pierce:"AGI",dex_pierce:"DX"};
+  if(simple.kind==="buff"){
+    const names=stats.map(k=>atkLabels[k]).filter(Boolean);
+    if(!names.length)return `Cada ${cd} s, obtiene una mejora durante ${duration} s.`;
+    return `Cada ${cd} s, gana ${names.map(n=>`+${power} ${n}`).join(" y ")} durante ${duration} s.`;
+  }
+  if(simple.kind==="strike"){
+    const increases=stats.filter(k=>k==="atk"||k==="dex").map(k=>`+${power} ${strikeLabels[k]}`);
+    const reductions=stats.filter(k=>k.endsWith("_pierce")).map(k=>`-${power} ${strikeLabels[k]||"GD"} del rival`);
+    const parts=[...increases,...reductions];
+    return `Cada ${cd} s, su siguiente ataque ${parts.length?`aplica ${parts.join(" y ")}`:"recibe una mejora"}.`;
+  }
+  if(simple.kind==="block"){
+    const gains=stats.filter(k=>["guard","agi","dex"].includes(k)).map(k=>`+${power} ${atkLabels[k]}`);
+    const drops=stats.filter(k=>k==="atk_reduct"||k==="dex_reduct")
+      .map(k=>`-${power} ${k==="atk_reduct"?"AT":"DX"} del atacante`);
+    const parts=[...gains,...drops];
+    return `Cada ${cd} s, al defenderse aplica ${parts.length?parts.join(" y "):"una protección"} contra ese ataque.`;
+  }
+  if(simple.kind==="hit"){
+    const e=String(simple.effect||"");
+    const weaker={weaken_atk:"AT",weaken_dex:"DX",weaken_agi:"AGI",weaken_guard:"GD"};
+    let action="aplica un efecto al enemigo";
+    if(weaker[e])action=`reduce ${power} ${weaker[e]} del enemigo durante ${duration} s`;
+    else if(e==="slow_move")action=`retrasa el movimiento enemigo ${hvSkillNumberForPlayer(power*.15)} s durante ${duration} s`;
+    else if(e==="slow_attack")action=`retrasa el ataque enemigo ${hvSkillNumberForPlayer(power*.15)} s durante ${duration} s`;
+    else if(e==="slow_both")action=`retrasa el ataque y movimiento enemigos ${hvSkillNumberForPlayer(power*.15)} s durante ${duration} s`;
+    else if(e==="poison")action=`aplica Veneno de potencia ${power}`;
+    else if(e==="burn")action=`aplica Quemadura de potencia ${power}`;
+    else if(e==="bleed")action=`aplica Sangrado de potencia ${power}`;
+    else if(e==="heal")return `Cada ${cd} s, si acierta un golpe estando herida, recupera ${power} PV.`;
+    else if(e==="guard_chip")return `Cada ${cd} s, si acierta un golpe contra un enemigo con Guardia, le resta ${power} GD.`;
+    return `Cada ${cd} s, si acierta un golpe, ${action}.`;
+  }
+  return "";
+}
+function hvSkillLegacyPlayerCondition(skill){
+  const t=String(skill?.trigger||"").trim();
+  const lower=hvSkillNorm(t);
+  if(!lower||lower==="pasiva")return "";
+  const specials={
+    "al realizar un ataque a distancia":"al atacar a distancia",
+    "al impactar":"si acierta un golpe",
+    "al causar dano a hp":"si hace daño a Vida",
+    "al atravesar guardia":"si atraviesa la Guardia enemiga",
+    "al atacar":"al atacar",
+    "al recibir ataque melee":"al recibir un ataque cuerpo a cuerpo",
+    "al recibir ataque":"al recibir un ataque",
+    "a melee":"en cuerpo a cuerpo",
+    "melee":"en cuerpo a cuerpo",
+    "tras recorrer distancia":"después de avanzar",
+    "tras bloqueo exitoso":"después de bloquear",
+    "aliados cercanos":"si tiene aliados cerca",
+    "enemigos cercanos":"si tiene enemigos cerca",
+    "al fijar objetivo":"al elegir un objetivo",
+    "al atacar frontalmente":"al atacar de frente",
+    "contra proyectiles":"al recibir proyectiles",
+    "enemigo <50% hp":"si el enemigo tiene menos del 50 % de Vida",
+    "objetivo <20% hp":"si el enemigo tiene menos del 20 % de Vida",
+    "objetivo por debajo de 20% hp":"si el enemigo tiene menos del 20 % de Vida",
+    "en formacion frontal":"si está en formación frontal"
+  };
+  if(specials[lower])return specials[lower];
+  if(/^cada\s+\d+(?:[.,]\d+)?\s*s\b/.test(lower)){
+    const m=t.match(/^cada\s+\d+(?:[.,]\d+)?\s*s\b\s*(.*)/i);
+    const rest=String(m?.[1]||"").replace(/^con\s+2\+\s+enemigos en zona/i,"si hay 2 o más enemigos cerca").trim();
+    return rest||"";
+  }
+  const condition=t.replace(/^Al\s+/i,"al ").replace(/^Cuando\s+/i,"cuando ")
+    .replace(/^Tras\s+/i,"después de ").replace(/^Contra\s+/i,"contra ")
+    .replace(/^Mientras\s+/i,"mientras ").replace(/^Objetivo\s+/i,"si el objetivo ")
+    .replace(/^Enemigo\s+/i,"si el enemigo ");
+  return condition.charAt(0).toLowerCase()+condition.slice(1);
+}
+function hvSkillLegacyPlayerEffect(skill,entity){
+  const scaled=hvSkillScale(skill,entity),raw=String(skill?.effect||"").trim();
+  let effect=raw.split(/\.\s+(?=[A-ZÁÉÍÓÚ])/)[0].replace(/[.;\s]+$/g,"");
+  const number=scaled.value===null?null:hvSkillNumberForPlayer(scaled.value);
+  const normalizedScale=hvSkillNorm(skill?.scale||"").replaceAll("guardia","gd");
+  if(number!==null){
+    const stats={"at":"AT","dx":"DX","agi":"AGI","mov":"MOV","gd":"GD"};
+    const mapped=normalizedScale.split("/").map(t=>stats[t]).filter(Boolean);
+    const plain=hvSkillNorm(effect);
+    if(mapped.length&&(/^(aumenta|gana) (at|dx|agi|mov|guardia|gd)\b/.test(plain)||/^aumenta at y dx/.test(plain))){
+      effect=`gana ${mapped.map(stat=>`+${number} ${stat}`).join(" y ")}`;
+    }else if(mapped.length&&/^reduce (mov|at|dx|agi|guardia|gd)\b/.test(plain)){
+      effect=`reduce ${mapped.map(stat=>`${number} ${stat}`).join(" y ")} al enemigo`;
+    }
+  }
+  effect=effect.replace(/\bbonus\b/gi,"bonificación").replace(/\bHP\b/g,"Vida")
+    .replace(/\bGuardia base\b/gi,"Guardia").trim();
+  return effect.charAt(0).toLowerCase()+effect.slice(1);
+}
+function hvSkillPlayerText(skill,entity={rarity:"Básica"}){
   if(!skill)return "";
-  const numbers=hvSkillDescribe(skill,entity);
-  const lines=[];
-  if(source)lines.push(source);
-  const activation=hvSkillActivationLabel(skill);
-  if(activation)lines.push(`Activación: ${activation}.`);
-  if(skill.effect)lines.push(skill.effect);
-  if(skill.secondary)lines.push(skill.secondary);
-  if(numbers)lines.push(`Valor para ${String(entity?.rarity||"esta rareza")}: ${numbers}.`);
-  if(skill.weapons?.length)lines.push(`Armas compatibles: ${skill.weapons.join(", ")}.`);
-  if(skill.classes?.length)lines.push(`Clases compatibles: ${skill.classes.join(", ")}.`);
-  if(skill.counters)lines.push(`Contrajuego: ${skill.counters}.`);
-  const lore=[skill.origin,skill.reference].filter(Boolean).join(" · ");
-  if(lore)lines.push(`Base: ${lore}.`);
-  return lines.join(" ");
+  const scale=hvSkillScale(skill,entity);
+  const template=String(skill.playerText||"").trim();
+  if(template){
+    return template.replaceAll("{poder}",hvSkillNumberForPlayer(scale.value??0))
+      .replaceAll("{duracion}",hvSkillNumberForPlayer(scale.duration??0))
+      .replaceAll("{recarga}",hvSkillNumberForPlayer(scale.cooldown??0));
+  }
+  if(skill.simple)return hvSkillSimplePlayerText(skill,entity);
+  const number=hvSkillNumberForPlayer(scale.value??0);
+  const specials={
+    "HV-001":`Cada 30 s, al atacar a distancia, gana +${number} AT en ese ataque.`,
+    "HV-033":`Cada 30 s, si un enemigo cercano lo ataca cuerpo a cuerpo, su lanza golpea primero con +${number} AT.`,
+    "HV-034":`Cada 30 s, junto a otro lancero, daña a un enemigo que carga de frente y anula su bonificación de carga.`,
+    "HV-040":"Cada 30 s, si tiene 2 o más enemigos al lado, golpea también a los enemigos cercanos.",
+    "HV-082":`Cada 30 s, si el enemigo tiene menos del 20 % de Vida, gana +${number} AT al atacarlo.`,
+    "HV-084":`Cada 30 s, gana +${number} GD solo contra el primer ataque que recibe.`,
+    "HV-092":"Cada 30 s, si tiene 2 o más enemigos al lado, golpea también a los enemigos cercanos.",
+    "HV-099":`Cada 30 s, si el enemigo tiene menos del 20 % de Vida, gana +${number} AT al atacarlo.`,
+    "HV-130":"Cada 30 s, si atacan a un aliado a 2 casillas o menos, recibe ese daño en su lugar.",
+    "HV-132":`Mientras esté junto a otro lancero u hoplita aliado, gana +${number} GD.`,
+    "HV-177":"Cada 30 s, aplica a todos sus aliados una curación de 3 PV por segundo durante 10 s.",
+    "HV-204":"Cada 30 s, devuelve a la batalla una unidad aliada caída, si hay un cadáver válido.",
+    "HV-232":`Mientras esté a 2 casillas o menos del líder, gana +${number} GD.`,
+    "HV-046":`Mientras esté junto a otro lancero aliado, gana +${number} GD.`
+  };
+  if(Object.prototype.hasOwnProperty.call(specials,skill.id))return specials[skill.id];
+  const effect=hvSkillLegacyPlayerEffect(skill,entity);
+  const condition=hvSkillLegacyPlayerCondition(skill);
+  const cd=scale.cooldown;
+  const passive=cd===null||!hvSkillUsesTriggerCooldown(skill);
+  if(!effect)return passive?"Siempre activa.":`Cada ${hvSkillNumberForPlayer(cd||30)} s, se activa automáticamente.`;
+  if(passive){
+    if(!condition)return `Siempre activa: ${effect}.`;
+    if(condition.startsWith("mientras "))return `${condition.charAt(0).toUpperCase()+condition.slice(1)}, ${effect}.`;
+    return `${condition.charAt(0).toUpperCase()+condition.slice(1)}, ${effect}.`;
+  }
+  const pre=`Cada ${hvSkillNumberForPlayer(cd||30)} s`;
+  const when=condition?`, ${condition}`:"";
+  const duration=(scale.duration!==null&&!/\bsegundos\b|\bdurante\b|\b\d+\s*s\b/i.test(effect))?` durante ${hvSkillNumberForPlayer(scale.duration)} s`:"";
+  return `${pre}${when}, ${effect}${duration}.`.replace(/,\s*,/g,",");
+}
+
+function hvSkillDetailedText(skill,entity,{source=""}={}){
+  // DET: únicamente qué hace y cuándo se activa; sin origen ni fórmulas internas.
+  return hvSkillPlayerText(skill,entity);
 }
 function getHallvallaUnitSkillSectionsForEntity(entity){
   const key=String(entity?.key||"");
@@ -1032,8 +1173,8 @@ function hvGlossaryEntries(){
       id:skill.id,
       name:skill.name,
       category:skill.category||"Habilidad",
-      effect:[skill.effect,skill.secondary].filter(Boolean).join(" "),
-      trigger:hvSkillActivationLabel(skill)||"Pasiva / contextual",
+      effect:hvSkillPlayerText(skill,{rarity:"Básica"}),
+      trigger:"",
       numbers:"",
       origin:[skill.origin,skill.reference].filter(Boolean).join(" · "),
       weapons:(skill.weapons||[]).join(", "),
@@ -1133,6 +1274,11 @@ function hvGlossaryRender(){
   count.textContent=`${filtered.length} / ${entries.length}`;
   list.innerHTML=filtered.length?filtered.map(entry=>{
     const skill=HALLVALLA_UNIT_SKILL_BANK[entry.id];
+    if(skill){
+      const basic=hvSkillPlayerText(skill,{rarity:"Básica"});
+      const legendary=hvSkillPlayerText(skill,{rarity:"Legendaria"});
+      return `<article class="hv-glossary-entry"><h3>${hvGlossaryEsc(skill.name)}</h3><div class="hv-glossary-effect"><b>Básica:</b> ${hvGlossaryEsc(basic)}</div>${legendary!==basic?`<div class="hv-glossary-line"><b>Legendaria:</b> ${hvGlossaryEsc(legendary)}</div>`:""}</article>`;
+    }
     const scale=skill?hvSkillDescribe(skill,{rarity:"Básica"}):"";
     const scaleMax=skill?hvSkillDescribe(skill,{rarity:"Semidiós"}):"";
     return `<article class="hv-glossary-entry"><div class="hv-glossary-meta"><span class="hv-glossary-id">${hvGlossaryEsc(entry.id||"")}</span> · ${hvGlossaryEsc(entry.category||"Efecto")} · ${hvGlossaryEsc(entry.source||"")}</div><h3>${hvGlossaryEsc(entry.name||"Efecto")}</h3><div class="hv-glossary-effect">${hvGlossaryEsc(entry.effect||"")}</div>${entry.trigger?`<div class="hv-glossary-line"><b>Activación:</b> ${hvGlossaryEsc(entry.trigger)}</div>`:""}${skill&&scale?`<div class="hv-glossary-line"><b>Básica:</b> ${hvGlossaryEsc(scale)}</div>`:""}${skill&&scaleMax&&scaleMax!==scale?`<div class="hv-glossary-line"><b>Semidiós:</b> ${hvGlossaryEsc(scaleMax)}</div>`:""}${entry.weapons?`<div class="hv-glossary-line"><b>Armas:</b> ${hvGlossaryEsc(entry.weapons)}</div>`:""}${entry.classes?`<div class="hv-glossary-line"><b>Clases:</b> ${hvGlossaryEsc(entry.classes)}</div>`:""}${entry.counters?`<div class="hv-glossary-line"><b>Contrajuego:</b> ${hvGlossaryEsc(entry.counters)}</div>`:""}${entry.origin?`<div class="hv-glossary-line"><b>Base:</b> ${hvGlossaryEsc(entry.origin)}</div>`:""}</article>`;
@@ -1197,6 +1343,7 @@ Object.assign(globalThis,{
   HALLVALLA_UNIT_SKILL_BANK,
   HALLVALLA_UNIT_SKILL_ASSIGNMENTS,
   HALLVALLA_UNIT_SKILL_RARITY,
+  hvSkillPlayerText,
   ensureHallvallaUnitSkillCopies,
   assignHallvallaUnitCopyIdsToDeck,
   queueHallvallaUnitSkillChoice,
