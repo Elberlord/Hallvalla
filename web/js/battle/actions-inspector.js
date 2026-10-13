@@ -260,9 +260,6 @@ function openStatGuideModal(label=""){
   modal.classList.remove("hidden");
 }
 
-function normalizeEffectGuideKey(entity){
-  return String(entity?.key||entity?.name||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9_]+/g,"_");
-}
 function getLeaderExactEffectGuideData(entity){
   const type=String(entity?.leaderType||"warrior").toLowerCase();
   const data=LEADER_DATA[type]||LEADER_DATA.warrior;
@@ -943,9 +940,7 @@ function ensureUnifiedDetOwnAbilities(modal,entity){
     button.type='button';
     button.className='hv-det-own-ability-icon guide-ability-btn';
     button.dataset.abilityTitle=String(section?.title||visual?.label||`Efecto ${index+1}`);
-    button.dataset.abilityText=typeof hallvallaPublicGameplayText==='function'
-      ? hallvallaPublicGameplayText(section?.body||'Sin explicaci\u00f3n adicional.')
-      : String(section?.body||'Sin explicaci\u00f3n adicional.');
+    button.dataset.abilityText=String(section?.body||"Sin explicación adicional.");
     button.dataset.abilityKind=String(visual?.kind||'effect');
     button.dataset.detAbilityIndex=String(index+1);
     button.dataset.detAbilitySlot=String(index+1);

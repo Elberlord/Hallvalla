@@ -1273,22 +1273,22 @@ function getHallvallaUnitSkillSectionsForEntity(entity){
 function hvSkillInstallDetIntegration(){
   if(globalThis.__HALLVALLA_STAGE4_DET_SKILLS__)return;
   const original=typeof globalThis.getDetAbilitySectionsForInspector==="function"
-    ? globalThis.getDetAbilitySectionsForInspector
-    : null;
+    ?globalThis.getDetAbilitySectionsForInspector
+    :null;
   if(!original)return;
   globalThis.__HALLVALLA_STAGE4_DET_SKILLS__=true;
   globalThis.getDetAbilitySectionsForInspector=function(entity,effectText=""){
-    const stage3=getHallvallaUnitSkillSectionsForEntity(entity);
-    const legacy=original(entity,effectText)||[];
-    if(!stage3.length)return legacy;
-    const used=new Set(stage3.map(section=>hvSkillNorm(section?.title||"")));
-    // El banco Stage 3 gana cuando existe el mismo nombre. Reglas universales
-    // que no están en el banco (Ultimate Blow, Vínculo Arcano, etc.) se conservan.
-    const extra=legacy.filter(section=>!used.has(hvSkillNorm(section?.title||"")));
-    return [...stage3,...extra].slice(0,27);
+    const native=original(entity,effectText)||[];
+    const meta=HALLVALLA_UNIT_SKILL_ASSIGNMENTS[String(entity?.key||"")];
+    if(!meta)return native;
+    const hasCanonical=typeof getCardEffectTextByKey==="function"&&Boolean(getCardEffectTextByKey(entity?.key));
+    const nativeSkillId=hasCanonical?String(meta.innate?.[0]||""):"";
+    const extra=getHallvallaUnitSkillSectionsForEntity(entity)
+      .filter(section=>section.skillId!==nativeSkillId);
+    const used=new Set(native.map(section=>hvSkillNorm(section?.title||"")));
+    return [...native,...extra.filter(section=>!used.has(hvSkillNorm(section?.title||"")))].slice(0,27);
   };
 }
-
 const HALLVALLA_ENGINE_GLOSSARY=Object.freeze([
   {name:"Sangrado",category:"Estado",effect:"Causa daño periódico directo a Vida y permanece hasta curación/limpieza o destrucción, según la fuente.",trigger:"Se aplica cuando una habilidad o ataque compatible logra su condición.",tags:["bleed"]},
   {name:"Veneno",category:"Estado",effect:"Causa daño periódico que puede aumentar por gravedad. La unidad permanece envenenada hasta curación/limpieza o destrucción.",trigger:"Se aplica por ataques, magia, trampas o habilidades compatibles.",tags:["poison"]},

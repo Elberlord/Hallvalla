@@ -395,8 +395,9 @@ function getDetAbilitySectionsForInspector(entity,effectText=""){
     "regla_de_lanza_atacar_primero","formacion_de_picas","atacar_primero","anticaballeria",
     "golpe_final_asesino"
   ]);
-  const currentEffectText=entity?.key==="skipar_del_drakkar"&&typeof getCardEffectTextByKey==="function"
-    ?getCardEffectTextByKey(entity.key):effectText;
+  const canonicalEffectText=entity?.key&&typeof getCardEffectTextByKey==="function"
+    ?getCardEffectTextByKey(entity.key):"";
+  const currentEffectText=canonicalEffectText||effectText||entity?.text||entity?.effectText||entity?.ability||"";
   const nativeSections=getEntityAbilitySections(entity,currentEffectText)
     .filter(section=>!obsoleteDetHeadings.has(normalizeDetEffectTitle(section?.title||"")));
   const isAssassin=typeof isAssassinUnit==="function"&&isAssassinUnit(entity);
