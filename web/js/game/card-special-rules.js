@@ -295,7 +295,7 @@ function currentOrNextWindowKeyForOwner(owner,state=publicState){
   return typeof currentOrNextCombatWindowKey==="function"?currentOrNextCombatWindowKey(owner,state):getCombatWindowKey(state);
 }
 function applyBasicParalysisSpell(target,sourceName="Parálisis",state=publicState){
-  if(!target||target.leader)return target;
+  if(!target||target.leader||(typeof globalThis.hvSkillHasAdaptation==="function"&&globalThis.hvSkillHasAdaptation(target)))return target;
   const actionWindowKey=currentOrNextWindowKeyForOwner(target.owner,state);
   const reactionWindowKey=state?.combatWindowKey||actionWindowKey;
   return {...target,paralysisSource:sourceName,noMoveWindowKey:actionWindowKey,noAttackWindowKey:actionWindowKey,noDefWindowKey:actionWindowKey,noCounterWindowKey:reactionWindowKey};
@@ -1305,7 +1305,7 @@ function resolveBlessedArmorTransition(previous,next,combatWindowKey=publicState
 }
 function isUndeadUnit(u){return !!u&&(u.undead===true||u.noMuerto===true||String(u.race||"").toLowerCase()==="undead");}
 function isBleedImmuneUnit(u){return isUndeadUnit(u);}
-function isPoisonImmuneUnit(u){return !!u&&(u.key==="honey_badger"||isUndeadUnit(u));}
+function isPoisonImmuneUnit(u){return !!u&&(u.key==="honey_badger"||isUndeadUnit(u)||(typeof globalThis.hvSkillHasAdaptation==="function"&&globalThis.hvSkillHasAdaptation(u)));}
 function clearBleedStatus(u){
   if(!u)return u;
   const n={...u};

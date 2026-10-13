@@ -554,23 +554,9 @@ function applyUlyssesAttackTactic(units,attacker){
   const out=(units||[]).map(u=>u.id===attacker.id?hvCardMark(u,"estratega_itaca"):affectedIds.has(u.id)?{...u,tempGuardBuff:(u.tempGuardBuff||0)+3,tempMovBuff:(u.tempMovBuff||0)+1,ulyssesTacticBuffWindowKey:publicState?.combatWindowKey||""}:u);
   return{units:out,affected,log:` Estratega de Ítaca: ${affected.length} unidad${affected.length===1?" aliada gana":"es aliadas ganan"} +3 Guardia y +1 MOV en radio 2.`};
 }
-function applyGenghisKhanKillDebuff(units,attackerBefore,defenderBefore,defenderFell){
-  let out=[...(units||[])];
-  if(!defenderFell||!attackerBefore||attackerBefore.key!=="genghis_khan"||!defenderBefore||defenderBefore.leader||!hvCardReady(attackerBefore,"horda_estepa"))return{units:out,affected:[],log:"",statusFxEvent:null,floatFxEvent:null};
-  const genghis=out.find(u=>u.id===attackerBefore.id&&u.hp>0)||attackerBefore;
-  if(!out.some(u=>u.id===genghis.id&&u.hp>0))return{units:out,affected:[],log:"",statusFxEvent:null,floatFxEvent:null};
-  const affected=out.filter(u=>u.owner!==genghis.owner&&!u.leader&&u.hp>0&&dist(genghis,u)<=2);
-  if(!affected.length)return{units:out,affected:[],log:"",statusFxEvent:null,floatFxEvent:null};
-  const affectedIds=new Set(affected.map(u=>u.id));
-  out=out.map(u=>{
-    if(!affectedIds.has(u.id))return u;
-    const nextKey=nextWindowKeyForOwner(u.owner);
-    const currentWindow=typeof getLongGrowthWindowIndex==="function"?getLongGrowthWindowIndex():Math.max(0,Number(publicState?.combatWindowIndex||0));
-    return {...u,genghisGuardDebuff:Math.max(2,Number(u.genghisGuardDebuff||0)),genghisGuardUntilWindowIndex:Math.max(currentWindow+1,Number(u.genghisGuardUntilWindowIndex||-1)),genghisMovDebuff:Math.max(1,Number(u.genghisMovDebuff||0),1),genghisMovDebuffWindowKey:nextKey,genghisMovDebuffSource:genghis.name||"Gengis Kan"};
-  });
-  out=out.map(u=>u.id===genghis.id?hvCardMark(u,"horda_estepa"):u);
-  const first=out.find(u=>affectedIds.has(u.id))||affected[0];
-  return{units:out,affected,log:` Horda de la Estepa: ${affected.length} unidad${affected.length===1?" enemiga pierde":"es enemigas pierden"} 2 Guardia y 1 MOV en radio 2 de ${genghis.name}.`,statusFxEvent:makeStatusFxEvent("debuff",first,2),floatFxEvent:makeFloatFxEvent("debuff",first,2,{iconText:"🛡",labelText:"-2 GD"})};
+function applyGenghisKhanKillDebuff(units){
+  // Reemplazo canónico: Horda ahora es aura global; no tiene efecto al matar.
+  return{units:[...(units||[])],affected:[],log:'',statusFxEvent:null,floatFxEvent:null};
 }
 const HALLVALLA_PIKE_WALL_SKILL_ID="HV-034";
 const HALLVALLA_PIKE_WALL_COOLDOWN_MS=30000;
@@ -1020,7 +1006,15 @@ async function resolveSharedAttackOutcome({
       delete nextAttacker.khalidChainReady;
       delete nextAttacker.mulanExecutionMoveReady;
       delete nextAttacker.mulanExecutionChoiceReady;
-      if(u.key==="mulan"){nextAttacker.mulanFirstAttackUsed=true;nextAttacker.mulanRepositionReady=false;nextAttacker.mulanFollowupReady=false;}
+      if(u.key==="mulan"){if(hit.hit&&isMulanOpeningAttack(a))nextAttacker=hvCardMark(nextAttacker,"mulan_opening");nextAttacker.mulanFirstAttackUsed=true;nextAttacker.mulanRepositionReady=false;nextAttacker.mulanFollowupReady=false;}
+      if((a.key==='achilles'||(a.unitSkillRuntimeIds||[]).includes('HV-055'))&&dist(a,d)===2&&hvCardReady(a,'aquiles_rg2')){
+        nextAttacker=hvCardMark(nextAttacker,'aquiles_rg2');
+        if((a.unitSkillRuntimeIds||[]).includes('HV-055'))nextAttacker=hvSkillMarkCooldown(nextAttacker,HALLVALLA_UNIT_SKILL_BANK['HV-055']);
+      }
+      if((a.key==='mulan'||(a.unitSkillRuntimeIds||[]).includes('HV-076'))&&hvCardReady(a,'corte_desenvainado')){
+        nextAttacker=hvCardMark(nextAttacker,'corte_desenvainado');
+        if((a.unitSkillRuntimeIds||[]).includes('HV-076'))nextAttacker=hvSkillMarkCooldown(nextAttacker,HALLVALLA_UNIT_SKILL_BANK['HV-076']);
+      }
       if((a.dragonBoss||(typeof isDragonCompanionKey==="function"&&isDragonCompanionKey(a.key)))&&a.key!=="dragon_egg"){
         nextAttacker.dragonCharge=Number(a.dragonCharge||0)>=2?0:Number(a.dragonCharge||0)+1;
       }else{
@@ -1048,7 +1042,7 @@ async function resolveSharedAttackOutcome({
     return u;
   });
   let geishaFanKillResult={units,triggered:false,text:""};
-  if(hit.hit&&hpLoss>0){units=applyAttackSideEffects(a,d,units,{hpLoss,allowGuardian:false});geishaFanKillResult=applyGeishaFanKill(units,a,d,hpLoss,attackContext);units=geishaFanKillResult.units;}
+  if(hit.hit){units=applyAttackSideEffects(a,d,units,{hit:true,hpLoss,allowGuardian:false});}if(hit.hit&&hpLoss>0){geishaFanKillResult=applyGeishaFanKill(units,a,d,hpLoss,attackContext);units=geishaFanKillResult.units;}
   if(dmgTrap.shadowCut&&hit.hit&&hpLoss>0){
     const shadowTarget=units.find(u=>u.id===d.id);
     if(shadowTarget&&(shadowTarget.hp||0)<(effectiveMaxHp(shadowTarget)/2)){

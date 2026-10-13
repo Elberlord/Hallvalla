@@ -118,7 +118,11 @@ function getHallvallaUnitBaseAttackCooldownMs(unit){
   return Math.max(1000,Math.round(legacyWindow-HALLVALLA_SPEED_TIMING.attackSpeedupMs));
 }
 function getHallvallaUnitAttackCooldownMs(unit){
-  return getHallvallaUnitBaseAttackCooldownMs(unit)+hallvallaSpeedStatusPenaltyMs(unit,"attack");
+  const ms=getHallvallaUnitBaseAttackCooldownMs(unit)+hallvallaSpeedStatusPenaltyMs(unit,'attack');
+  const learned=!!(unit?.unitSkillRuntimeIds||[]).includes('HV-076');
+  const prepared=(unit?.key==='mulan'||learned)&&typeof hvCardReady==='function'&&hvCardReady(unit,'corte_desenvainado')&&
+    (!learned||typeof hvSkillCooldownReady!=='function'||hvSkillCooldownReady(unit,HALLVALLA_UNIT_SKILL_BANK['HV-076']));
+  return prepared?Math.max(1500,ms-4000):ms;
 }
 function getHallvallaUnitBaseMoveCooldownMs(unit){
   const mov=Math.max(0,Math.min(5,Number(typeof effectiveMov==="function"?effectiveMov(unit):unit?.mov)||0));

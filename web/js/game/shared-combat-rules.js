@@ -289,7 +289,12 @@ function firstOwnerUnit(owner,key,units=publicState?.units||[]){return unitsInPl
 function adjacentUnits(u,units=publicState?.units||[]){return unitsInPlay(units).filter(t=>t.id!==u?.id&&dist(u,t)<=1)}
 function adjacentAllies(u,units=publicState?.units||[]){return adjacentUnits(u,units).filter(t=>t.owner===u.owner)}
 function isBasicUnit(u){return !!u&&!u.leader&&!u.special&&String(u.rarity||"Básica").toLowerCase().includes("bás")}
-function isRangedAttack(attacker,defender){return !!attacker&&!!defender&&dist(attacker,defender)>1&&(attacker.range||1)>1}
+function isRangedAttack(attacker,defender){
+  if(!attacker||!defender||dist(attacker,defender)<=1)return false;
+  const learnLance=(attacker.unitSkillRuntimeIds||[]).includes('HV-055');
+  const achilles=(attacker.key==='achilles'||learnLance)&&dist(attacker,defender)<=2&&hvCardReady(attacker,'aquiles_rg2')&&(!learnLance||hvSkillCooldownReady(attacker,HALLVALLA_UNIT_SKILL_BANK['HV-055']));
+  return (attacker.range||1)>1||achilles;
+}
 function isHalfHpOrLess(u){return !!u&&(u.hp||0)<=Math.ceil(effectiveMaxHp(u)/2)}
 const HALLVALLA_LONG_GROWTH_CYCLES=3;
 function getLongGrowthWindowIndex(state=publicState){return Math.max(0,Number(state?.combatWindowIndex||0));}
@@ -448,6 +453,7 @@ function withRtTrapDebuff(unit,stat,amount,durationMs,source="Trampa"){
   return {...unit,[amountKey]:Math.max(Number(unit?.[amountKey]||0),Math.max(0,Number(amount||0))),[untilKey]:Math.max(Number(unit?.[untilKey]||0),until),[sourceKey]:source};
 }
 function withRtTrapLock(unit,kind,durationMs,source="Trampa"){
+  if(kind==='stun'&&/par[aá]lisi|electr|rayo|chispa|tormenta|descarga|precisi[oó]n/i.test(String(source||''))&&typeof globalThis.hvSkillHasAdaptation==='function'&&globalThis.hvSkillHasAdaptation(unit))return unit;
   const field={move:"rtMoveLockedUntil",attack:"rtAttackLockedUntil",counter:"rtCounterLockedUntil",defense:"rtDefLockedUntil",silence:"rtSilencedUntil",heal:"rtNoHealUntil",reduction:"rtNoReductionUntil",stun:"rtStunnedUntil"}[kind];
   if(!field)return unit;
   const until=hallvallaTrapNow()+Math.max(0,Number(durationMs||0));
@@ -472,7 +478,7 @@ function getHannibalAtkDebuff(u){return u&&u.hannibalAtkDebuffWindowKey&&u.hanni
 function effectiveAtk(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);let v=(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"atk"):0)+(u?.atk||0)+(u?.buffAtk||0)+(u?.permAtk||0)+(u?.tempAtkBuff||0)-(u?.tempAtkDebuff||0)-getRtTrapDebuff(u,"atk")-getHannibalAtkDebuff(u)-getKhalidAttackPenalty(u)-(u?.leader?0:getMoraleAttackPenalty(u?.owner))+(bonus.atk||0)+(arcaneLink.atk||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=africanLionAllyAtkAura(u);v+=hectorEnemyAtkAura(u);v+=cuChulainnFearAura(u);return Math.max(0,v)}
 function isRhinoStunnedNow(u){return !!(u&&u.rhinoStunnedWindowKey&&u.rhinoStunnedWindowKey===publicState?.combatWindowKey)}
 function halveForRhinoStun(v,u){v=Math.max(0,Number(v)||0);return isRhinoStunnedNow(u)?Math.floor(v/2):v}
-function effectiveDex(u){const forcedZero=!!(u?.saboteadorDexZeroWindowKey&&u.saboteadorDexZeroWindowKey===publicState?.combatWindowKey);const burnPanic=!!u&&!u.leader&&Number(u?.burnDamage||0)>0&&(Number(u?.burnTurns||0)>0||u?.burnPersistent===true);if(forcedZero||burnPanic)return 0;const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);const rawTempDebuff=Number(u?.tempDexDebuff||0);const legacyIgaHack=!!(u?.saboteadorDexZeroWindowKey&&rawTempDebuff>=90);const tempDebuff=legacyIgaHack?0:rawTempDebuff;let v=(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"dex"):0)+(u?.dex||0)+(u?.tempDexBuff||0)-tempDebuff-getRtTrapDebuff(u,"dex")+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
+function effectiveDex(u){const forcedZero=!!(u?.saboteadorDexZeroWindowKey&&u.saboteadorDexZeroWindowKey===publicState?.combatWindowKey);const burnPanic=!!u&&!u.leader&&Number(u?.burnDamage||0)>0&&(Number(u?.burnTurns||0)>0||u?.burnPersistent===true);if(forcedZero||burnPanic)return 0;const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);const rawTempDebuff=Number(u?.tempDexDebuff||0);const legacyIgaHack=!!(u?.saboteadorDexZeroWindowKey&&rawTempDebuff>=90);const tempDebuff=legacyIgaHack?0:rawTempDebuff;let v=(typeof globalThis.hvHordeAuraBonus==="function"?globalThis.hvHordeAuraBonus(u):0)+(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"dex"):0)+(u?.dex||0)+(u?.tempDexBuff||0)-tempDebuff-getRtTrapDebuff(u,"dex")+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
 function effectiveAgi(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"agi"):0)+(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)-getRtTrapDebuff(u,"agi")+b+(arcaneLink.agi||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return applyHallvallaValueHooks("unit.effectiveAgi",Math.max(0,halveForRhinoStun(v,u)),{unit:u})}
 function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(1,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u)+alexanderBonusHp(u)-Number(u?.tempHpDebuff||0)-getRtTrapDebuff(u,"hp"))}
 function isSkiparSummonMoveActive(u,state=publicState){return !!(u&&u.key==="skipar_del_drakkar"&&state&&u.summonedWindowKey&&u.summonedWindowKey===state.combatWindowKey);}
@@ -579,7 +585,7 @@ function actionStatSpendText(unitName,spent,remaining){
   return spent>0?` Esfuerzo: ${unitName} gasta ${spent} PREC/EVA necesaria hasta el final del ciclo táctico actual${typeof remaining==="number"?` (reserva restante ${remaining})`:""}.`:"";
 }
 function isMulanOpeningAttack(attacker){
-  return !!attacker&&attacker.key==="mulan"&&attacker.mulanFirstAttackUsed!==true;
+  return !!attacker&&attacker.key==="mulan"&&hvCardReady(attacker,"mulan_opening");
 }
 
 
@@ -650,6 +656,9 @@ function getCombatMods(attacker,defender,attackContext=null){
   const khalidPenalty=getKhalidAttackPenalty(attacker);
   if(khalidPenalty>0)mods.notes.push(`${attacker.name} -${khalidPenalty} AT por Espada Invicta.`);
   if(isMulanOpeningAttack(attacker)){mods.attackerAtk+=6;mods.notes.push(`${attacker.name} +6 AT por Golpe de Apertura.`);}
+  if(attacker.key==='ulysses'&&hvCardTryMod(mods,attacker,'arco_odiseo')){
+    mods.attackerAtk+=8;mods.notes.push('Arco de Odiseo: +8 AT para este ataque.');
+  }
   if(ownerHasUnit(attacker.owner,"shaka_zulu")&&adjacentAllies(defender).some(a=>a.owner===attacker.owner)&&hvCardTryMod(mods,firstOwnerUnit(attacker.owner,"shaka_zulu"),"cuernos_buffalo")){mods.attackerAtk+=3;mods.notes.push(`${attacker.name} +3 AT por Cuernos del Búfalo.`);if(adjacentAllies(defender).filter(a=>a.owner===attacker.owner).length>=2){mods.defenderAgi-=4;mods.notes.push(`${defender.name} -4 AGI por estar rodeado.`);}}
   if(attacker.key==="nasu_no_yoichi"&&isRangedAttack(attacker,defender)&&dist(attacker,defender)>=3&&hvCardTryMod(mods,attacker,"marca_abanico")){mods.defenderGuard-=4;mods.notes.push(`${defender.name} -4 Guardia por Marca del Abanico.`);}
   if(attacker.key==="tomoe_gozen"&&(attacker.movedSpaces||0)>=2&&hvCardTryMod(mods,attacker,"jinete_luna")){mods.defenderAgi-=6;mods.notes.push(`${defender.name} -6 AGI por Jinete de la Luna Cortante.`);if((defender.range||1)>=2){mods.attackerAtk+=8;mods.notes.push(`${attacker.name} +8 AT contra unidades de rango.`);}}
@@ -1326,16 +1335,17 @@ function applyAttackSideEffects(attacker,defender,units,options={}){
   const melee=dist(attacker,defender)<=1;
   const ranged=!melee&&(attacker.range||1)>1;
   const hpLoss=Number(options.hpLoss||0);
-  const allowArcher=attacker.key==="archer"&&ranged&&hpLoss>0&&hvCardReady(attacker,"disparo_supresion");
+  const allowArcher=attacker.key==="archer"&&ranged&&options.hit===true&&hvCardReady(attacker,"disparo_supresion");
   const allowGuardian=options.allowGuardian!==false&&attacker.key==="guardian"&&melee&&hvCardReady(attacker,"golpe_escudo");
   let usedArcher=false,usedGuardian=false;
   let out=(units||[]).map(u=>{
     if(u.id!==defender.id)return u;
     let next={...u};
     if(allowArcher){
-      const amount=1,current=Number(next.tempMovDebuff||0);
-      next.tempMovDebuff=Math.max(current,amount);
-      if(amount>=current)next.tempMovDebuffSource=`Disparo de supresión de ${attacker.name||"Arquera"}`;
+      if(typeof withRtTrapDebuff==="function"){
+        next=withRtTrapDebuff(next,"mov",1,5000,"Disparo de Supresión");
+        next=withRtTrapDebuff(next,"dex",1,5000,"Disparo de Supresión");
+      }
       usedArcher=true;
     }
     if(allowGuardian&&(u.guard||0)<=2){
