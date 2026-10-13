@@ -533,7 +533,7 @@ function getEffectTargetOptions(caster,units=publicState?.units||[]){
     return spots;
   }
   if(caster.key==="sun_tzu"){
-    if(caster.sunTzuUsedWindow)return[];
+    if(caster.sunTzuUsedWindow||Number(caster.sunTzuCooldownUntil||0)>Date.now())return[];
     return units.filter(a=>a.owner===owner&&a.id!==caster.id);
   }
   if(caster.key==="subotai"){
@@ -640,7 +640,7 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     out=out.map(it=>it.id===liveCaster.id?{...it,acted:true}:it).concat(token);
     log=`${liveCaster.name} activa Media Luna del Desierto e invoca una Caballería Arquera en ${target.x+1},${target.y+1}.`;
   }else if(liveCaster.key==="sun_tzu"){
-    out=out.map(it=>it.id===target.id?{...it,tempDexBuff:(it.tempDexBuff||0)+4,tempGuardBuff:(it.tempGuardBuff||0)+4}:it.id===liveCaster.id?{...it,acted:true,sunTzuUsedWindow:true}:it);
+    out=out.map(it=>it.id===target.id?{...it,tempDexBuff:(it.tempDexBuff||0)+4,tempGuardBuff:(it.tempGuardBuff||0)+4}:it.id===liveCaster.id?{...it,acted:true,sunTzuUsedWindow:true,sunTzuCooldownUntil:Date.now()+30000}:it);
     log=`${liveCaster.name} activa Arte de la Guerra: ${target.name} gana +4 Destreza y +4 Guardia durante este ciclo táctico.`;
   }else if(liveCaster.key==="subotai"){
     out=out.map(it=>it.id===target.id?{...it,tempMovBuff:(it.tempMovBuff||0)+2}:it.id===liveCaster.id?{...it,acted:true,subotaiUsedWindow:true}:it);

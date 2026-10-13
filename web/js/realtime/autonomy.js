@@ -600,8 +600,15 @@ async function hallvallaRtLeaderEffectsTick(now){
       if(heroic?.logs?.length){units=heroic.units;logs.push(...heroic.logs);changed=true;}
     }catch(_){ }
     try{
-      const auto=resolveAutomaticLeaderEffectOnWindow(units,owner,{legendaryTraps:publicState?.legendaryTraps||[],beastTraps:publicState?.beastTraps||[]});
-      if(auto?.triggered){units=auto.units;logs.push(...(auto.logs||[]));battleFxEvent=auto.battleFxEvent||battleFxEvent;changed=true;}
+      const cooldownKey=`leader-active:${owner}`;
+      const lastActivation=Number(hallvallaRtState.supportAt.get(cooldownKey)||0);
+      if(now-lastActivation>=30000){
+        const auto=resolveAutomaticLeaderEffectOnWindow(units,owner,{legendaryTraps:publicState?.legendaryTraps||[],beastTraps:publicState?.beastTraps||[]});
+        if(auto?.triggered){
+          hallvallaRtState.supportAt.set(cooldownKey,now);
+          units=auto.units;logs.push(...(auto.logs||[]));battleFxEvent=auto.battleFxEvent||battleFxEvent;changed=true;
+        }
+      }
     }catch(error){console.warn("[HallValla][RT] efecto automático de líder falló",error);}
   }
   if(!changed)return false;
