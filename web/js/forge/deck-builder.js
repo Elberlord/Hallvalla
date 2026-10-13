@@ -1021,17 +1021,52 @@ function showDeckBuilderCardDetail(card){
   if(!card)return;
   tryPlaySound("card_select",.38);
   const hydrated=hydrateCardVisualData({...card});
+  // Las cartas de colección son genéricas; las habilidades se guardan por copia.
+  // Consultar sus registros sin crear/alterar copias ni reclamar habilidades.
+  const copies=hydrated.type==="unit"&&typeof globalThis.hvSkillGetDetCopies==="function"
+    ?globalThis.hvSkillGetDetCopies(hydrated.key):[];
+  let index=Math.max(0,copies.findIndex(row=>row.copyId===String(hydrated.unitCopyId||"")));
+  const cardForCopy=which=>!copies.length?hydrated:{
+    ...hydrated,unitCopyId:copies[which].copyId,
+    unitLearnedSkillIds:[...copies[which].learnedSkillIds]
+  };
   cardInspectSelection=null;
   const ownerLabel=isCollectionBrowseOnly()?"Carta de la colección":"Carta de la Forja";
-  const modal=openUnifiedDetEntity(hydrated,{
-    mode:"collection",
-    ownerLabel,
-    live:false,
-    statuses:[],
-    allowPlay:false
+  const modal=openUnifiedDetEntity(cardForCopy(index),{
+    mode:"collection",ownerLabel,live:false,statuses:[],allowPlay:false
   });
   if(!modal)return;
   modal.classList.add("deck-builder-preview","det-v32-collection");
+  if(copies.length>1){
+    const copyBox=modal.querySelector("#detCopiesValue");
+    const number=copyBox?.querySelector(".hv-det-copies-number");
+    if(copyBox&&number){
+      copyBox.setAttribute("role","button");
+      copyBox.setAttribute("tabindex","0");
+      copyBox.style.setProperty("cursor","pointer","important");
+      copyBox.style.setProperty("pointer-events","auto","important");
+      number.style.setProperty("font-size","14px","important");
+      number.style.setProperty("letter-spacing","0","important");
+      const show=next=>{
+        index=(next+copies.length)%copies.length;
+        const entity=cardForCopy(index);
+        modal._hvInspectedEntity=entity;
+        number.textContent=`‹${index+1}/${copies.length}›`;
+        copyBox.title=`Copia ${index+1} de ${copies.length}. Pulsa para ver la siguiente`;
+        copyBox.setAttribute("aria-label",copyBox.title);
+        if(typeof ensureUnifiedDetOwnAbilities==="function")ensureUnifiedDetOwnAbilities(modal,entity);
+      };
+      show(index);
+      copyBox.addEventListener("click",ev=>{
+        ev.preventDefault();ev.stopPropagation();show(index+1);
+      });
+      copyBox.addEventListener("keydown",ev=>{
+        if(!["ArrowLeft","ArrowRight","Enter"," "].includes(ev.key))return;
+        ev.preventDefault();ev.stopPropagation();
+        show(index+(ev.key==="ArrowLeft"?-1:1));
+      });
+    }
+  }
   if(typeof queueHvDetDirectRefresh==="function")queueHvDetDirectRefresh();
 }
 function getDeckBuilderDragPayload(ev){
@@ -1209,6 +1244,8 @@ function syncDeckBuilderUnitTabs(){
 function renderDeckBuilder(){
   syncDeckBuilderUnitTabs();
   hvDeckEnsureSkillBadgeStyle();
+  // Una sola reconciliación por render, nunca una por tarjeta o por copia.
+  if(typeof ensureHallvallaUnitSkillCopies==="function")ensureHallvallaUnitSkillCopies();
   const collectionGrid=$("deckCollectionGrid"),deckList=$("currentDeckList");
   if(!collectionGrid||!deckList)return;
   const browseOnly=isCollectionBrowseOnly();

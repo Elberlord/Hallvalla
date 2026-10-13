@@ -908,10 +908,10 @@ function hvSkillUnclaimedTiersForCopy(rec,profile=hvSkillGetProfile()){
 }
 
 
+
 function hvSkillDeckAvailableCopies(unitKey){
   const key=String(unitKey||"");if(!key||key==="acolyte_healer")return [];
-  const book=ensureHallvallaUnitSkillCopies();
-  const profile=hvSkillGetProfile();
+  const profile=hvSkillGetProfile(),book=hvSkillNormalizeCopyBook(profile);
   return (book.byKey[key]||[]).filter(rec=>rec.active!==false).map((rec,i)=>{
     const missing=hvSkillUnclaimedTiersForCopy(rec,profile);
     const pending=new Set(hvSkillNormalizePending(profile).filter(row=>
@@ -919,6 +919,15 @@ function hvSkillDeckAvailableCopies(unitKey){
     return {copyId:rec.id,key,index:i+1,count:missing.length+pending.size};
   });
 }
+// Vista DET: lectura sin escrituras. Nunca se generan copias ni habilidades aquí.
+function hvSkillGetDetCopies(unitKey){
+  const key=String(unitKey||"");if(!key)return [];
+  const book=hvSkillNormalizeCopyBook(hvSkillGetProfile());
+  return (book.byKey[key]||[]).filter(rec=>rec.active!==false).map((rec,i)=>({
+    index:i+1,copyId:rec.id,learnedSkillIds:[...(rec.learnedSkillIds||[])]
+  }));
+}
+globalThis.hvSkillGetDetCopies=hvSkillGetDetCopies;
 function hvSkillDeckUnclaimedCount(unitKey,copyId=""){
   return hvSkillDeckAvailableCopies(unitKey).filter(row=>!copyId||row.copyId===String(copyId))
     .reduce((sum,row)=>sum+row.count,0);
