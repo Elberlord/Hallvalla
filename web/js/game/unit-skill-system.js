@@ -241,9 +241,9 @@ function hvSkillCompatible(skill,unitKey){
   const exclusive=Array.isArray(skill.exclusiveKeys)?skill.exclusiveKeys:[];
   if(exclusive.length&&!exclusive.includes(unitKey))return false;
   const uw=new Set(meta.weaponTags||[]),uc=new Set(meta.classTags||[]);
-  const weapon=(skill.weapons||[]).some(tag=>tag==="any"||uw.has(tag));
-  const klass=(skill.classes||[]).some(tag=>tag==="any"||uc.has(tag));
-  return weapon||klass;
+  const weapon=(skill.weapons||[]).some(tag=>tag==="any"||uw.has("any")||uw.has(tag));
+  const klass=(skill.classes||[]).some(tag=>tag==="any"||uc.has("any")||uc.has(tag));
+  return weapon&&klass;
 }
 function hvSkillHash(text){
   let h=2166136261;for(const ch of String(text||"")){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;
@@ -251,9 +251,15 @@ function hvSkillHash(text){
 function hvSkillOptionsForCopy(rec,tier){
   const meta=hvSkillUnitMeta(rec?.key);if(!meta)return[];
   const blocked=new Set([...(meta.innate||[]),...(rec.learnedSkillIds||[])]);
-  const pool=Object.values(HALLVALLA_UNIT_SKILL_BANK).filter(skill=>!blocked.has(skill.id)&&hvSkillCompatible(skill,rec.key));
+  const eligible=Object.values(HALLVALLA_UNIT_SKILL_BANK).filter(skill=>!blocked.has(skill.id)&&hvSkillCompatible(skill,rec.key));
   const seed=`${rec.id}|${rec.key}|tier:${tier}`;
-  return pool.sort((a,b)=>hvSkillHash(`${seed}|${a.id}`)-hvSkillHash(`${seed}|${b.id}`)||String(a.id).localeCompare(String(b.id))).slice(0,3).map(skill=>skill.id);
+  const specialized=[],universal=[];
+  for(const skill of eligible){
+    const generic=(skill.weapons||[]).includes("any")&&(skill.classes||[]).includes("any");
+    (generic?universal:specialized).push(skill);
+  }
+  const sortPool=pool=>pool.sort((a,b)=>hvSkillHash(`${seed}|${a.id}`)-hvSkillHash(`${seed}|${b.id}`)||String(a.id).localeCompare(String(b.id)));
+  return [...sortPool(specialized),...sortPool(universal)].slice(0,3).map(skill=>skill.id);
 }
 function hvSkillNormalizePending(profile){
   return (Array.isArray(profile?.unitSkillPendingChoices)?profile.unitSkillPendingChoices:[]).filter(item=>item&&item.copyId&&Array.isArray(item.options)&&item.options.length);
@@ -284,6 +290,8 @@ function hvSkillChoose(pendingId,skillId){
   const item=pending.find(row=>String(row.id)===String(pendingId));if(!item||!item.options.includes(skillId))return false;
   const rec=hvSkillFindCopyMutable(item.copyId,book);if(!rec)return false;
   const meta=hvSkillUnitMeta(rec.key)||{innate:[]};
+  const chosenSkill=HALLVALLA_UNIT_SKILL_BANK[skillId];
+  if(!chosenSkill||!hvSkillCompatible(chosenSkill,rec.key))return false;
   if(!hvSkillPendingTierStillNeeded(item,rec,profile))return false;
   if((meta.innate||[]).includes(skillId)||(rec.learnedSkillIds||[]).includes(skillId))return false;
   rec.learnedSkillIds=hvSkillUnique([...(rec.learnedSkillIds||[]),skillId]);
@@ -344,7 +352,7 @@ function maybeShowHallvallaUnitSkillChoice(preferredCopyId=""){
   const rec=hvSkillFindCopy(item.copyId,profile);
   if(rec){
     const blocked=new Set([...(meta.innate||[]),...(rec.learnedSkillIds||[])]);
-    if(item.options?.length!==3||item.options.some(id=>blocked.has(id)||!HALLVALLA_UNIT_SKILL_BANK[id])){
+    if(item.options?.length!==3||new Set(item.options).size!==3||item.options.some(id=>blocked.has(id)||!HALLVALLA_UNIT_SKILL_BANK[id]||!hvSkillCompatible(HALLVALLA_UNIT_SKILL_BANK[id],rec.key))){
       const fresh=hvSkillOptionsForCopy(rec,item.tier);if(fresh.length!==3)return false;
       const repaired=pending.map(row=>row.id===item.id?{...row,options:fresh}:row);
       hvSkillSaveProfile({...profile,unitSkillPendingChoices:repaired},"unit_skill_options_repaired");
@@ -1480,6 +1488,121 @@ function hallvallaSkillLocalTestChoice(unitKey="archer"){
   const item=queueHallvallaUnitSkillChoice(fake,{afterTier:nextTier,afterRank:(nextTier-1)*3+1});
   if(item)setTimeout(()=>maybeShowHallvallaUnitSkillChoice(),100);
   return !!item;
+}
+
+/* HALLVALLA_ARCHER_PERSONAL_REPAIR_V1
+   Reparacion voluntaria, iniciada SOLO con ?hvRepararArquera=1.
+   No altera ninguna cuenta hasta pulsar una opcion y confirmar. */
+function hvSkillShowPersonalArcherRepair(){
+  if(new URLSearchParams(location.search).get("hvRepararArquera")!=="1")return;
+  if(document.getElementById("hvPersonalArcherRepairPanel"))return;
+  const invalidIds=new Set(["HV-134","HV-135","HV-142","HV-144","HV-145","HV-148","HV-152"]);
+  const newSkillId="HV-001";
+  const shell=document.createElement("section");
+  shell.id="hvPersonalArcherRepairPanel";
+  shell.style.cssText="position:fixed;top:18px;right:18px;z-index:2147483647;width:min(485px,calc(100vw - 28px));max-height:calc(100vh - 36px);overflow:auto;background:#21170c;border:2px solid #cda650;border-radius:16px;padding:17px;box-shadow:0 14px 50px #000;color:#ffebc1;font:15px/1.5 Arial,sans-serif;";
+  const heading=document.createElement("h3");
+  heading.textContent="Correccion personal - Arquera del Desierto";
+  heading.style.cssText="font:700 20px Arial;color:#ffd47a;margin:0 0 8px";
+  shell.appendChild(heading);
+  const sub=document.createElement("div");
+  sub.textContent="Cambia solo la habilidad de Sigilo incorrecta por Ojo de Aguila (+2 AT en el siguiente ataque a distancia; 30 s de recarga). No modifica otras copias ni el Tier.";
+  shell.appendChild(sub);
+  const area=document.createElement("div");
+  area.style.cssText="margin:12px 0;max-height:45vh;overflow:auto";
+  shell.appendChild(area);
+  const message=document.createElement("div");
+  message.style.cssText="font-size:13px;color:#bde4fc;white-space:pre-wrap;margin:6px 0";
+  shell.appendChild(message);
+  const foot=document.createElement("div");
+  foot.style.cssText="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px";
+  shell.appendChild(foot);
+  const createButton=(label,parent,fn)=>{
+    const button=document.createElement("button");button.type="button";button.textContent=label;
+    button.style.cssText="background:#583d1c;color:#fff3c5;border:1px solid #d6ab55;border-radius:8px;padding:8px 10px;margin:4px 0;cursor:pointer;text-align:left";
+    button.addEventListener("click",fn);parent.appendChild(button);return button;
+  };
+  const render=()=>{
+    area.replaceChildren();message.textContent="";
+    const profile=hvSkillGetProfile(),records=profile?.unitSkillCopies?.byKey?.archer||[];
+    const active=records.filter(rec=>rec&&rec.active!==false);
+    const pending=Array.isArray(profile?.unitSkillPendingChoices)?profile.unitSkillPendingChoices:[];
+    const entries=[];
+    active.forEach((rec,index)=>{
+      for(const id of (rec.learnedSkillIds||[])){
+        if(invalidIds.has(id))entries.push({copyId:String(rec.id),index,oldId:id,kind:"learned"});
+      }
+      for(const item of pending){
+        if(String(item.copyId)!==String(rec.id))continue;
+        for(const id of item.options||[]){
+          if(invalidIds.has(id))entries.push({copyId:String(rec.id),index,oldId:id,kind:"pending",pendingId:String(item.id)});
+        }
+      }
+    });
+    if(!entries.length){
+      message.textContent=active.length?"No hay habilidades de Sigilo erroneas detectadas en estas copias. No se modifico nada.":"No se encuentran copias activas. Inicia sesion, espera a que cargue tu coleccion y pulsa Revisar.";
+      return;
+    }
+    for(const entry of entries){
+      const oldName=HALLVALLA_UNIT_SKILL_BANK[entry.oldId]?.name||entry.oldId;
+      const kind=entry.kind==="learned"?"Habilidad aprendida":"Opcion pendiente";
+      const button=createButton(`Copia ${entry.index+1} - ${kind}: ${oldName} -> Ojo de Aguila`,area,()=>void apply(entry));
+      button.style.display="block";button.style.width="100%";
+    }
+  };
+  const apply=async entry=>{
+    const oldName=HALLVALLA_UNIT_SKILL_BANK[entry.oldId]?.name||entry.oldId;
+    const question=`Arquera del Desierto, copia ${entry.index+1}\n\nCambiar ${oldName} por Ojo de Aguila (+2 AT en un ataque a distancia, recarga 30 s).\n\nÂ¿Confirmar este cambio UNICAMENTE para esta copia?`;
+    if(!window.confirm(question))return;
+    const raw=localStorage.getItem("hallvalla_player_profile");
+    if(!raw){message.textContent="No se encontro perfil guardado. No se modifico nada.";return;}
+    const profile=hvSkillGetProfile(),book=hvSkillNormalizeCopyBook(profile);
+    const rec=hvSkillFindCopyMutable(entry.copyId,book);
+    if(!rec||rec.key!=="archer"||rec.active===false){message.textContent="Esa copia ya no esta disponible. No se modifico nada.";return;}
+    if((rec.learnedSkillIds||[]).includes(newSkillId)){message.textContent="Esta copia ya aprendio Ojo de Aguila. No se modifico nada.";return;}
+    const next={...profile,unitSkillCopies:book};
+    if(entry.kind==="learned"){
+      if(!(rec.learnedSkillIds||[]).includes(entry.oldId)){message.textContent="La habilidad original ya cambio. No se modifico nada.";return;}
+      rec.learnedSkillIds=rec.learnedSkillIds.map(id=>id===entry.oldId?newSkillId:id);
+    }else{
+      const all=Array.isArray(profile.unitSkillPendingChoices)?profile.unitSkillPendingChoices:[];
+      const item=all.find(row=>String(row.id)===entry.pendingId&&String(row.copyId)===entry.copyId);
+      if(!item||(item.options||[]).includes(newSkillId)||(item.options||[]).filter(id=>id===entry.oldId).length!==1){
+        message.textContent="La solicitud pendiente ya cambio o contiene Ojo de Aguila. No se modifico nada.";return;
+      }
+      next.unitSkillPendingChoices=all.map(row=>row===item?{...row,options:row.options.map(id=>id===entry.oldId?newSkillId:id)}:row);
+    }
+    const backupKey="hallvalla_backup_personal_arquera_"+Date.now();
+    try{localStorage.setItem(backupKey,raw);}catch(e){message.textContent="No se pudo crear el respaldo. Se cancelo la correccion.";return;}
+    if(typeof savePlayerProfile==="function")savePlayerProfile(next);
+    else localStorage.setItem("hallvalla_player_profile",JSON.stringify(next));
+    try{
+      const deck=typeof getSavedDeck==="function"?getSavedDeck():null;
+      if(Array.isArray(deck)&&typeof saveDeck==="function")saveDeck(deck);
+    }catch(e){console.warn("[HallValla] El mazo se sincronizara en la siguiente carga:",e);}
+    message.textContent=`Cambio local guardado. Respaldo: ${backupKey}. Intentando sincronizar con la nube...`;
+    try{
+      const account=typeof auth!=="undefined"?auth?.currentUser:null;
+      if(account&&!account.isAnonymous&&typeof globalThis.hallvallaUploadCloudSave==="function"){
+        await globalThis.hallvallaUploadCloudSave(account,{force:true,reason:"personal_archer_skill_fix_20261013"});
+        message.textContent=`CORRECCION REALIZADA. Copia ${entry.index+1}: ${oldName} -> Ojo de Aguila. Perfil local y nube sincronizados. Respaldo: ${backupKey}`;
+      }else{
+        message.textContent=`CORRECCION LOCAL REALIZADA. Copia ${entry.index+1}: ${oldName} -> Ojo de Aguila. No se pudo confirmar guardado en nube; verifica tu sesion. Respaldo: ${backupKey}`;
+      }
+    }catch(err){console.warn("[HallValla] Cloud save no confirmado:",err);message.textContent=`CORRECCION LOCAL REALIZADA, pero la nube no confirmo el guardado. Respaldo: ${backupKey}`;}
+    area.replaceChildren();
+    createButton("Cerrar",foot,()=>shell.remove());
+    console.info("[HallValla] Reparacion personal arquera",{copyId:entry.copyId,before:entry.oldId,after:newSkillId,backupKey});
+  };
+  createButton("Revisar copias",foot,render);
+  createButton("Cerrar",foot,()=>shell.remove());
+  document.body.appendChild(shell);
+  render();
+}
+if(typeof location!=="undefined"&&new URLSearchParams(location.search).get("hvRepararArquera")==="1"){
+  const startRepair=()=>setTimeout(hvSkillShowPersonalArcherRepair,1100);
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",startRepair,{once:true});
+  else startRepair();
 }
 
 Object.assign(globalThis,{
