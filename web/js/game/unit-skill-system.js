@@ -234,29 +234,33 @@ function hvSkillOptionsForCopy(rec,tier){
 function hvSkillNormalizePending(profile){
   return (Array.isArray(profile?.unitSkillPendingChoices)?profile.unitSkillPendingChoices:[]).filter(item=>item&&item.copyId&&Array.isArray(item.options)&&item.options.length);
 }
+
 function queueHallvallaUnitSkillChoice(unit,result){
   try{
     const copyId=String(unit?.unitCopyId||"");if(!copyId)return null;
-    const profile=hvSkillGetProfile(),book=hvSkillNormalizeCopyBook(profile),rec=hvSkillFindCopyMutable(copyId,book);if(!rec)return null;
-    const afterTier=Math.max(1,Math.min(15,Number(result?.afterTier||hvSkillTierFromRank(result?.afterRank||1))));
-    if(afterTier<=Number(rec.talentTierReached||1))return null;
+    const profile=hvSkillGetProfile(),book=hvSkillNormalizeCopyBook(profile);
+    const rec=hvSkillFindCopyMutable(copyId,book);if(!rec)return null;
+    const top=Math.max(1,Math.min(15,Number(result?.afterTier||hvSkillTierFromRank(result?.afterRank||1))));
     const pending=hvSkillNormalizePending(profile);
-    if(pending.some(item=>String(item.copyId)===copyId&&Number(item.tier)===afterTier))return null;
-    const options=hvSkillOptionsForCopy(rec,afterTier);
-    if(options.length<3){console.warn("[HallValla][Skills] Pool insuficiente para 3 opciones:",rec.key,afterTier,options);return null;}
-    rec.talentTierReached=afterTier;
-    const item={id:`skill-choice:${copyId}:${afterTier}`,copyId,unitKey:rec.key,unitName:rec.name,rarity:rec.rarity,tier:afterTier,options,createdAt:Date.now()};
+    // El evento no es el único origen de las elecciones: el Tier ganado manda.
+    const missing=hvSkillUnclaimedTiersForCopy(rec,profile).filter(tier=>tier<=top);
+    if(!missing.length)return null;
+    const tier=missing[0],options=hvSkillOptionsForCopy(rec,tier);
+    if(options.length!==3)return null;
+    rec.talentTierReached=Math.max(Number(rec.talentTierReached||1),top);
+    const item={id:'skill-choice:'+copyId+':'+tier,copyId,unitKey:rec.key,unitName:rec.name,rarity:rec.rarity,tier,options,createdAt:Date.now()};
     pending.push(item);
-    hvSkillSaveProfile({...profile,unitSkillCopies:book,unitSkillPendingChoices:pending},"unit_skill_tier_up");
+    hvSkillSaveProfile({...profile,unitSkillCopies:book,unitSkillPendingChoices:pending},'unit_skill_tier_up');
     setTimeout(()=>maybeShowHallvallaUnitSkillChoice(),900);
     return item;
-  }catch(error){console.warn("[HallValla][Skills] No se pudo crear elección de habilidad:",error);return null;}
+  }catch(error){console.warn('[HallValla][Skills] Falló nueva elección:',error);return null;}
 }
 function hvSkillChoose(pendingId,skillId){
   const profile=hvSkillGetProfile(),book=hvSkillNormalizeCopyBook(profile),pending=hvSkillNormalizePending(profile);
   const item=pending.find(row=>String(row.id)===String(pendingId));if(!item||!item.options.includes(skillId))return false;
   const rec=hvSkillFindCopyMutable(item.copyId,book);if(!rec)return false;
   const meta=hvSkillUnitMeta(rec.key)||{innate:[]};
+  if(!hvSkillPendingTierStillNeeded(item,rec,profile))return false;
   if((meta.innate||[]).includes(skillId)||(rec.learnedSkillIds||[]).includes(skillId))return false;
   rec.learnedSkillIds=hvSkillUnique([...(rec.learnedSkillIds||[]),skillId]);
   const nextPending=pending.filter(row=>String(row.id)!==String(item.id));
@@ -306,7 +310,10 @@ function hvSkillEnsureUi(){
 function maybeShowHallvallaUnitSkillChoice(preferredCopyId=""){
   hvSkillEnsureUi();
   const overlay=document.getElementById("hvUnitSkillChoiceOverlay");if(!overlay||!overlay.classList.contains("hidden"))return false;
-  const profile=hvSkillGetProfile(),pending=hvSkillNormalizePending(profile);
+  const profile=hvSkillGetProfile(),all=hvSkillNormalizePending(profile);
+  const pending=all.filter(row=>{const rec=hvSkillFindCopy(row.copyId,profile);return rec&&hvSkillPendingTierStillNeeded(row,rec,profile);});
+  if(pending.length<all.length&&all.every(row=>!!hvSkillFindCopy(row.copyId,profile)))
+    hvSkillSaveProfile({...profile,unitSkillPendingChoices:pending},"unit_skill_pending_cleanup");
   const eligible=preferredCopyId?pending.filter(row=>String(row.copyId)===String(preferredCopyId)):pending;
   let item=[...eligible].sort((a,b)=>Number(a.tier)-Number(b.tier))[0];if(!item)return false;
   const meta=hvSkillUnitMeta(item.unitKey)||{rarity:item.rarity,innate:[]};
@@ -841,37 +848,57 @@ function hvSkillAttachToUnit(unit,{card}={}){
 }
 
 /* RECUPERACION DE HABILIDADES DE TIER: por copia, sin modificar combate. */
+
 function hvSkillTierEarnedForCopy(rec,profile=hvSkillGetProfile()){
   if(!rec||String(rec.key)==="acolyte_healer")return 1;
-  let rank=1;
+  // El nivel y el derecho a aprender nunca deben discrepar tras una migración.
+  const reached=Math.max(1,Math.min(15,Math.floor(Number(rec.talentTierReached)||1)));
   try{
     const book=typeof normalizeUnitMasteryBook==="function"?normalizeUnitMasteryBook(profile?.unitMastery||{}):(profile?.unitMastery||{});
     const copyKey="copy:"+String(rec.id||"").toLowerCase();
     const legacyKey=hvSkillLegacyMasteryKey(rec);
-    const kills=Number(book?.[copyKey]?.kills??book?.[legacyKey]?.kills??0);
-    rank=typeof getUnitMasteryRankFromKills==="function"?getUnitMasteryRankFromKills(kills):1;
-  }catch(error){console.warn("[HallValla][Skills] Fallo consulta de Tier:",error);}
-  return hvSkillTierFromRank(rank);
+    const kills=Math.max(0,Number(book?.[copyKey]?.kills||0),Number(book?.[legacyKey]?.kills||0));
+    const rank=typeof getUnitMasteryRankFromKills==="function"?getUnitMasteryRankFromKills(kills):1;
+    return Math.max(reached,hvSkillTierFromRank(rank));
+  }catch(error){console.warn("[HallValla][Skills] Falló cálculo Tier:",error);return reached;}
 }
-function hvSkillUnclaimedTiersForCopy(rec,profile=hvSkillGetProfile()){
-  const top=hvSkillTierEarnedForCopy(rec,profile);
-  const tiers=Array.from({length:Math.max(0,top-1)},(_,i)=>i+2);
+
+function hvSkillExtraLearnedCount(rec){
   const meta=hvSkillUnitMeta(rec?.key)||{innate:[]};
   const innate=new Set(meta.innate||[]);
-  const learned=hvSkillUnique(rec?.learnedSkillIds||[]).filter(id=>!innate.has(id)&&!!HALLVALLA_UNIT_SKILL_BANK[id]);
-  const pending=hvSkillNormalizePending(profile).filter(row=>String(row.copyId)===String(rec?.id)&&tiers.includes(Number(row.tier)));
-  const occupied=new Set(pending.map(row=>Number(row.tier)));
-  let claimed=learned.length;
-  for(const tier of tiers){if(occupied.has(tier))continue;if(claimed>0){occupied.add(tier);claimed--;}}
-  return tiers.filter(tier=>!occupied.has(tier));
+  return hvSkillUnique(rec?.learnedSkillIds||[]).filter(id=>!innate.has(id)&&!!HALLVALLA_UNIT_SKILL_BANK[id]).length;
 }
+function hvSkillTierAlreadyClaimed(rec,tier){return Number(tier)>=2&&Number(tier)<2+hvSkillExtraLearnedCount(rec);}
+function hvSkillPendingTierStillNeeded(row,rec,profile=hvSkillGetProfile()){
+  const tier=Number(row?.tier||0);
+  return !!rec&&tier>=2&&tier<=hvSkillTierEarnedForCopy(rec,profile)&&!hvSkillTierAlreadyClaimed(rec,tier);
+}
+function hvSkillUnclaimedTiersForCopy(rec,profile=hvSkillGetProfile()){
+  if(!rec)return [];
+  const top=hvSkillTierEarnedForCopy(rec,profile);
+  const pending=new Set(hvSkillNormalizePending(profile).filter(row=>
+    String(row.copyId)===String(rec.id)&&hvSkillPendingTierStillNeeded(row,rec,profile)).map(row=>Number(row.tier)));
+  const missing=[];
+  for(let tier=2;tier<=top;tier++)if(!hvSkillTierAlreadyClaimed(rec,tier)&&!pending.has(tier))missing.push(tier);
+  return missing;
+}
+
 function hvSkillDeckAvailableCopies(unitKey){
   const key=String(unitKey||"");if(!key||key==="acolyte_healer")return [];
-  const profile=hvSkillGetProfile(),book=hvSkillNormalizeCopyBook(profile);
-  return (book.byKey[key]||[]).filter(rec=>rec.active!==false).map((rec,i)=>{
+  let profile=hvSkillGetProfile(),book=hvSkillNormalizeCopyBook(profile);
+  let active=(book.byKey[key]||[]).filter(rec=>rec.active!==false);
+  const owned=hvSkillCollectionUnits().find(row=>String(row.card?.key||"")===key);
+  // Si la colección cargó tarde, crear copias faltantes antes de decidir
+  // si se muestra el botón de elegir habilidad.
+  if(owned&&active.length<owned.qty){
+    book=ensureHallvallaUnitSkillCopies();profile=hvSkillGetProfile();
+    active=(book.byKey[key]||[]).filter(rec=>rec.active!==false);
+  }
+  return active.map((rec,i)=>{
     const missing=hvSkillUnclaimedTiersForCopy(rec,profile);
-    const pending=hvSkillNormalizePending(profile).filter(row=>row.copyId===rec.id&&Number(row.tier)<=hvSkillTierEarnedForCopy(rec,profile));
-    return {copyId:rec.id,key,index:i+1,count:missing.length+pending.length};
+    const pending=new Set(hvSkillNormalizePending(profile).filter(row=>
+      String(row.copyId)===String(rec.id)&&hvSkillPendingTierStillNeeded(row,rec,profile)).map(row=>Number(row.tier)));
+    return {copyId:rec.id,key,index:i+1,count:missing.length+pending.size};
   });
 }
 function hvSkillDeckUnclaimedCount(unitKey,copyId=""){
@@ -888,7 +915,7 @@ function hvSkillStartDeckChoice(unitKey,requestedCopyId=""){
     const pending=hvSkillNormalizePending(profile);
     const rec=candidates.find(copy=>hvSkillUnclaimedTiersForCopy(copy,profile).length||pending.some(row=>row.copyId===copy.id));
     if(!rec)return false;
-    const existing=pending.filter(row=>row.copyId===rec.id).sort((a,b)=>Number(a.tier)-Number(b.tier));
+    const existing=pending.filter(row=>row.copyId===rec.id&&hvSkillPendingTierStillNeeded(row,rec,profile)).sort((a,b)=>Number(a.tier)-Number(b.tier));
     const missing=hvSkillUnclaimedTiersForCopy(rec,profile);
     if(missing.length&&(!existing.length||missing[0]<Number(existing[0].tier))){
       const tier=missing[0],options=hvSkillOptionsForCopy(rec,tier);
@@ -923,9 +950,10 @@ function hvSkillInstallMasteryWrappers(){
       const copyKey=hvSkillCopyMasteryKey(entity);
       if(!copyKey)return originalRecord(entity,profile);
       const book=typeof normalizeUnitMasteryBook==="function"?normalizeUnitMasteryBook(profile.unitMastery||{}):(profile.unitMastery||{});
-      if(book[copyKey])return book[copyKey];
       const legacyKey=hvSkillLegacyMasteryKey(entity);
-      return book[legacyKey]||{name:String(entity?.name||copyKey),kills:0};
+      const own=book[copyKey],shared=book[legacyKey];
+      if(own&&shared&&Number(shared.kills||0)>Number(own.kills||0))return {...own,kills:Number(shared.kills||0)};
+      return own||shared||{name:String(entity?.name||copyKey),kills:0};
     };
   }
   if(typeof originalRegister==="function"){
@@ -936,9 +964,11 @@ function hvSkillInstallMasteryWrappers(){
       if(copyKey){
         try{
           const profile=hvSkillGetProfile(),book=typeof normalizeUnitMasteryBook==="function"?normalizeUnitMasteryBook(profile.unitMastery||{}):(profile.unitMastery||{});
-          if(!book[copyKey]){
-            const legacy=book[hvSkillLegacyMasteryKey(credited)];
-            book[copyKey]={name:String(credited?.name||copyKey),kills:Math.max(0,Number(legacy?.kills||0))};
+          const legacy=book[hvSkillLegacyMasteryKey(credited)];
+          const historical=Math.max(0,Number(legacy?.kills||0));
+          const own=Math.max(0,Number(book[copyKey]?.kills||0));
+          if(!book[copyKey]||own<historical){
+            book[copyKey]={name:String(credited?.name||copyKey),kills:Math.max(own,historical)};
             hvSkillSaveProfile({...profile,unitMastery:book},"unit_mastery_copy_migration");
           }
         }catch(_){}
