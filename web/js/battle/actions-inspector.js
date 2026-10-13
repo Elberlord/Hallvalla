@@ -894,6 +894,9 @@ function ensureUnifiedDetOwnAbilities(modal,entity){
     ? getDetAbilitySectionsForInspector(entity)
     : [];
   const visibleSections=(Array.isArray(sections)?sections:[]).slice(0,27);
+  const skillChoiceCount=modal?.classList?.contains('unified-det-collection')&&entity?.type==='unit'
+    &&typeof globalThis.hvSkillDeckUnclaimedCount==='function'
+    ?globalThis.hvSkillDeckUnclaimedCount(entity.key,entity.unitCopyId||''):0;
   const list=document.createElement('div');
   list.id='detOwnEffectsList';
   list.className=`hv-det-own-effects-list count-${visibleSections.length}`;
@@ -907,6 +910,22 @@ function ensureUnifiedDetOwnAbilities(modal,entity){
   for(let index=0;index<27;index++){
     const section=visibleSections[index];
 
+    if(!section&&skillChoiceCount>0&&index===visibleSections.length){
+      const choose=document.createElement('button');
+      choose.type='button';
+      choose.className='hv-det-own-ability-icon hv-det-skill-choose';
+      choose.dataset.detAbilitySlot=String(index+1);
+      choose.title=skillChoiceCount+' habilidad(es) pendientes · elegir';
+      choose.setAttribute('aria-label',choose.title);
+      choose.textContent=skillChoiceCount>99?'99+':String(skillChoiceCount);
+      choose.addEventListener('click',ev=>{
+        ev.preventDefault();ev.stopPropagation();
+        if(typeof globalThis.hvSkillStartDeckChoice!=='function')return;
+        if(globalThis.hvSkillStartDeckChoice(entity.key,entity.unitCopyId||''))modal.classList.add('hidden');
+      });
+      list.appendChild(choose);
+      continue;
+    }
     if(!section){
       const slot=document.createElement('span');
       slot.className='hv-det-own-ability-slot is-empty';

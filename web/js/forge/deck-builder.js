@@ -954,14 +954,14 @@ function getDeckBuilderMiniImageHtml(card){
   return `<span class="deck-mini-fallback">${escapeHtml(card?.icon||"✦")}</span>`;
 }
 
+
 function hvDeckEnsureSkillBadgeStyle(){
   if(document.getElementById("hvDeckSkillBadgeStyle"))return;
   const style=document.createElement("style");
   style.id="hvDeckSkillBadgeStyle";
-  style.textContent=".deck-mini-card{position:relative}.deck-skill-choose{position:absolute;z-index:8;bottom:4px;left:4px;right:4px;width:calc(100% - 8px);border:1px solid #d9bc64;border-radius:7px;background:rgba(21,47,56,.94);color:#fff2bf;font:700 10px/1.2 Arial,sans-serif;padding:5px 2px;cursor:pointer;box-sizing:border-box;box-shadow:0 1px 6px #0009}.deck-skill-choose:hover,.deck-skill-choose:focus-visible{background:rgba(48,88,96,.98);outline:1px solid #f2d783}";
+  style.textContent=".deck-mini-card{position:relative}.deck-skill-choose{position:absolute;z-index:12;top:3px;right:23px;left:auto;bottom:auto;width:19px;height:19px;padding:0;border:1px solid #ffe8e8;border-radius:50%;background:#c51625;color:#fff;font:800 11px/17px Arial,sans-serif;text-align:center;box-shadow:0 1px 5px #000c;cursor:pointer;box-sizing:border-box}.deck-skill-choose:hover,.deck-skill-choose:focus-visible{background:#f03849;outline:2px solid #ffe6a4}.hv-det-skill-choose{display:flex;align-items:center;justify-content:center;border:1px solid #ffadb1!important;background:#b71020!important;color:white!important;font:800 12px/1 Arial,sans-serif!important;cursor:pointer!important;border-radius:50%!important}.hv-det-skill-choose:focus-visible{outline:2px solid #ffe6a4!important}";
   document.head.appendChild(style);
 }
-
 function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,addDisabled=false,addLockReason="",used=0,maxAllowed=1,readOnly=false,collectionLocked=false,gameplayLocked=false}={}){
   const cls=`deck-mini-card ${getCardVisualClass(card)} ${disabled?"disabled":""} ${mode==="deck"?"in-deck":"in-collection"} ${card?.craftableMissing?"craft-missing":""} ${collectionLocked?"collection-locked":""} ${gameplayLocked?"gameplay-locked":""} ${readOnly?"read-only":""}`;
   const name=escapeHtml(card?.name||"Carta");
@@ -979,7 +979,7 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
   const pendingSkills=card?.type==="unit"&&typeof globalThis.hvSkillDeckUnclaimedCount==="function"
     ?globalThis.hvSkillDeckUnclaimedCount(card.key,mode==="deck"?card.unitCopyId||"":""):0;
   const skillButton=pendingSkills>0
-    ?`<button class="deck-skill-choose" type="button" data-skill-choice-key="${escapeHtml(card.key||"")}" data-skill-copy-id="${escapeHtml(mode==="deck"?card.unitCopyId||"":"")}" aria-label="Elegir habilidad gratis para ${name}">Habilidad disponible${pendingSkills>1?` (${pendingSkills})`:""} · Gratis</button>`:"";
+    ?`<button class="deck-skill-choose" type="button" data-skill-choice-key="${escapeHtml(card.key||"")}" data-skill-copy-id="${escapeHtml(mode==="deck"?card.unitCopyId||"":"")}" title="${pendingSkills} habilidad${pendingSkills===1?"":"es"} para elegir" aria-label="${pendingSkills} habilidad${pendingSkills===1?"":"es"} pendiente${pendingSkills===1?"":"s"} para ${name}">${pendingSkills>99?"99+":pendingSkills}</button>`:"";
   const isNew=mode==="collection"&&typeof isCollectionCardNew==="function"&&isCollectionCardNew(card);
   const newBadge=isNew?`<span class="deck-new-badge" aria-label="Carta nueva">New</span>`:"";
   const detailTitle=collectionLocked?`${name} · bloqueada · clic/tap para ver detalles`:`${name} · clic/tap para ver detalles`;

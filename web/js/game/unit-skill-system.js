@@ -88,6 +88,7 @@ function hvSkillSaveProfile(profile,reason="unit_skills"){
 function hvSkillLegacyMasteryKey(entity){return typeof normalizeUnitMasteryName==="function"?normalizeUnitMasteryName(entity?.name||"").toLowerCase():hvSkillNorm(entity?.name||"");}
 function hvSkillCopyMasteryKey(entity){const id=String(entity?.unitCopyId||"").trim();return id?`copy:${id.toLowerCase()}`:"";}
 
+
 function hvSkillNormalizeCopyBook(profile){
   const source=profile?.unitSkillCopies&&typeof profile.unitSkillCopies==="object"?profile.unitSkillCopies:{};
   const byKey=source.byKey&&typeof source.byKey==="object"?source.byKey:{};
@@ -101,52 +102,75 @@ function hvSkillNormalizeCopyBook(profile){
       active:rec.active!==false,
       createdAt:Number(rec.createdAt||Date.now()),
       learnedSkillIds:hvSkillUnique(rec.learnedSkillIds||[]).filter(id=>!!HALLVALLA_UNIT_SKILL_BANK[id]),
-      talentTierReached:Math.max(1,Math.min(15,Number(rec.talentTierReached||1)||1))
+      talentTierReached:Math.max(1,Math.min(15,Math.floor(Number(rec.talentTierReached)||1))),
+      masteryRank:Math.max(0,Math.min(45,Math.floor(Number(rec.masteryRank||rec.unitMasteryRank)||0)))
     }));
   }
   return out;
 }
+
 function hvSkillCollectionUnits(){
   let collection={cards:[]};
   try{collection=typeof getPlayerCollection==="function"?getPlayerCollection():JSON.parse(localStorage.getItem("hallvalla_player_collection")||'{"cards":[]}');}catch(_){}
   const cards=Array.isArray(collection?.cards)?collection.cards:[];
   return cards.map(raw=>{
-    const template=(typeof CARD_TEMPLATES!=="undefined"?CARD_TEMPLATES:[]).find(card=>String(card?.key||"")===String(raw?.key||""))||raw;
-    return {card:template,qty:Math.max(0,Math.floor(Number(raw?.qty||0)))};
+    const template=(typeof CARD_TEMPLATES!=="undefined"?CARD_TEMPLATES:[]).find(card=>String(card?.key||"")===String(raw?.key||""))||{};
+    const card={...template,...raw};
+    const meta=hvSkillUnitMeta(card.key);
+    if(!card.type&&meta)card.type="unit";
+    return {card,qty:Math.max(0,Math.floor(Number(raw?.qty||0)))};
   }).filter(entry=>entry.qty>0&&String(entry.card?.type||"")==="unit"&&!entry.card?.leader);
 }
-function ensureHallvallaUnitSkillCopies() {
+
+function ensureHallvallaUnitSkillCopies(){
   const profile=hvSkillGetProfile();
-  const copyBook=hvSkillNormalizeCopyBook(profile);
+  const original=profile?.unitSkillCopies?.byKey||{};
+  const book=hvSkillNormalizeCopyBook(profile);
   let changed=false;
+  const seenIds=new Set();
+  for(const list of Object.values(book.byKey))for(const rec of list){
+    if(!rec.id||seenIds.has(rec.id)){rec.id=hvSkillCopyId();changed=true;}
+    seenIds.add(rec.id);
+  }
+  for(const [key,list] of Object.entries(original)){
+    for(let index=0;index<(Array.isArray(list)?list.length:0);index++){
+      if(!list[index]?.id&&book.byKey[key]?.[index])changed=true;
+    }
+  }
   for(const {card,qty} of hvSkillCollectionUnits()){
-    const key=String(card?.key||"");if(!key)continue;
-    const meta=hvSkillUnitMeta(key)||{name:card?.name||key,rarity:card?.rarity||"Básica"};
-    const list=copyBook.byKey[key]||(copyBook.byKey[key]=[]);
+    const key=String(card.key||"");if(!key)continue;
+    const meta=hvSkillUnitMeta(key)||{name:card.name||key,rarity:card.rarity||"Básica"};
+    const list=book.byKey[key]||(book.byKey[key]=[]);
+    const mastery=typeof normalizeUnitMasteryBook==="function"?normalizeUnitMasteryBook(profile.unitMastery||{}):(profile.unitMastery||{});
+    const legacyKey=hvSkillLegacyMasteryKey(card);
+    const legacyKills=Math.max(0,Number(mastery?.[legacyKey]?.kills||0));
+    const rankFromKills=typeof getUnitMasteryRankFromKills==="function"?getUnitMasteryRankFromKills(legacyKills):1;
+    const explicitRank=Math.max(0,Number(card.masteryRank||card.unitMasteryRank||0));
+    const historicalRank=Math.max(rankFromKills,explicitRank);
+    const reachedTier=hvSkillTierFromRank(historicalRank);
     let active=list.filter(rec=>rec.active!==false);
     while(active.length<qty){
-      let legacyTier=1;
-      try{
-        const legacyKey=hvSkillLegacyMasteryKey(card);
-        const mastery=typeof normalizeUnitMasteryBook==="function"?normalizeUnitMasteryBook(profile.unitMastery||{}):(profile.unitMastery||{});
-        const kills=Math.max(0,Number(mastery?.[legacyKey]?.kills||0));
-        const rank=typeof getUnitMasteryRankFromKills==="function"?getUnitMasteryRankFromKills(kills):1;
-        legacyTier=hvSkillTierFromRank(rank);
-      }catch(_){}
-      const rec={id:hvSkillCopyId(),key,name:meta.name||card?.name||key,rarity:meta.rarity||card?.rarity||"Básica",active:true,createdAt:Date.now(),learnedSkillIds:[],talentTierReached:legacyTier};
+      // Recuperar exactamente el ID, habilidades y Tier de una copia anterior.
+      const dormant=list.find(rec=>rec.active===false);
+      if(dormant){dormant.active=true;active.push(dormant);changed=true;continue;}
+      const rec={id:hvSkillCopyId(),key,name:meta.name||card.name||key,rarity:meta.rarity||card.rarity||"Básica",active:true,createdAt:Date.now(),learnedSkillIds:[],talentTierReached:reachedTier,masteryRank:historicalRank};
       list.push(rec);active.push(rec);changed=true;
     }
     if(active.length>qty){
-      const excess=active.slice(qty);
-      for(const rec of excess){rec.active=false;changed=true;}
+      // Nunca se eliminan registros históricos de una copia.
+      for(const rec of active.slice(qty)){rec.active=false;changed=true;}
     }
     for(const rec of list){
-      if(rec.name!==String(meta.name||card?.name||key)){rec.name=String(meta.name||card?.name||key);changed=true;}
-      if(rec.rarity!==String(meta.rarity||card?.rarity||"Básica")){rec.rarity=String(meta.rarity||card?.rarity||"Básica");changed=true;}
+      const properName=String(meta.name||card.name||key);
+      const rarity=String(meta.rarity||card.rarity||"Básica");
+      if(rec.name!==properName){rec.name=properName;changed=true;}
+      if(rec.rarity!==rarity){rec.rarity=rarity;changed=true;}
+      if(rec.masteryRank<historicalRank){rec.masteryRank=historicalRank;changed=true;}
+      if(rec.talentTierReached<reachedTier){rec.talentTierReached=reachedTier;changed=true;}
     }
   }
-  if(changed)hvSkillSaveProfile({...profile,unitSkillCopies:copyBook},"unit_skill_copy_registry");
-  return copyBook;
+  if(changed)hvSkillSaveProfile({...profile,unitSkillCopies:book},"unit_skill_copy_reconcile_v257");
+  return book;
 }
 function hvSkillFindCopy(copyId,profile=hvSkillGetProfile()){
   const id=String(copyId||"");if(!id)return null;
@@ -183,7 +207,7 @@ function assignHallvallaUnitCopyIdsToDeck(deck=[]){
     let rec=list.find(item=>String(item.id)===String(card.unitCopyId||"")&&!used.has(item.id));
     if(!rec)rec=list.find(item=>!used.has(item.id));
     if(!rec){
-      rec={id:hvSkillCopyId(),key,name:meta.name||card.name||key,rarity:meta.rarity||card.rarity||"Básica",active:true,createdAt:Date.now(),learnedSkillIds:[],talentTierReached:1};
+      rec={id:hvSkillCopyId(),key,name:meta.name||card.name||key,rarity:meta.rarity||card.rarity||"Básica",active:true,createdAt:Date.now(),learnedSkillIds:[],talentTierReached:1,masteryRank:1};
       (book.byKey[key]||(book.byKey[key]=[])).push(rec);
       const nextProfile={...profile,unitSkillCopies:book};hvSkillSaveProfile(nextProfile,"unit_skill_virtual_copy");
     }
@@ -849,9 +873,9 @@ function hvSkillAttachToUnit(unit,{card}={}){
 
 /* RECUPERACION DE HABILIDADES DE TIER: por copia, sin modificar combate. */
 
+
 function hvSkillTierEarnedForCopy(rec,profile=hvSkillGetProfile()){
   if(!rec||String(rec.key)==="acolyte_healer")return 1;
-  // El nivel y el derecho a aprender nunca deben discrepar tras una migración.
   const reached=Math.max(1,Math.min(15,Math.floor(Number(rec.talentTierReached)||1)));
   try{
     const book=typeof normalizeUnitMasteryBook==="function"?normalizeUnitMasteryBook(profile?.unitMastery||{}):(profile?.unitMastery||{});
@@ -859,10 +883,10 @@ function hvSkillTierEarnedForCopy(rec,profile=hvSkillGetProfile()){
     const legacyKey=hvSkillLegacyMasteryKey(rec);
     const kills=Math.max(0,Number(book?.[copyKey]?.kills||0),Number(book?.[legacyKey]?.kills||0));
     const rank=typeof getUnitMasteryRankFromKills==="function"?getUnitMasteryRankFromKills(kills):1;
-    return Math.max(reached,hvSkillTierFromRank(rank));
-  }catch(error){console.warn("[HallValla][Skills] Falló cálculo Tier:",error);return reached;}
+    const oldRank=Math.max(0,Math.floor(Number(rec.masteryRank||0)));
+    return Math.max(reached,hvSkillTierFromRank(Math.max(rank,oldRank)));
+  }catch(error){console.warn("[HallValla][Skills] Falló cálculo de Tier:",error);return reached;}
 }
-
 function hvSkillExtraLearnedCount(rec){
   const meta=hvSkillUnitMeta(rec?.key)||{innate:[]};
   const innate=new Set(meta.innate||[]);
@@ -883,18 +907,12 @@ function hvSkillUnclaimedTiersForCopy(rec,profile=hvSkillGetProfile()){
   return missing;
 }
 
+
 function hvSkillDeckAvailableCopies(unitKey){
   const key=String(unitKey||"");if(!key||key==="acolyte_healer")return [];
-  let profile=hvSkillGetProfile(),book=hvSkillNormalizeCopyBook(profile);
-  let active=(book.byKey[key]||[]).filter(rec=>rec.active!==false);
-  const owned=hvSkillCollectionUnits().find(row=>String(row.card?.key||"")===key);
-  // Si la colección cargó tarde, crear copias faltantes antes de decidir
-  // si se muestra el botón de elegir habilidad.
-  if(owned&&active.length<owned.qty){
-    book=ensureHallvallaUnitSkillCopies();profile=hvSkillGetProfile();
-    active=(book.byKey[key]||[]).filter(rec=>rec.active!==false);
-  }
-  return active.map((rec,i)=>{
+  const book=ensureHallvallaUnitSkillCopies();
+  const profile=hvSkillGetProfile();
+  return (book.byKey[key]||[]).filter(rec=>rec.active!==false).map((rec,i)=>{
     const missing=hvSkillUnclaimedTiersForCopy(rec,profile);
     const pending=new Set(hvSkillNormalizePending(profile).filter(row=>
       String(row.copyId)===String(rec.id)&&hvSkillPendingTierStillNeeded(row,rec,profile)).map(row=>Number(row.tier)));
