@@ -447,12 +447,13 @@ function hvSimpleReadySkill(unit,kind,now=Date.now()){
 }
 async function hvSimpleAutoBuffSkill(caster,now=Date.now()){
   if(!caster||caster.leader||Number(caster.hp||0)<=0||typeof updatePublic!=="function")return false;
-  const units=[...(publicState?.units||[])],live=units.find(u=>u.id===caster.id);
+  const live=(publicState?.units||[]).find(u=>u.id===caster.id);
   if(!live||Number(live.hp||0)<=0)return false;
   // Solo una mejora sencilla temporal simultánea; nunca se acumulan unas con otras.
   if(Number(live.hvSimpleBuff?.until||0)>now)return false;
   const skill=hvSimpleReadySkill(live,"buff",now);
   if(!skill)return false;
+  const units=[...(publicState?.units||[])];
   const potency=hvSimplePower(live),seconds=Math.max(1,Number(skill.simple.seconds||3));
   const stats=Object.fromEntries((skill.simple.stats||[]).map(key=>[key,potency]));
   const buff={id:skill.id,until:now+seconds*1000,stats};
@@ -822,11 +823,17 @@ function hvSkillNearestWounded(caster,units){
 }
 async function hallvallaRtAutoUnitSkills(caster,now=Date.now()){
   if(!caster||caster.leader||Number(caster.hp||0)<=0||typeof updatePublic!=="function")return false;
+  // Evitar preparar datos de batalla para unidades sin habilidades de soporte.
+  const supportSkills=hvSkillEntries(caster).filter(skill=>{
+    const tags=skill.tags||[];
+    return tags.includes("support")||tags.includes("death")||tags.includes("exorcism");
+  });
+  if(!supportSkills.length)return false;
   let units=[...(publicState?.units||[])],grave=[...(publicState?.erictoGraveyard||[])],remains=[...(publicState?.undeadRemains||[])];
-  for(const skill of hvSkillEntries(caster)){
-    const tags=new Set(skill.tags||[]);if(!tags.has("support")&&!tags.has("death")&&!tags.has("exorcism"))continue;
+  for(const skill of supportSkills){
+    const tags=new Set(skill.tags||[]);
     let live=units.find(u=>u.id===caster.id)||caster;if(!hvSkillCooldownReady(live,skill,now))continue;
-    const scaled=hvSkillScale(skill,live),value=Math.max(1,Math.round(Number(scaled.value||2))),durationMs=Math.max(1000,Math.round(Number(scaled.duration||5)*1000));
+    const scaled=hvSkillScale(skill,live),value=Math.max(1,Math.round(Number(scaled.value||2)));
     let log="",statusFxEvent=null,floatFxEvent=null,changed=false;
     if(skill.name==="Curación"||skill.name==="Curación Gradual"){
       const target=hvSkillNearestWounded(live,units);if(!target)continue;

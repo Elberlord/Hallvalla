@@ -65,10 +65,12 @@
 
   function setMotionVars(el,unit,profile){
     const personality=unitMotionPersonality(unit,profile);
-    el.dataset.hvMotionProfile=profile;
-    el.dataset.hvMotionPersonality=personality;
-    el.dataset.hvGuardPose=unit?.defenseModeReady===true?"ready":"off";
-    el.style.setProperty("--hv-motion-phase",`${stablePhase(unit?.id||unit?.key)}ms`);
+    const guardPose=unit?.defenseModeReady===true?"ready":"off";
+    if(el.dataset.hvMotionProfile!==profile)el.dataset.hvMotionProfile=profile;
+    if(el.dataset.hvMotionPersonality!==personality)el.dataset.hvMotionPersonality=personality;
+    if(el.dataset.hvGuardPose!==guardPose)el.dataset.hvGuardPose=guardPose;
+    const phase=`${stablePhase(unit?.id||unit?.key)}ms`;
+    if(el.style.getPropertyValue("--hv-motion-phase")!==phase)el.style.setProperty("--hv-motion-phase",phase);
   }
 
   function beginMove(el,unit,previous,x,y,profile){
@@ -143,7 +145,7 @@
     if(!previous)hvPlayUnitSummonMotion(el,unit,profile);
 
     if(profile==="immobile"){
-      el.dataset.hvMotion="idle";
+      if(el.dataset.hvMotion!=="idle")el.dataset.hvMotion="idle";
       if(previous)clearTimer(previous);
       records.set(id,{x:nx,y:ny,profile,seenAt:now,until:0,timer:0});
       purgeOld(now);
@@ -160,9 +162,9 @@
       timer=started.timer;
       until=started.until;
     }else if(until>now){
-      el.dataset.hvMotion="move";
+      if(el.dataset.hvMotion!=="move")el.dataset.hvMotion="move";
     }else{
-      el.dataset.hvMotion="idle";
+      if(el.dataset.hvMotion!=="idle")el.dataset.hvMotion="idle";
       timer=0;
       until=0;
     }
