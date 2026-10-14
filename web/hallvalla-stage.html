@@ -22,15 +22,15 @@
 </script>
 <script>
   // v181: esta página ES el juego lógico. index.html es el shell físico.
-  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20261013.266"});
+  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20261014.267"});
   document.documentElement.dataset.hvDesignStage="1366x636";
 </script>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20261013.266">
-<meta name="hallvalla-build" content="v8_MODULAR_20261013.266">
+<meta name="hallvalla-version" content="20261014.267">
+<meta name="hallvalla-build" content="v8_MODULAR_20261014.267">
 <meta name="hallvalla-build-name" content="Design Stage fijo 1366×636 · v192 arquitectura modular · canon v191 preservado">
-<link rel="stylesheet" href="styles.css?h=368bd225ba0a"/>
+<link rel="stylesheet" href="styles.css?h=79f4417ae47f"/>
 
 <link rel="icon" type="image/x-icon" href="assets/branding/hallvalla_favicon.ico?v=20260913.90">
 <link rel="icon" type="image/png" sizes="64x64" href="assets/branding/hallvalla_logo_64.png?v=20260913.90">
@@ -1364,6 +1364,7 @@
     <h2 id="pvpRankingTitle" class="pvp-ranking-title">TABLA DE LÍDERES</h2>
     <div id="pvpRankingOwnSummary" class="pvp-ranking-own-summary">Cargando tus estadísticas...</div>
     <div class="pvp-ranking-rules">Victoria +3 · Derrota −2 · Empate 0 · Matchmaking cerrado por liga</div>
+    <button id="pvpLeaguePathOpenBtn" type="button">CAMINO DE LIGAS · PROGRESO Y RECOMPENSAS</button>
     <div class="pvp-ranking-table-wrapper">
       <table class="pvp-ranking-table" aria-label="Clasificación PvP">
         <thead>
@@ -1377,6 +1378,23 @@
       </table>
     </div>
   </div>
+</div>
+
+<div id="pvpLeaguePathModal" class="hv-lp-overlay hidden" aria-hidden="true">
+  <section class="hv-lp-shell" role="dialog" aria-modal="true" aria-labelledby="pvpLeaguePathTitle">
+    <button id="pvpLeaguePathCloseBtn" class="hv-lp-close" type="button" aria-label="Cerrar camino de ligas">×</button>
+    <header class="hv-lp-titlebar"><small>HALLVALLA · PVP</small><h2 id="pvpLeaguePathTitle">CAMINO DE LIGAS</h2></header>
+    <div class="hv-lp-status"><strong id="pvpLeaguePathCurrent">Leyendo liga...</strong><b id="pvpLeaguePathPoints">—</b><span id="pvpLeaguePathNext">Próxima liga...</span></div>
+    <div id="pvpLeaguePathProgress" class="hv-lp-progress" role="progressbar" aria-label="Avance hacia la siguiente liga"><span id="pvpLeaguePathProgressFill"></span></div>
+    <div class="hv-lp-main">
+      <div class="hv-lp-left">
+        <div id="pvpLeaguePathNodes" class="hv-lp-nodes" aria-label="Secuencia de las doce ligas PvP"></div>
+        <div class="hv-lp-sectionhead">HITOS DE LA LIGA SELECCIONADA · 25% / 50% / 75% / 100%</div>
+        <div id="pvpLeaguePathRewards" class="hv-lp-rewards"></div>
+      </div>
+      <aside class="hv-lp-details"><div id="pvpLeaguePathSelectedInfo" class="hv-lp-selected"></div><p id="pvpLeaguePathRewardsNote"></p><small id="pvpLeaguePathAccountNote"></small></aside>
+    </div>
+  </section>
 </div>
 
 <div id="adventurePanel" class="overlay-panel hidden">

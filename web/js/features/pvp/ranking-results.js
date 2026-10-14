@@ -194,6 +194,109 @@ HALLVALLA · PVP RANKING / HISTORIAL PERSISTENTE · STEP 6I2
     }).join("");
   }
 
+  /* CAMINO DE LIGAS: UI declarativa derivada del ranking PvP verificado.
+     Sin timers, mutaciones de puntos, ni entrega prematura de premios. */
+  let pvpLeaguePathSnapshot=null;
+  let pvpLeaguePathSelection="";
+  const PVP_LEAGUE_ART_ROOT="assets/ui/pvp_leagues/";
+  const PVP_LEAGUE_REWARD_SLOTS=Object.freeze([
+    Object.freeze({percent:25,name:"Oro",icon:"assets/home/icon_gold.webp"}),
+    Object.freeze({percent:50,name:"Gemas",icon:"assets/home/icon_gems.webp"}),
+    Object.freeze({percent:75,name:"Fragmentos / piezas de Mina",icon:"assets/home/icon_fragments.webp"}),
+    Object.freeze({percent:100,name:"Pack de liga",icon:"assets/home/cartas_basicas.webp"})
+  ]);
+  function pvpLeagueQuarterMark(league,index,percent){
+    const next=PVP_LEAGUES[index+1]||null;
+    // En Valhalla no existe una siguiente división: los cuatro hitos
+    // finales son de llegada y dependen del umbral oficial de 1500.
+    if(!next)return league.min;
+    return league.min+Math.ceil((next.min-league.min)*percent/100);
+  }
+  function pvpLeagueIsOpen(){return !$("pvpLeaguePathModal")?.classList.contains("hidden");}
+  function pvpLeaguePathRewardCards(league,index,points){
+    const maxTier=index===PVP_LEAGUES.length-1;
+    return PVP_LEAGUE_REWARD_SLOTS.map(reward=>{
+      const threshold=pvpLeagueQuarterMark(league,index,reward.percent);
+      const achieved=points>=threshold;
+      const status=achieved?"Hito alcanzado":"Bloqueado";
+      return `<article class="hv-lp-reward ${achieved?"hv-lp-reward-reached":"hv-lp-reward-locked"}">
+        <span class="hv-lp-reward-percent">${maxTier?"FINAL":`${reward.percent}%`}</span>
+        <img src="${reward.icon}" alt="" loading="lazy">
+        <strong>${esc(reward.name)}</strong>
+        <small>${maxTier?`Al alcanzar ${threshold} pts`:`A los ${threshold} pts`}</small>
+        <span class="hv-lp-reward-status">${status}</span>
+      </article>`;
+    }).join("");
+  }
+  function renderPvpLeaguePath(){
+    const panel=$("pvpLeaguePathModal");
+    if(!panel||!pvpLeaguePathSnapshot)return;
+    const myUid=getMyUid();
+    const my=pvpLeaguePathSnapshot.byUid.get(myUid)||makeBlank(myUid,getMyFallbackName());
+    const points=Math.max(0,Math.floor(Number(my.points)||0));
+    const current=leagueForPoints(points);
+    const selectedIndex=Math.max(0,PVP_LEAGUES.findIndex(x=>x.key===pvpLeaguePathSelection));
+    const selected=PVP_LEAGUES[selectedIndex];
+    const selectedNext=PVP_LEAGUES[selectedIndex+1]||null;
+    const progressMax=current.nextMin;
+    const percent=progressMax===null?100:Math.max(0,Math.min(100,(points-current.min)/(progressMax-current.min)*100));
+    const name=$("pvpLeaguePathCurrent");if(name)name.textContent=`LIGA ACTUAL · ${current.name.toUpperCase()}`;
+    const score=$("pvpLeaguePathPoints");if(score)score.textContent=`${points.toLocaleString("es-ES")} puntos PvP`;
+    const next=$("pvpLeaguePathNext");if(next)next.textContent=progressMax===null?"Liga máxima alcanzada · Valhalla":`Próxima liga: ${current.nextName} · faltan ${Math.max(0,progressMax-points)} puntos`;
+    const fill=$("pvpLeaguePathProgressFill");if(fill)fill.style.width=`${percent.toFixed(2)}%`;
+    const track=$("pvpLeaguePathProgress");if(track){track.setAttribute("aria-valuenow",String(points));track.setAttribute("aria-valuemin",String(current.min));track.setAttribute("aria-valuemax",String(progressMax??points));}
+    const nodes=$("pvpLeaguePathNodes");if(nodes)nodes.innerHTML=PVP_LEAGUES.map((league,index)=>{
+      const unlocked=points>=league.min;
+      const active=league.key===current.key;
+      const selectedNode=league.key===selected.key;
+      const x=index<6?index+1:12-index;
+      const y=index<6?1:2;
+      return `<button type="button" class="hv-lp-node ${unlocked?"is-lit":"is-locked"} ${active?"is-active":""} ${selectedNode?"is-selected":""}" data-hv-league-key="${league.key}" style="grid-column:${x};grid-row:${y}" aria-pressed="${selectedNode}" aria-label="Liga ${esc(league.name)}, ${league.min} puntos mínimos, ${unlocked?"alcanzada":"bloqueada"}">
+        <img class="hv-lp-node-icon" src="${PVP_LEAGUE_ART_ROOT}${league.key}_${unlocked?"lit":"locked"}.webp?v=267" alt="" draggable="false" loading="lazy">
+        <strong>${esc(league.name)}</strong>${active?'<em>ACTUAL</em>':(!unlocked?'<span aria-hidden="true">🔒</span>':'')}
+      </button>`;
+    }).join("");
+    const info=$("pvpLeaguePathSelectedInfo");
+    if(info){
+      const arrived=points>=selected.min;
+      const remain=Math.max(0,selected.min-points);
+      const selectedProgress=selectedNext?`${Math.min(100,Math.max(0,(points-selected.min)/(selectedNext.min-selected.min)*100)).toFixed(0)}% de esta liga completado`:"Última liga";
+      info.innerHTML=`<img src="${PVP_LEAGUE_ART_ROOT}${selected.key}_${arrived?"lit":"locked"}.webp?v=267" alt=""><div><small>ARENA SELECCIONADA</small><h3>${esc(selected.name)}</h3><p>Requiere ${selected.min.toLocaleString("es-ES")} puntos · ${arrived?"Alcanzada":`faltan ${remain} puntos`}</p><small>${selectedNext?`Siguiente: ${selectedNext.name} (${selectedNext.min} pts) · ${selectedProgress}`:"Valhalla es la liga máxima"}</small></div>`;
+    }
+    const rewards=$("pvpLeaguePathRewards");if(rewards)rewards.innerHTML=pvpLeaguePathRewardCards(selected,selectedIndex,points);
+    const note=$("pvpLeaguePathRewardsNote");if(note)note.textContent="Vista de hitos: cantidades y reclamación de premios pendientes de configuración. El camino no concede recursos todavía.";
+    const login=$("pvpLeaguePathAccountNote");if(login)login.textContent=myUid?"Progreso tomado del ranking PvP verificado.":"Inicia sesión para ver tus puntos reales. La vista sin sesión parte de Piedra.";
+  }
+  async function openPvpLeaguePath(){
+    const modal=$("pvpLeaguePathModal");if(!modal)return false;
+    modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");
+    const state=$("pvpLeaguePathAccountNote");if(state)state.textContent="Leyendo clasificación PvP...";
+    try{
+      pvpLeaguePathSnapshot=await loadRanking({force:true});
+      pvpLeaguePathSelection=leagueForPoints((pvpLeaguePathSnapshot.byUid.get(getMyUid())||{}).points||0).key;
+      renderPvpLeaguePath();
+      return true;
+    }catch(error){
+      console.error("[HallValla][Camino PvP] No se pudo leer el ranking:",error);
+      if(state)state.textContent="No se pudo leer la clasificación. Inténtalo nuevamente.";
+      return false;
+    }
+  }
+  function closePvpLeaguePath(){
+    const modal=$("pvpLeaguePathModal");
+    if(modal){modal.classList.add("hidden");modal.setAttribute("aria-hidden","true");}
+  }
+  $("pvpLeaguePathOpenBtn")?.addEventListener("click",()=>{void openPvpLeaguePath();});
+  $("pvpLeaguePathCloseBtn")?.addEventListener("click",closePvpLeaguePath);
+  $("pvpLeaguePathModal")?.addEventListener("click",ev=>{if(ev.target===ev.currentTarget)closePvpLeaguePath();});
+  $("pvpLeaguePathNodes")?.addEventListener("click",ev=>{
+    const node=ev.target.closest?.("[data-hv-league-key]");
+    if(!node)return;
+    pvpLeaguePathSelection=node.dataset.hvLeagueKey;
+    renderPvpLeaguePath();
+  });
+  document.addEventListener("keydown",ev=>{if((ev.key==="Escape"||ev.key==="Backspace")&&pvpLeagueIsOpen()){ev.preventDefault();closePvpLeaguePath();}});
+
   async function openRanking(){
     const modal=$("pvpRankingModal");
     if(!modal)return false;
