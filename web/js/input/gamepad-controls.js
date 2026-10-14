@@ -545,6 +545,13 @@ async function hvGamepadActivateBoard(){
   if(!hvGamepadInitBoardCursor()||typeof cellClick!=="function")return;
   const x=Number(hvGamepadState.boardX),y=Number(hvGamepadState.boardY);
   if(typeof flashBoardSelectedCell==="function")flashBoardSelectedCell(x,y);
+  const unit=typeof getUnitAt==="function"?getUnitAt(x,y):null;
+  if(unit&&typeof showUnit==="function"&&!(typeof shouldDirectBoardTarget==="function"&&shouldDirectBoardTarget())){
+    showUnit(unit);
+    hvGamepadState.mode="board";
+    requestAnimationFrame(hvGamepadSyncBoardCursor);
+    return;
+  }
   try{await cellClick(x,y);}catch(error){console.warn("[HallValla][GAMEPAD] A tablero:",error);}
   hvGamepadState.mode="board";
   requestAnimationFrame(hvGamepadSyncBoardCursor);
@@ -969,7 +976,12 @@ function hvGamepadHandleButtons(gp){
     }
     if(pressed.B&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("cancel","gamepad");
     if(pressed.X&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice1","gamepad");
-    if(pressed.A&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice2","gamepad");
+    if(pressed.A){
+      const unitAtCursor=(level==="root"&&hvGamepadState.mode==="board"&&typeof getUnitAt==="function"&&hvGamepadInitBoardCursor())
+        ?getUnitAt(Number(hvGamepadState.boardX),Number(hvGamepadState.boardY)):null;
+      if(unitAtCursor&&typeof showUnit==="function")showUnit(unitAtCursor);
+      else if(typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice2","gamepad");
+    }
     if(pressed.Y&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice3","gamepad");
     if(pressed.LT&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("pagePrev","gamepad");
     if(pressed.RT&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("pageNext","gamepad");

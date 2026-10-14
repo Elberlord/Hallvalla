@@ -520,7 +520,7 @@ function ensureBattleBoardDelegation(grid){
       if(handleDirectBoardTargetEvent(ev,x,y))return;
       ev.stopPropagation();
       const u=getUnit(unitEl.dataset.unitId);
-      if(u)openUnitContextMenu(u,x,y);
+      if(u)showUnit(u);
       return;
     }
     const cell=ev.target&&ev.target.closest?ev.target.closest(".cell"):null;
@@ -777,7 +777,7 @@ function ensureLeaderBasesLayer(){
       ev.preventDefault();
       ev.stopPropagation();
       flashBoardSelectedCell(x,y);
-      if(u)openUnitContextMenu(u,x,y);
+      if(u)showUnit(u);
     },true);
     layer.addEventListener("contextmenu",ev=>{
       const hit=ev.target&&ev.target.closest?ev.target.closest(".leader-base,.leader-base-hitbox,.leader-cell-proxy"):null;

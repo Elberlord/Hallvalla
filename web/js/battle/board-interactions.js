@@ -318,14 +318,8 @@ function openUnitContextMenu(u,x,y){
     setHint("Presencia Oculta · Sigilo: la identidad, estadísticas y DET de esta unidad están ocultos para el rival.");
     return;
   }
-  unitContextSelection={unitId:u.id,x,y};
-  selectedCard=null;
-  selectedUnitId=u.id;
-  highlights=[];
-  highlightType="move";
-  hideCardInspectModal();
-  render();
-  setHint(`${u.name}: DET disponible.`);
+  hideUnitContextMenu();
+  showUnit(u);
 }
 const hallvallaUnitContextDelegatedMenus=new WeakSet();
 function ensureUnitContextMenuDelegation(menu){
