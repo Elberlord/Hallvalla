@@ -1808,11 +1808,19 @@ function isArcherWeaponUnitCardLike(card){
     || name.includes("tiradora")
     || name.includes("tirador");
 }
+function getCanonicalDragonCompanionRange(card){
+  const key=String(card?.key||"");
+  if(!/^(young|adult)_(lightning|fire|ice)_dragon$/.test(key))return null;
+  const template=typeof getDragonCompanionCardTemplate==="function"?getDragonCompanionCardTemplate(key):null;
+  const range=Number(template?.range||0);
+  return Number.isFinite(range)&&range>0?range:null;
+}
 function hasExplicitRangedWeapon(card){
   if(!card||card.type!=="unit")return false;
   const key=String(card.key||"").toLowerCase();
   const cls=String(getWeaponClassForCard(card)||"").toLowerCase();
-  return !!card.rangedWeapon
+  return getCanonicalDragonCompanionRange(card)!==null
+    || !!card.rangedWeapon
     || cls==="mage"
     || isArcherWeaponUnitCardLike(card)
     || EXPLICIT_NON_BOW_RANGED_UNIT_KEYS.has(key);
@@ -1852,6 +1860,8 @@ function applyArcherRangeRule(card){
 }
 function getArcherRangeBonus(card){return isArcherWeaponUnitCardLike(card)&&!card.archerRangeBonusApplied?1:0;}
 function getCardDisplayRange(card){
+  const dragonRange=getCanonicalDragonCompanionRange(card);
+  if(dragonRange!==null)return dragonRange;
   if(isLanceUnitCardLike(card))return 1;
   const cls=String(getWeaponClassForCard(card)||"").toLowerCase();
   if(card?.type==="unit"&&MELEE_RANGE_ONE_CLASSES.has(cls)&&!hasExplicitRangedWeapon(card))return 1;

@@ -12,18 +12,18 @@ const DRAGON_GROWTH_KILL_LEDGER_KEY="hallvalla_dragon_growth_kill_ledger_v2";
 const DRAGON_COMPANION_STATS=Object.freeze({
   lightning:Object.freeze({
     baby:Object.freeze({hp:6,guard:2,atk:5,dex:1,agi:9,mov:2,range:3}),
-    young:Object.freeze({hp:24,guard:8,atk:10,dex:2,agi:12,mov:3,range:4}),
-    adult:Object.freeze({hp:60,guard:16,atk:18,dex:4,agi:14,mov:4,range:5})
+    young:Object.freeze({hp:24,guard:8,atk:10,dex:2,agi:12,mov:3,range:2}),
+    adult:Object.freeze({hp:60,guard:16,atk:18,dex:4,agi:14,mov:4,range:3})
   }),
   fire:Object.freeze({
     baby:Object.freeze({hp:8,guard:3,atk:6,dex:1,agi:7,mov:1,range:3}),
-    young:Object.freeze({hp:30,guard:10,atk:11,dex:2,agi:9,mov:2,range:4}),
-    adult:Object.freeze({hp:78,guard:20,atk:20,dex:4,agi:10,mov:3,range:5})
+    young:Object.freeze({hp:30,guard:10,atk:11,dex:2,agi:9,mov:2,range:2}),
+    adult:Object.freeze({hp:78,guard:20,atk:20,dex:4,agi:10,mov:3,range:3})
   }),
   ice:Object.freeze({
     baby:Object.freeze({hp:10,guard:4,atk:4,dex:1,agi:6,mov:1,range:3}),
-    young:Object.freeze({hp:36,guard:12,atk:9,dex:2,agi:7,mov:1,range:4}),
-    adult:Object.freeze({hp:108,guard:24,atk:16,dex:4,agi:8,mov:2,range:5})
+    young:Object.freeze({hp:36,guard:12,atk:9,dex:2,agi:7,mov:1,range:2}),
+    adult:Object.freeze({hp:108,guard:24,atk:16,dex:4,agi:8,mov:2,range:3})
   })
 });
 

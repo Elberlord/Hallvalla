@@ -19,7 +19,8 @@ function getUnitAttackRange(u){
   if(isLanceUnitCardLike(u))return 1;
   const cls=String(getWeaponClassForCard(u)||"").toLowerCase();
   if(!u?.leader&&MELEE_RANGE_ONE_CLASSES.has(cls)&&!hasExplicitRangedWeapon(u))return 1;
-  const baseRange=Number(u?.range||1)||1;
+  const dragonRange=getCanonicalDragonCompanionRange(u);
+  const baseRange=dragonRange===null?(Number(u?.range||1)||1):dragonRange;
   const bonus=getLeaderBonus(u);
   const arcaneLink=getArcaneAdeptLinkBonus(u);
   let range=baseRange+Number(bonus.range||0)+Number(arcaneLink.range||0)+Number(getEquipmentRangeBonus(u)||0)-Number(u?.tempRangeDebuff||0)-getRtTrapDebuff(u,"range");
