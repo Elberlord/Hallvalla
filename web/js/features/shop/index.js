@@ -325,6 +325,7 @@ function syncShopPackPostRevealControls(){
   }
   const revealed=!!(grid&&!grid.classList.contains("hidden")&&grid.children.length);
   if(!revealed)return;
+  if(shopPackRevealObserver){shopPackRevealObserver.disconnect();shopPackRevealObserver=null;}
   if(confirm){confirm.textContent="Ir a colección";confirm.classList.remove("hidden");}
   if(next){next.textContent="Seguir comprando";next.classList.remove("hidden");}
 }
