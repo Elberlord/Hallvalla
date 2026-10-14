@@ -22,13 +22,13 @@
 </script>
 <script>
   // v181: esta página ES el juego lógico. index.html es el shell físico.
-  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20261014.267"});
+  globalThis.__HALLVALLA_DESIGN_STAGE__=Object.freeze({width:1366,height:636,build:"20261014.268"});
   document.documentElement.dataset.hvDesignStage="1366x636";
 </script>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20261014.267">
-<meta name="hallvalla-build" content="v8_MODULAR_20261014.267">
+<meta name="hallvalla-version" content="20261014.268">
+<meta name="hallvalla-build" content="v8_MODULAR_20261014.268">
 <meta name="hallvalla-build-name" content="Design Stage fijo 1366×636 · v192 arquitectura modular · canon v191 preservado">
 <link rel="stylesheet" href="styles.css?h=79f4417ae47f"/>
 
@@ -1380,6 +1380,17 @@
   </div>
 </div>
 
+<style>
+.hv-lp-claim-btn{display:block;width:94%;margin:8px auto;padding:10px 12px;border:1px solid #e5bc6a;border-radius:9px;color:#231408;font-weight:800;background:linear-gradient(#f4d892,#be8743);cursor:pointer;box-shadow:0 0 12px #d8994352}
+.hv-lp-claim-btn:disabled{opacity:.5;cursor:default;box-shadow:none}
+.hv-lp-reward-available{border-color:#dba34f!important;background:linear-gradient(#322710,#181712)!important}
+.hv-lp-prize-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000c;z-index:95}
+.hv-lp-prize-overlay.hidden{display:none!important}
+.hv-lp-prize-dialog{position:relative;min-width:400px;max-width:680px;max-height:86%;overflow:auto;background:linear-gradient(140deg,#121c23,#090b10);border:2px solid #d0a45b;box-shadow:0 0 45px #000;border-radius:16px;padding:20px;color:#f7e3b5}
+.hv-lp-prize-dialog h3{margin:0 44px 14px 0;color:#f5c976;font-size:25px}
+.hv-lp-prize-dialog p{padding:4px 0;margin:0;font-size:13px;border-bottom:1px solid #80643a44}
+.hv-lp-prize-close{position:absolute;top:11px;right:11px;background:#40240e;color:#ffe3a6;border:1px solid #dba34f;border-radius:7px;font-size:24px;width:38px;height:38px;cursor:pointer}
+</style>
 <div id="pvpLeaguePathModal" class="hv-lp-overlay hidden" aria-hidden="true">
   <section class="hv-lp-shell" role="dialog" aria-modal="true" aria-labelledby="pvpLeaguePathTitle">
     <button id="pvpLeaguePathCloseBtn" class="hv-lp-close" type="button" aria-label="Cerrar camino de ligas">×</button>
@@ -1392,7 +1403,14 @@
         <div class="hv-lp-sectionhead">HITOS DE LA LIGA SELECCIONADA · 25% / 50% / 75% / 100%</div>
         <div id="pvpLeaguePathRewards" class="hv-lp-rewards"></div>
       </div>
-      <aside class="hv-lp-details"><div id="pvpLeaguePathSelectedInfo" class="hv-lp-selected"></div><p id="pvpLeaguePathRewardsNote"></p><small id="pvpLeaguePathAccountNote"></small></aside>
+      <aside class="hv-lp-details"><div id="pvpLeaguePathSelectedInfo" class="hv-lp-selected"></div><button type="button" id="pvpLeagueClaimAllBtn" class="hv-lp-claim-btn">Cargando premios...</button><p id="pvpLeaguePathRewardsNote"></p><small id="pvpLeaguePathAccountNote"></small></aside>
+    </div>
+    <div id="pvpLeaguePrizeModal" class="hv-lp-prize-overlay hidden" aria-hidden="true">
+      <div class="hv-lp-prize-dialog" role="dialog" aria-modal="true" aria-labelledby="pvpLeaguePrizeTitle">
+        <button type="button" id="pvpLeaguePrizeCloseBtn" class="hv-lp-prize-close" aria-label="Cerrar premios">×</button>
+        <h3 id="pvpLeaguePrizeTitle">Premios de liga</h3>
+        <div id="pvpLeaguePrizeBody"></div>
+      </div>
     </div>
   </section>
 </div>
