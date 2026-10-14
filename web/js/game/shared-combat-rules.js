@@ -854,6 +854,7 @@ function grantSimoStealthAfterKill(units,attacker,defender,defenderFell){
 }
 function canUnitAttackTarget(attacker,target){
   if(!attacker||!target)return true;
+  if((target.aerial||target.flight)&&!canUnitAttackAerialTarget(attacker,target))return false;
   if(attacker.key==="geisha_encubierta"&&target.leader)return false;
   return true;
 }
@@ -978,6 +979,7 @@ function canLanceFirstStrike(attacker,defender,mods={}){
   if(!attacker||!defender||attacker.leader||defender.leader)return false;
   if(mods&&mods.falconDive)return false;
   if(!isLanceUnitCardLike(defender))return false;
+  if(!canUnitAttackTarget(defender,attacker))return false;
   if(Number(defender.lanceFirstStrikeCooldownUntil||0)>Date.now())return false;
   if(defender.lanceFirstStrikeUsedWindow)return false;
   if((defender.noCounterWindowKey&&defender.noCounterWindowKey===publicState?.combatWindowKey)||isRtTrapLocked(defender,"counter"))return false;
@@ -1274,7 +1276,7 @@ function resolveAfricanElephantCharge(units,attacker,defender,hit,mods={}){
     const sideVectors=[{x:-dy,y:dx},{x:dy,y:-dx}];
     for(const vec of sideVectors){
       const sx=origin.x+vec.x,sy=origin.y+vec.y;
-      const side=out.find(u=>u.owner!==attacker.owner&&canReceiveUntargetedAreaEffect(u)&&u.x===sx&&u.y===sy);
+      const side=out.find(u=>u.owner!==attacker.owner&&canReceiveUntargetedAreaEffect(u,attacker)&&u.x===sx&&u.y===sy);
       if(!side)continue;
       sideTargetIds.push(side.id);
       const sideMods={defenderAgi:-4};

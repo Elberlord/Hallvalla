@@ -289,7 +289,7 @@ function applyMiyamotoHonesakiki(units){
     const damage=Math.max(0,Math.round(effectiveAtk(musashi)*2));
     out=out.map(u=>{
       if(u.id===musashi.id)return {...u,honesakikiUsed:true};
-      if(u.owner===musashi.owner||u.leader||!canReceiveUntargetedAreaEffect(u)||dist(musashi,u)>1)return u;
+      if(u.owner===musashi.owner||u.leader||!canReceiveUntargetedAreaEffect(u,musashi)||dist(musashi,u)>1)return u;
       let damaged=applyGuardDamage(u,damage,0,0);
       damaged={...damaged,damagedThisWindow:(damaged.lastHpLoss||0)>0||!!damaged.damagedThisWindow,honesakikiSource:musashi.name||"Miyamoto Musashi"};
       delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
@@ -641,6 +641,7 @@ function resolveHallvallaPikeWall(attacker,defender,units,now=Date.now()){
 
   if(
     !hallvallaHasAdjacentLanceAlly(defender,out)||
+    !canUnitAttackTarget(defender,attacker)||
     !hallvallaIsFrontalCharge(attacker,defender)
   ){
     return{
@@ -1218,7 +1219,7 @@ async function resolveSharedAttackOutcome({
   const arcaneAdeptRangedCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="arcane_adept"&&declaredRanged;
   const miyamotoMeleeCounter=defenderAfter&&attackerAfter&&defenderAfter.key==="miyamoto_musashi"&&declaredMelee&&(!hit.hit||hpLoss>0);
   const counterLocked=!!((defenderAfter?.noCounterWindowKey&&defenderAfter.noCounterWindowKey===combatWindowKey)||isRtTrapLocked(defenderAfter,"counter"));
-  const canSpecialCounter=defenderAfter&&attackerAfter&&!mods.noCounter&&!counterLocked&&hvCardReady(defenderAfter,"respuesta_contra")&&(arcaneAdeptRangedCounter||miyamotoMeleeCounter);
+  const canSpecialCounter=defenderAfter&&attackerAfter&&!mods.noCounter&&!counterLocked&&canUnitAttackTarget(defenderAfter,attackerAfter)&&hvCardReady(defenderAfter,"respuesta_contra")&&(arcaneAdeptRangedCounter||miyamotoMeleeCounter);
   if(defenderAfter&&attackerAfter&&canSpecialCounter){
     const counterDefenseRemainder=runInState(()=>getCounterDefenseRemainder(a,d,mods),{units,legendaryTraps:resolvedLegendaryTraps,beastTraps});
     const isMiyamotoCounter=!!miyamotoMeleeCounter;

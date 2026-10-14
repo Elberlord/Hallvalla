@@ -269,7 +269,7 @@ function isBeastUnit(u){return !!u&&!u.leader&&(u.beast===true||["honey_badger",
 function isStealthedUnit(u){return !!u&&!u.leader&&(u.stealth===true||u.hidden===true)&&!u.revealed;}
 function canTargetStealth(source,target){return !isStealthedUnit(target)||source?.trap==="reveal_stealth"||source?.revealStealth;}
 // Regla global: Sigilo impide ser seleccionado directamente, pero NO protege contra daño de área/sector/global que cubra la casilla de la unidad.
-function canReceiveUntargetedAreaEffect(target){return !!target&&Number(target.hp||0)>0;}
+function canReceiveUntargetedAreaEffect(target,attacker=null){return !!target&&Number(target.hp||0)>0&&(!attacker||!(target.aerial||target.flight)||canUnitAttackAerialTarget(attacker,target));}
 function revealUnit(u,reason="revelada"){return isStealthedUnit(u)?{...u,revealed:true,stealth:false,text:`${u.text||""} Revelada por ${reason}.`.trim()}:u;}
 function revealStealthInRadius(units,owner,center,radius,reason="detección"){let count=0;const out=(units||[]).map(u=>{if(u.owner!==owner&&isStealthedUnit(u)&&dist(u,center)<=radius){count++;return revealUnit(u,reason);}return u;});return{units:out,count};}
 function applyMongolExplorerAura(units){const list=Array.isArray(units)?units:[];const mongols=list.filter(u=>u&&u.key==="mongol_explorer"&&Number(u.hp||0)>0&&!u.leader);if(!mongols.length)return{units:list,count:0};let count=0;const out=list.map(u=>{if(!u||u.leader||!isStealthedUnit(u))return u;const revealer=mongols.find(m=>m.owner!==u.owner&&dist(m,u)<=2);if(!revealer)return u;count++;return revealUnit(u,"Ojos de la estepa");});return{units:out,count};}
@@ -1837,13 +1837,13 @@ function canUnitAttackAerialTarget(attacker,target=null){
   try{if(hasExplicitRangedWeapon(attacker))return true;}catch(_){ }
   try{
     const cls=String(getWeaponClassForCard(attacker)||"").toLowerCase();
-    if(cls==="bow"||cls==="mage")return true;
+    if(cls==="mage")return true;
+    if(cls==="bow"){
+      const declared=String(attacker.weaponClass||attacker.tacticalWeaponClass||"").toLowerCase();
+      const known=typeof WEAPON_CLASS_BY_KEY!=="undefined"?String(WEAPON_CLASS_BY_KEY[String(attacker.key||"").toLowerCase()]||"").toLowerCase():"";
+      if(declared==="bow"||known==="bow")return true;
+    }
   }catch(_){ }
-  // Compatibilidad con diseños heredados de largo alcance que ya podían golpear vuelo.
-  try{
-    const rg=typeof getUnitAttackRange==="function"?Number(getUnitAttackRange(attacker)||0):Number(attacker.range||0);
-    if(rg>3)return true;
-  }catch(_){if(Number(attacker.range||0)>3)return true;}
   return false;
 }
 function applyArcherRangeRule(card){

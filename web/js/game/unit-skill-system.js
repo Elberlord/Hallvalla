@@ -716,7 +716,7 @@ function applyHallvallaUnitSkillAttackEffects(units,attacker,defender,context={}
       if(!primaryAdjacent)continue;
       adjacentSweepTargets=out.filter(u=>{
         if(!u||u.id===liveA.id||u.owner===liveA.owner||Number(u.hp||0)<=0)return false;
-        if(typeof canReceiveUntargetedAreaEffect==="function"&&!canReceiveUntargetedAreaEffect(u))return false;
+        if(typeof canReceiveUntargetedAreaEffect==="function"&&!canReceiveUntargetedAreaEffect(u,liveA))return false;
         try{return dist(liveA,u)<=1;}catch(_){return false;}
       });
       if(adjacentSweepTargets.length<2)continue;
@@ -771,7 +771,7 @@ function applyHallvallaUnitSkillAttackEffects(units,attacker,defender,context={}
       const percent=String(skill.scale||"").includes("%")?Math.max(0.15,Math.min(1,Number(scaled.value||50)/100)):.45;
       const raw=Math.max(1,Math.round((typeof effectiveAtk==="function"?effectiveAtk(liveA):Number(liveA.atk||1))*percent));
       if(isAdjacentSweep||easySplash){
-        const secondaryIds=new Set((isAdjacentSweep?adjacentSweepTargets:out.filter(u=>u&&u.owner!==liveA.owner&&u.id!==liveD.id&&u.hp>0&&typeof dist==="function"&&dist(u,liveD)<=1).slice(0,2)).filter(u=>u.id!==liveD.id).map(u=>u.id));
+        const secondaryIds=new Set((isAdjacentSweep?adjacentSweepTargets:out.filter(u=>u&&u.owner!==liveA.owner&&u.id!==liveD.id&&u.hp>0&&typeof dist==="function"&&dist(u,liveD)<=1&&canUnitAttackTarget(liveA,u)).slice(0,2)).filter(u=>u.id!==liveD.id).map(u=>u.id));
         if(easySplash&&secondaryIds.size===0)secondaryIds.add(liveD.id);
         const hitNames=[];
         out=out.map(u=>{
