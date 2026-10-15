@@ -853,6 +853,24 @@ function getUnitMasteryRank(entity){
   }
   return getUnitMasteryRankFromKills(getUnitMasteryRecord(entity).kills);
 }
+// Nivel informativo compartido por campo y DET. NO modifica atributos de combate.
+// Para el propietario prevalece su maestria registrada; para rivales se respeta
+// el rango sincronizado (o la progresion propia del enemigo en Aventura).
+function getUnitDisplayMasteryRank(entity){
+  if(!entity || entity.leader)return 1;
+  const clampRank=value=>Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Math.floor(Number(value)||1)));
+  const serialized=clampRank(entity.masteryRank);
+  const remote=entity.owner!=null && typeof myPlayer!=="undefined" && myPlayer!=null && Number(entity.owner)!==Number(myPlayer);
+  if(remote)return clampRank(getUnitMasteryRank(entity));
+  if(typeof isUnitServiceProgression==="function" && isUnitServiceProgression(entity))return serialized;
+  if(typeof globalThis.getDragonDetProgressData==="function"){
+    // Los dragones conservan su presentacion especializada en DET.
+    const dragon=globalThis.getDragonDetProgressData?.(entity);
+    if(dragon)return clampRank(entity.masteryRank||1);
+  }
+  const record=getUnitMasteryRecord(entity);
+  return clampRank(getUnitMasteryRankFromKills(record?.kills||0));
+}
 function getUnitMasteryDexBonusByRank(rank){return Math.max(0,(Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(rank)||1))-1)*2);}
 
 function getUnitMasteryProgressText(entity){

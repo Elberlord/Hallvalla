@@ -277,7 +277,7 @@ function getUnitTopLeftText(u){
     return `${Number(st.honor||0)}/${Number(st.maxHonor||0)}`;
   }
   if(isUnitServiceProgression(u))return String(getUnitServicePoints(u));
-  return romanUnitRank(getUnitMasteryRank(u));
+  return romanUnitRank(getUnitDisplayMasteryRank(u));
 }
 function getUnitTopLeftTitle(u){
   if(!u)return "";
@@ -286,7 +286,7 @@ function getUnitTopLeftTitle(u){
     return `${getResourceLabel(u.owner)} disponible: ${Number(st.honor||0)}/${Number(st.maxHonor||0)}`;
   }
   if(isUnitServiceProgression(u))return `Puntos de servicio de ${u.name}: ${getUnitServicePoints(u)}. Purificación se desbloquea en 50 y Resurrección en 100. Esta progresión no usa bajas ni concede Vida máxima.`;
-  const rank=getUnitMasteryRank(u);
+  const rank=getUnitDisplayMasteryRank(u);
   const bonus=typeof getUnitMasteryDexBonusByRank==="function"?getUnitMasteryDexBonusByRank(rank):0;
   return `Rango de maestría de ${u.name}: ${romanUnitRank(rank)} · ${getUnitMasteryProgressText(u)} · Bonus actual: +${bonus} DX. Máximo: Nivel ${UNIT_MASTERY_MAX_RANK} (${romanUnitRank(UNIT_MASTERY_MAX_RANK)}).`;
 }

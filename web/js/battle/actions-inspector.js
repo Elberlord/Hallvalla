@@ -1015,7 +1015,7 @@ function getUnifiedDetLevelDisplayData(entity){
     }
     const record=getUnitMasteryRecord(entity);
     const kills=Math.max(0,Math.floor(Number(record?.kills||0)));
-    const rank=Math.max(1,Number(getUnitMasteryRankFromKills(kills)||1));
+    const rank=Math.max(1,Number(getUnitDisplayMasteryRank(entity)||1));
     const maxRank=typeof UNIT_MASTERY_MAX_RANK==='number'?UNIT_MASTERY_MAX_RANK:45;
     const rankText=typeof romanUnitRank==='function'?romanUnitRank(rank):String(rank);
     if(rank>=maxRank){
