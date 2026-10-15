@@ -1380,7 +1380,7 @@ async function saveCurrentDeck(){
   await saveDeck(currentDeckDraft);
   savePrincipalKeys([]);
   closeDeckBuilder();
-  hvAlert(`Mazo guardado: Nivel ${leaderLevel} · Tier ${leaderTier} · ${requiredDeckSize} cartas. Todas las cartas forman parte del mazo normal; ya no existen Personajes Principales.`,"Mazo guardado");
+  hvAlert("","Mazo guardado");
 }
 
 function getNotificationState(){

@@ -20,7 +20,7 @@ function hvDialog(message,{title="Información",confirmText="Aceptar",cancelText
     const modal=ensureHallVallaModal();
     const titleEl=$("hvModalTitle"),messageEl=$("hvModalMessage"),actions=$("hvModalActions");
     if(titleEl)titleEl.textContent=title;
-    if(messageEl)messageEl.textContent=message;
+    if(messageEl){messageEl.textContent=message;messageEl.hidden=!String(message||"").trim();}
     if(actions){
       actions.innerHTML="";
       if(showCancel){
