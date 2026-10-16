@@ -1668,29 +1668,37 @@ function clearVeilCurseStatus(unit){
 }
 function applyVeilCurseAfterHpDamage(units,source,target,hpLoss){
   const out=[...(units||[])];
-  if(!source||source.key!=="morgana"||Number(hpLoss||0)<=0||isVeilCurseForbiddenTarget(target))return{units:out,applied:false,text:"",statusFxEvent:null};
+  if(!source||source.key!=="morgana"||Number(hpLoss||0)<=0||isVeilCurseForbiddenTarget(target))return {units:out,applied:false,text:"",statusFxEvent:null};
+  const liveSource=out.find(u=>u.id===source.id&&Number(u.hp||0)>0);
   const liveTarget=out.find(u=>u.id===target.id&&Number(u.hp||0)>0);
-  if(!liveTarget||hasVeilCurse(liveTarget))return{units:out,applied:false,text:"",statusFxEvent:null};
-  const combatWindowKey=String(publicState?.combatWindowKey||"");
+  if(!liveSource||!liveTarget||hasVeilCurse(liveTarget)||!hvCardReady(liveSource,"condena_morgana"))return {units:out,applied:false,text:"",statusFxEvent:null};
   const cursed={...liveTarget,
     veilCurseCyclesRemaining:VEIL_CURSE_START_COUNT,
-    veilCurseSourceId:String(source.id||""),
-    veilCurseSourceKey:String(source.key||"morgana"),
-    veilCurseSourceName:String(source.name||"Morgana"),
-    veilCurseSourceOwner:Number(source.owner||0),
-    veilCurseSourcePortrait:String(source.portrait||CARD_PORTRAITS.morgana||""),
-    veilCurseSourceRarity:String(source.rarity||"Épica"),
-    veilCurseAppliedWindowKey:combatWindowKey
+    veilCurseSourceId:String(liveSource.id||""),
+    veilCurseSourceKey:"morgana",
+    veilCurseSourceName:String(liveSource.name||"Morgana"),
+    veilCurseSourceOwner:Number(liveSource.owner||0),
+    veilCurseSourcePortrait:String(liveSource.portrait||CARD_PORTRAITS.morgana||""),
+    veilCurseSourceRarity:String(liveSource.rarity||"Épica"),
+    veilCurseAppliedWindowKey:""
   };
-  const nextUnits=out.map(u=>u.id===liveTarget.id?cursed:u);
-  return{
-    units:nextUnits,
-    applied:true,
-    text:` Cuenta regresiva mortal: ${liveTarget.name} queda marcada con 3.`,
-    statusFxEvent:makeStatusFxEvent("curse_apply",cursed,0)
-  };
+  const next=out.map(u=>u.id===liveTarget.id?cursed:u.id===liveSource.id?hvCardMark(u,"condena_morgana"):u);
+  return {units:next,applied:true,text:" Condena de Morgana: "+liveTarget.name+" queda maldita (3 acciones). Recarga: 30 s.",statusFxEvent:makeStatusFxEvent("curse_apply",cursed,0)};
 }
 
+// La víctima pierde una cuenta solo cuando realmente ataca, se desplaza o usa una habilidad.
+// No se invoca desde la actualización interna de 10 s ni desde los ticks de estados.
+function hvAdvanceVeilCurseOnAction(units,unitId,actionLabel="acción"){
+  const list=[...(units||[])],target=list.find(u=>u&&String(u.id)===String(unitId)&&Number(u.hp||0)>0);
+  if(!target||!hasVeilCurse(target))return {units:list,changed:false,fallen:false,text:""};
+  const remaining=Math.max(0,Math.round(Number(target.veilCurseCyclesRemaining||0))-1);
+  if(remaining===0){
+    return {units:list.filter(u=>String(u.id)!==String(target.id)),changed:true,fallen:true,fallenId:target.id,
+      text:" Condena de Morgana: "+target.name+" completa su tercera acción y cae derrotada."};
+  }
+  return {units:list.map(u=>String(u.id)===String(target.id)?{...u,veilCurseCyclesRemaining:remaining}:u),
+    changed:true,fallen:false,text:" Condena de Morgana: "+target.name+" realiza "+actionLabel+"; quedan "+remaining+" acciones."};
+}
 // v7EO - Identificación táctica de unidades de espada.
 // 20260909.18: la espada ya no concede Guardia base; GD queda reservada a armadura/cobertura física.
 function applySwordGuardRule(card){

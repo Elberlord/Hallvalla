@@ -903,6 +903,13 @@ async function hallvallaRtAutoGenericEffect(caster,now){
   const beforeIds=new Set(units.map(u=>u.id));for(const u of (result.units||[])){if(!beforeIds.has(u.id)&&u.owner===caster.owner)hallvallaRtRememberSummon(caster.owner,u);}
   return true;
 }
+async function hallvallaRtVeilAfterSupport(caster){
+  if(typeof hvAdvanceVeilCurseOnAction!=="function")return;
+  const current=[...(publicState?.units||[])];
+  const progressed=hvAdvanceVeilCurseOnAction(current,caster.id,"una habilidad");
+  if(progressed.changed)await updatePublic({units:progressed.units,
+    log:[progressed.text,...(publicState?.log||[])].slice(0,18)});
+}
 async function hallvallaRtSupportTick(now){
   const units=[...(publicState?.units||[])];
   for(const unit of units){
@@ -916,11 +923,19 @@ async function hallvallaRtSupportTick(now){
         if(now-last>=1000){hallvallaRtState.supportAt.set(retryKey,now);await updatePublic({units:liveUnits});}
       }
     }
-    if(typeof globalThis.hvSimpleAutoBuffSkill==="function"&&await globalThis.hvSimpleAutoBuffSkill(unit,now))continue;
-    if(unit.key==="acolyte_healer"||unit.healer){await hallvallaRtAutoAcolyte(unit,now);continue;}
-    if(unit.key==="ericto"||unit.nigromante){await hallvallaRtAutoEricto(unit,now);continue;}
-    if(typeof globalThis.hallvallaRtAutoUnitSkills==="function"&&await globalThis.hallvallaRtAutoUnitSkills(unit,now))continue;
-    await hallvallaRtAutoGenericEffect(unit,now);
+    if(typeof globalThis.hvSimpleAutoBuffSkill==="function"&&await globalThis.hvSimpleAutoBuffSkill(unit,now)){
+      await hallvallaRtVeilAfterSupport(unit);continue;
+    }
+    if(unit.key==="acolyte_healer"||unit.healer){
+      if(await hallvallaRtAutoAcolyte(unit,now))await hallvallaRtVeilAfterSupport(unit);continue;
+    }
+    if(unit.key==="ericto"||unit.nigromante){
+      if(await hallvallaRtAutoEricto(unit,now))await hallvallaRtVeilAfterSupport(unit);continue;
+    }
+    if(typeof globalThis.hallvallaRtAutoUnitSkills==="function"&&await globalThis.hallvallaRtAutoUnitSkills(unit,now)){
+      await hallvallaRtVeilAfterSupport(unit);continue;
+    }
+    if(await hallvallaRtAutoGenericEffect(unit,now))await hallvallaRtVeilAfterSupport(unit);
   }
 }
 async function hallvallaRtStatusTick(now){
@@ -1078,6 +1093,11 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
           ?`Ejecución táctica: ${live.name} se reposiciona y prepara un ataque adicional.`
           :`Ejecución táctica: ${live.name} se reposiciona y adopta Guardia defensiva.`);
       }
+    }
+    if(!trapMove.cancel&&typeof hvAdvanceVeilCurseOnAction==="function"){
+      const veilMove=hvAdvanceVeilCurseOnAction(units,live.id,"un movimiento");
+      units=veilMove.units;
+      if(veilMove.changed){stateChanges++;logs.push(veilMove.text);}
     }
     hallvallaRtState.moveAt.set(live.id,now);moves++;
   }

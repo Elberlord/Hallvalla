@@ -1362,11 +1362,16 @@ async function resolveSharedAttackOutcome({
   // Consumir las penalizaciones después de resolver la acción afectada.
   units=units.map(u=>u.id===a.id?{...u,saboteadorDexZeroNextAttack:false,saboteadorDexZeroWindowKey:"",hvNextAttackAtkDebuff:0}:
     u.id===d.id?{...u,hvNextDefenseAgiDebuff:0}:u);
+  // Las maldiciones se colocan después de consumir los estados del golpe actual.
+  if(typeof hvApplyDeclaredSkillCurses==="function")units=hvApplyDeclaredSkillCurses(units,mods);
+  const veilActionResult=typeof hvAdvanceVeilCurseOnAction==="function"
+    ?hvAdvanceVeilCurseOnAction(units,a.id,"un ataque"):{units,changed:false,text:""};
+  units=veilActionResult.units;
   const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: acierta (${hit.roll}/${hit.chance}).${rerollText}${interpositionLogText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD del ciclo táctico actual. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${hannibalSplitText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
   return {
     units,
     prePostCombatUnits,
-    actionLog,
+    actionLog:actionLog+(veilActionResult.text||""),
     legendaryTraps:resolvedLegendaryTraps,
     dmgTrap,
     exileTrap,

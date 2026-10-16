@@ -554,6 +554,16 @@ function hvSkillCombatMods(mods,{attacker,defender,attackContext}={}){
     if(hvSkillUsesTriggerCooldown(skill)&&!hvSkillCooldownReady(attacker,skill,skillNow))continue;
     const scaled=hvSkillScale(skill,attacker),value=Math.max(0,Number(scaled.value||0)),effect=hvSkillNorm(`${skill.effect} ${skill.secondary}`),scale=hvSkillNorm(skill.scale),cat=hvSkillNorm(skill.category);
     let used=false;
+    if(["HV-166","HV-167","HV-168"].includes(skill.id)){
+      const power=Math.max(1,hvSkillRarityIndex(attacker));
+      if(skill.id==="HV-166")next.hvCurseWeakTarget={id:defender.id,power};
+      if(skill.id==="HV-167")next.defenderGuard=(next.defenderGuard||0)-power;
+      if(skill.id==="HV-168")next.hvCurseSlowTarget={id:defender.id,power};
+      next.attackerSkillCooldownMarks=[...(next.attackerSkillCooldownMarks||[]),
+        {unitId:attacker.id,skillId:skill.id,until:skillNow+30000}];
+      hvSkillAddNote(next,skill.name+": -"+power+" por rareza; recarga 30 s.");
+      continue;
+    }
     if(value>0&&(effect.includes("aumenta at")||effect.includes("bonus de at")||effect.includes("bonificacion de at")||effect.includes("gana at")||(cat.includes("ofensiva")&&scale==="at"))){next.attackerAtk=(next.attackerAtk||0)+value;used=true;}
     if(value>0&&(effect.includes("aumenta dx")||effect.includes("bonus de dx")||effect.includes("bonificacion de dx")||cat.includes("ofensiva")&&scale==="dx")){next.attackerDex=(next.attackerDex||0)+value;used=true;}
     if(value>0&&(effect.includes("reduce guardia")||effect.includes("ignora parte de la guardia")||scale.includes("gd ignorada")||scale.includes("guardia ignorada"))){next.defenderGuard=(next.defenderGuard||0)-value;used=true;}
@@ -616,6 +626,22 @@ function hvSkillCombatMods(mods,{attacker,defender,attackContext}={}){
     }
   }catch(_){}
   return next;
+}
+// Las maldiciones de acción se almacenan una vez terminado el golpe que las declaró.
+// Así el debuff no es eliminado por el consumo de la defensa del mismo ataque.
+function hvApplyDeclaredSkillCurses(units,mods){
+  const weak=mods?.hvCurseWeakTarget,slow=mods?.hvCurseSlowTarget;
+  if(!weak&&!slow)return units;
+  return (units||[]).map(u=>{
+    if(!u||Number(u.hp||0)<=0)return u;
+    let next=u;
+    if(weak&&String(weak.id)===String(u.id))next={...next,
+      hvNextAttackAtkDebuff:Math.max(Number(next.hvNextAttackAtkDebuff||0),Number(weak.power||0))};
+    if(slow&&String(slow.id)===String(u.id))next={...next,
+      hvNextDefenseAgiDebuff:Math.max(Number(next.hvNextDefenseAgiDebuff||0),Number(slow.power||0)),
+      hvNextMoveDelayMs:Math.max(Number(next.hvNextMoveDelayMs||0),Number(slow.power||0)*1000)};
+    return next;
+  });
 }
 function hvSkillEffectiveAgi(value,{unit}={}){
   let next=Math.max(0,Number(value||0));if(!unit)return next;
@@ -823,7 +849,7 @@ function applyHallvallaUnitSkillAttackEffects(units,attacker,defender,context={}
 
 function hvSkillClearNegativeStates(unit){
   let n={...unit};
-  for(const key of ["bleedTurns","bleedCyclesRemaining","bleedDamage","bleedSource","poisonTurns","poisonStage","poisonDamage","poisonBaseDamage","poisonMaxDamage","poisonPersistent","poisonSourceId","poisonSourceName","burnTurns","burnDamage","burnPersistent","burnSource","rtTimingPenalties","attackTimePenaltyMs","moveTimePenaltyMs","attackTimePenaltyUntil","moveTimePenaltyUntil","rtMoveLockedUntil","rtAttackLockedUntil","rtStunnedUntil","rtSilencedUntil"])delete n[key];
+  for(const key of ["bleedTurns","bleedCyclesRemaining","bleedDamage","bleedSource","poisonTurns","poisonStage","poisonDamage","poisonBaseDamage","poisonMaxDamage","poisonPersistent","poisonSourceId","poisonSourceName","burnTurns","burnDamage","burnPersistent","burnSource","rtTimingPenalties","attackTimePenaltyMs","moveTimePenaltyMs","attackTimePenaltyUntil","moveTimePenaltyUntil","rtMoveLockedUntil","rtAttackLockedUntil","rtStunnedUntil","rtSilencedUntil","hvNextAttackAtkDebuff","hvNextDefenseAgiDebuff","hvNextMoveDelayMs","hvNextMoveSkip","veilCurseCyclesRemaining","veilCurseSourceId","veilCurseSourceKey","veilCurseSourceName","veilCurseSourceOwner","veilCurseSourcePortrait","veilCurseSourceRarity","veilCurseAppliedWindowKey"])delete n[key];
   return n;
 }
 function hvSkillNearestWounded(caster,units){
@@ -848,7 +874,13 @@ async function hallvallaRtAutoUnitSkills(caster,now=Date.now()){
       units=units.map(u=>u.id===target.id?{...u,hp:Math.min(Math.max(1,Number(u.maxHp||u.hp||1)),Number(u.hp||0)+value)}:u);
       log=`${live.name} usa ${skill.name}: ${target.name} recupera ${value} HP.`;changed=true;statusFxEvent=hvSkillStatusEvent("heal",target,value);
     }else if(skill.name==="Purificación"){
-      const target=(units||[]).find(u=>u&&u.owner===live.owner&&!u.leader&&u.id!==live.id&&(u.bleedDamage||u.poisonDamage||u.burnDamage||u.rtStunnedUntil||u.rtTimingPenalties?.length));if(!target)continue;
+      const target=(units||[]).filter(u=>u&&u.owner===live.owner&&!u.leader&&u.id!==live.id&&Number(u.hp||0)>0&&
+        ((typeof hasVeilCurse==="function"&&hasVeilCurse(u))||Number(u.hvNextAttackAtkDebuff||0)>0||Number(u.hvNextDefenseAgiDebuff||0)>0||Number(u.hvNextMoveDelayMs||0)>0||u.bleedDamage||u.poisonDamage||u.burnDamage||u.rtStunnedUntil||u.rtTimingPenalties?.length))
+        .sort((a,b)=>{
+          const priority=u=>(typeof hasVeilCurse==="function"&&hasVeilCurse(u))
+            ?(Number(u.veilCurseCyclesRemaining||3)===1?100:50):0;
+          return priority(b)-priority(a);
+        })[0];if(!target)continue;
       units=units.map(u=>u.id===target.id?hvSkillClearNegativeStates(u):u);log=`${live.name} usa Purificación sobre ${target.name}.`;changed=true;statusFxEvent=hvSkillStatusEvent("buff",target,1);
     }else if(skill.name==="Escudo Aliado"||skill.name==="Fortificación"||skill.name==="Protección del Flanco"){
       const target=(units||[]).filter(u=>u&&u.owner===live.owner&&!u.leader&&u.id!==live.id&&Number(u.hp||0)>0).sort((a,b)=>Number(a.guard||0)-Number(b.guard||0))[0];if(!target)continue;
@@ -890,7 +922,7 @@ function hvSkillAttachToUnit(unit,{card}={}){
   const innate=hvSkillUnique(meta.innate||[]);
   // La primera habilidad innata representa la regla nativa ya existente de cada unidad.
   // Se etiqueta para UI/identidad pero no se duplica en el motor genérico.
-  const runtime=hvSkillUnique([...innate.slice(1),...learned]);
+  const runtime=hvSkillUnique([...innate.filter((id,i)=>i>0||["HV-166","HV-167","HV-168"].includes(id)),...learned]);
   return {...unit,unitCopyId:copyId,unitInnateSkillIds:innate,unitLearnedSkillIds:learned,unitSkillIds:hvSkillUnique([...innate,...learned]),unitSkillRuntimeIds:runtime,unitWeaponTags:[...(meta.weaponTags||[])],unitClassTags:[...(meta.classTags||[])]};
 }
 
@@ -1203,6 +1235,11 @@ function hvSkillLegacyPlayerEffect(skill,entity){
 }
 function hvSkillPlayerText(skill,entity={rarity:"Básica"}){
   if(!skill)return "";
+  const power=hvSkillRarityIndex(entity);
+  if(skill.id==="HV-166")return "Al fijar un objetivo, reduce "+power+" AT en su próximo ataque. Recarga: 30 segundos.";
+  if(skill.id==="HV-167")return "Al atacar a un enemigo, reduce "+power+" GD durante la defensa contra ese ataque. Recarga: 30 segundos.";
+  if(skill.id==="HV-168")return "Al fijar un objetivo, retrasa su próximo movimiento "+power+" s y reduce "+power+" AGI en su próxima defensa. Recarga: 30 segundos.";
+  if(skill.id==="HV-176")return "Elimina maldiciones y estados negativos de un aliado. Prioriza una Condena de Morgana a punto de ejecutarse. Recarga: 30 segundos.";
   if(skill.id==="HV-187"&&String(entity?.key||"").toLowerCase()==="achilles")return "Gana +8 AT durante 1 ataque.";
   const scale=hvSkillScale(skill,entity);
   const template=String(skill.playerText||"").trim();
@@ -1301,7 +1338,7 @@ function hvSkillInstallDetIntegration(){
     const meta=HALLVALLA_UNIT_SKILL_ASSIGNMENTS[String(entity?.key||"")];
     if(!meta)return native;
     const hasCanonical=typeof getCardEffectTextByKey==="function"&&Boolean(getCardEffectTextByKey(entity?.key));
-    const nativeSkillId=hasCanonical?String(meta.innate?.[0]||""):"";
+    const nativeSkillId=hasCanonical&&!(["HV-166","HV-167","HV-168"].includes(String(meta.innate?.[0]||"")))?String(meta.innate?.[0]||""):"";
     const extra=getHallvallaUnitSkillSectionsForEntity(entity)
       .filter(section=>section.skillId!==nativeSkillId);
     const used=new Set(native.map(section=>hvSkillNorm(section?.title||"")));

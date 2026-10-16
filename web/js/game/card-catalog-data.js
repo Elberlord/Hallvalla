@@ -32,7 +32,7 @@ const ADVENTURE_SPECIALS={mulan:{key:"mulan",name:"Hua Lan",type:"unit",icon:"�
 
 
 
-const MORGANA_CARD={key:"morgana",name:"Morgana",type:"unit",icon:"✠",portrait:CARD_PORTRAITS.morgana,cost:4,hp:2,atk:2,guard:0,dex:5,agi:6,mov:1,range:3,rarity:"Épica",caster:true,hechicera:true,text:"Condena de Morgana: cuando un ataque de esta unidad atraviesa Guardia y causa al menos 1 daño a la Vida de una unidad enemiga no líder, coloca un contador 3. Al final de cada ciclo táctico (10 s) propio de la víctima, el contador baja 1; al llegar a 0, la unidad cae derrotada. La cuenta persiste aunque Morgana abandone el campo, no se acumula ni se reinicia y puede eliminarse con Purificación. No afecta líderes, jefes, estructuras, huevos ni objetivos de misión."};
+const MORGANA_CARD={key:"morgana",name:"Morgana",type:"unit",icon:"✠",portrait:CARD_PORTRAITS.morgana,cost:4,hp:2,atk:2,guard:0,dex:5,agi:6,mov:1,range:3,rarity:"Épica",caster:true,hechicera:true,text:"Condena de Morgana: cuando un ataque de esta unidad atraviesa Guardia y causa al menos 1 daño a la Vida de una unidad enemiga no líder, coloca un contador 3. Cada ataque, movimiento o habilidad activa completada por la víctima reduce el contador en 1; al llegar a 0, cae derrotada. La cuenta persiste aunque Morgana abandone el campo, no se acumula ni se reinicia y puede eliminarse con Purificación. Solo puede aplicar una Condena cada 30 segundos. No afecta líderes, jefes, estructuras, huevos ni objetivos de misión."};
 CARD_TEMPLATES.push(MORGANA_CARD);
 
 
