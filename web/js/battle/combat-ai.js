@@ -1182,7 +1182,7 @@ async function resolveSharedAttackOutcome({
   if(hit.hit&&hpLoss>0&&a.key==="constrictor_snake"&&units.some(u=>u.id===d.id)){
     units=units.map(u=>u.id===d.id?{...u,tempMovDebuff:Math.max(Number(u.tempMovDebuff||0),1),tempAgiDebuff:(u.tempAgiDebuff||0)+1,noMoveWindowKey:(u.tempMovDebuff?nextWindowKeyForOwner(u.owner):u.noMoveWindowKey)}:u);
   }
-  if(hit.hit&&hpLoss>0&&a.key==="wild_boar"&&(a.movedSpaces||0)>=2){
+  if(hit.hit&&hpLoss>0&&a.key==="wild_boar"&&(mods.hvCardMarks||[]).some(m=>m.name==="carga_brusca"&&m.unitId===a.id)){
     units=pushUnitBackIfPossible(units,d,a,1);
   }
   let alexanderWallText="";
@@ -1360,8 +1360,8 @@ async function resolveSharedAttackOutcome({
   const actionTargetName=(interposition.originalDefender||d).name;
   const interpositionLogText=interposition.protector?` ${interposition.text}`:"";
   // Consumir las penalizaciones después de resolver la acción afectada.
-  units=units.map(u=>u.id===a.id?{...u,saboteadorDexZeroNextAttack:false,saboteadorDexZeroWindowKey:"",hvNextAttackAtkDebuff:0}:
-    u.id===d.id?{...u,hvNextDefenseAgiDebuff:0}:u);
+  units=units.map(u=>u.id===a.id?{...u,saboteadorDexZeroNextAttack:false,saboteadorDexZeroWindowKey:"",hvNextAttackAtkDebuff:0,hvSunTzuNextAttackDex:0}:
+    u.id===d.id?{...u,hvNextDefenseAgiDebuff:0,hvSunTzuNextDefenseGuard:0}:u);
   // Las maldiciones se colocan después de consumir los estados del golpe actual.
   if(typeof hvApplyDeclaredSkillCurses==="function")units=hvApplyDeclaredSkillCurses(units,mods);
   const veilActionResult=typeof hvAdvanceVeilCurseOnAction==="function"

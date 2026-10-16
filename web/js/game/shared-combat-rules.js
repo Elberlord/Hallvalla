@@ -498,14 +498,10 @@ function effectiveMov(u){
   const canonicalBaseMov=hasFixedMov?Math.max(0,Number(u.fixedMov)):(canonical?canonical.finalMov:(u?.mov||0));
   const base=u?.leader?0:Math.max(0,canonicalBaseMov+(u?.permMov||0)+summonBonus+equipmentMoveBonus+(u?.tempMovBuff||0)+(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"mov"):0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getRtTrapDebuff(u,"mov")-getGenghisMovDebuff(u)-getHannibalMovDebuff(u)-getPikeWallMovDebuff(u));
   return applyHallvallaValueHooks("unit.effectiveMov",base,{unit:u});
-}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino"&&(u.lastMoveStraightDistance||0)>=2)}
+}function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino");}
 function isAfricanElephantChargeReady(u,target){
-  if(!u||!target||!isHannibalElephantCombatForm(u))return false;
-  if(Number(u.lastMoveDistance||0)!==1||u.lastMoveWindowKey!==publicState?.combatWindowKey)return false;
-  if(dist(u,target)!==1)return false;
-  const dx=Math.sign((target.x||0)-(u.x||0));
-  const dy=Math.sign((target.y||0)-(u.y||0));
-  return (dx!==0||dy!==0)&&dx===Number(u.lastMoveDx||0)&&dy===Number(u.lastMoveDy||0);
+  // TR: la carga solo exige alcance cuerpo a cuerpo, no desplazamiento previo.
+  return !!(u&&target&&isHannibalElephantCombatForm(u)&&dist(u,target)===1);
 }
 function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
 function maxWindowGuard(u){
@@ -623,6 +619,11 @@ function getCombatMods(attacker,defender,attackContext=null){
 
   const mods={attackerAtk:0,attackerAgi:0,attackerDex:0,attackerGuard:0,defenderAgi:0,defenderDex:0,defenderGuard:0,damageReduction:0,reroll:false,notes:[]};
   if(!attacker||!defender)return applyHallvallaValueHooks("combat.mods",mods,{attacker,defender,attackContext});
+  // Arte de la Guerra: bonus por accion, separados entre ataque y defensa.
+  const sunTzuDex=Math.max(0,Number(attacker.hvSunTzuNextAttackDex||0));
+  const sunTzuGuard=Math.max(0,Number(defender.hvSunTzuNextDefenseGuard||0));
+  if(sunTzuDex>0){mods.attackerDex+=sunTzuDex;mods.notes.push(`${attacker.name} +${sunTzuDex} DX de Sun Tzu, solo este ataque.`);}
+  if(sunTzuGuard>0){mods.defenderGuard+=sunTzuGuard;mods.notes.push(`${defender.name} +${sunTzuGuard} GD de Sun Tzu, solo esta defensa.`);}
   const weaponAdvantage=getWeaponAdvantage(attacker,defender);
   if(weaponAdvantage){
     mods.attackerDex+=weaponAdvantage.dexBonus;
@@ -666,7 +667,7 @@ function getCombatMods(attacker,defender,attackContext=null){
   }
   if(ownerHasUnit(attacker.owner,"shaka_zulu")&&adjacentAllies(defender).some(a=>a.owner===attacker.owner)&&hvCardTryMod(mods,firstOwnerUnit(attacker.owner,"shaka_zulu"),"cuernos_buffalo")){mods.attackerAtk+=3;mods.notes.push(`${attacker.name} +3 AT por Cuernos del Búfalo.`);if(adjacentAllies(defender).filter(a=>a.owner===attacker.owner).length>=2){mods.defenderAgi-=4;mods.notes.push(`${defender.name} -4 AGI por estar rodeado.`);}}
   if(attacker.key==="nasu_no_yoichi"&&isRangedAttack(attacker,defender)&&dist(attacker,defender)>=3&&hvCardTryMod(mods,attacker,"marca_abanico")){mods.defenderGuard-=4;mods.notes.push(`${defender.name} -4 Guardia por Marca del Abanico.`);}
-  if(attacker.key==="tomoe_gozen"&&(attacker.movedSpaces||0)>=2&&hvCardTryMod(mods,attacker,"jinete_luna")){mods.defenderAgi-=6;mods.notes.push(`${defender.name} -6 AGI por Jinete de la Luna Cortante.`);if((defender.range||1)>=2){mods.attackerAtk+=8;mods.notes.push(`${attacker.name} +8 AT contra unidades de rango.`);}}
+  if(attacker.key==="tomoe_gozen"&&hvCardTryMod(mods,attacker,"jinete_luna")){mods.defenderAgi-=6;mods.notes.push(`${defender.name} -6 AGI por Jinete de la Luna Cortante.`);if((defender.range||1)>=2){mods.attackerAtk+=8;mods.notes.push(`${attacker.name} +8 AT contra unidades de rango.`);}}
   if(attacker.key==="solomon_ifrit"){mods.defenderGuard-=4;mods.notes.push(`${defender.name} -4 Guardia por Fuego del Mandato.`);}
   if(attacker.key==="beowulf"&&effectiveMaxHp(defender)>effectiveMaxHp(attacker)&&hvCardTryMod(mods,attacker,"matador_monstruos")){mods.attackerAtk+=3;mods.notes.push(`${attacker.name} +3 AT contra enemigos de mayor Vida.`);}
   if(attacker.key==="achilles"&&hvCardTryMod(mods,attacker,"colera_pelida")){mods.attackerAtk+=5;mods.notes.push(`${attacker.name} +5 AT por Cólera del Pélida.`);}
@@ -688,16 +689,16 @@ function getCombatMods(attacker,defender,attackContext=null){
   if(defender.key==="gilgamesh"&&isRangedAttack(attacker,defender)&&defender.noReductionWindowKey!==publicState?.combatWindowKey&&!isRtTrapLocked(defender,"reduction")){mods.damageReduction+=2;mods.notes.push(`Gilgamesh reduce 2 daño de proyectiles o magia a distancia.`);}
   if(melee&&attacker.key==="bengal_tiger"&&isAttackFromStealth(attacker,attackContext)){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Emboscada desde Sigilo.`);}
   if(melee&&attacker.key==="bengal_tiger"&&adjacentAllies(defender).some(a=>a.owner===attacker.owner&&isBeastUnit(a))){mods.defenderAgi-=2;mods.notes.push(`${defender.name} -2 AGI por Ataque por la espalda de la manada.`);}
-  if(melee&&attacker.key==="wild_boar"&&(attacker.movedSpaces||0)>=2){mods.attackerAtk+=1;mods.notes.push(`${attacker.name} +1 AT por Carga Brusca.`);}
+  if(melee&&attacker.key==="wild_boar"&&hvCardTryMod(mods,attacker,"carga_brusca")){mods.attackerAtk+=1;mods.notes.push(`${attacker.name} +1 AT por Carga Brusca.`);}
   if(melee&&isWhiteRhinoChargeReady(attacker)&&hvCardTryMod(mods,attacker,"embestida_rino")){mods.attackerAtk+=8;mods.rhinoCharge=true;mods.notes.push(`${attacker.name} usa Embestida Devastadora: AT 22.`);}
   if(melee&&isHannibalMountedUnit(attacker)){mods.attackerAtk+=12;mods.hannibalElephantMelee=true;mods.notes.push(`${attacker.name} combate con la fuerza del elefante: AT 16.`);}
   if(melee&&isAfricanElephantChargeReady(attacker,defender)&&hvCardTryMod(mods,attacker,"arremetida_elephant")){mods.attackerAtk+=6;mods.defenderAgi-=4;mods.elephantCharge=true;mods.notes.push(`${attacker.name} usa Arremetida Colosal: +6 AT (AT 22) y ${defender.name} -4 AGI para evadir.`);}
-  if(attacker.key==="peregrine_falcon"&&(attacker.movedSpaces||0)>=3&&hvCardTryMod(mods,attacker,"picada_falcon")){mods.attackerAtk+=2;mods.falconDive=true;mods.notes.push(`${attacker.name} usa Ataque en Picada: golpe seguro, AT 3.`);}
+  if(attacker.key==="peregrine_falcon"&&hvCardTryMod(mods,attacker,"picada_falcon")){mods.attackerAtk+=2;mods.falconDive=true;mods.notes.push(`${attacker.name} usa Ataque en Picada: golpe seguro, AT 3.`);}
   if(defender.key==="honey_badger"){mods.damageReduction+=1;mods.honeyBadgerReduction=true;mods.notes.push(`${defender.name} reduce 1 daño por Armadura Natural.`);}
-  if(melee&&attacker.key==="cavalry"&&(attacker.movedSpaces||0)>=3&&defenderUsesEvasion){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Carga desestabilizadora.`);}
+  if(melee&&attacker.key==="cavalry"&&defenderUsesEvasion&&hvCardTryMod(mods,attacker,"carga_desestabilizadora")){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Carga desestabilizadora.`);}
   if(isRangedAttack(attacker,defender)&&attacker.key==="numidian_javelin_rider"&&hvCardTryMod(mods,attacker,"jabalinas_hostigamiento")){mods.attackerDex+=hvActionRarityValue(attacker);mods.notes.push(`${attacker.name} +${hvActionRarityValue(attacker)} DX por Jabalinas de hostigamiento.`);}
   if(isRangedAttack(attacker,defender)&&attacker.key==="mongol_explorer"&&hvCardTryMod(mods,attacker,"tiro_en_carrera")){mods.attackerDex+=hvActionRarityValue(attacker);mods.notes.push(`${attacker.name} +${hvActionRarityValue(attacker)} DX por Tiro en carrera.`);}
-  if(melee&&attacker.key==="hungarian_hussar"&&Number(attacker.movedSpaces||0)>=2&&hvCardTryMod(mods,attacker,"carga_sable")){mods.attackerAtk+=2;mods.attackerDex+=2;mods.notes.push(`${attacker.name} usa Carga de sable: +2 AT y +2 DX.`);}
+  if(melee&&attacker.key==="hungarian_hussar"&&hvCardTryMod(mods,attacker,"carga_sable")){mods.attackerAtk+=2;mods.attackerDex+=2;mods.notes.push(`${attacker.name} usa Carga de sable: +2 AT y +2 DX.`);}
   if(melee&&attacker.key==="cossack_rider"&&Number(defender.hp||0)<Number(effectiveMaxHp(defender)||defender.maxHp||defender.hp||0)){mods.attackerDex+=2;mods.notes.push(`${attacker.name} +2 DX por Persecución cosaca.`);}
   if(hasUnitEquipment(attacker,"rupture_bracers")&&isAttackFromStealth(attacker,attackContext)){mods.defenderGuard-=5;mods.notes.push(`${defender.name} -5 Guardia por Guardabrazos de Ruptura.`);}
   if(hasUnitEquipment(attacker,"counterweighted_grip")&&effectiveGuard(defender)>0){mods.attackerAtk+=5;mods.notes.push(`${attacker.name} +5 AT por Mango Contrapesado.`);}

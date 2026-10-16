@@ -4,7 +4,8 @@ function hallvallaRtMoveCooldown(unit){
   const normal=typeof getHallvallaUnitMoveCooldownMs==="function"?getHallvallaUnitMoveCooldownMs(unit):
     Math.max(1320,Math.round(HALLVALLA_RT_CFG.baseMoveCooldownMs/(0.70+Math.max(1,Math.min(5,Number(unit?.mov||1)))*0.30)));
   const skipar=unit?.key==="skipar_del_drakkar"&&!unit?.hvSkiparFirstMoveConsumed?hvActionRarityValue(unit)*1000:0;
-  return Math.max(1000,normal-skipar);
+  const subotai=Math.max(0,Number(unit?.hvSubotaiNextMoveBoostMs||0));
+  return Math.max(1000,normal-skipar-subotai);
 }
 function hallvallaRtAttackCooldown(unit){
   if(typeof getHallvallaUnitAttackCooldownMs==="function")return getHallvallaUnitAttackCooldownMs(unit);
@@ -1072,7 +1073,7 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
     let trapMove;
     try{trapMove=resolveMovementLegendaryTraps(live,{x:step.x,y:step.y},units,legendaryTraps);}catch(_){trapMove={cancel:false,units,traps:legendaryTraps,logs:[]};}
     legendaryTraps=[...(trapMove.traps||legendaryTraps)];
-    units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveWindowKey:publicState?.combatWindowKey||'RT',hvNextMoveDelayMs:0,hvNextMoveSkip:false,hvSkiparFirstMoveConsumed:u.key==='skipar_del_drakkar'?true:u.hvSkiparFirstMoveConsumed,rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false}:u);
+    units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveWindowKey:publicState?.combatWindowKey||'RT',hvNextMoveDelayMs:0,hvNextMoveSkip:false,hvSubotaiNextMoveBoostMs:0,hvSkiparFirstMoveConsumed:u.key==='skipar_del_drakkar'?true:u.hvSkiparFirstMoveConsumed,rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false}:u);
     if(!trapMove.cancel){
       const moved=units.find(u=>u.id===live.id&&Number(u.hp||0)>0);
       if(moved){

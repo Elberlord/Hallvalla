@@ -527,12 +527,12 @@ function getEffectTargetOptions(caster,units=publicState?.units||[]){
     return spots;
   }
   if(caster.key==="sun_tzu"){
-    if(caster.sunTzuUsedWindow||Number(caster.sunTzuCooldownUntil||0)>Date.now())return[];
-    return units.filter(a=>a.owner===owner&&a.id!==caster.id);
+    if(Number(caster.sunTzuCooldownUntil||0)>Date.now())return[];
+    return units.filter(a=>a.owner===owner&&a.id!==caster.id&&!a.leader&&Number(a.hp||0)>0);
   }
   if(caster.key==="subotai"){
-    if(caster.subotaiUsedWindow)return[];
-    return units.filter(a=>a.owner===owner&&a.id!==caster.id);
+    if(Number(caster.subotaiCooldownUntil||0)>Date.now())return[];
+    return units.filter(a=>a.owner===owner&&a.id!==caster.id&&!a.leader&&Number(a.hp||0)>0&&Number(a.hvSubotaiNextMoveBoostMs||0)<=0);
   }
   return[];
 }
@@ -634,11 +634,13 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     out=out.map(it=>it.id===liveCaster.id?{...it,acted:true}:it).concat(token);
     log=`${liveCaster.name} activa Media Luna del Desierto e invoca una Caballería Arquera en ${target.x+1},${target.y+1}.`;
   }else if(liveCaster.key==="sun_tzu"){
-    out=out.map(it=>it.id===target.id?{...it,tempDexBuff:(it.tempDexBuff||0)+4,tempGuardBuff:(it.tempGuardBuff||0)+4}:it.id===liveCaster.id?{...it,acted:true,sunTzuUsedWindow:true,sunTzuCooldownUntil:Date.now()+30000}:it);
-    log=`${liveCaster.name} activa Arte de la Guerra: ${target.name} gana +4 Destreza y +4 Guardia durante este ciclo táctico.`;
+    const power=hvActionRarityValue(liveCaster);
+    out=out.map(it=>it.id===target.id?{...it,hvSunTzuNextAttackDex:Math.max(Number(it.hvSunTzuNextAttackDex||0),power),hvSunTzuNextDefenseGuard:Math.max(Number(it.hvSunTzuNextDefenseGuard||0),power)}:it.id===liveCaster.id?{...it,acted:true,sunTzuCooldownUntil:Date.now()+30000}:it);
+    log=`${liveCaster.name} activa Arte de la Guerra: ${target.name} recibe +${power} DX para su próximo ataque y +${power} GD para su próxima defensa. Recarga: 30 s.`;
   }else if(liveCaster.key==="subotai"){
-    out=out.map(it=>it.id===target.id?{...it,tempMovBuff:(it.tempMovBuff||0)+2}:it.id===liveCaster.id?{...it,acted:true,subotaiUsedWindow:true}:it);
-    log=`${liveCaster.name} activa Marcha de Mil Horizontes: ${target.name} gana +2 Movimiento durante este ciclo táctico.`;
+    const seconds=hvActionRarityValue(liveCaster);
+    out=out.map(it=>it.id===target.id?{...it,hvSubotaiNextMoveBoostMs:Math.max(Number(it.hvSubotaiNextMoveBoostMs||0),seconds*1000)}:it.id===liveCaster.id?{...it,acted:true,subotaiCooldownUntil:Date.now()+30000}:it);
+    log=`${liveCaster.name} activa Marcha de Mil Horizontes: adelanta ${seconds} s solo el próximo movimiento de ${target.name}. Recarga: 30 s.`;
   }else{
     return{success:false,reason:"Este efecto es pasivo o se activa automáticamente durante el combate."};
   }

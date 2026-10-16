@@ -432,8 +432,7 @@ function hvSkillTriggerOk(skill,actor,target,attackContext=null){
     if(!ranged)return false;
   }
   if((t.includes("rango minimo")||t.includes("melee")||t.includes("cuerpo a cuerpo")||t.includes("a melee"))&&distance>1)return false;
-  if((t.includes("recorrer")||t.includes("carga larga")||t.includes("impacto de carga"))&&Number(actor?.movedSpaces||0)<2)return false;
-  if((t.includes("sin moverse")||t.includes("mantenga posicion"))&&Number(actor?.movedSpaces||0)>0)return false;
+  // TR: no exigir desplazamiento previo ni inmovilidad a habilidades activas.
   if((t.includes("desde sigilo")||t.includes("retaguardia"))&&!attackContext?.startedFromStealth&&!actor?.stealth)return false;
   if((t.includes("por debajo de 20")||t.includes("<20")||t.includes("menor a 20"))&&targetHp/targetMax>.20)return false;
   if(t.includes("<50")&&targetHp/targetMax>.50)return false;
