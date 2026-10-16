@@ -785,6 +785,13 @@ function inspectSharedAttackTargetBasics(attacker,defender,{runInState=(fn)=>fn(
   if(!inState(()=>canUnitAttackTarget(attacker,defender)))return{ok:false,code:"blocked_target"};
   return{ok:true};
 }
+// [HV275] Trazas de solo lectura; no se ejecutan fuera de ?dev.
+function hvSkillOrderTraceSafe(stage,ctx){
+  if(globalThis.__HALLVALLA_DEV_TOOLS__!==true)return;
+  try{if(typeof globalThis.hvSkillOrderTrace==='function')globalThis.hvSkillOrderTrace(stage,ctx);}
+  catch(e){console.warn('[HV275] Auditor de orden (no afecta al combate):',e);}
+}
+
 function resolveSharedAttackPreparation({
   a,
   d,
@@ -805,7 +812,9 @@ function resolveSharedAttackPreparation({
   const inState=(fn,snap=snapshot())=>runInState(fn,snap);
   const combatStat=(fn,snap=snapshot())=>statefulCombatStats?inState(fn,snap):fn();
 
+  hvSkillOrderTraceSafe('00.inicio',{a,d,units:liveUnits});
   const preTrap=inState(()=>resolvePreAttackLegendaryTraps(a,liveUnits,legendaryTraps),snapshot(liveUnits,legendaryTraps,beastTraps));
+  hvSkillOrderTraceSafe('01.trampas_previas',{a,d,units:preTrap.units||liveUnits});
   if(preTrap.cancel){
     const cancelSpend=spendActionStatsByAttack(a,d,preTrap.units,getCombatMods(a,d),{hit:false});
     return{terminal:"pretrap_cancel",a,d,units:preTrap.units,liveUnits,preTrap,cancelSpend,beastTraps};
@@ -841,6 +850,7 @@ function resolveSharedAttackPreparation({
   const pikeWall=resolveHallvallaPikeWall(a,d,units);
   units=pikeWall.units||units;
 
+  hvSkillOrderTraceSafe('02.interceptaciones',{a,d,units});
   a=units.find(u=>u.id===a.id)||a;
   d=units.find(u=>u.id===d.id)||d;
 
@@ -875,6 +885,7 @@ function resolveSharedAttackPreparation({
   }
   beastTraps=bloodBaitBonus.trapId?removeBeastTrapById(beastTraps,bloodBaitBonus.trapId):beastTraps;
 
+  hvSkillOrderTraceSafe('03.bonos_ataque_defensa',{a,d,units,mods});
   const defensePrep=consumeDefensiveStanceForAttack(d,units,mods);
   units=defensePrep.units;
   mods=defensePrep.mods;
@@ -923,6 +934,7 @@ function resolveSharedAttackPreparation({
     rerollText=` Repite por Flecha del Dharma con +6 Destreza (${first.roll}/${first.chance} → ${hit.roll}/${hit.chance})${hit.hit?" y provoca Veneno.":"."}`;
   }
 
+  hvSkillOrderTraceSafe('04.precision_y_evasion',{a,d,units,mods,hit});
   return{
     terminal:"",
     a,d,units,liveUnits,preTrap,beastTraps,attackContext,tigerFromStealthBefore,
@@ -954,6 +966,7 @@ async function resolveSharedAttackOutcome({
 }){
   let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false,dragonCompanionText="";
   units=applySkillCooldownMarksFromMods(units,mods);
+  hvSkillOrderTraceSafe('05.inicio_resolucion',{a,d,units,mods,hit});
   units=hvCardMarksFromMods(units,mods);
   a=units.find(unit=>unit.id===a.id)||a;
   const originalDefender=d;
@@ -991,6 +1004,7 @@ async function resolveSharedAttackOutcome({
   units=ulyssesAttackTactic.units;
   const actionSpend=spendActionStatsByAttack(a,d,units,mods,hit);
   units=actionSpend.units;
+  hvSkillOrderTraceSafe('06.consumo_atributos',{a,d,units,mods,hit});
   const dmgTrap=runInState(()=>applyDamageTrapModifiers(d,getBattleDamage(a,mods),preTrap.traps),{units,legendaryTraps:preTrap.traps,beastTraps});
   let resolvedLegendaryTraps=dmgTrap.traps||preTrap.traps;
   const ulfhednarCritResult=rollUlfhednarCritical(a,hit);
@@ -1042,6 +1056,7 @@ async function resolveSharedAttackOutcome({
     }
     return u;
   });
+  hvSkillOrderTraceSafe('07.dano_principal',{a,d,units,mods,hit});
   let geishaFanKillResult={units,triggered:false,text:""};
   if(hit.hit){units=applyAttackSideEffects(a,d,units,{hit:true,hpLoss,allowGuardian:false});}if(hit.hit&&hpLoss>0){geishaFanKillResult=applyGeishaFanKill(units,a,d,hpLoss,attackContext);units=geishaFanKillResult.units;}
   if(dmgTrap.shadowCut&&hit.hit&&hpLoss>0){
@@ -1064,6 +1079,7 @@ async function resolveSharedAttackOutcome({
     ?globalThis.applyHallvallaUnitSkillAttackEffects(units,a,d,{hit:!!hit.hit,hpLoss,guardLoss,mods,attackContext})
     :{units,text:"",statusFxEvent:null,floatFxEvent:null};
   units=unitSkillAttackResult.units||units;
+  hvSkillOrderTraceSafe('08.habilidades_impacto',{a,d,units,mods,hit});
   let defenderFell=!!units.find(u=>u.id===d.id&&u.hp<=0);
   const leonidasLastStand=defenderFell?applyLeonidasLastStand(units,d.id,a.id):{units,triggered:false,killerFell:false,saved:false};
   units=leonidasLastStand.units;
@@ -1081,6 +1097,7 @@ async function resolveSharedAttackOutcome({
   units=berserkerOsoResult.units;
   berserkerOsoText=berserkerOsoResult.text||"";
   units=applyAfterDamageBonuses(units,a,d,hpLoss,defenderFell,mods,!!hit.hit);
+  hvSkillOrderTraceSafe('09.bonos_post_impacto',{a,d,units,mods,hit});
   const skiparWarLootResult=defenderFell?resolveSkiparWarLoot(a,d.owner,units):{units,triggered:false,text:""};
   units=skiparWarLootResult.units||units;
   skiparWarLootText=skiparWarLootResult.text||"";
@@ -1111,6 +1128,7 @@ async function resolveSharedAttackOutcome({
   const elephantPrimaryAliveBeforeCharge=units.some(u=>u.id===d.id&&u.hp>0);
   const elephantChargeResult=resolveAfricanElephantCharge(units,a,d,hit,mods);
   units=elephantChargeResult.units;
+  hvSkillOrderTraceSafe('10.arremetida_y_area',{a,d,units,mods,hit});
   const elephantChargeText=elephantChargeResult.text||"";
   // Pisoton es otro disparador: no reutiliza el cooldown de Arremetida Colosal.
   const stompResult=resolveAfricanElephantStomp(units,a,d,hit);
@@ -1224,6 +1242,7 @@ async function resolveSharedAttackOutcome({
   const porcupineResult=applyPorcupineSpinesAndFear(a,d,units);
   units=porcupineResult.units;
   const porcupineText=porcupineResult.logs.length?` ${porcupineResult.logs.join(" ")}`:"";
+  hvSkillOrderTraceSafe('11.espinas_y_reacciones',{a,d,units,mods,hit});
   const lionFearCombat=runInState(()=>applyAfricanLionFearAura(units),{units,legendaryTraps:resolvedLegendaryTraps,beastTraps});
   units=lionFearCombat.units;
   const recoilBloodVictory=applyBloodVictoryForDeaths(bloodVictoryCheckpoint,units);
@@ -1331,6 +1350,7 @@ async function resolveSharedAttackOutcome({
   }
   const veilCurseResult=applyVeilCurseAfterHpDamage(units,a,d,hpLoss);
   units=veilCurseResult.units;
+  hvSkillOrderTraceSafe('12.condena_y_contraataque',{a,d,units,mods,hit});
   const counterBloodVictory=applyBloodVictoryForDeaths(bloodVictoryCheckpoint,units);
   units=counterBloodVictory.units;
   if(counterBloodVictory.triggered){bloodVictoryTriggered=true;bloodVictoryLogs.push(...counterBloodVictory.logs);}
@@ -1373,6 +1393,7 @@ async function resolveSharedAttackOutcome({
   const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
   const actionTargetName=(interposition.originalDefender||d).name;
   const interpositionLogText=interposition.protector?` ${interposition.text}`:"";
+  hvSkillOrderTraceSafe('13.antes_consumir_estados',{a,d,units,mods,hit});
   // Consumir las penalizaciones después de resolver la acción afectada.
   units=units.map(u=>u.id===a.id?{...u,saboteadorDexZeroNextAttack:false,saboteadorDexZeroWindowKey:"",hvNextAttackAtkDebuff:0,hvSunTzuNextAttackDex:0}:
     u.id===d.id?{...u,hvNextDefenseAgiDebuff:0,hvSunTzuNextDefenseGuard:0}:u);
@@ -1381,7 +1402,9 @@ async function resolveSharedAttackOutcome({
   const veilActionResult=typeof hvAdvanceVeilCurseOnAction==="function"
     ?hvAdvanceVeilCurseOnAction(units,a.id,"un ataque"):{units,changed:false,text:""};
   units=veilActionResult.units;
+  hvSkillOrderTraceSafe('14.cierre_estados_y_registros',{a,d,units,mods,hit});
   const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: acierta (${hit.roll}/${hit.chance}).${rerollText}${interpositionLogText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD del ciclo táctico actual. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${stompText}${hannibalSplitText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`:`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${stompText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`;
+  hvSkillOrderTraceSafe('99.fin',{a,d,units,mods,hit});
   return {
     units,
     prePostCombatUnits,
