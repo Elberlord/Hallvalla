@@ -1084,7 +1084,29 @@ async function resolveSharedAttackOutcome({
   const skiparWarLootResult=defenderFell?resolveSkiparWarLoot(a,d.owner,units):{units,triggered:false,text:""};
   units=skiparWarLootResult.units||units;
   skiparWarLootText=skiparWarLootResult.text||"";
-  const saboteadorEscapeResult=hit.hit?applySaboteadorEscapeForzado(units,d.id):{units,triggered:false,text:""};
+  // Habilidades por acción; nunca se eliminan al cambiar el ciclo táctico.
+  if(mods?.hvGuardianTargetId){
+    units=units.map(u=>u.id===mods.hvGuardianTargetId?{...u,
+      hvNextAttackAtkDebuff:Math.max(Number(u.hvNextAttackAtkDebuff||0),Number(mods.hvGuardianRank||0)),
+      hvNextMoveDelayMs:Math.max(Number(u.hvNextMoveDelayMs||0),Number(mods.hvGuardianRank||0)*1000)}:u);
+  }
+  if(hpLoss>0&&a.key==="honey_badger"&&hvCardReady(a,"mordida_fastidiosa")){
+    const rank=hvActionRarityValue(a);
+    units=units.map(u=>u.id===a.id?hvCardMark(u,"mordida_fastidiosa"):u.id===d.id?{...u,hvNextMoveDelayMs:Math.max(Number(u.hvNextMoveDelayMs||0),rank*1000)}:u);
+  }
+  if(hpLoss>0&&a.key==="constrictor_snake"){
+    const rank=hvActionRarityValue(a),oldTarget=units.find(u=>u.id===d.id);
+    const grab=!!oldTarget&&Number(oldTarget.hvNextMoveDelayMs||0)>0&&hvCardReady(a,"agarre");
+    const constrict=hvCardReady(a,"constriccion");
+    if(constrict||grab)units=units.map(u=>u.id===a.id?(
+      grab?hvCardMark(constrict?hvCardMark(u,"constriccion"):u,"agarre"):hvCardMark(u,"constriccion")
+    ):u.id===d.id?{...u,
+      hvNextMoveDelayMs:constrict?Math.max(Number(u.hvNextMoveDelayMs||0),rank*1000):u.hvNextMoveDelayMs,
+      hvNextDefenseAgiDebuff:constrict?Math.max(Number(u.hvNextDefenseAgiDebuff||0),rank):u.hvNextDefenseAgiDebuff,
+      hvNextMoveSkip:grab||u.hvNextMoveSkip===true
+    }:u);
+  }
+  const saboteadorEscapeResult=applySaboteadorEscapeForzado(units,d.id);
   units=saboteadorEscapeResult.units;
   const elephantPrimaryAliveBeforeCharge=units.some(u=>u.id===d.id&&u.hp>0);
   const elephantChargeResult=resolveAfricanElephantCharge(units,a,d,hit,mods);
@@ -1321,7 +1343,7 @@ async function resolveSharedAttackOutcome({
   units=equipmentRetreatResult.units;
   const yabusameRetreatResult=units.some(u=>u.id===d.id)?applyYabusameRetreatIfPossible(units,d.id):{units,moved:false,text:""};
   units=yabusameRetreatResult.units;
-  const scythianRetreatResult=units.some(u=>u.id===a.id)&&isRangedAttack(a,d)&&hit.hit?applyScythianRetreatIfPossible(units,a.id):{units,moved:false,text:""};
+  const scythianRetreatResult=units.some(u=>u.id===a.id)&&isRangedAttack(a,d)&&hit.hit?applyScythianRetreatIfPossible(units,a.id,d.id):{units,moved:false,text:""};
   units=scythianRetreatResult.units;
   const cossackAdvanceResult=units.some(u=>u.id===a.id)&&dist(a,d)<=1&&hit.hit&&defenderFell?applyCossackAdvanceIfPossible(units,a.id,d.x,d.y):{units,moved:false,text:""};
   units=cossackAdvanceResult.units;
@@ -1337,6 +1359,9 @@ async function resolveSharedAttackOutcome({
   const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
   const actionTargetName=(interposition.originalDefender||d).name;
   const interpositionLogText=interposition.protector?` ${interposition.text}`:"";
+  // Consumir las penalizaciones después de resolver la acción afectada.
+  units=units.map(u=>u.id===a.id?{...u,saboteadorDexZeroNextAttack:false,saboteadorDexZeroWindowKey:"",hvNextAttackAtkDebuff:0}:
+    u.id===d.id?{...u,hvNextDefenseAgiDebuff:0}:u);
   const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: acierta (${hit.roll}/${hit.chance}).${rerollText}${interpositionLogText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD del ciclo táctico actual. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${hannibalSplitText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
   return {
     units,

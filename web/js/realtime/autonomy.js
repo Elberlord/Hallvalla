@@ -1,9 +1,10 @@
 "use strict";
 /* HallValla · Motor automático canónico · movimiento, combate, soporte e IA */
 function hallvallaRtMoveCooldown(unit){
-  if(typeof getHallvallaUnitMoveCooldownMs==="function")return getHallvallaUnitMoveCooldownMs(unit);
-  const mov=Math.max(1,Math.min(5,Number(typeof effectiveMov==="function"?effectiveMov(unit):unit?.mov)||1));
-  return Math.max(1320,Math.round(HALLVALLA_RT_CFG.baseMoveCooldownMs/(0.70+mov*0.30)));
+  const normal=typeof getHallvallaUnitMoveCooldownMs==="function"?getHallvallaUnitMoveCooldownMs(unit):
+    Math.max(1320,Math.round(HALLVALLA_RT_CFG.baseMoveCooldownMs/(0.70+Math.max(1,Math.min(5,Number(unit?.mov||1)))*0.30)));
+  const skipar=unit?.key==="skipar_del_drakkar"&&!unit?.hvSkiparFirstMoveConsumed?hvActionRarityValue(unit)*1000:0;
+  return Math.max(1000,normal-skipar);
 }
 function hallvallaRtAttackCooldown(unit){
   if(typeof getHallvallaUnitAttackCooldownMs==="function")return getHallvallaUnitAttackCooldownMs(unit);
@@ -1007,7 +1008,11 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
     // hasta que el cooldown real de movimiento vence. La reposición de Hua Lan
     // es una reacción inmediata y, por diseño, no espera ese cooldown.
     const lastMove=Number(hallvallaRtState.moveAt.get(live.id)||0);
-    if(!freshSpawn&&!mulanReposition&&now-lastMove<hallvallaRtMoveCooldown(live))continue;
+    if(!freshSpawn&&!mulanReposition&&now-lastMove<hallvallaRtMoveCooldown(live)+Math.max(0,Number(live.hvNextMoveDelayMs||0)))continue;
+    if(live.hvNextMoveSkip===true&&!freshSpawn&&!mulanReposition){
+      units=units.map(u=>u.id===live.id?{...u,hvNextMoveSkip:false,hvNextMoveDelayMs:0}:u);
+      hallvallaRtState.moveAt.set(live.id,now);moves++;continue;
+    }
     let step=null;
 
     if(mulanReposition){
@@ -1037,7 +1042,7 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
         const target=hallvallaRtChooseTarget(live,units);if(!target)continue;
         // Fuera del corredor de salida, si ya puede atacar conserva su posición.
         if(hallvallaRtCanAttackNow(live,target))continue;
-        if(now-lastMove<hallvallaRtMoveCooldown(live))continue;
+        if(now-lastMove<hallvallaRtMoveCooldown(live)+Math.max(0,Number(live.hvNextMoveDelayMs||0)))continue;
         step=hallvallaRtChooseStep(live,target,units);
         if(!step){
           for(const alt of hallvallaRtTargetCandidates(live,units).slice(1)){step=hallvallaRtChooseStep(live,alt,units);if(step)break;}
@@ -1052,7 +1057,7 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
     let trapMove;
     try{trapMove=resolveMovementLegendaryTraps(live,{x:step.x,y:step.y},units,legendaryTraps);}catch(_){trapMove={cancel:false,units,traps:legendaryTraps,logs:[]};}
     legendaryTraps=[...(trapMove.traps||legendaryTraps)];
-    units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveWindowKey:publicState?.combatWindowKey||'RT',rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false}:u);
+    units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveWindowKey:publicState?.combatWindowKey||'RT',hvNextMoveDelayMs:0,hvNextMoveSkip:false,hvSkiparFirstMoveConsumed:u.key==='skipar_del_drakkar'?true:u.hvSkiparFirstMoveConsumed,rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false}:u);
     if(!trapMove.cancel){
       const moved=units.find(u=>u.id===live.id&&Number(u.hp||0)>0);
       if(moved){

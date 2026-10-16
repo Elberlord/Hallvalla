@@ -385,7 +385,15 @@ function maybeShowHallvallaUnitSkillChoice(preferredCopyId=""){
 function hvSkillActiveIds(unit){
   return hvSkillUnique(unit?.unitSkillRuntimeIds||unit?.unitLearnedSkillIds||[]);
 }
-function hvSkillEntries(unit){return hvSkillActiveIds(unit).map(id=>HALLVALLA_UNIT_SKILL_BANK[id]).filter(Boolean);}
+function hvSkillEntries(unit){
+  return hvSkillActiveIds(unit).map(id=>{
+    const skill=HALLVALLA_UNIT_SKILL_BANK[id];
+    if(id==="HV-187"&&String(unit?.key||"").toLowerCase()==="achilles"){
+      return {...skill,trigger:"Al atacar",effect:"Gana +8 AT durante 1 ataque.",secondary:"",base:8,step:0,scale:"AT"};
+    }
+    return skill;
+  }).filter(Boolean);
+}
 function hvSkillHasAdjacentLanceAlly(actor,{allowHoplite=true}={}){
   if(!actor)return false;
   const units=publicState?.units||[];
@@ -1195,6 +1203,7 @@ function hvSkillLegacyPlayerEffect(skill,entity){
 }
 function hvSkillPlayerText(skill,entity={rarity:"Básica"}){
   if(!skill)return "";
+  if(skill.id==="HV-187"&&String(entity?.key||"").toLowerCase()==="achilles")return "Gana +8 AT durante 1 ataque.";
   const scale=hvSkillScale(skill,entity);
   const template=String(skill.playerText||"").trim();
   if(template){
@@ -1246,6 +1255,9 @@ function hvSkillPlayerText(skill,entity={rarity:"Básica"}){
 }
 
 function hvSkillDetailedText(skill,entity,{source=""}={}){
+  if(skill?.id==="HV-187"&&String(entity?.key||"").toLowerCase()==="achilles"){
+    return "Gana +8 AT durante 1 ataque.";
+  }
   // DET: únicamente qué hace y cuándo se activa; sin origen ni fórmulas internas.
   return hvSkillPlayerText(skill,entity);
 }

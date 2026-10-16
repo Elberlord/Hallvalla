@@ -1512,30 +1512,27 @@ function applyPorcupineSpinesAndFear(attackerBefore,defenderBefore,units){
   let out=[...(units||[])],logs=[],statusFxEvent=null,floatFxEvent=null;
   if(!attackerBefore||!defenderBefore||defenderBefore.key!=="porcupine")return {units:out,logs,statusFxEvent,floatFxEvent};
   if(attackerBefore.owner===defenderBefore.owner||dist(attackerBefore,defenderBefore)>1||!hvCardReady(defenderBefore,"espinas_defensivas"))return {units:out,logs,statusFxEvent,floatFxEvent};
+  const rank=hvActionRarityValue(defenderBefore);
   out=out.map(u=>u.id===defenderBefore.id?hvCardMark(u,"espinas_defensivas"):u);
-  const attackerAlive=out.some(u=>u.id===attackerBefore.id&&u.hp>0);
-  if(attackerAlive){
-    out=out.map(u=>u.id===attackerBefore.id?applyDirectHpDamage(u,2):u);
-    const attackerAfter=out.find(u=>u.id===attackerBefore.id)||attackerBefore;
-    floatFxEvent=makeFloatFxEvent("damage",attackerAfter,2,{iconText:"🦔"});
-    logs.push(`Espinas Defensivas: ${attackerBefore.name} recibe 2 daño directo por atacar cuerpo a cuerpo al Puercoespín.`);
+  if(out.some(u=>u.id===attackerBefore.id&&u.hp>0)){
+    out=out.map(u=>u.id===attackerBefore.id?applyDirectHpDamage(u,rank):u);
+    const hit=out.find(u=>u.id===attackerBefore.id)||attackerBefore;
+    floatFxEvent=makeFloatFxEvent("damage",hit,rank,{iconText:"🦔"});
+    logs.push("Espinas Defensivas: devuelve "+rank+" de daño directo.");
     out=applyLegendaryFatalSaves(out,[attackerBefore.id]).filter(u=>u.hp>0);
   }
   const feared=[];
   out=out.map(u=>{
-    if(u.owner===defenderBefore.owner||u.id===attackerBefore.id)return u;
-    if(dist(u,defenderBefore)>1)return u;
-    if(Math.random()>=PORCUPINE_FEAR_CHANCE)return u;
+    if(u.owner===defenderBefore.owner||u.id===attackerBefore.id||dist(u,defenderBefore)>1||Math.random()>=PORCUPINE_FEAR_CHANCE)return u;
     feared.push(u.name||"Unidad");
-    const n=applyFearToUnit(u,defenderBefore.name||"Puercoespín");
-    if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("fear",n,3);
-    if(!floatFxEvent)floatFxEvent=makeFloatFxEvent("debuff",n,3,{iconText:"😨"});
+    const n={...u,hvNextAttackAtkDebuff:Math.max(Number(u.hvNextAttackAtkDebuff||0),rank)};
+    if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("fear",n,rank);
+    if(!floatFxEvent)floatFxEvent=makeFloatFxEvent("debuff",n,rank,{iconText:"😨"});
     return n;
   });
-  if(feared.length)logs.push(`Miedo: ${feared.join(", ")} pierde${feared.length===1?"":"n"} 3 AT hasta el final del siguiente ciclo táctico.`);
+  if(feared.length)logs.push("Miedo: "+feared.join(", ")+" pierde(n) "+rank+" AT solo en su siguiente ataque.");
   return {units:out,logs,statusFxEvent,floatFxEvent};
 }
-
 function hasActiveFearStatus(unit){return !!(unit&&Number(unit.tempAtkDebuff||0)>=3&&unit.fearWindowKey);}
 function applyFearToUnitOnce(unit,sourceName="León Africano"){
   if(!unit)return unit;
@@ -1546,25 +1543,22 @@ function applyFearToUnitOnce(unit,sourceName="León Africano"){
 }
 function applyAfricanLionFearAura(units,sourceLabel="León Africano"){
   let out=[...(units||[])],logs=[],statusFxEvent=null,floatFxEvent=null;
-  const lions=out.filter(l=>l.key==="african_lion"&&l.hp>0&&!l.leader);
-  if(!lions.length)return {units:out,logs,statusFxEvent,floatFxEvent};
-  const feared=[];
-  out=out.map(u=>{
-    if(!u||u.leader||u.hp<=0)return u;
-    const lion=lions.find(l=>l.owner!==u.owner&&dist(l,u)<=1);
-    if(!lion)return u;
-    const beforeAtkDebuff=Number(u.tempAtkDebuff||0);
-    const n=applyFearToUnitOnce(u,lion.name||sourceLabel);
-    if(n===u)return u;
-    if(Number(n.tempAtkDebuff||0)>beforeAtkDebuff)feared.push(u.name||"Unidad");
-    if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("fear",n,3);
-    if(!floatFxEvent)floatFxEvent=makeFloatFxEvent("debuff",n,3,{iconText:"😨"});
-    return n;
-  });
-  if(feared.length)logs.push(`Rugido del Rey: ${feared.join(", ")} recibe${feared.length===1?"":"n"} Miedo y pierde${feared.length===1?"":"n"} 3 AT hasta el final del siguiente ciclo táctico.`);
+  const lions=out.filter(l=>l.key==="african_lion"&&Number(l.hp||0)>0&&!l.leader);
+  for(const lion of lions){
+    const caster=out.find(u=>u.id===lion.id);
+    if(!hvCardReady(caster,"presencia_alfa"))continue;
+    const targets=out.filter(u=>u&&u.owner!==caster.owner&&!u.leader&&Number(u.hp||0)>0&&dist(caster,u)<=1&&u.key!=="berserker_de_oso"&&Number(u.hvNextAttackAtkDebuff||0)===0);
+    if(!targets.length)continue;
+    const rank=hvActionRarityValue(caster),ids=new Set(targets.map(u=>u.id));
+    out=out.map(u=>u.id===caster.id?hvCardMark(u,"presencia_alfa"):ids.has(u.id)?{...u,hvNextAttackAtkDebuff:rank}:u);
+    for(const enemy of targets){
+      logs.push("Presencia Alfa: "+enemy.name+" pierde "+rank+" AT en su próximo ataque.");
+      if(!statusFxEvent)statusFxEvent=makeStatusFxEvent("fear",enemy,rank);
+      if(!floatFxEvent)floatFxEvent=makeFloatFxEvent("debuff",enemy,rank,{iconText:"😨"});
+    }
+  }
   return {units:out,logs,statusFxEvent,floatFxEvent};
 }
-
 function applyBleedingCycleTick(units,owner){
   let logs=[];
   let statusFxEvent=null;

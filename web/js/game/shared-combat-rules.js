@@ -475,11 +475,11 @@ function getKhalidAttackPenalty(u){return u?.key==="khalid_ibn_al_walid"?Math.ma
 function getGenghisMovDebuff(u){return u&&u.genghisMovDebuffWindowKey&&u.genghisMovDebuffWindowKey===publicState?.combatWindowKey?Math.max(1,Number(u.genghisMovDebuff||1)):0;}
 function getHannibalMovDebuff(u){return u&&u.hannibalMovDebuffWindowKey&&u.hannibalMovDebuffWindowKey===publicState?.combatWindowKey?Math.max(1,Number(u.hannibalMovDebuff||1)):0;}
 function getHannibalAtkDebuff(u){return u&&u.hannibalAtkDebuffWindowKey&&u.hannibalAtkDebuffWindowKey===publicState?.combatWindowKey?Math.max(1,Number(u.hannibalAtkDebuff||1)):0;}
-function effectiveAtk(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);let v=(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"atk"):0)+(u?.atk||0)+(u?.buffAtk||0)+(u?.permAtk||0)+(u?.tempAtkBuff||0)-(u?.tempAtkDebuff||0)-getRtTrapDebuff(u,"atk")-getHannibalAtkDebuff(u)-getKhalidAttackPenalty(u)-(u?.leader?0:getMoraleAttackPenalty(u?.owner))+(bonus.atk||0)+(arcaneLink.atk||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=africanLionAllyAtkAura(u);v+=hectorEnemyAtkAura(u);v+=cuChulainnFearAura(u);return Math.max(0,v)}
+function effectiveAtk(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);let v=(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"atk"):0)+(u?.atk||0)+(u?.buffAtk||0)+(u?.permAtk||0)+(u?.tempAtkBuff||0)-(u?.tempAtkDebuff||0)-Number(u?.hvNextAttackAtkDebuff||0)-getRtTrapDebuff(u,"atk")-getHannibalAtkDebuff(u)-getKhalidAttackPenalty(u)-(u?.leader?0:getMoraleAttackPenalty(u?.owner))+(bonus.atk||0)+(arcaneLink.atk||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=africanLionAllyAtkAura(u);v+=hectorEnemyAtkAura(u);v+=cuChulainnFearAura(u);return Math.max(0,v)}
 function isRhinoStunnedNow(u){return !!(u&&u.rhinoStunnedWindowKey&&u.rhinoStunnedWindowKey===publicState?.combatWindowKey)}
 function halveForRhinoStun(v,u){v=Math.max(0,Number(v)||0);return isRhinoStunnedNow(u)?Math.floor(v/2):v}
-function effectiveDex(u){const forcedZero=!!(u?.saboteadorDexZeroWindowKey&&u.saboteadorDexZeroWindowKey===publicState?.combatWindowKey);const burnPanic=!!u&&!u.leader&&Number(u?.burnDamage||0)>0&&(Number(u?.burnTurns||0)>0||u?.burnPersistent===true);if(forcedZero||burnPanic)return 0;const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);const rawTempDebuff=Number(u?.tempDexDebuff||0);const legacyIgaHack=!!(u?.saboteadorDexZeroWindowKey&&rawTempDebuff>=90);const tempDebuff=legacyIgaHack?0:rawTempDebuff;let v=(typeof globalThis.hvHordeAuraBonus==="function"?globalThis.hvHordeAuraBonus(u):0)+(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"dex"):0)+(u?.dex||0)+(u?.tempDexBuff||0)-tempDebuff-getRtTrapDebuff(u,"dex")+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
-function effectiveAgi(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"agi"):0)+(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)-getRtTrapDebuff(u,"agi")+b+(arcaneLink.agi||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return applyHallvallaValueHooks("unit.effectiveAgi",Math.max(0,halveForRhinoStun(v,u)),{unit:u})}
+function effectiveDex(u){const forcedZero=!!u?.saboteadorDexZeroNextAttack||!!(u?.saboteadorDexZeroWindowKey&&u.saboteadorDexZeroWindowKey===publicState?.combatWindowKey);const burnPanic=!!u&&!u.leader&&Number(u?.burnDamage||0)>0&&(Number(u?.burnTurns||0)>0||u?.burnPersistent===true);if(forcedZero||burnPanic)return 0;const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.dex||0);const rawTempDebuff=Number(u?.tempDexDebuff||0);const legacyIgaHack=!!(u?.saboteadorDexZeroWindowKey&&rawTempDebuff>=90);const tempDebuff=legacyIgaHack?0:rawTempDebuff;let v=(typeof globalThis.hvHordeAuraBonus==="function"?globalThis.hvHordeAuraBonus(u):0)+(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"dex"):0)+(u?.dex||0)+(u?.tempDexBuff||0)-tempDebuff-getRtTrapDebuff(u,"dex")+b+(arcaneLink.dex||0);return Math.max(0,halveForRhinoStun(v,u))}
+function effectiveAgi(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);const b=u?.key==="white_rhino"?0:(bonus.agi||0);let v=(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"agi"):0)+(u?.agi||0)+(u?.tempAgiBuff||0)-(u?.tempAgiDebuff||0)-Number(u?.hvNextDefenseAgiDebuff||0)-getRtTrapDebuff(u,"agi")+b+(arcaneLink.agi||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=blackRavenAgiAura(u);v+=attilaEnemyAura(u).agi;return applyHallvallaValueHooks("unit.effectiveAgi",Math.max(0,halveForRhinoStun(v,u)),{unit:u})}
 function effectiveMaxHp(u){const bonus=getLeaderBonus(u);return Math.max(1,(u?.maxHp||u?.hp||0)+(bonus.hp||0)+richardBonusHp(u)+alexanderBonusHp(u)-Number(u?.tempHpDebuff||0)-getRtTrapDebuff(u,"hp"))}
 function isSkiparSummonMoveActive(u,state=publicState){return !!(u&&u.key==="skipar_del_drakkar"&&state&&u.summonedWindowKey&&u.summonedWindowKey===state.combatWindowKey);}
 function getCanonicalNaturalMovement(u){
@@ -614,6 +614,11 @@ function hvCardTryMod(mods,unit,name,once=false){
   if(!list.some(m=>m.unitId===unit.id&&m.name===name))list.push({unitId:unit.id,name,once});
   return true;
 }
+// Escala única de potencia para habilidades por rareza.
+function hvActionRarityValue(card){
+  const rarity=String(card?.rarity||globalThis.HALLVALLA_UNIT_SKILL_ASSIGNMENTS?.[String(card?.key||'')]?.rarity||'Básica').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  return ({basica:1,rara:2,epica:3,gloriosa:4,mitica:5,legendaria:6,semidios:7,astral:8})[rarity]||1;
+}
 function getCombatMods(attacker,defender,attackContext=null){
 
   const mods={attackerAtk:0,attackerAgi:0,attackerDex:0,attackerGuard:0,defenderAgi:0,defenderDex:0,defenderGuard:0,damageReduction:0,reroll:false,notes:[]};
@@ -632,8 +637,8 @@ function getCombatMods(attacker,defender,attackContext=null){
     const bonus=Math.min(2,countAdjacentUnitsByKey(attacker,"egyptian_line_archer",combatUnits));
     if(bonus>0&&hvCardTryMod(mods,attacker,"descarga_coordinada")){mods.attackerDex+=bonus;mods.notes.push(`${attacker.name} +${bonus} DX por Descarga coordinada.`);}
   }
-  if(isRangedAttack(attacker,defender)&&attacker.key==="new_kingdom_archer"&&!attacker.moved&&Number(attacker.movedSpaces||0)===0&&hvCardTryMod(mods,attacker,"tiro_preparado")){
-    mods.defenderGuard-=2;mods.notes.push(`${defender.name} -2 Guardia por Tiro preparado.`);
+  if(isRangedAttack(attacker,defender)&&attacker.key==="new_kingdom_archer"&&hvCardTryMod(mods,attacker,"tiro_preparado")){
+    mods.defenderGuard-=hvActionRarityValue(attacker);mods.notes.push(`${defender.name} -${hvActionRarityValue(attacker)} Guardia por Tiro preparado.`);
   }
   if(isRangedAttack(attacker,defender)&&attacker.key==="roman_auxiliary_sagittarius"&&enemyHasAdjacentAllyOfAttacker(attacker,defender,combatUnits)&&hvCardTryMod(mods,attacker,"cobertura_auxiliar",true)){
     mods.attackerDex+=2;mods.notes.push(`${attacker.name} +2 DX por Cobertura auxiliar.`);
@@ -690,8 +695,8 @@ function getCombatMods(attacker,defender,attackContext=null){
   if(attacker.key==="peregrine_falcon"&&(attacker.movedSpaces||0)>=3&&hvCardTryMod(mods,attacker,"picada_falcon")){mods.attackerAtk+=2;mods.falconDive=true;mods.notes.push(`${attacker.name} usa Ataque en Picada: golpe seguro, AT 3.`);}
   if(defender.key==="honey_badger"){mods.damageReduction+=1;mods.honeyBadgerReduction=true;mods.notes.push(`${defender.name} reduce 1 daño por Armadura Natural.`);}
   if(melee&&attacker.key==="cavalry"&&(attacker.movedSpaces||0)>=3&&defenderUsesEvasion){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Carga desestabilizadora.`);}
-  if(isRangedAttack(attacker,defender)&&attacker.key==="numidian_javelin_rider"&&Number(attacker.movedSpaces||0)>=1){mods.attackerDex+=2;mods.notes.push(`${attacker.name} +2 DX por Jabalinas de hostigamiento.`);}
-  if(isRangedAttack(attacker,defender)&&attacker.key==="mongol_explorer"&&Number(attacker.movedSpaces||0)>=2){mods.attackerDex+=1;mods.notes.push(`${attacker.name} +1 DX por Tiro en carrera.`);}
+  if(isRangedAttack(attacker,defender)&&attacker.key==="numidian_javelin_rider"&&hvCardTryMod(mods,attacker,"jabalinas_hostigamiento")){mods.attackerDex+=hvActionRarityValue(attacker);mods.notes.push(`${attacker.name} +${hvActionRarityValue(attacker)} DX por Jabalinas de hostigamiento.`);}
+  if(isRangedAttack(attacker,defender)&&attacker.key==="mongol_explorer"&&hvCardTryMod(mods,attacker,"tiro_en_carrera")){mods.attackerDex+=hvActionRarityValue(attacker);mods.notes.push(`${attacker.name} +${hvActionRarityValue(attacker)} DX por Tiro en carrera.`);}
   if(melee&&attacker.key==="hungarian_hussar"&&Number(attacker.movedSpaces||0)>=2&&hvCardTryMod(mods,attacker,"carga_sable")){mods.attackerAtk+=2;mods.attackerDex+=2;mods.notes.push(`${attacker.name} usa Carga de sable: +2 AT y +2 DX.`);}
   if(melee&&attacker.key==="cossack_rider"&&Number(defender.hp||0)<Number(effectiveMaxHp(defender)||defender.maxHp||defender.hp||0)){mods.attackerDex+=2;mods.notes.push(`${attacker.name} +2 DX por Persecución cosaca.`);}
   if(hasUnitEquipment(attacker,"rupture_bracers")&&isAttackFromStealth(attacker,attackContext)){mods.defenderGuard-=5;mods.notes.push(`${defender.name} -5 Guardia por Guardabrazos de Ruptura.`);}
@@ -701,12 +706,12 @@ function getCombatMods(attacker,defender,attackContext=null){
   if(melee&&attacker.key==="berserker"&&hvCardTryMod(mods,attacker,"ruptura_brutal")){mods.defenderGuard-=3;mods.notes.push(`${defender.name} -3 Guardia por Ruptura brutal.`);}
   if(melee&&attacker.key==="samurai_katana"&&hvCardTryMod(mods,attacker,"dos_manos")){mods.attackerAtk+=6;mods.notes.push(`${attacker.name} +6 AT por Dos Manos.`);}
   if(defender.key==="samurai_katana"||defender.key==="miyamoto_musashi"){const shirahadoriCount=countEnemyUnitsInCardRange(defender,publicState?.units||[]);if(shirahadoriCount>0&&hvCardTryMod(mods,defender,"shirahadori")){mods.defenderDex+=(shirahadoriCount*2);mods.notes.push(`${defender.name} +${shirahadoriCount*2} DX por Shirahadori (${shirahadoriCount} rival${shirahadoriCount===1?"":"es"} en su rango).`);}}
-  if(melee&&attacker.key==="guardian"){if(defenderUsesEvasion){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Golpe de escudo.`);}if((defender.guard||0)<=2){mods.notes.push(`${defender.name} -1 AT y -1 MOV por Aplastamiento.`)}}
-  if(melee&&defender.key==="huscarl_anglosajon_hacha"&&!defender.moved&&Number(defender.movedSpaces||0)===0){mods.defenderGuard+=2;mods.notes.push(`${defender.name} +2 Guardia por Muro sajón.`);}
+  if(melee&&attacker.key==="guardian"&&hvCardTryMod(mods,attacker,"golpe_escudo")){const rank=hvActionRarityValue(attacker);if(defenderUsesEvasion){mods.defenderAgi-=rank;mods.notes.push(`${defender.name} -${rank} AGI por Golpe de escudo.`);}if((defender.guard||0)<=2){mods.hvGuardianTargetId=defender.id;mods.hvGuardianRank=rank;mods.notes.push(`${defender.name} -${rank} AT en su próximo ataque y +${rank} s antes de su próximo movimiento.`);}}
+  if(melee&&defender.key==="huscarl_anglosajon_hacha"&&melee&&hvCardTryMod(mods,defender,"muro_sajon")){mods.defenderGuard+=hvActionRarityValue(defender);mods.notes.push(`${defender.name} +${hvActionRarityValue(defender)} Guardia por Muro sajón.`);}
   if(attacker.key==="guardia_varega_hacha"&&isAdjacentToOwnLeader(attacker,combatUnits)){mods.attackerGuard+=2;mods.notes.push(`${attacker.name} +2 Guardia por Juramento imperial.`);}
   if(defender.key==="guardia_varega_hacha"&&isAdjacentToOwnLeader(defender,combatUnits)){mods.defenderGuard+=2;mods.notes.push(`${defender.name} +2 Guardia por Juramento imperial.`);}
   if(isRangedAttack(attacker,defender)&&attacker.key==="guerrero_franco_hacha"){mods.defenderGuard-=2;mods.notes.push(`${defender.name} -2 Guardia por Hacha arrojadiza.`);}
-  if(melee&&attacker.key==="gallowglass_irlandes_hacha"&&!attacker.moved&&Number(attacker.movedSpaces||0)===0){mods.attackerAtk+=2;mods.notes.push(`${attacker.name} +2 AT por Golpe pesado.`);}
+  if(melee&&attacker.key==="gallowglass_irlandes_hacha"&&hvCardTryMod(mods,attacker,"golpe_pesado")){mods.attackerAtk+=hvActionRarityValue(attacker);mods.notes.push(`${attacker.name} +${hvActionRarityValue(attacker)} AT por Golpe pesado.`);}
   if(melee&&attacker.key==="caballero_poleaxe"&&effectiveGuard(defender)>=4){mods.defenderGuard-=3;mods.notes.push(`${defender.name} -3 Guardia por Enganche de poleaxe.`);}
   if(melee&&isLanceUnitCardLike(attacker)&&isAntiCavalryTargetUnit(defender)){
     if(defenderUsesEvasion)mods.defenderAgi-=999;
@@ -746,12 +751,14 @@ function applyYabusameRetreatIfPossible(units,unitId){
   const result=retreatUnitOneStepTowardLeader(units,unitId);
   return{...result,text:result.moved?` Estrategia de repliegue: ${unit.name} retrocede 1 casilla hacia su líder.`:""};
 }
-function applyScythianRetreatIfPossible(units,unitId){
-  const unit=(units||[]).find(u=>u.id===unitId);
-  if(!unit||unit.key!=="scythian_horse_archer"||(unit.hp||0)<=0)return{units:units||[],moved:false,text:""};
-  if(Number(unit.movedSpaces||0)<2)return{units:units||[],moved:false,text:""};
-  const result=retreatUnitOneStepTowardLeader(units,unitId);
-  return{...result,text:result.moved?` Disparo parto: ${unit.name} retrocede 1 casilla hacia su líder.`:""};
+function applyScythianRetreatIfPossible(units,unitId,targetId){
+  const attacker=(units||[]).find(u=>u.id===unitId);
+  const target=(units||[]).find(u=>u.id===targetId);
+  if(!attacker||attacker.key!=="scythian_horse_archer"||!target||Number(target.hp||0)<=0||!hvCardReady(attacker,"disparo_parto"))return {units:units||[],moved:false,text:""};
+  const seconds=hvActionRarityValue(attacker);
+  const out=(units||[]).map(u=>u.id===attacker.id?hvCardMark(u,"disparo_parto"):u.id===target.id?
+    {...u,hvNextMoveDelayMs:Math.max(Number(u.hvNextMoveDelayMs||0),seconds*1000)}:u);
+  return {units:out,moved:false,text:" Disparo Parto: el próximo movimiento del objetivo tarda "+seconds+" s adicionales."};
 }
 function applyCossackAdvanceIfPossible(units,unitId,targetX,targetY){
   const unit=(units||[]).find(u=>u.id===unitId);
@@ -879,21 +886,15 @@ function normalizeSaboteadorRuleText(entity,value){
 }
 function applySaboteadorEscapeForzado(units,defenderId){
   const defender=(units||[]).find(u=>u.id===defenderId);
-  if(!defender||defender.key!=="saboteador_iga"||(defender.hp||0)<=0)return{units:units||[],triggered:false,text:""};
-  const affected=(units||[]).filter(u=>u.id!==defender.id&&!u.leader&&u.owner!==defender.owner&&dist(defender,u)<=1);
-  if(!affected.length)return{units:units||[],triggered:false,text:""};
+  if(!defender||defender.key!=="saboteador_iga"||Number(defender.hp||0)<=0||!hvCardReady(defender,"escape_forzado"))return {units:units||[],triggered:false,text:""};
+  const affected=(units||[]).filter(u=>u.id!==defender.id&&!u.leader&&u.owner!==defender.owner&&Number(u.hp||0)>0&&dist(defender,u)<=1);
+  if(!affected.length)return {units:units||[],triggered:false,text:""};
   const ids=new Set(affected.map(u=>u.id));
-  const combatWindowKey=publicState?.combatWindowKey||"";
-  const next=(units||[]).map(u=>{
-    if(!ids.has(u.id))return u;
-    const n={...u,saboteadorDexZeroWindowKey:combatWindowKey,saboteadorDexZeroSource:defender.name};
-    // Migración de partidas antiguas: elimina únicamente el falso debuff técnico de +99.
-    if(Number(n.tempDexDebuff||0)>=90)n.tempDexDebuff=0;
-    return n;
-  });
-  return{units:next,triggered:true,text:` Escape Forzado: ${defender.name} sobrevive y fuerza la DX a 0 de ${affected.length} unidad${affected.length===1?" enemiga":"es enemigas"} en rango 1 hasta el final del ciclo táctico actual.`};
+  const next=(units||[]).map(u=>u.id===defender.id?hvCardMark(u,"escape_forzado"):
+    ids.has(u.id)?{...u,saboteadorDexZeroNextAttack:true,saboteadorDexZeroWindowKey:"",saboteadorDexZeroSource:defender.name,
+      tempDexDebuff:Number(u.tempDexDebuff||0)>=90?0:u.tempDexDebuff}:u);
+  return {units:next,triggered:true,text:" Escape Forzado: "+defender.name+" reduce a 0 la DX de "+affected.length+" enemigo(s) en su próximo ataque; recarga 30 s."};
 }
-
 function consumeDefensiveStanceForAttack(defender,units,mods={}){
   if(!defender?.defenseModeReady)return{defender,units,mods,consumed:false};
   const nextMods={...mods,defenderGuard:(mods.defenderGuard||0)+2,defenseStancePenalty:Math.max(10,Number(mods.defenseStancePenalty||0)),notes:[...(mods.notes||[]),`${defender.name} activa Guardia defensiva: +2 GD y -10% precisión al primer ataque.`]};
