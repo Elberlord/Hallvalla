@@ -581,6 +581,14 @@ function hvSkillCombatMods(mods,{attacker,defender,attackContext}={}){
     if(hvSkillUsesTriggerCooldown(skill)&&!hvSkillCooldownReady(defender,skill,skillNow))continue;
     const scaled=hvSkillScale(skill,defender),value=Math.max(0,Number(scaled.value||0)),effect=hvSkillNorm(`${skill.effect} ${skill.secondary}`),cat=hvSkillNorm(skill.category),scale=hvSkillNorm(skill.scale);
     let used=false;
+    // Escudo Arcano: una sola defensa contra proyectiles o magia de distancia.
+    if(skill.id==="HV-173"&&typeof isRangedAttack==="function"&&isRangedAttack(attacker,defender)){
+      const shield=Math.max(1,Math.round(Number(scaled.value||1)));
+      next.damageReduction=(next.damageReduction||0)+shield;
+      next.defenderSkillCooldownMarks=[...(next.defenderSkillCooldownMarks||[]),{unitId:defender.id,skillId:skill.id,until:skillNow+30000}];
+      hvSkillAddNote(next,skill.name+": reduce "+shield+" de dano a distancia en esta defensa; recarga 30 s.");
+      continue;
+    }
     if(skill.name==="Guardia de Hierro"){
       if(!hvSkillCooldownReady(defender,skill,skillNow))continue;
       if(value>0){
@@ -710,6 +718,54 @@ function hvPrecisionFreezeUnit(unit,now=Date.now()){
   }catch(e){console.warn('[HallValla][Skills] Reloj de precisión:',e);}
   return next;
 }
+// Habilidades de movilidad que se resuelven DESPUES del ataque (no durante una tirada).
+function hvResolvePostAttackMobilitySkills(units,attacker,defender,attackHit){
+  const unchanged={units:[...(units||[])],changed:false,text:""};
+  if(!attacker||!defender||!Array.isArray(units))return unchanged;
+  const now=Date.now(),live=units.find(u=>u.id===attacker.id&&Number(u.hp||0)>0);
+  if(!live||live.leader)return unchanged;
+  const ids=hvSkillEntries(live).filter(x=>["HV-024","HV-143","HV-194"].includes(x?.id)&&hvSkillCooldownReady(live,x,now));
+  if(!ids.length)return unchanged;
+  const shot=(typeof isRangedAttack==="function"?isRangedAttack(attacker,defender):Number(attacker.range||1)>1);
+  const skill=ids.find(x=>
+    (x.id==="HV-024"&&shot)||
+    (x.id==="HV-143")||
+    (x.id==="HV-194"&&Number(defender.atk||0)>Number(live.guard||0))
+  );
+  if(!skill)return unchanged;
+  const w=typeof COLS!=="undefined"?COLS:11,h=typeof ROWS!=="undefined"?ROWS:6;
+  const blocked=new Set(units.filter(u=>u&&u.id!==live.id&&Number(u.hp||0)>0).map(u=>u.x+','+u.y));
+  const cells=[];
+  for(const dx of [-1,0,1])for(const dy of [-1,0,1]){
+    if(dx===0&&dy===0)continue;
+    const x=Number(live.x)+dx,y=Number(live.y)+dy;
+    if(x<0||x>=w||y<0||y>=h||blocked.has(x+','+y))continue;
+    if(typeof isCellBlockedForUnit==="function"&&isCellBlockedForUnit(live,x,y,units))continue;
+    const targetDistance=Math.max(Math.abs(x-Number(defender.x)),Math.abs(y-Number(defender.y)));
+    cells.push({x,y,targetDistance});
+  }
+  const previous=Math.max(Math.abs(Number(live.x)-Number(defender.x)),Math.abs(Number(live.y)-Number(defender.y)));
+  cells.sort((a,b)=>b.targetDistance-a.targetDistance);
+  const chosen=cells.find(c=>c.targetDistance>previous);
+  if(!chosen)return unchanged;
+  const out=units.map(u=>u.id===live.id?hvSkillMarkCooldown({...u,x:chosen.x,y:chosen.y,nexoX:chosen.x,nexoY:chosen.y,acted:true},skill,now):u);
+  return{units:out,changed:true,text:' '+skill.name+': '+live.name+' se repliega a una casilla libre; recarga 30 s.'};
+}
+
+// Visión Verdadera es PASIVA. No inventar una recarga periódica de 30 s.
+function hvSkillRevealTrueSight(units){
+  let revealed=0;
+  const sources=(units||[]).filter(u=>u&&!u.leader&&Number(u.hp||0)>0&&hvSkillOwns(u,'HV-185'));
+  if(!sources.length)return{units,changed:false,amount:0};
+  const out=(units||[]).map(u=>{
+    if(!u||Number(u.hp||0)<=0||(!u.stealth&&!u.hidden)||u.revealed)return u;
+    const source=sources.find(s=>s.owner!==u.owner&&Math.max(Math.abs(Number(s.x)-Number(u.x)),Math.abs(Number(s.y)-Number(u.y)))<=3);
+    if(!source)return u;
+    revealed++;return {...u,revealed:true,stealth:false,hidden:false};
+  });
+  return{units:out,changed:revealed>0,amount:revealed};
+}
+
 function applyHallvallaUnitSkillAttackEffects(units,attacker,defender,context={}){
   let out=[...(units||[])],text="",statusFxEvent=null,floatFxEvent=null;
   if(!attacker||!defender||!context.hit)return{units:out,text,statusFxEvent,floatFxEvent};
@@ -758,6 +814,23 @@ function applyHallvallaUnitSkillAttackEffects(units,attacker,defender,context={}
     if(requiresHp&&Number(context.hpLoss||0)<=0)continue;
     if((tags.has("burn")||tags.has("poison")||tags.has("bleed")||tags.has("leg_slow")||tags.has("arm_slow")||tags.has("blind")||tags.has("shock")||tags.has("guard_break")||tags.has("push")||tags.has("multi")||tags.has("stun")||tags.has("silence"))&&!hvSkillProc(skill,liveA))continue;
     let changed=false;
+    // Pisoteo HV-192: combate melee contra objetivo ligero, NO duplica
+    // el pisoteo especial de Arremetida Colosal ya resuelta por el motor.
+    if(skill.id==="HV-192"&&typeof dist==="function"&&dist(liveA,liveD)<=1&&
+       !context.mods?.elephantCharge&&
+       Number((typeof effectiveMaxHp==="function"?effectiveMaxHp(liveD):liveD.maxHp)||1)<
+       Number((typeof effectiveMaxHp==="function"?effectiveMaxHp(liveA):liveA.maxHp)||1)&&
+       typeof applyGuardDamage==="function"){
+      const dmg=Math.max(1,Math.round(Number(scaled.value||1)));
+      out=out.map(u=>{
+        if(u.id!==liveD.id)return u;
+        const n=applyGuardDamage(u,dmg,0,0);
+        delete n.lastGuardLoss;delete n.lastHpLoss;return n;
+      });
+      if(typeof pushUnitBackIfPossible==="function"&&out.some(u=>u.id===liveD.id&&Number(u.hp||0)>0))
+        out=pushUnitBackIfPossible(out,out.find(u=>u.id===liveD.id),liveA,1);
+      changed=true;text+=' Pisoteo: '+liveD.name+' recibe '+dmg+' de daño adicional, primero en Guardia; empuje si hay espacio.';
+    }
     if(skill.id==="HV-014"){
       if(typeof withRtTrapDebuff!=="function")continue;
       out=out.map(u=>u.id===liveD.id?withRtTrapDebuff(withRtTrapDebuff(u,"mov",1,5000,skill.name),"dex",1,5000,skill.name):u);
@@ -1235,6 +1308,14 @@ function hvSkillLegacyPlayerEffect(skill,entity){
 function hvSkillPlayerText(skill,entity={rarity:"Básica"}){
   if(!skill)return "";
   const power=hvSkillRarityIndex(entity);
+  if(skill.id==="HV-242"&&String(entity?.key||"")==="african_elephant")return "Pisotón: al acertar un ataque cuerpo a cuerpo, golpea a los enemigos adyacentes (rango 1) con "+(1+power)+" de daño cada uno. Consume Guardia antes de Vida. Cada enemigo alcanzado tiene 25 % de probabilidad de perder su próximo movimiento. Se activa una sola vez y espera 30 segundos de recarga. Es independiente de Arremetida Colosal.";
+  if(skill.id==="HV-024")return "Después de un disparo, retrocede una casilla hacia una posición libre y más alejada del enemigo. Recarga: 30 segundos.";
+  if(skill.id==="HV-143")return "Después de atacar, se repliega una casilla libre si puede alejarse del objetivo. Recarga: 30 segundos.";
+  if(skill.id==="HV-173")return "Al defenderse de un ataque a distancia, reduce el daño de ese ataque según su rareza. Recarga: 30 segundos.";
+  if(skill.id==="HV-185")return "Pasiva: revela a enemigos en Sigilo a 3 casillas o menos. No tiene recarga.";
+  if(skill.id==="HV-192")return "Al acertar un ataque cuerpo a cuerpo contra un enemigo de menor Vida máxima, causa daño adicional según rareza (primero Guardia) y lo empuja una casilla si hay espacio. Recarga: 30 segundos. No requiere desplazamiento previo.";
+  if(skill.id==="HV-194")return "Después de atacar contra un enemigo más ofensivo que la Guardia propia, retrocede a una casilla libre si aumenta distancia. Recarga: 30 segundos.";
+  if(skill.id==="HV-202")return "Aura pasiva: toda la caballería aliada obtiene +1 DX y +1 MOV mientras esta unidad esté en batalla. No se acumula.";
   if(skill.id==="HV-166")return "Al fijar un objetivo, reduce "+power+" AT en su próximo ataque. Recarga: 30 segundos.";
   if(skill.id==="HV-167")return "Al atacar a un enemigo, reduce "+power+" GD durante la defensa contra ese ataque. Recarga: 30 segundos.";
   if(skill.id==="HV-168")return "Al fijar un objetivo, retrasa su próximo movimiento "+power+" s y reduce "+power+" AGI en su próxima defensa. Recarga: 30 segundos.";
@@ -1337,7 +1418,7 @@ function hvSkillInstallDetIntegration(){
     const meta=HALLVALLA_UNIT_SKILL_ASSIGNMENTS[String(entity?.key||"")];
     if(!meta)return native;
     const hasCanonical=typeof getCardEffectTextByKey==="function"&&Boolean(getCardEffectTextByKey(entity?.key));
-    const nativeSkillId=hasCanonical&&!(["HV-166","HV-167","HV-168"].includes(String(meta.innate?.[0]||"")))?String(meta.innate?.[0]||""):"";
+    const nativeSkillId=hasCanonical&&String(entity?.key||"")!=="african_elephant"&&!(["HV-166","HV-167","HV-168"].includes(String(meta.innate?.[0]||"")))?String(meta.innate?.[0]||""):"";
     const extra=getHallvallaUnitSkillSectionsForEntity(entity)
       .filter(section=>section.skillId!==nativeSkillId);
     const used=new Set(native.map(section=>hvSkillNorm(section?.title||"")));

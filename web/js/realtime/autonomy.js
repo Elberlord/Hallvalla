@@ -913,6 +913,13 @@ async function hallvallaRtVeilAfterSupport(caster){
 }
 async function hallvallaRtSupportTick(now){
   const units=[...(publicState?.units||[])];
+  if(typeof hvSkillRevealTrueSight==="function"){
+    const sight=hvSkillRevealTrueSight(units);
+    if(sight.changed){
+      await updatePublic({units:sight.units,log:['Visión Verdadera revela '+sight.amount+' enemigo(s).',...(publicState?.log||[])].slice(0,18)});
+      return true;
+    }
+  }
   for(const unit of units){
     if(!unit||unit.leader||Number(unit.hp||0)<=0)continue;
     // Revisión periódica para que Salomón no espere eternamente tras 30 s.

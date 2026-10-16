@@ -1112,6 +1112,18 @@ async function resolveSharedAttackOutcome({
   const elephantChargeResult=resolveAfricanElephantCharge(units,a,d,hit,mods);
   units=elephantChargeResult.units;
   const elephantChargeText=elephantChargeResult.text||"";
+  // Pisoton es otro disparador: no reutiliza el cooldown de Arremetida Colosal.
+  const stompResult=resolveAfricanElephantStomp(units,a,d,hit);
+  units=stompResult.units;
+  const stompText=stompResult.text||"";
+  const stompMasteryResults=[];
+  for(const stompVictimId of stompResult.fatalIds||[]){
+    const victim=liveUnits.find(u=>u.id===stompVictimId);
+    if(!victim)continue;
+    const mastery=registerLocalUnitMasteryKill(a,victim);
+    stompMasteryResults.push(mastery);
+    units=applyUnitMasteryRankUpToUnits(units,a,mastery);
+  }
   const elephantChargeKilledPrimary=elephantPrimaryAliveBeforeCharge&&!units.some(u=>u.id===d.id&&u.hp>0);
   if(elephantChargeKilledPrimary)defenderFell=true;
   const elephantMasteryKillResult=elephantChargeKilledPrimary?registerLocalUnitMasteryKill(a,d):null;
@@ -1341,6 +1353,8 @@ async function resolveSharedAttackOutcome({
   const masteryKillText=`${unitMasteryRankUpText(masteryKillResult)}${unitMasteryRankUpText(elephantMasteryKillResult)}`;
   const equipmentRetreatResult=units.some(u=>u.id===a.id)?applyPostCombatEquipmentRetreat(units,a,d):{units,moved:false,text:""};
   units=equipmentRetreatResult.units;
+  const skillRetreatResult=typeof hvResolvePostAttackMobilitySkills==="function"?hvResolvePostAttackMobilitySkills(units,a,d,!!hit.hit):{units,changed:false,text:""};
+  units=skillRetreatResult.units;
   const yabusameRetreatResult=units.some(u=>u.id===d.id)?applyYabusameRetreatIfPossible(units,d.id):{units,moved:false,text:""};
   units=yabusameRetreatResult.units;
   const scythianRetreatResult=units.some(u=>u.id===a.id)&&isRangedAttack(a,d)&&hit.hit?applyScythianRetreatIfPossible(units,a.id,d.id):{units,moved:false,text:""};
@@ -1367,7 +1381,7 @@ async function resolveSharedAttackOutcome({
   const veilActionResult=typeof hvAdvanceVeilCurseOnAction==="function"
     ?hvAdvanceVeilCurseOnAction(units,a.id,"un ataque"):{units,changed:false,text:""};
   units=veilActionResult.units;
-  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: acierta (${hit.roll}/${hit.chance}).${rerollText}${interpositionLogText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD del ciclo táctico actual. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${hannibalSplitText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`:`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}`;
+  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: acierta (${hit.roll}/${hit.chance}).${rerollText}${interpositionLogText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD del ciclo táctico actual. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${stompText}${hannibalSplitText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`:`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${stompText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`;
   return {
     units,
     prePostCombatUnits,
@@ -1380,6 +1394,7 @@ async function resolveSharedAttackOutcome({
     dragonCompanionResult,
     solomonIfritResult,
     elephantChargeResult,
+    stompResult,
     veilCurseResult,
     arcaneAdeptStatusEvent,
     poisonStatusEvent,

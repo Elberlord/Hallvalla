@@ -1246,6 +1246,52 @@ function pushUnitStepwise(units,targetId,dx,dy,maxSteps=1){
   }
   return {units:out,moved};
 }
+// HV-242: Pisoton del Elefante Africano. Independiente de Arremetida Colosal.
+// Rango 1, un solo disparo cuando acierta un ataque melee, cooldown propio 30 s.
+function resolveAfricanElephantStomp(units,attacker,defender,hit){
+  const unchanged={units:[...(units||[])],triggered:false,text:"",victimIds:[],fatalIds:[]};
+  if(!attacker||attacker.key!=="african_elephant"||!defender||!hit?.hit||dist(attacker,defender)>1) return unchanged;
+  if(!hvCardReady(attacker,"pisoton_elephant"))return unchanged;
+  let out=[...(units||[])];
+  if(!out.some(u=>u.id===attacker.id&&Number(u.hp||0)>0))return unchanged;
+  const liveElephant=out.find(u=>u.id===attacker.id)||attacker;
+  const targets=out.filter(u=>u&&u.owner!==attacker.owner&&Number(u.hp||0)>0&&dist(u,liveElephant)<=1&&
+    (typeof canReceiveUntargetedAreaEffect!=="function"||canReceiveUntargetedAreaEffect(u,attacker)));
+  if(!targets.length)return unchanged;
+  const rank=hvActionRarityValue(attacker),damage=1+rank,hitNames=[],fatalIds=[];
+  out=out.map(u=>u.id===attacker.id?hvCardMark(u,"pisoton_elephant"):u);
+  for(const target of targets){
+    const current=out.find(u=>u.id===target.id&&Number(u.hp||0)>0);
+    if(!current)continue;
+    let result=applyGuardDamage(current,damage,0,0);
+    if(typeof applyWarriorLeaderUnitShield==="function")result=applyWarriorLeaderUnitShield(current,attacker,result,out).unit;
+    if(typeof routeHannibalMountedHpDamage==="function"&&Number(result.lastHpLoss||0)>0){
+      const routed=routeHannibalMountedHpDamage(current,result,attacker);
+      result=routed.unit||result;
+    }
+    const guardLost=Math.max(0,Number(result.lastGuardLoss||0)),hpLost=Math.max(0,Number(result.lastHpLoss||0));
+    result.damagedThisWindow=hpLost>0||!!result.damagedThisWindow;
+    delete result.lastGuardLoss;delete result.lastHpLoss;
+    let interrupted=false;
+    if(Number(result.hp||0)>0&&Math.random()<0.25){result.hvNextMoveSkip=true;interrupted=true;}
+    out=out.map(u=>u.id===target.id?result:u);
+    fatalIds.push(target.id);
+    hitNames.push(`${current.name||"Enemigo"}: ${guardLost} GD y ${hpLost} Vida${interrupted?"; interrumpe su próximo movimiento":""}`);
+  }
+  if(!hitNames.length)return unchanged;
+  for(const id of [...new Set(fatalIds)]){
+    const still=out.find(u=>u.id===id);
+    if(still&&Number(still.hp||0)<=0&&typeof applyLeonidasLastStand==="function"){
+      const lastStand=applyLeonidasLastStand(out,id,attacker.id);out=lastStand.units;
+    }
+  }
+  if(typeof applyLegendaryFatalSaves==="function")out=applyLegendaryFatalSaves(out,fatalIds);
+  const defeated=fatalIds.filter(id=>!out.some(u=>u.id===id&&Number(u.hp||0)>0));
+  out=out.filter(u=>Number(u.hp||0)>0);
+  return {units:out,triggered:true,victimIds:hitNames,fatalIds:defeated,
+    text:` Pisotón: ${attacker.name} golpea a enemigos a rango 1 con ${damage} de daño por objetivo (Guardia antes que Vida; 25 % de interrupción del siguiente movimiento). ${hitNames.join("; ")}; recarga 30 s.`};
+}
+
 function resolveAfricanElephantCharge(units,attacker,defender,hit,mods={}){
   if(!mods.elephantCharge||!attacker||!defender)return {units:units||[],triggered:false,text:"",logs:[],sideTargetIds:[],stealthAreaDamageEvent:null};
   let out=[...(units||[])];
