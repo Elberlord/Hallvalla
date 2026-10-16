@@ -159,7 +159,17 @@ function getEntityAbilitySections(entity,effectText=""){
   while((m=rx.exec(txt))){
     sections.push({title:m[1].trim(),body:m[2].trim()});
   }
-  if(sections.length)return sections.slice(0,27);
+  // 'Recarga: 30 s.' es un dato de la habilidad previa, nunca una habilidad nueva.
+  const merged=[];
+  for(const section of sections){
+    if(/^(recarga|enfriamiento|cooldown)$/i.test(String(section.title||"").trim()) && merged.length){
+      const previous=merged[merged.length-1];
+      previous.body=`${String(previous.body||"").trim()} Recarga: ${String(section.body||"").trim()}`;
+    }else{
+      merged.push(section);
+    }
+  }
+  if(merged.length)return merged.slice(0,27);
   return [{title:entity?.leader?"Pasiva":"Habilidad",body:txt}];
 }
 
