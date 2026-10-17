@@ -4,7 +4,7 @@
    Las activaciones son parte de la transicion publica de unidades de TR. */
 (function(){
   if(globalThis.HV_LEADER_NINE_SKILLS)return;
-  const SECOND=1000, CD=30000;
+  const SECOND=1000, CD=30000, LEADER_ACTIVE_GAP_MS=5000;
   const info=(id,name,desc,mode="active")=>Object.freeze({id,name,desc,mode});
   const C=Object.freeze({
     warrior:[
@@ -290,6 +290,12 @@
     const level=Math.max(1,Math.min(45,N(leader.leaderLevel)||1));
     // Silencio y parálisis del líder impiden su lanzamiento activo.
     if(typeof isRtTrapLocked==="function"&&(isRtTrapLocked(leader,"silence",now)||isRtTrapLocked(leader,"attack",now)))return{units:out,logs,changed,battleFxEvent};
+    // Una sola habilidad activa por lider como minimo cada cinco segundos.
+    // Para partidas restauradas, consultar tambien los ultimos usos de habilidades
+    // del estado antiguo (que aun no tenia hvLeaderLastActiveAt).
+    const lastActive=Math.max(N(leader.hvLeaderLastActiveAt),
+      ...Object.values(leader.hvLeaderSkillLast||{}).map(N));
+    if(lastActive>0&&now-lastActive<LEADER_ACTIVE_GAP_MS)return{units:out,logs,changed,battleFxEvent};
     for(let i=0;i<9;i++){
       const entry=skill(leader.leaderType,i);
       if(level<levelForIndex(i)||!entry||entry.mode==="passive")continue;
@@ -308,11 +314,14 @@
       out=mapOne(out,leader.id,u=>({...u,
         hvLeaderSkillLast:{...(u.hvLeaderSkillLast||{}),[entry.id]:now},
         hvLeaderSkillUsed:entry.mode==="one_use"?{...(u.hvLeaderSkillUsed||{}),[entry.id]:true}:(u.hvLeaderSkillUsed||{}),
-        hvLeaderActivationCount:N(u.hvLeaderActivationCount)+1
+        hvLeaderActivationCount:N(u.hvLeaderActivationCount)+1,
+        hvLeaderLastActiveAt:now
       }));
       logs.push(`Líder ${leader.leaderType}: ${entry.name}.`,...(result.logs||[]));
       if(result.battleFxEvent)battleFxEvent=result.battleFxEvent;
       changed=true;
+      // Una sola activacion por actualizacion, aunque varias esten listas.
+      break;
     }
     return{units:out,logs,changed,battleFxEvent};
   }
@@ -370,7 +379,7 @@
     return `<section class="hv-leader-nine" aria-label="Nueve habilidades del líder"><h3>Habilidades del líder · ${Math.min(9,Math.floor(level/5))}/9 desbloqueadas</h3><div class="hv-leader-nine-grid">`+
       (C[type]||[]).map((s,i)=>{
         const need=levelForIndex(i),locked=level<need;
-        return `<div class="hv-leader-nine-tile ${locked?"hv-leader-nine-locked":"hv-leader-nine-unlocked"}" aria-label="${locked?"Bloqueada":"Desbloqueada"}: ${s.name}"><span class="hv-leader-nine-icon">${locked?"🔒":"✦"}</span><div><strong>${s.name}</strong><small>Nv. ${need} · ${s.mode==="passive"?"Pasiva":s.mode==="one_use"?"1 uso por batalla":"30 s de recarga"}</small><p>${s.desc}</p></div></div>`;
+        return `<div class="hv-leader-nine-tile ${locked?"hv-leader-nine-locked":"hv-leader-nine-unlocked"}" aria-label="${locked?"Bloqueada":"Desbloqueada"}: ${s.name}"><span class="hv-leader-nine-icon">${locked?"🔒":"✦"}</span><div><strong>${s.name}</strong><small>Nv. ${need} · ${s.mode==="passive"?"Pasiva":s.mode==="one_use"?"1 uso por batalla · 5 s entre habilidades":"30 s de recarga · 5 s entre habilidades"}</small><p>${s.desc}</p></div></div>`;
       }).join("")+`</div></section>`;
   }
   globalThis.HV_LEADER_NINE_SKILLS=Object.freeze({catalog:C,levelForIndex,resolve,dotTick,html,attackBonus,defenseBonus,dexBonus,agiBonus,extraAttack,activeStat});

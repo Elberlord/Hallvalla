@@ -58,7 +58,7 @@
     activePriority=0;
     clearTimeout(watchdog);
     if(!battleOpen()){
-      for(let i=queue.length-1;i>=0;i--){if(queue[i].kind!=="streak"&&queue[i].kind!=="boss"&&queue[i].kind!=="mvp"&&queue[i].kind!=="mvp_name"&&queue[i].kind!=="fallen"&&queue[i].kind!=="revived"&&queue[i].kind!=="life_name")queue.splice(i,1);}
+      for(let i=queue.length-1;i>=0;i--){if(queue[i].kind!=="streak"&&queue[i].kind!=="boss"&&queue[i].kind!=="mvp"&&queue[i].kind!=="mvp_name"&&queue[i].kind!=="revived"&&queue[i].kind!=="life_name")queue.splice(i,1);}
       if(!queue.length)return;
     }
     setTimeout(drain,70);
@@ -66,7 +66,7 @@
   function drain(){
     if(active||!queue.length||!settingsOk())return;
     if(!battleOpen()){
-      for(let i=queue.length-1;i>=0;i--){if(queue[i].kind!=="streak"&&queue[i].kind!=="boss"&&queue[i].kind!=="mvp"&&queue[i].kind!=="mvp_name"&&queue[i].kind!=="fallen"&&queue[i].kind!=="revived"&&queue[i].kind!=="life_name")queue.splice(i,1);}
+      for(let i=queue.length-1;i>=0;i--){if(queue[i].kind!=="streak"&&queue[i].kind!=="boss"&&queue[i].kind!=="mvp"&&queue[i].kind!=="mvp_name"&&queue[i].kind!=="revived"&&queue[i].kind!=="life_name")queue.splice(i,1);}
       if(!queue.length)return;
     }
     const delta=now()-lastSpeechAt;
@@ -100,8 +100,10 @@
     try{const p=audio.play();if(p&&p.catch)p.catch(completed);}catch(_){completed();}
   }
   function announce(kind,name,priority=1,cardKey="",leaderType="",unitId=""){
+    // Suprimir todos los anuncios de muerte, incluso desde consumidores antiguos.
+    if(kind==="fallen")return false;
     const safe=String(name||"").trim().replace(/\s+/g," ").slice(0,75);
-    if(!safe||!settingsOk()||(!battleOpen()&&kind!=="streak"&&kind!=="boss"&&kind!=="mvp"&&kind!=="mvp_name"&&kind!=="fallen"&&kind!=="life_name"))return false;
+    if(!safe||!settingsOk()||(!battleOpen()&&kind!=="streak"&&kind!=="boss"&&kind!=="mvp"&&kind!=="mvp_name"&&kind!=="life_name"))return false;
     const key=`${kind}:${safe.toLowerCase()}`;
     const t=now();
     if(t-(recent.get(key)||0)<4500)return false;
@@ -289,11 +291,11 @@
       return announce(kind,label,kind==="boss"?10:9,assetKey||"");
     },
     life(kind,name,key=""){
-      if(kind!=="fallen"&&kind!=="revived")return false;
+      if(kind!=="revived")return false;
       const label=String(name||"").trim();
       if(!label||!settingsOk())return false;
-      const priority=kind==="fallen"?7.1:7.3;
-      const intro=announce(kind,kind==="fallen"?"Fallen":"Resurrected",priority,kind);
+      const priority=7.3;
+      const intro=announce("revived","Resurrected",priority,"revived");
       // Los nombres se reutilizan del catalogo original de 198 MP3.
       // No se sintetizan nombres ni se revelan nombres ocultos.
       const nameAudio=globalThis.HV281_VOICE_ASSETS?.resolve("summon",label,key)||"";
