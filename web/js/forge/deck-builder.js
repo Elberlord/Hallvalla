@@ -841,6 +841,32 @@ function migrateVisibleStarterDeckForLeader(deck=[],leaderType=getSelectedLeader
   if(deckKeySignature(target)===sig)return{deck:current,changed:false};
   return{deck:target,changed:true};
 }
+/* v279 | DET de los siete lideres disponible desde Construir mazo. Solo lectura. */
+function renderForgeLeaderPortraitRail(){
+  const rail=$("forgeLeaderPortraitRail");
+  if(!rail)return;
+  const current=typeof getSelectedLeaderType==="function"?getSelectedLeaderType():"";
+  const rows=Object.entries(LEADER_DATA);
+  rail.innerHTML=`<div class="hv-forge-leader-rail-head">LÍDERES <small>TOCA PARA VER DET</small></div>`+
+    rows.map(([type,data])=>{
+      const level=typeof getLocalLeaderLevel==="function"?Math.max(1,Math.min(45,Number(getLocalLeaderLevel(type))||1)):1;
+      const count=Math.min(9,Math.floor(level/5));
+      const active=type===current;
+      return `<button type="button" class="hv-forge-leader-portrait ${active?"is-active":""}" data-forge-leader-det="${escapeHtml(type)}" title="${escapeHtml(data.name)} · ${count}/9 habilidades" aria-label="Detalles de ${escapeHtml(data.name)}, nivel ${level}, ${count} habilidades desbloqueadas">
+        <img src="${escapeHtml(data.portrait||"")}" alt="" loading="lazy" decoding="async">
+        <span class="hv-forge-leader-label"><strong>${escapeHtml(data.name)}</strong><small>Nv. ${level} · ${count}/9 habilidades</small></span>
+        <span class="hv-forge-leader-indicator" aria-hidden="true">${active?"✦":"›"}</span>
+      </button>`;
+    }).join("");
+  rail.querySelectorAll("[data-forge-leader-det]").forEach(button=>{
+    button.addEventListener("click",event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      openLeaderAbilityModal(button.dataset.forgeLeaderDet);
+    });
+  });
+}
+
 function openDeckBuilderCore(){
   const browseOnly=isCollectionBrowseOnly();
   const panel=$("deckBuilderPanel");
@@ -1242,6 +1268,7 @@ function syncDeckBuilderUnitTabs(){
   });
 }
 function renderDeckBuilder(){
+  renderForgeLeaderPortraitRail();
   syncDeckBuilderUnitTabs();
   hvDeckEnsureSkillBadgeStyle();
   // Una sola reconciliación por render, nunca una por tarjeta o por copia.
@@ -1634,29 +1661,25 @@ function openLeaderDetailModal(type){
 function closeLeaderDetailModal(){const modal=$("leaderDetailModal");if(modal){modal.classList.add("hidden");modal.setAttribute("aria-hidden","true");}}
 function openLeaderAbilityModal(type){
   const data=LEADER_DATA[type];
-  const meta=LEADER_DETAIL_META[type];
-  if(!data||!meta)return;
+  if(!data)return;
+  const level=getLocalLeaderLevel(type);
+  const tier=getLeaderBuffTierFromLevel(level);
   const body=$("leaderAbilityBody");
   if(!body)return;
-  body.innerHTML=`<div class="leader-info-head compact">
-    <img src="${escapeHtml(data.portrait||"")}" alt="${escapeHtml(data.name)}">
+  const count=Math.min(9,Math.floor(level/5));
+  const grid=typeof hvLeaderAbilityGridHtml==="function"
+    ?hvLeaderAbilityGridHtml(type,level)
+    :`<p>Las habilidades no pudieron cargarse. Recarga el juego.</p>`;
+  body.innerHTML=`<div class="leader-info-head compact hv-leader-det-head">
+    <img src="${escapeHtml(data.portrait||"")}" alt="Retrato de ${escapeHtml(data.name)}">
     <div>
-      <h2>${escapeHtml(meta.abilityName)}</h2>
-      <p>${escapeHtml(data.name)} · Habilidad especial de nivel 5</p>
+      <h2>${escapeHtml(data.name)}</h2>
+      <p>Nivel ${level} · Tier ${tier} · ${count} de 9 habilidades desbloqueadas</p>
+      <p>Las habilidades con candado se desbloquean cada 5 niveles.</p>
     </div>
-  </div>
-  <section class="leader-info-section">
-    <h3>Se desbloquea en nivel 5</h3>
-    <p><b>Importante:</b> nivel 5 sigue siendo Tier 2. Cada tier conserva los bonus anteriores; cada 5 tiers se completa una vuelta AT → DX → AG → GD → HP y el ciclo empieza de nuevo. La habilidad Nv.5 es un desbloqueo aparte.</p>
-    <p>${escapeHtml(meta.ability)}</p>
-  </section>
-  <section class="leader-info-actions">
-    <button class="leader-info-select-btn" type="button" data-leader-choice="${escapeHtml(type)}">Seleccionar</button>
-  </section>`;
-  if(typeof hvLeaderAbilityGridHtml==="function")body.innerHTML=hvLeaderAbilityGridHtml(type,getLocalLeaderLevel(type));
+  </div>${grid}`;
   const modal=$("leaderAbilityModal");
   if(modal){modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");}
-  body.querySelector("[data-leader-choice]")?.addEventListener("click",async()=>{await setSelectedLeaderType(type);closeLeaderAbilityModal();closeLeaderDetailModal();});
 }
 function closeLeaderAbilityModal(){const modal=$("leaderAbilityModal");if(modal){modal.classList.add("hidden");modal.setAttribute("aria-hidden","true");}}
 

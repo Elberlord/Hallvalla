@@ -1,0 +1,61 @@
+/* HallValla v279 | Selector de retratos en Construir mazo. Geometria fija 1366x636. */
+#deckBuilderPanel .hv-forge-leader-rail{
+  position:fixed !important;left:25px !important;top:50% !important;
+  transform:translateY(-50%) !important; box-sizing:border-box;
+  display:flex !important;flex-direction:column;gap:5px;
+  width:205px;max-height:calc(100% - 32px);overflow-y:auto;overflow-x:hidden;
+  padding:9px 8px;border-radius:12px;
+  border:1px solid rgba(211,169,83,.67);
+  background:linear-gradient(155deg,rgba(24,20,15,.97),rgba(9,12,18,.94));
+  box-shadow:0 6px 28px #0009,inset 0 0 17px rgba(153,104,36,.15);
+  z-index:30;pointer-events:auto;scrollbar-width:thin;scrollbar-color:#86662c #151515;
+}
+#deckBuilderPanel .hv-forge-leader-rail-head{
+  color:#f4d58a;font:700 14px Georgia,serif;text-align:center;
+  letter-spacing:1.1px;line-height:1.25;padding:3px 0 8px;
+  border-bottom:1px solid rgba(223,177,85,.36);
+}
+#deckBuilderPanel .hv-forge-leader-rail-head small{
+  display:block;font:600 9px system-ui,sans-serif;letter-spacing:.4px;
+  color:#cbb894;margin-top:3px;
+}
+#deckBuilderPanel .hv-forge-leader-portrait{
+  box-sizing:border-box;width:100%;min-height:57px;display:flex;align-items:center;
+  gap:8px;margin:0;padding:4px 5px;text-align:left;cursor:pointer;
+  border:1px solid rgba(199,157,76,.30);border-radius:8px;
+  color:#f4e9d2;background:linear-gradient(110deg,#2d2119e8,#14181ded);
+  font:inherit;transition:border-color .13s,background .13s;
+}
+#deckBuilderPanel .hv-forge-leader-portrait:hover,
+#deckBuilderPanel .hv-forge-leader-portrait:focus-visible{
+  border-color:#f5ce69;background:#44311d;outline:2px solid #f1ca66;
+  outline-offset:1px;
+}
+#deckBuilderPanel .hv-forge-leader-portrait.is-active{
+  border-color:#e1b65f;box-shadow:inset 0 0 11px rgba(241,180,63,.2);
+}
+#deckBuilderPanel .hv-forge-leader-portrait img{
+  width:44px;height:48px;flex:0 0 44px;border-radius:5px;object-fit:cover;
+  background:#181515;border:1px solid rgba(242,200,98,.5);
+}
+#deckBuilderPanel .hv-forge-leader-label{
+  flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;
+}
+#deckBuilderPanel .hv-forge-leader-label strong{
+  font:700 11px/1.15 Georgia,serif;white-space:normal;color:#f3dfab;
+}
+#deckBuilderPanel .hv-forge-leader-label small{
+  font:600 9px/1.2 system-ui,sans-serif;color:#d8d6cc;
+}
+#deckBuilderPanel .hv-forge-leader-indicator{
+  flex:0 0 9px;color:#f5cd74;font-size:17px;
+}
+#leaderAbilityModal {z-index:2147482500 !important;}
+#leaderAbilityModal .leader-ability-card {
+  box-sizing:border-box;width:min(1060px,calc(100% - 70px)) !important;
+  max-width:1060px !important;max-height:calc(100% - 36px) !important;
+  overflow-x:hidden !important;overflow-y:auto !important;
+}
+#leaderAbilityModal .hv-leader-det-head{margin-bottom:12px;}
+#leaderAbilityModal .hv-leader-nine-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+#leaderAbilityModal .hv-leader-nine-tile{min-height:102px;}
