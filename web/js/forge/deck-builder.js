@@ -1622,9 +1622,10 @@ function openLeaderDetailModal(type){
     ${leaderTierExplanationHtml(meta)}
   </section>
   <section class="leader-info-actions">
-    <button class="leader-info-ability-btn" type="button" data-leader-ability="${escapeHtml(type)}">Ver habilidad Nv.5</button>
+    <button class="leader-info-ability-btn" type="button" data-leader-ability="${escapeHtml(type)}">Ver las 9 habilidades</button>
     <button class="leader-info-select-btn" type="button" data-leader-choice="${escapeHtml(type)}">Seleccionar</button>
   </section>`;
+  if(typeof hvLeaderAbilityGridHtml==="function")body.insertAdjacentHTML("beforeend",hvLeaderAbilityGridHtml(type,level));
   const modal=$("leaderDetailModal");
   if(modal){modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");}
   body.querySelector("[data-leader-ability]")?.addEventListener("click",()=>openLeaderAbilityModal(type));
@@ -1652,6 +1653,7 @@ function openLeaderAbilityModal(type){
   <section class="leader-info-actions">
     <button class="leader-info-select-btn" type="button" data-leader-choice="${escapeHtml(type)}">Seleccionar</button>
   </section>`;
+  if(typeof hvLeaderAbilityGridHtml==="function")body.innerHTML=hvLeaderAbilityGridHtml(type,getLocalLeaderLevel(type));
   const modal=$("leaderAbilityModal");
   if(modal){modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");}
   body.querySelector("[data-leader-choice]")?.addEventListener("click",async()=>{await setSelectedLeaderType(type);closeLeaderAbilityModal();closeLeaderDetailModal();});

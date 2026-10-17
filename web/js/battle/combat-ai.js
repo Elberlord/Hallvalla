@@ -455,6 +455,7 @@ function applyJoanOrleansCooldownFromMods(units,mods){
 function hasAxeLeader(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="axe"&&hasActiveLeader(owner,units)}
 function hasBloodVictory(owner,units=publicState?.units||[]){return hasAxeLeader(owner,units)&&getLeaderAbilityForOwner(owner,units)==="blood_victory"}
 function shouldTriggerWarCry(attacker,defenderBefore,guardLoss,hit){
+  if(globalThis.HV_LEADER_NINE_SKILLS)return false; // v278: Grito de Guerra se desbloquea en nivel 10 y usa cooldown propio.
   if(!hit||!attacker||!defenderBefore)return false;
   if(!hasAxeLeader(attacker.owner))return false;
   if(!isAxeUnitCardLike(attacker))return false;
@@ -1039,7 +1040,7 @@ async function resolveSharedAttackOutcome({
     }
     if(u.id===d.id){
       if(!hit.hit)return u;
-      const attackIgnoresGuard=shouldIgnoreGuardForAttack(a,d,units);
+      const attackIgnoresGuard=shouldIgnoreGuardForAttack(a,d,units)||a.hvLeaderNextIgnoreGuard===true;
       let damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?applyDirectHpDamageWithEquipment(u,battleAtk).unit:applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
       const warriorShield=applyWarriorLeaderUnitShield(d,a,damaged,units);
       damaged=warriorShield.unit;

@@ -21,6 +21,7 @@ async function hallvallaRtLoop(){
     // El ciclo táctico abre primero; después se aplican buffs/efectos para que duren el ciclo completo.
     await hallvallaRtSafeStage("ciclo táctico TR",()=>hallvallaRtCombatRefreshTick(now));
     await hallvallaRtSafeStage("efectos de líder",()=>hallvallaRtLeaderEffectsTick(now));
+    await hallvallaRtSafeStage("estados especiales del líder",()=>hallvallaRtLeaderSkillDotTick(now));
     await hallvallaRtSafeStage("soporte",()=>hallvallaRtSupportTick(now));
     await hallvallaRtSafeStage("Recovery",()=>hallvallaRtRecoveryTick(now));
     await hallvallaRtSafeStage("estados",()=>hallvallaRtStatusTick(now));
@@ -59,6 +60,7 @@ function hallvallaRtPrimePreparedState(){
   hallvallaRtState.lastAiThinkAt=now;
   hallvallaRtState.lastAiDeployAt=now;
   hallvallaRtState.lastLeaderEffectAt=now;
+  hallvallaRtState.hvLeaderDotTickAt=now;
   hallvallaRtState.lastCombatRefreshAt=now;
   hallvallaRtState.lastSupportAt=now;
   hallvallaRtState.lastStatusAt=now;

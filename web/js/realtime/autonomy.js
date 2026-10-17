@@ -154,6 +154,7 @@ async function hallvallaRtAttackUnit(attacker,target){
       combatWindowKey:publicState?.combatWindowKey||"RT"
     });
     units=outcome.units||prep.units;
+    if(globalThis.HV_LEADER_NINE_SKILLS){const r=globalThis.HV_LEADER_NINE_SKILLS.extraAttack({units,a,d,hit:prep.hit});if(r?.units)units=r.units;}
     // En TR no existe la bandera "ya actuó": el cooldown temporal manda.
     units=units.map(u=>u&&u.id===a.id?{...u,acted:false}:u);
     const attackerNow=units.find(u=>u.id===a.id)||a;
@@ -591,32 +592,50 @@ async function hallvallaRtAiDeploy(now){
 }
 
 async function hallvallaRtLeaderEffectsTick(now){
-  if(now-hallvallaRtState.lastLeaderEffectAt<HALLVALLA_RT_CFG.leaderEffectEveryMs)return false;
+  if(now-hallvallaRtState.lastLeaderEffectAt<1000)return false;
   hallvallaRtState.lastLeaderEffectAt=now;
-  let units=[...(publicState?.units||[])];
-  const logs=[];
-  let changed=false,battleFxEvent=null;
-  for(const owner of [1,2]){
+  if(!globalThis.HV_LEADER_NINE_SKILLS)return false;
+  const before=[...(publicState?.units||[])];
+  let units=before,logs=[],changed=false,battleFxEvent=null;
+  const owners=(Number(hallvallaRtState.cycle||0)%2===0)?[1,2]:[2,1];
+  for(const owner of owners){
     try{
-      const heroic=applyHeroicEdgeStartHealing(units,owner);
-      if(heroic?.logs?.length){units=heroic.units;logs.push(...heroic.logs);changed=true;}
-    }catch(_){ }
-    try{
-      const cooldownKey=`leader-active:${owner}`;
-      const lastActivation=Number(hallvallaRtState.supportAt.get(cooldownKey)||0);
-      if(now-lastActivation>=30000){
-        const auto=resolveAutomaticLeaderEffectOnWindow(units,owner,{legendaryTraps:publicState?.legendaryTraps||[],beastTraps:publicState?.beastTraps||[]});
-        if(auto?.triggered){
-          hallvallaRtState.supportAt.set(cooldownKey,now);
-          units=auto.units;logs.push(...(auto.logs||[]));battleFxEvent=auto.battleFxEvent||battleFxEvent;changed=true;
-        }
-      }
-    }catch(error){console.warn("[HallValla][RT] efecto automático de líder falló",error);}
+      const r=globalThis.HV_LEADER_NINE_SKILLS.resolve(units,owner,now);
+      if(!r?.changed)continue;
+      units=r.units;
+      logs.push(...(r.logs||[]));
+      if(r.battleFxEvent)battleFxEvent=r.battleFxEvent;
+      changed=true;
+    }catch(error){console.warn('[HallValla][LIDER278] Error aislado',owner,error);}
   }
   if(!changed)return false;
-  const logText=logs.filter(Boolean).join(" ");
+  if(typeof applyLegendaryFatalSaves==='function')units=applyLegendaryFatalSaves(units,units.filter(u=>Number(u.hp||0)<=0).map(u=>u.id));
+  units=units.filter(u=>Number(u.hp||0)>0);
+  if(typeof applyBloodVictoryForDeaths==='function'){
+    const r=applyBloodVictoryForDeaths(before,units);
+    units=r.units;
+    logs.push(...(r.logs||[]));
+  }
+  const logText=logs.join(' ');
   if(await finalizeBattle(units,logText))return true;
   await updatePublic({units,battleFxEvent:battleFxEvent||null,log:logText?[logText,...(publicState?.log||[])].slice(0,18):(publicState?.log||[])});
+  return true;
+}
+async function hallvallaRtLeaderSkillDotTick(now){
+  if(!globalThis.HV_LEADER_NINE_SKILLS)return false;
+  if(now-Number(hallvallaRtState.hvLeaderDotTickAt||0)<1000)return false;
+  hallvallaRtState.hvLeaderDotTickAt=now;
+  const before=[...(publicState?.units||[])];
+  const r=globalThis.HV_LEADER_NINE_SKILLS.dotTick(before,now);
+  if(!r.changed)return false;
+  let units=r.units;
+  if(typeof applyLegendaryFatalSaves==='function')units=applyLegendaryFatalSaves(units,units.filter(u=>Number(u.hp||0)<=0).map(u=>u.id));
+  units=units.filter(u=>Number(u.hp||0)>0);
+  const blood=typeof applyBloodVictoryForDeaths==='function'?applyBloodVictoryForDeaths(before,units):{units,logs:[]};
+  units=blood.units;
+  const logText=[...(r.logs||[]),...(blood.logs||[])].join(' ');
+  if(await finalizeBattle(units,logText))return true;
+  await updatePublic({units,log:logText?[logText,...(publicState?.log||[])].slice(0,18):(publicState?.log||[])});
   return true;
 }
 
@@ -890,7 +909,7 @@ async function hallvallaRtRecoveryTick(now){
   return true;
 }
 async function hallvallaRtAutoGenericEffect(caster,now){
-  if(!caster||caster.leader||Number(caster.hp||0)<=0)return false;
+  if(!caster||caster.leader||Number(caster.hp||0)<=0||isRtTrapLocked(caster,"silence",now))return false;
   const mode=typeof getUnitEffectMode==="function"?getUnitEffectMode(caster):"passive";if(mode==="passive"||mode==="choice"||caster.key==="ericto")return false;
   const last=Number(hallvallaRtState.supportAt.get(`fx:${caster.id}`)||0);
   const effectCooldown=Math.max(30000,Number(HALLVALLA_RT_CFG.supportEffectEveryMs||0));
@@ -921,7 +940,7 @@ async function hallvallaRtSupportTick(now){
     }
   }
   for(const unit of units){
-    if(!unit||unit.leader||Number(unit.hp||0)<=0)continue;
+    if(!unit||unit.leader||Number(unit.hp||0)<=0||isRtTrapLocked(unit,"silence",now))continue;
     // Revisión periódica para que Salomón no espere eternamente tras 30 s.
     if(unit.key==="king_solomon"&&unit.solomonPending){
       const liveUnits=[...(publicState?.units||[])];
@@ -995,7 +1014,7 @@ async function hallvallaRtAttackReadyUnits(now,maxAttacks=HALLVALLA_RT_CFG.maxAt
     // PERF v119: el cooldown se comprueba ANTES de buscar/ordenar objetivos, salvo
     // el único seguimiento de Hua Lan habilitado por una baja.
     const last=Number(hallvallaRtState.attackAt.get(live.id)||0);
-    if(!mulanFollowup&&now-last<hallvallaRtAttackCooldown(live))continue;
+    if(!mulanFollowup&&now-last<Math.max(1000,hallvallaRtAttackCooldown(live)-Math.max(0,Number(live.hvLeaderNextAttackAccelerateMs||0))))continue;
     const target=mulanFollowup?hallvallaRtFindAttackableTarget(live,publicState?.units||[]):hallvallaRtChooseTarget(live,publicState?.units||[]);
     if(!target||!hallvallaRtCanAttackNow(live,target)){
       // Si el objetivo desapareció entre la reposición y este pulso, el seguimiento
@@ -1031,7 +1050,7 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
     // hasta que el cooldown real de movimiento vence. La reposición de Hua Lan
     // es una reacción inmediata y, por diseño, no espera ese cooldown.
     const lastMove=Number(hallvallaRtState.moveAt.get(live.id)||0);
-    if(!freshSpawn&&!mulanReposition&&now-lastMove<hallvallaRtMoveCooldown(live)+Math.max(0,Number(live.hvNextMoveDelayMs||0)))continue;
+    if(!freshSpawn&&!mulanReposition&&now-lastMove<Math.max(1000,hallvallaRtMoveCooldown(live)-Math.max(0,Number(live.hvLeaderNextMoveAccelerateMs||0)))+Math.max(0,Number(live.hvNextMoveDelayMs||0)))continue;
     if(live.hvNextMoveSkip===true&&!freshSpawn&&!mulanReposition){
       units=units.map(u=>u.id===live.id?{...u,hvNextMoveSkip:false,hvNextMoveDelayMs:0}:u);
       hallvallaRtState.moveAt.set(live.id,now);moves++;continue;
@@ -1065,7 +1084,7 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
         const target=hallvallaRtChooseTarget(live,units);if(!target)continue;
         // Fuera del corredor de salida, si ya puede atacar conserva su posición.
         if(hallvallaRtCanAttackNow(live,target))continue;
-        if(now-lastMove<hallvallaRtMoveCooldown(live)+Math.max(0,Number(live.hvNextMoveDelayMs||0)))continue;
+        if(now-lastMove<Math.max(1000,hallvallaRtMoveCooldown(live)-Math.max(0,Number(live.hvLeaderNextMoveAccelerateMs||0)))+Math.max(0,Number(live.hvNextMoveDelayMs||0)))continue;
         step=hallvallaRtChooseStep(live,target,units);
         if(!step){
           for(const alt of hallvallaRtTargetCandidates(live,units).slice(1)){step=hallvallaRtChooseStep(live,alt,units);if(step)break;}
@@ -1080,7 +1099,7 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
     let trapMove;
     try{trapMove=resolveMovementLegendaryTraps(live,{x:step.x,y:step.y},units,legendaryTraps);}catch(_){trapMove={cancel:false,units,traps:legendaryTraps,logs:[]};}
     legendaryTraps=[...(trapMove.traps||legendaryTraps)];
-    units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveWindowKey:publicState?.combatWindowKey||'RT',hvNextMoveDelayMs:0,hvNextMoveSkip:false,hvSubotaiNextMoveBoostMs:0,hvSkiparFirstMoveConsumed:u.key==='skipar_del_drakkar'?true:u.hvSkiparFirstMoveConsumed,rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false}:u);
+    units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveWindowKey:publicState?.combatWindowKey||'RT',hvNextMoveDelayMs:0,hvLeaderNextMoveAccelerateMs:0,hvNextMoveSkip:false,hvSubotaiNextMoveBoostMs:0,hvSkiparFirstMoveConsumed:u.key==='skipar_del_drakkar'?true:u.hvSkiparFirstMoveConsumed,rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false}:u);
     if(!trapMove.cancel){
       const moved=units.find(u=>u.id===live.id&&Number(u.hp||0)>0);
       if(moved){
