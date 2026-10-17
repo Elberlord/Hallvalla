@@ -1029,10 +1029,12 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const humanBuilt=buildRealPrivateState6e(ownPayload,botCode,1);
       const human=humanBuilt.enginePrivate;
       const competitive=getPvpBotCompetitiveProfile(league);
-      const botLevel=competitive.level;
+      const botTier=competitive.tier;
+      const botLevel=competitive.leaderLevel;
+      if(Math.ceil(botLevel/3)!==botTier)throw new Error("BOT PvP: Tier y nivel real incoherentes.");
       const botMasteryRank=competitive.masteryRank;
       const botAiLevel=competitive.aiLevel;
-      const profile=selectPvpBotProfile(botLevel,leagueKey);
+      const profile=selectPvpBotProfile(botTier,leagueKey);
       if(!PVP_BOT_ALLOWED_LEADERS.includes(profile.leaderType))throw new Error(`Líder BOT no permitido: ${profile.leaderType}.`);
       const botDeck=buildPvpBotDeck(profile,league);
       const botUid=getPvpBotUid(profile,leagueKey);
@@ -1053,7 +1055,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const publicShowcase={1:buildPublicShowcase(ownPayload),2:{leaderType:profile.leaderType,principalKeys:[]}};
       const pub={
         schema:"hallvalla-pvp-bot-v1",code:botCode,boardRows:rows,boardCols:cols,mode:"adventure",entryMode:"random",
-        pvpBotMatch:true,pvpBotProfileId:profile.id,pvpBotLevel:botLevel,pvpBotMasteryRank:botMasteryRank,pvpBotAiLevel:botAiLevel,pvpBotLeagueKey:leagueKey,pvpBotLeagueName:String(league?.name||"Piedra"),
+        pvpBotMatch:true,pvpBotProfileId:profile.id,pvpBotTier:botTier,pvpBotLevel:botLevel,pvpBotMasteryRank:botMasteryRank,pvpBotAiLevel:botAiLevel,pvpBotLeagueKey:leagueKey,pvpBotLeagueName:String(league?.name||"Piedra"),
         pvpBotStyle:String(profile.style||"balanced"),pvpBotRarityCap:rarityCap,pvpBotRarityCounts:botDeck.rarityCounts,
         adventureBattleTitle:`PvP · Liga ${String(league?.name||"Piedra")}`,adventureEnemyName:botName,
         adventureAdaptiveCampaign:false,adventureAdaptiveLearning:false,adventureAdaptiveMage:false,
@@ -1113,7 +1115,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
 
       clearPvpBotPreludeTimers();
       activeCode=botCode;activeOwnerUid=myUid;activeRole=1;
-      activePvpBotProfile={...profile,leagueKey,leagueName:String(league?.name||"Piedra"),botUid,rarityCap,botLevel,botMasteryRank,botAiLevel};
+      activePvpBotProfile={...profile,leagueKey,leagueName:String(league?.name||"Piedra"),botUid,rarityCap,botTier,botLevel,botMasteryRank,botAiLevel};
       roomCache=confirm.val()||pub;
       randomLeagueSnapshot=league;
       renderRandomMatchmakingUi({playerShowcase:publicShowcase,playerSlots:pub.playerSlots});
@@ -1123,9 +1125,9 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       attachOwnPrivateListener(botCode,1,myUid);
       renderRoomSnapshot(roomCache,botCode);
       attachRoomListener(botCode);
-      pvpMatchDiag("fallback-success",{room:botCode,rival:botName,league:String(league?.name||"Piedra"),botLevel,botMasteryRank,botAiLevel});
+      pvpMatchDiag("fallback-success",{room:botCode,rival:botName,league:String(league?.name||"Piedra"),botTier,botLevel,botMasteryRank,botAiLevel});
       fallbackSucceeded=true;
-      mark(`Rival encontrado · ${botName} · Liga ${String(league?.name||"Piedra")} · Nv. ${botLevel} · Rango ${botMasteryRank}.`);
+      mark(`Rival encontrado · ${botName} · Liga ${String(league?.name||"Piedra")} · Tier ${botTier} · Nv. ${botLevel} · Rango ${botMasteryRank}.`);
       return {started:true,deferredHuman:false};
     }catch(error){
       console.error(`[HallValla][${STEP}] Fallback BOT PvP falló:`,error);

@@ -36,23 +36,23 @@ permanece en el orquestador PvP hasta el corte dedicado de sincronización.
       Object.freeze({key:"mythic",maxRarity:5,rareSlots:10}),
       Object.freeze({key:"valhalla",maxRarity:5,rareSlots:12})
     ]);
-    /* v204 · Escalado competitivo por liga.
+    /* v286 · Escalado competitivo por liga y Tier I-XV.
        La liga, no el nivel del jugador, determina la fuerza del BOT. Esto evita
        que una cuenta con líder alto pero recién llegada a Piedra reciba un rival XV.
        Dentro de algunas ligas el nivel avanza gradualmente según los puntos. */
     const PVP_BOT_COMPETITIVE_SCALE=Object.freeze([
-      Object.freeze({key:"stone",minLevel:1,maxLevel:1,minAi:2,maxAi:3}),
-      Object.freeze({key:"wood",minLevel:1,maxLevel:2,minAi:3,maxAi:4}),
-      Object.freeze({key:"fire",minLevel:2,maxLevel:3,minAi:4,maxAi:5}),
-      Object.freeze({key:"iron",minLevel:3,maxLevel:4,minAi:5,maxAi:6}),
-      Object.freeze({key:"steel",minLevel:4,maxLevel:5,minAi:6,maxAi:8}),
-      Object.freeze({key:"silver",minLevel:5,maxLevel:6,minAi:8,maxAi:9}),
-      Object.freeze({key:"gold",minLevel:6,maxLevel:8,minAi:9,maxAi:11}),
-      Object.freeze({key:"platinum",minLevel:8,maxLevel:9,minAi:11,maxAi:12}),
-      Object.freeze({key:"obsidian",minLevel:9,maxLevel:11,minAi:12,maxAi:14}),
-      Object.freeze({key:"diamond",minLevel:11,maxLevel:13,minAi:14,maxAi:16}),
-      Object.freeze({key:"mythic",minLevel:13,maxLevel:14,minAi:17,maxAi:18}),
-      Object.freeze({key:"valhalla",minLevel:15,maxLevel:15,minAi:19,maxAi:20})
+      Object.freeze({key:"stone",minTier:1,maxTier:1,minAi:2,maxAi:3}),
+      Object.freeze({key:"wood",minTier:1,maxTier:2,minAi:3,maxAi:4}),
+      Object.freeze({key:"fire",minTier:2,maxTier:3,minAi:4,maxAi:5}),
+      Object.freeze({key:"iron",minTier:3,maxTier:4,minAi:5,maxAi:6}),
+      Object.freeze({key:"steel",minTier:4,maxTier:5,minAi:6,maxAi:8}),
+      Object.freeze({key:"silver",minTier:5,maxTier:6,minAi:8,maxAi:9}),
+      Object.freeze({key:"gold",minTier:6,maxTier:8,minAi:9,maxAi:11}),
+      Object.freeze({key:"platinum",minTier:8,maxTier:9,minAi:11,maxAi:12}),
+      Object.freeze({key:"obsidian",minTier:9,maxTier:11,minAi:12,maxAi:14}),
+      Object.freeze({key:"diamond",minTier:11,maxTier:13,minAi:14,maxAi:16}),
+      Object.freeze({key:"mythic",minTier:13,maxTier:14,minAi:17,maxAi:18}),
+      Object.freeze({key:"valhalla",minTier:15,maxTier:15,minAi:19,maxAi:20})
     ]);
     const PVP_BOT_RARE_PREFERENCES=Object.freeze({
       warrior:Object.freeze(["richard_lionheart","boudica","joan_of_arc","leonidas","hector_troy","julius_caesar","beowulf","alexander_magnus","achilles","gilgamesh"]),
@@ -102,18 +102,22 @@ permanece en el orquestador PvP hasta el corte dedicado de sincronización.
     function getPvpBotLeagueProgress(league){
       const min=Number(league?.min||0),next=Number(league?.nextMin);
       const points=Number(league?.points||0);
-      if(!Number.isFinite(next)||next<=min)return 0;
+      if(!Number.isFinite(next)||next<=min)return String(league?.key||"")==="valhalla"?1:0;
       return Math.max(0,Math.min(1,(points-min)/(next-min)));
     }
     function getPvpBotCompetitiveProfile(league={}){
       const key=String(league?.key||league||"stone");
       const scale=getPvpBotCompetitiveScale(key);
       const progress=getPvpBotLeagueProgress(typeof league==="object"?league:{key});
-      const level=Math.max(1,Math.min(15,Math.round(scale.minLevel+(scale.maxLevel-scale.minLevel)*progress)));
+      // Este valor 1-15 es el TIER competitivo, no el nivel de batalla del lider.
+      const tier=Math.max(1,Math.min(15,Math.round(scale.minTier+(scale.maxTier-scale.minTier)*progress)));
+      const leaderLevel=Math.max(1,Math.min(45,tier*3));
       const maxAi=typeof ADVENTURE_AI_BEST_SKILL_LEVEL!=="undefined"?Math.max(1,Number(ADVENTURE_AI_BEST_SKILL_LEVEL)||20):20;
       const aiRaw=Math.round(scale.minAi+(scale.maxAi-scale.minAi)*progress);
       const aiLevel=Math.max(1,Math.min(maxAi,aiRaw));
-      return {key,level,masteryRank:level,aiLevel,progress,scale};
+      // level se conserva como alias legado del Tier para consumidores antiguos.
+      // masteryRank es la maestria de unidades; no se multiplica por tres.
+      return {key,tier,level:tier,leaderLevel,masteryRank:tier,aiLevel,progress,scale};
     }
     function getPvpBotLevelPolicy(level=1){
       const lv=Math.max(1,Math.min(15,Math.floor(Number(level)||1)));
