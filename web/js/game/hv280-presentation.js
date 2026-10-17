@@ -7,7 +7,8 @@
   globalThis.__HV_PRESENTATION_280__=true;
 
   const synth=globalThis.speechSynthesis||null;
-  const speechSupported=!!(synth&&globalThis.SpeechSynthesisUtterance);
+  const speechSupported=!!globalThis.HV281_VOICE_ASSETS;
+  let activeAudio=null;
   const queue=[];
   const recent=new Map();
   const skillEvents=new Set();
@@ -43,7 +44,7 @@
     skillEvents.clear();
     active=false;
     clearTimeout(watchdog);
-    try{synth?.cancel?.();}catch(_){ }
+    try{activeAudio?.pause?.();}catch(_){ }activeAudio=null;active=false;
   }
   function finish(){
     active=false;
@@ -55,22 +56,29 @@
     if(active||!queue.length||!battleOpen()||!settingsOk())return;
     const delta=now()-lastSpeechAt;
     if(delta<1450){setTimeout(drain,1450-delta);return;}
-    if(!speechSupported){queue.length=0;return;}
     const item=queue.shift();
-    const say=new SpeechSynthesisUtterance(item.name);
-    say.lang=language(item.name);
-    say.voice=chooseVoice(say.lang);
-    say.rate=.76;
-    say.pitch=.48;
-    say.volume=.94;
+    const url=globalThis.HV281_VOICE_ASSETS?.resolve(item.kind,item.name,item.key,item.leaderType)||"";
+    if(!url){console.info("[HV281] MP3 no disponible",item.kind,item.name,item.key);setTimeout(drain,80);return;}
+    const audio=new Audio(url);
+    audio.preload="auto";
+    audio.volume=Math.max(0,Math.min(1,Number(typeof gameSettings!=="undefined"?gameSettings.sfxVolume:.9)||.9));
+    activeAudio=audio;
     active=true;
     lastSpeechAt=now();
-    say.onend=finish;
-    say.onerror=finish;
-    watchdog=setTimeout(()=>{try{synth.cancel();}catch(_){ }finish();},6500);
-    try{synth.speak(say);}catch(_){finish();}
+    let settled=false;
+    const completed=()=>{
+      if(settled)return;
+      settled=true;
+      if(activeAudio!==audio)return;
+      activeAudio=null;
+      finish();
+    };
+    audio.onended=completed;
+    audio.onerror=completed;
+    watchdog=setTimeout(()=>{try{audio.pause();}catch(_){ }completed();},12000);
+    try{const p=audio.play();if(p&&p.catch)p.catch(completed);}catch(_){completed();}
   }
-  function announce(kind,name,priority=1){
+  function announce(kind,name,priority=1,cardKey="",leaderType=""){
     const safe=String(name||"").trim().replace(/\s+/g," ").slice(0,75);
     if(!safe||!settingsOk()||!battleOpen())return false;
     const key=`${kind}:${safe.toLowerCase()}`;
@@ -86,7 +94,7 @@
       if(queue[minimum].priority>priority)return false;
       queue.splice(minimum,1);
     }
-    queue.push({kind,name:safe,priority});
+    queue.push({kind,name:safe,priority,key:String(cardKey||""),leaderType:String(leaderType||"")});
     queue.sort((a,b)=>b.priority-a.priority);
     drain();
     return true;
@@ -158,7 +166,7 @@
       if(!unit||unit.leader||before.has(String(unit.id)))continue;
       // El motor visual ya resuelve por separado la invocacion; esto sustituye
       // el pitido por el nombre de la carta.
-      announce("summon",unit.name||unit.key,Number(unit.owner)===localOwner()?2:1);
+      announce("summon",unit.name||unit.key,Number(unit.owner)===localOwner()?2:1,unit.key||"");
     }
     const catalog=globalThis.HV_LEADER_NINE_SKILLS?.catalog||{};
     const leaders=next.units.filter(u=>u?.leader&&Number(u.hp||0)>0&&catalog[u.leaderType]);
@@ -179,7 +187,7 @@
         const targetEnemy=next.units.filter(u=>u&&!u.leader&&Number(u.hp||0)>0&&Number(u.owner)!==Number(leader.owner));
         const targetAlly=next.units.filter(u=>u&&!u.leader&&Number(u.hp||0)>0&&Number(u.owner)===Number(leader.owner));
         const defensive=family==="guard"||/bless|heal|shield|aura|order_offense|fortify|iron_shell|banner|rage|frenzy|galop|war_cry/i.test(skill.id);
-        toShow.push({name:skill.name,family,owner:Number(leader.owner),leader,targets:defensive?targetAlly:targetEnemy,tier:i});
+        toShow.push({name:skill.name,skillId:skill.id,leaderType:leader.leaderType,family,owner:Number(leader.owner),leader,targets:defensive?targetAlly:targetEnemy,tier:i});
       }
     }
     // Visualizaciones suficientes para identificar cada familia sin inundar el campo.
@@ -195,18 +203,18 @@
     for(const item of toShow.sort((a,b)=>b.tier-a.tier)){
       if(said.has(item.owner))continue;
       said.add(item.owner);
-      announce("leader",item.name,2+item.tier/10);
+      announce("leader",item.name,2+item.tier/10,item.skillId,item.leaderType);
     }
     const spell=next.cardVisualEvent;
     const prevSpell=prev.cardVisualEvent;
     if(spell?.eventId&&spell.eventId!==prevSpell?.eventId){
       const spellName=String(spell.cardName||spell.title||"");
-      if(spellName)announce("card",spellName,3);
+      if(spellName)announce("card",spellName,3,spell.cardKey||spell.spellKey||"");
     }else{
       const fx=next.battleFxEvent,prior=prev.battleFxEvent;
       if(fx?.eventId&&fx.eventId!==prior?.eventId&&["spell","magic","heal"].includes(fx.type)){
         const name=fx.cardName||fx.title||"";
-        if(name)announce("card",name,3);
+        if(name)announce("card",name,3,fx.cardKey||fx.spellKey||"");
       }
     }
     // Trampas y cartas del motor TR que no publican cardVisualEvent.
@@ -227,7 +235,7 @@
   }
   globalThis.hv280Announcer=Object.freeze({
     supported:speechSupported,
-    enable(value){try{localStorage.setItem("hallvalla_announcer_enabled",value?"1":"0");}catch(_){ }if(!value){queue.length=0;try{synth?.cancel?.();}catch(_){ }}},
+    enable(value){try{localStorage.setItem("hallvalla_announcer_enabled",value?"1":"0");}catch(_){ }if(!value){queue.length=0;try{activeAudio?.pause?.();}catch(_){ }activeAudio=null;active=false;}},
     test(name="Aquiles"){announce("test",name,8);},
     queueSize(){return queue.length;}
   });
