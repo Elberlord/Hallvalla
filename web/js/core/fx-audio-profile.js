@@ -20,7 +20,7 @@ function hideDemigodSummonPresentation(){
 }
 function showDemigodSummonPresentation(unit){
   if(!unit)return;
-  tryPlaySound("summon_demigod",.78);
+  // v280: la voz sustituye el sonido de entrada del semidios.
   const box=$("demigodSummonModal");
   if(!box)return;
   const sideClass=unit.owner===1?"demigod-summon-player":"demigod-summon-enemy";
@@ -460,7 +460,7 @@ function getFxRarityClass(unit){
 }
 function playSummonFx(unit){
   if(!unit)return;
-  tryPlaySound(getSummonSoundForUnit(unit),.82);
+  // v280: la voz sustituye el sonido de entrada de las unidades.
   const point=getGridCellCenter(unit.x,unit.y);
   if(!point)return;
   const sideClass=unit.owner===1?"player":"enemy";
