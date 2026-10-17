@@ -971,7 +971,7 @@ async function resolveSharedAttackOutcome({
   getDragonState=()=>publicState,
   actionLogPrefix=""
 }){
-  let guardLoss=0,hpLoss=0,counterText=firstStrikeText,warriorShieldBlocked=false,dragonCompanionText="";
+  let guardLoss=0,hpLoss=0,counterText=firstStrikeText,dragonCompanionText="";
   units=applySkillCooldownMarksFromMods(units,mods);
   hvSkillOrderTraceSafe('05.inicio_resolucion',{a,d,units,mods,hit});
   units=hvCardMarksFromMods(units,mods);
@@ -1048,9 +1048,6 @@ async function resolveSharedAttackOutcome({
       if(!hit.hit)return u;
       const attackIgnoresGuard=shouldIgnoreGuardForAttack(a,d,units)||a.hvLeaderNextIgnoreGuard===true;
       let damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?applyDirectHpDamageWithEquipment(u,battleAtk).unit:applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
-      const warriorShield=applyWarriorLeaderUnitShield(d,a,damaged,units);
-      damaged=warriorShield.unit;
-      warriorShieldBlocked=warriorShieldBlocked||warriorShield.blocked;
       if(typeof routeHannibalMountedHpDamage==="function"&&Number(damaged.lastHpLoss||0)>0){
         const routed=routeHannibalMountedHpDamage(u,damaged,a);
         damaged=routed.unit||damaged;
@@ -1258,7 +1255,6 @@ async function resolveSharedAttackOutcome({
   bloodVictoryCheckpoint=[...units];
   const lionFearText=lionFearCombat.logs.length?` ${lionFearCombat.logs.join(" ")}`:"";
   const rhinoStunText=rhinoStunTriggered?` Aturdido por Embestida: ${a.name} queda aturdido hasta el final del siguiente ciclo táctico; no podrá moverse, defenderse ni atacar. Su DX/AGI quedan a la mitad y su Guardia no cambia.`:"";
-  const warriorShieldText=warriorShieldBlocked?` Muralla del Warrior: mientras conserve unidades aliadas, ${d.name} no pierde Vida por ataques de unidades.`:"";
   const mulanExecutionTriggered=hit.hit&&defenderFell&&a.key==="mulan"&&!mulanFollowupAttack&&!d.leader&&units.some(u=>u.id===a.id);
   const khalidChainTriggered=hit.hit&&defenderFell&&a.key==="khalid_ibn_al_walid"&&!d.leader&&hvCardReady(a,"espada_invicta")&&units.some(u=>u.id===a.id);
   const exileTrap=defenderFell?runInState(()=>resolveAfterKillLegendaryTraps(a,d,units,dmgTrap.traps),{units,legendaryTraps:resolvedLegendaryTraps,beastTraps}):{units,traps:dmgTrap.traps,logs:[]};
@@ -1295,22 +1291,19 @@ async function resolveSharedAttackOutcome({
     units=cSpend.units;
     defenderAfter=units.find(u=>u.id===defenderAfter.id)||defenderAfter;
     if(cHit.hit){
-      let cGuard=0,cHp=0,cWarriorShieldBlocked=false,counterHannibalSplitText="";
+      let cGuard=0,cHp=0,counterHannibalSplitText="";
       const ulfhednarCounterCrit=rollUlfhednarCritical(defenderAfter,cHit);
       const cAtk=Math.max(0,Math.round(getBattleDamage(defenderAfter,cMods)*(ulfhednarCounterCrit.multiplier||1)));
       units=units.map(u=>{
         if(u.id===defenderAfter.id)returnhvCardMark({...u,counterUsedWindow:true},"respuesta_contra");
         if(u.id===attackerAfter.id){
           let damaged=applyGuardDamage(u,cAtk,cMods.defenderGuard||0,0);
-          const warriorShield=applyWarriorLeaderUnitShield(attackerAfter,defenderAfter,damaged,units);
-          damaged=warriorShield.unit;
           if(typeof routeHannibalMountedHpDamage==="function"&&Number(damaged.lastHpLoss||0)>0){
             const routed=routeHannibalMountedHpDamage(u,damaged,defenderAfter);
             damaged=routed.unit||damaged;
             if(routed.splitText)counterHannibalSplitText=routed.splitText;
           }
           cGuard=damaged.lastGuardLoss||0;cHp=damaged.lastHpLoss||0;
-          cWarriorShieldBlocked=cWarriorShieldBlocked||warriorShield.blocked;
           damaged.damagedThisWindow=(cHp>0)||!!damaged.damagedThisWindow;
           delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
           return damaged;
@@ -1349,7 +1342,7 @@ async function resolveSharedAttackOutcome({
       }
       const miyamotoBonusText=isMiyamotoCounter&&!hit.hit?" con +2 AT por Dos Cielos":"";
       const guardText=`${cGuard>0?`consume ${cGuard} GD y `:""}${cHp>0?`inflige ${cHp} daño a HP`:"no atraviesa la Guardia"}`;
-      counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${ulfhednarCounterCrit.text||""}${cWarriorShieldBlocked?` Muralla del Warrior: ${attackerAfter.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${counterVenomText}${counterBleedText}${miyamotoBleedText}${counterHannibalSplitText}${unitMasteryRankUpText(counterMasteryResult)}${counterDefenseText(counterDefenseRemainder)}`;
+      counterText=` Contraataque: acierta (${cHit.roll}/${cHit.chance})${miyamotoBonusText}, ${guardText}.${ulfhednarCounterCrit.text||""}${counterVenomText}${counterBleedText}${miyamotoBleedText}${counterHannibalSplitText}${unitMasteryRankUpText(counterMasteryResult)}${counterDefenseText(counterDefenseRemainder)}`;
     }else{
       units=units.map(u=>u.id===defenderAfter.id?hvCardMark({...u,counterUsedWindow:true},"respuesta_contra"):u);
       counterText=` Contraataque: falla (${cHit.roll}/${cHit.chance}).${counterDefenseText(counterDefenseRemainder)}`;
@@ -1410,7 +1403,7 @@ async function resolveSharedAttackOutcome({
     ?hvAdvanceVeilCurseOnAction(units,a.id,"un ataque"):{units,changed:false,text:""};
   units=veilActionResult.units;
   hvSkillOrderTraceSafe('14.cierre_estados_y_registros',{a,d,units,mods,hit});
-  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: acierta (${hit.roll}/${hit.chance}).${rerollText}${interpositionLogText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD del ciclo táctico actual. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${stompText}${hannibalSplitText}${warriorShieldText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`:`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${stompText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`;
+  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: acierta (${hit.roll}/${hit.chance}).${rerollText}${interpositionLogText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD del ciclo táctico actual. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${stompText}${hannibalSplitText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`:`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${stompText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`;
   hvSkillOrderTraceSafe('99.fin',{a,d,units,mods,hit});
   return {
     units,

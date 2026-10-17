@@ -53,17 +53,14 @@ function routeHannibalMountedHpDamage(before,damaged,attacker){
 function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
 function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}
+// TR es el único modo; una única capacidad de recurso.
 const RESOURCE_MAX_CAP=10;
-const REALTIME_RESOURCE_MAX_CAP=10;
-function getActiveResourceMaxCap(){return (typeof isHallvallaRealtime==="function"&&isHallvallaRealtime())?REALTIME_RESOURCE_MAX_CAP:RESOURCE_MAX_CAP;}
+function getActiveResourceMaxCap(){return RESOURCE_MAX_CAP;}
 function capResourceMax(value){return Math.min(getActiveResourceMaxCap(),Math.max(0,Number(value||0)));}
 function capResourceAmount(value,maxValue){return Math.min(capResourceMax(maxValue),Math.max(0,Number(value||0)));}
-function getResourceLabel(owner,opts={}){const caps=!!opts.caps;const realtime=(typeof isHallvallaRealtime==="function"&&isHallvallaRealtime());const label=realtime?"Mana":(ownerUsesMana(owner)?"Mana":"Honor");return caps?label.toUpperCase():label}
+function getResourceLabel(_owner,opts={}){return opts.caps?"MANA":"Mana";}
 
 function hasActiveLeader(owner,units=publicState?.units||[]){return !!(units||[]).find(u=>u.owner===owner&&u.leader)}
-function applyWarriorLeaderUnitShield(defenderBefore,attacker,damaged,units=publicState?.units||[]){
-  return{unit:damaged,blocked:false};
-}
 const HEAVY_INFANTRY_KEYS=new Set([
   "guardian","paladin","knight","spearman",
   "greek_hoplite","roman_legionary","armored_man_at_arms",
@@ -1018,17 +1015,14 @@ function resolveLanceFirstStrike(attacker,defender,units){
   currentAttacker=(units||[]).find(u=>u.id===currentAttacker.id)||currentAttacker;
   currentDefender=(units||[]).find(u=>u.id===currentDefender.id)||currentDefender;
 
-  let guardLoss=0,hpLoss=0,warriorShieldBlocked=false,masteryResult=null;
+  let guardLoss=0,hpLoss=0,masteryResult=null;
   if(fsHit.hit){
     const fsAtk=getBattleDamage(currentDefender,fsMods);
     units=(units||[]).map(u=>{
       if(u.id===currentAttacker.id){
         let damaged=applyGuardDamage(u,fsAtk,fsMods.defenderGuard||0,0);
-        const warriorShield=applyWarriorLeaderUnitShield(currentAttacker,currentDefender,damaged,units);
-        damaged=warriorShield.unit;
         guardLoss=damaged.lastGuardLoss||0;
         hpLoss=damaged.lastHpLoss||0;
-        warriorShieldBlocked=warriorShieldBlocked||warriorShield.blocked;
         damaged.damagedThisWindow=(hpLoss>0)||!!damaged.damagedThisWindow;
         delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
         return damaged;
@@ -1054,7 +1048,7 @@ function resolveLanceFirstStrike(attacker,defender,units){
   const pressureText=evasionPressureText(currentAttacker.name,evasionPressure.spent,evasionPressure.remaining);
   const spendText=actionStatSpendText(currentDefender.name,fsSpend.spent,fsSpend.remaining);
   const resultText=fsHit.hit
-    ? ` ${currentDefender.name} activa Atacar Primero: acierta (${fsHit.roll}/${fsHit.chance}).${combatSummary(fsMods)} ${guardLoss>0?`Consume ${guardLoss} GD. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${spendText}${warriorShieldBlocked?` Muralla del Warrior: ${currentAttacker.name} no pierde Vida por ataques de unidades mientras conserve aliados.`:""}${unitMasteryRankUpText(masteryResult)}`
+    ? ` ${currentDefender.name} activa Atacar Primero: acierta (${fsHit.roll}/${fsHit.chance}).${combatSummary(fsMods)} ${guardLoss>0?`Consume ${guardLoss} GD. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${pressureText}${spendText}${unitMasteryRankUpText(masteryResult)}`
     : ` ${currentDefender.name} activa Atacar Primero: falla (${fsHit.roll}/${fsHit.chance}).${combatSummary(fsMods)}${pressureText}${spendText}`;
 
   return {
@@ -1070,7 +1064,7 @@ function resolveLanceFirstStrike(attacker,defender,units){
     actionSpend:fsSpend,
     guardLoss,
     hpLoss,
-    warriorShieldBlocked,
+    warriorShieldBlocked:false,
     masteryResult
   };
 }
@@ -1264,7 +1258,6 @@ function resolveAfricanElephantStomp(units,attacker,defender,hit){
     const current=out.find(u=>u.id===target.id&&Number(u.hp||0)>0);
     if(!current)continue;
     let result=applyGuardDamage(current,damage,0,0);
-    if(typeof applyWarriorLeaderUnitShield==="function")result=applyWarriorLeaderUnitShield(current,attacker,result,out).unit;
     if(typeof routeHannibalMountedHpDamage==="function"&&Number(result.lastHpLoss||0)>0){
       const routed=routeHannibalMountedHpDamage(current,result,attacker);
       result=routed.unit||result;
@@ -1334,12 +1327,10 @@ function resolveAfricanElephantCharge(units,attacker,defender,hit,mods={}){
         continue;
       }
       const sideDamage=reduceDamageForHoneyBadger(side,10);
-      let sideGuardLoss=0,sideHpLoss=0,warriorBlocked=false;
+      let sideGuardLoss=0,sideHpLoss=0;
       out=out.map(u=>{
         if(u.id!==side.id)return u;
         let damaged=applyGuardDamage(u,sideDamage,0,0);
-        const shield=applyWarriorLeaderUnitShield(side,attacker,damaged,out);
-        damaged=shield.unit;warriorBlocked=shield.blocked;
         sideGuardLoss=Number(damaged.lastGuardLoss||0);sideHpLoss=Number(damaged.lastHpLoss||0);
         damaged.damagedThisWindow=(sideHpLoss>0)||!!damaged.damagedThisWindow;
         delete damaged.lastGuardLoss;delete damaged.lastHpLoss;
@@ -1351,7 +1342,7 @@ function resolveAfricanElephantCharge(units,attacker,defender,hit,mods={}){
       fatalIds.push(side.id);
       const pushedSide=pushUnitStepwise(out,side.id,dx,dy,1);
       out=pushedSide.units;
-      logs.push(`${side.name} recibe el impacto lateral de AT 10${sideGuardLoss>0?`, pierde ${sideGuardLoss} GD`:""}${sideHpLoss>0?` y ${sideHpLoss} Vida`:""}${warriorBlocked?"; Muralla del Warrior evita el daño a Vida":""}${pushedSide.moved?" y es empujado 1 celda":""}.`);
+      logs.push(`${side.name} recibe el impacto lateral de AT 10${sideGuardLoss>0?`, pierde ${sideGuardLoss} GD`:""}${sideHpLoss>0?` y ${sideHpLoss} Vida`:""}${pushedSide.moved?" y es empujado 1 celda":""}.`);
     }
 
     if(fatalIds.length){

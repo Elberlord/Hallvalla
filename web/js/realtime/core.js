@@ -19,7 +19,7 @@ const HALLVALLA_RT_CFG=Object.freeze({
   handMax:99,
   aiThinkEveryMs:180,
   aiDeployCooldownMs:280,
-  summonCooldownMs:2000,
+  summonCooldownMs:4000,
   spellTrapCooldownPerManaMs:1000,
   spawnEgressDelayMs:250,
   // v216: respaldo/fallback. El ritmo real se calcula por unidad en unit-load-profiles.
