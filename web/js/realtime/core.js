@@ -38,9 +38,7 @@ const HALLVALLA_RT_CFG=Object.freeze({
 });
 /* El motor automático es el único flujo canónico de combate. */
 function isHallvallaRealtimeRequested(){return true;}
-function setHallvallaRealtimeRequested(){hallvallaRtUpdateUi();return true;}
 globalThis.isHallvallaRealtimeRequested=isHallvallaRealtimeRequested;
-globalThis.setHallvallaRealtimeRequested=setHallvallaRealtimeRequested;
 
 const hallvallaRtState={
   enabled:false,

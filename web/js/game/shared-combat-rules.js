@@ -52,11 +52,9 @@ function routeHannibalMountedHpDamage(before,damaged,attacker){
 }
 function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
-function ownerUsesMana(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="mage"}
 // TR es el único modo; una única capacidad de recurso.
 const RESOURCE_MAX_CAP=10;
-function getActiveResourceMaxCap(){return RESOURCE_MAX_CAP;}
-function capResourceMax(value){return Math.min(getActiveResourceMaxCap(),Math.max(0,Number(value||0)));}
+function capResourceMax(value){return Math.min(RESOURCE_MAX_CAP,Math.max(0,Number(value||0)));}
 function capResourceAmount(value,maxValue){return Math.min(capResourceMax(maxValue),Math.max(0,Number(value||0)));}
 function getResourceLabel(_owner,opts={}){return opts.caps?"MANA":"Mana";}
 

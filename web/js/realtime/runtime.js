@@ -140,11 +140,6 @@ function hallvallaRtDebugSnapshot(){
   };
 }
 globalThis.__HALLVALLA_RT_DEBUG__=hallvallaRtDebugSnapshot;
-async function enableHallvallaRealtime(){
-  /* Compatibilidad con llamadas antiguas: TR ya está siempre habilitado para nuevos combates. */
-  return true;
-}
-globalThis.enableHallvallaRealtime=enableHallvallaRealtime;
 globalThis.hallvallaRtSyncPreparedBattle=hallvallaRtSyncPreparedBattle;
 
 function hallvallaRtBind(){
