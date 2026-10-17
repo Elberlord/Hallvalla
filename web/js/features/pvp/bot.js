@@ -208,6 +208,8 @@ permanece en el orquestador PvP hasta el corte dedicado de sincronización.
     function pvpBotNoise(seed,key){return (botHashText(`${seed}|${key}`)%10000)/10000;}
     function buildPvpBotDeck(profile,league){
       const botLevel=Math.max(1,Math.min(15,Math.floor(Number(profile?.level)||1)));
+      // profile.level es el Tier competitivo I-XV; NO el nivel real del líder.
+      const leaderLevel=Math.max(1,Math.min(45,botLevel*3));
       const policy=getPvpBotDeckPolicy(league?.key||league||"stone",botLevel);
       const seed=`${profile.id}|${policy.key}|L${botLevel}|${profile.leaderType}`;
       const catalog=getPvpBotCatalog().filter(card=>pvpBotCardAllowed(card,profile.leaderType,policy));
@@ -216,7 +218,7 @@ permanece en el orquestador PvP hasta el corte dedicado de sincronización.
       const basics=scored.filter(x=>x.rank===0).sort((a,b)=>(b.score-a.score)||String(a.card.key).localeCompare(String(b.card.key)));
       const selected=[];
       const counts=new Map();
-      const targetDeckSize=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(botLevel):(botLevel>=15?30:botLevel>=10?25:botLevel>=7?20:botLevel>=5?15:10);
+      const targetDeckSize=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(leaderLevel):(leaderLevel>=15?30:leaderLevel>=9?25:leaderLevel>=7?20:leaderLevel>=4?15:10);
       const add=(card)=>{
         if(!card)return false;
         const key=String(card.key||"");
@@ -291,7 +293,7 @@ permanece en el orquestador PvP hasta el corte dedicado de sincronización.
         const r=Math.max(0,Math.min(5,pvpBotRarityRank(card)));
         rarityCounts[rarityKeys[r]]++;
       }
-      return {keys:selected.map(card=>String(card.key)),keyCounts,principalKeys,rarityCounts,policy};
+      return {keys:selected.map(card=>String(card.key)),keyCounts,principalKeys,rarityCounts,policy,tier:botLevel,leaderLevel,deckSize:targetDeckSize};
     }
     function selectPvpBotProfile(level=1,leagueKey="stone"){
       const botLevel=Math.max(1,Math.min(15,Math.floor(Number(level)||1)));
@@ -321,7 +323,8 @@ permanece en el orquestador PvP hasta el corte dedicado de sincronización.
         for(const league of (globalThis.HALLVALLA_PVP_LEAGUES||[])){
           try{
             const deck=buildPvpBotDeck(profile,league);
-            const expected=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(profile.level):(profile.level>=15?30:profile.level>=10?25:profile.level>=7?20:profile.level>=5?15:10);
+            const realLevel=Math.max(1,Math.min(45,Number(profile.level||1)*3));
+            const expected=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(realLevel):(realLevel>=15?30:realLevel>=9?25:realLevel>=7?20:realLevel>=4?15:10);
             if(deck.keys.length!==expected)errors.push(`${profile.id}/${league.key}: ${deck.keys.length}/${expected}.`);
             if(deck.principalKeys.length!==0)errors.push(`${profile.id}/${league.key}: no debe tener Principales.`);
             if(deck.keys.some(key=>!getPvpBotCatalog().some(card=>String(card?.key||"")===key)))errors.push(`${profile.id}/${league.key}: carta sin catálogo.`);

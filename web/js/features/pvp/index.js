@@ -1037,6 +1037,8 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const profile=selectPvpBotProfile(botTier,leagueKey);
       if(!PVP_BOT_ALLOWED_LEADERS.includes(profile.leaderType))throw new Error(`Líder BOT no permitido: ${profile.leaderType}.`);
       const botDeck=buildPvpBotDeck(profile,league);
+      const expectedBotDeck=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(botLevel):(botLevel>=15?30:botLevel>=9?25:botLevel>=7?20:botLevel>=4?15:10);
+      if(botDeck.keys.length!==expectedBotDeck||botDeck.leaderLevel!==botLevel||botDeck.tier!==botTier)throw new Error(`Mazo BOT incoherente: Tier ${botTier}, Nv. ${botLevel}, ${botDeck.keys.length}/${expectedBotDeck} cartas.`);
       const botUid=getPvpBotUid(profile,leagueKey);
       const botName=getPvpBotPublicName(profile);
       const botAbility=botLevel>=5?String((typeof getLeaderDefaultLevel5Ability==="function"&&getLeaderDefaultLevel5Ability(profile.leaderType))||""):"";
@@ -1055,7 +1057,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       const publicShowcase={1:buildPublicShowcase(ownPayload),2:{leaderType:profile.leaderType,principalKeys:[]}};
       const pub={
         schema:"hallvalla-pvp-bot-v1",code:botCode,boardRows:rows,boardCols:cols,mode:"adventure",entryMode:"random",
-        pvpBotMatch:true,pvpBotProfileId:profile.id,pvpBotTier:botTier,pvpBotLevel:botLevel,pvpBotMasteryRank:botMasteryRank,pvpBotAiLevel:botAiLevel,pvpBotLeagueKey:leagueKey,pvpBotLeagueName:String(league?.name||"Piedra"),
+        pvpBotMatch:true,pvpBotProfileId:profile.id,pvpBotTier:botTier,pvpBotLevel:botLevel,pvpBotDeckSize:botDeck.keys.length,pvpBotMasteryRank:botMasteryRank,pvpBotAiLevel:botAiLevel,pvpBotLeagueKey:leagueKey,pvpBotLeagueName:String(league?.name||"Piedra"),
         pvpBotStyle:String(profile.style||"balanced"),pvpBotRarityCap:rarityCap,pvpBotRarityCounts:botDeck.rarityCounts,
         adventureBattleTitle:`PvP · Liga ${String(league?.name||"Piedra")}`,adventureEnemyName:botName,
         adventureAdaptiveCampaign:false,adventureAdaptiveLearning:false,adventureAdaptiveMage:false,
@@ -1127,7 +1129,7 @@ no se considera validada en este paso. El Timer sí vuelve a usar el reloj real 
       attachRoomListener(botCode);
       pvpMatchDiag("fallback-success",{room:botCode,rival:botName,league:String(league?.name||"Piedra"),botTier,botLevel,botMasteryRank,botAiLevel});
       fallbackSucceeded=true;
-      mark(`Rival encontrado · ${botName} · Liga ${String(league?.name||"Piedra")} · Tier ${botTier} · Nv. ${botLevel} · Rango ${botMasteryRank}.`);
+      mark(`Rival encontrado · ${botName} · Liga ${String(league?.name||"Piedra")} · Tier ${botTier} · Nv. ${botLevel} · Mazo ${botDeck.keys.length} cartas · Rango ${botMasteryRank}.`);
       return {started:true,deferredHuman:false};
     }catch(error){
       console.error(`[HallValla][${STEP}] Fallback BOT PvP falló:`,error);
