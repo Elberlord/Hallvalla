@@ -1512,9 +1512,9 @@ La partida termina sin victoria para ti. El jugador que salió recibe -2 puntos 
   async function searchRivalAfterVictory(){
     if(searchRivalAfterVictoryBusy)return false;
     const state=(typeof publicState!=="undefined"&&publicState)?publicState:null;
-    const eligible=!!state&&state.battleEnded===true&&String(state.phase)==="ended"&&Number(state.winner||0)===Number(myPlayer||0)&&Number(state.winner||0)>0&&
+    const eligible=!!state&&state.battleEnded===true&&String(state.phase)==="ended"&&[0,1,2].includes(Number(state.winner||0))&&
       (String(state.mode)==="online"||state.pvpBotMatch===true);
-    if(!eligible){mark("Buscar rival solo se habilita tras una victoria PvP.");return false;}
+    if(!eligible){mark("Buscar rival requiere un duelo PvP finalizado.");return false;}
     searchRivalAfterVictoryBusy=true;
     try{
       // Reusar: confirmar ranking, salir de la sala y limpiar la sesion anterior.

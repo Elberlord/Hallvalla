@@ -1,0 +1,125 @@
+/* HallValla 276 · Única presentación final. Diseño 1366×636 dentro del stage canónico. */
+#battleOutcomeSplash.show.hv-mvp-ready {
+  position:fixed !important; inset:0 !important;
+  width:100% !important; height:100% !important;
+  display:flex !important; flex-direction:column !important;
+  align-items:stretch !important; justify-content:space-between !important;
+  padding:0 !important; margin:0 !important;
+  z-index:2147483000 !important;
+  isolation:isolate; opacity:1 !important; visibility:visible !important; pointer-events:auto !important;
+  transform:none !important; overflow:hidden !important;
+  background:#061321 url('../assets/ui/battle_results/hv_mvp_bg.webp') center center / cover no-repeat !important;
+  color:#fff5d9 !important;
+  text-align:center !important;
+}
+#battleOutcomeSplash.show.hv-mvp-ready::before {
+  content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(90deg,rgba(2,9,20,.46),rgba(2,9,20,.09) 40%,rgba(2,9,20,.80) 79%),
+    linear-gradient(0deg,rgba(0,5,12,.92),transparent 26%,transparent 78%,rgba(0,6,16,.62));
+}
+#battleOutcomeSplash.show.hv-mvp-ready .battle-outcome-splash-art,
+#battleOutcomeSplash.show.hv-mvp-ready .battle-outcome-draw-text {display:none !important;}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-layout{
+  position:absolute;inset:0;z-index:2;display:block;pointer-events:none;
+  width:100%;max-width:none;margin:0;padding:0;transform:none;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-result{
+  position:absolute;top:12px;left:0;right:0;margin:0;
+  font:bold 66px/1.10 Georgia,'Times New Roman',serif;letter-spacing:.09em;
+  text-shadow:0 3px 0 #1f140e,0 0 10px #ffc76a,0 12px 32px #000;
+  color:#ffeab0;z-index:6;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-result-defeat{
+  color:#ffb8b8;text-shadow:0 3px 0 #28080a,0 0 18px #af132e,0 12px 30px #000;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-figure-zone{
+  position:absolute;top:85px;bottom:106px;left:10.5%;width:48%;
+  display:flex;align-items:center;justify-content:center;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-unit-figure{
+  height:100%;max-height:432px;width:100%;max-width:470px;
+  object-fit:contain;object-position:center bottom;
+  filter:drop-shadow(0 12px 18px #000) drop-shadow(0 0 22px #e0b65b);
+  animation:hvMvpHeroRise .68s ease-out both;position:relative;z-index:3;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-pedestal{
+  position:absolute;bottom:0;left:14%;width:72%;height:22px;border-radius:50%;
+  background:radial-gradient(ellipse,#fff6c5 0%,#cb8e36 25%,rgba(235,198,123,.35) 55%,transparent 73%);
+  box-shadow:0 0 26px rgba(245,195,98,.8);
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-figure-star{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  font-size:37px;color:#ffe6a3;text-shadow:0 0 16px #ffc57a;opacity:.85;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-figure-missing{
+  font:16px/1.5 sans-serif;color:#eee4d5;padding:20px;
+  text-shadow:0 2px 9px #000;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-info{
+  position:absolute;top:112px;right:4.4%;width:39%;padding:16px 20px 18px;
+  background:linear-gradient(135deg,rgba(3,18,35,.94),rgba(8,25,43,.78));
+  border:1px solid rgba(235,195,111,.72);border-radius:17px;
+  box-shadow:inset 0 0 0 1px rgba(255,236,175,.09),0 15px 30px rgba(0,0,0,.65);
+  backdrop-filter:blur(5px);
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-kicker{
+  font:700 18px/1.3 Georgia,serif;color:#ffd97e;letter-spacing:.15em;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-name{
+  margin:9px 0 4px;font:700 30px/1.2 Georgia,serif;color:#fff5d6;
+  text-shadow:0 2px 8px #000;overflow-wrap:anywhere;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-side{
+  margin:0 0 12px;font:600 13px/1.4 sans-serif;color:#a6cfed;letter-spacing:.06em;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-metrics{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-metric{
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  min-height:65px;padding:7px 4px;
+  background:rgba(5,15,26,.77);border:1px solid rgba(222,187,117,.30);border-radius:9px;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-metric strong{
+  font:700 27px/1.0 Georgia,serif;color:#ffdf8d;font-variant-numeric:tabular-nums;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-metric span{
+  margin-top:5px;font:11px/1.25 sans-serif;color:#dde6ed;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-unavailable{
+  padding:18px 10px;font:14px/1.5 sans-serif;color:#d7e0e9;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .battle-outcome-rewards{
+  position:absolute !important;left:16px !important;bottom:20px !important;right:auto !important;top:auto !important;
+  max-width:360px !important;max-height:96px !important;overflow:auto !important;
+  margin:0 !important;z-index:4 !important;
+  padding:6px 10px !important;border-radius:8px;
+  background:rgba(0,9,22,.75) !important;
+  font-size:12px !important;box-shadow:none !important;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .battle-outcome-rewards[aria-hidden="true"]{display:none !important;}
+#battleOutcomeSplash.show.hv-mvp-ready .battle-outcome-actions{
+  position:absolute !important;left:50% !important;bottom:18px !important;top:auto !important;
+  transform:translateX(-50%) !important;z-index:5 !important;
+  display:flex !important;gap:18px !important;justify-content:center !important;align-items:center !important;
+  flex-wrap:nowrap !important;width:max-content !important;max-width:100% !important;
+  padding:0 !important;margin:0 !important;background:none !important;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .battle-outcome-action{
+  min-width:215px !important;height:55px !important;padding:9px 18px !important;
+  border-radius:10px !important;border:2px solid #d7ad55 !important;
+  background:linear-gradient(#dabb6a,#92641d) !important;
+  box-shadow:0 6px 0 #35200a,0 10px 20px #000b !important;
+  font:800 17px/1.1 sans-serif !important;color:#131b27 !important;
+  letter-spacing:.04em !important;white-space:nowrap !important;
+  cursor:pointer !important;pointer-events:auto !important;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .battle-outcome-action.ghost{
+  color:#fff4d6 !important;background:linear-gradient(#18324f,#071829) !important;
+}
+#battleOutcomeSplash.show.hv-mvp-ready .battle-outcome-action[hidden]{display:none !important;}
+#battleOutcomeSplash.show.hv-mvp-ready .battle-outcome-action:focus-visible{
+  outline:3px solid #fff;outline-offset:4px;
+}
+@keyframes hvMvpHeroRise{from{opacity:0;transform:translateY(22px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media (prefers-reduced-motion:reduce){#battleOutcomeSplash.show.hv-mvp-ready .hv-mvp-unit-figure{animation:none}}
