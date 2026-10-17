@@ -70,6 +70,14 @@ function getCardPlayState(card){
   if(!card)return{canPlay:false,reason:"Carta no disponible."};
   if(isBattleEnded())return{canPlay:false,reason:"La batalla ya terminó."};
   if(isPvpStep6fLimitedMode()&&!isPvpStep6hAllowedHandCard(card))return{canPlay:false,reason:"Paso 6H: por ahora están habilitadas las cartas de UNIDAD y Fireball. Otros hechizos, equipos y trampas siguen bloqueados."};
+  if(card.type==="unit"&&typeof hallvallaRtSummonCooldownRemaining==="function"){
+    const remaining=hallvallaRtSummonCooldownRemaining(myPlayer);
+    if(remaining>0)return {canPlay:false,reason:`Invocación en recarga: ${(remaining/1000).toFixed(1)} s.`};
+  }
+  if(typeof hallvallaRtIsSpellTrapCard==="function"&&hallvallaRtIsSpellTrapCard(card)){
+    const remaining=hallvallaRtSpellTrapCooldownRemaining(myPlayer);
+    if(remaining>0)return {canPlay:false,reason:`Magias y trampas en recarga: ${(remaining/1000).toFixed(1)} s.`};
+  }
   const honor=capResourceAmount(privateState?.honor||0,privateState?.maxHonor||0);
   if(honor<effectiveCardCost(card,myPlayer))return{canPlay:false,reason:`Necesitas ${effectiveCardCost(card,myPlayer)} ${getResourceLabel(myPlayer)}. Tienes ${honor}.`};
   if(card.type==="unit"&&summonZones(myPlayer).length===0)return{canPlay:false,reason:"No hay casillas libres junto a tu líder."};

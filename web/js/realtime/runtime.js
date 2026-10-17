@@ -74,6 +74,7 @@ function hallvallaRtPrimePreparedState(){
   hallvallaRtState.arsenalCategory="unit";hallvallaRtState.arsenalPage=0;hallvallaRtState.arsenalLevel="root";hallvallaRtClearTargetCursor();
   hallvallaRtState.moveAt.clear();
   hallvallaRtState.lastSummonAt={1:0,2:0};
+  hallvallaRtState.lastSpellTrapUntilAt={1:0,2:0};
   hallvallaRtState.lastPlayerSummonAttempt=null;
   hallvallaRtState.lastPlayerCardInput=null;
   hallvallaRtState.onlinePendingCasts=[];hallvallaRtState.onlineCastSeq=0;hallvallaRtState.onlineCastLastAckPublic=0;hallvallaRtState.onlineCastLastAckPrivate=0;hallvallaRtOnlineCastQueue=Promise.resolve();

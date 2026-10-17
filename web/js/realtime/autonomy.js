@@ -330,7 +330,10 @@ function hallvallaRtAiChoosePlay(ai,units,mana){
   const options=[];
   const push=(kind,card,target,score,extra={})=>{if(card&&Number.isFinite(score))options.push({kind,card,target,score,...extra});};
   const handCards=ai.hand||[];
-  const affordable=handCards.filter(card=>hallvallaRtAiCardCost(card)<=mana);
+  const canSummon=hallvallaRtSummonCooldownRemaining(2)===0;
+  const canCast=hallvallaRtSpellTrapCooldownRemaining(2)===0;
+  const affordable=handCards.filter(card=>hallvallaRtAiCardCost(card)<=mana&&
+    (card?.type!=="unit"||canSummon)&&(!hallvallaRtIsSpellTrapCard(card)||canCast));
   // Presencia mínima TR: con 0–1 invocaciones J2 prioriza desplegar y no quema
   // el MANÁ en magia/trampas mientras espera una unidad. Esto evita que una IA
   // de control se quede lanzando hechizos sin construir ejército.
@@ -340,7 +343,7 @@ function hallvallaRtAiChoosePlay(ai,units,mana){
       const best=affordableUnits.map(card=>({kind:"summon",card,target:null,cell:spawnCell,score:5000+hallvallaRtAiUnitValue(card)-hallvallaRtAiCardCost(card)*8})).sort((a,b)=>b.score-a.score)[0];
       if(best)return best;
     }
-    if(handCards.some(card=>card?.type==='unit'))return null;
+    if(canSummon&&handCards.some(card=>card?.type==='unit'))return null;
   }
   for(const card of affordable){
     const cost=hallvallaRtAiCardCost(card);
@@ -492,6 +495,8 @@ async function hallvallaRtAiResolvePlay(choice,ai,units,now){
   if(!choice?.card)return false;
   const card=choice.card,cost=hallvallaRtAiCardCost(card);
   if(cost>Math.max(0,Number(ai.honor||0)))return false;
+  if(card.type==="unit"&&hallvallaRtSummonCooldownRemaining(2,now)>0)return false;
+  if(hallvallaRtIsSpellTrapCard(card)&&hallvallaRtSpellTrapCooldownRemaining(2,now)>0)return false;
   let nextUnits=[...(units||[])],patch={},log="",battleFxEvent=null,floatFxEvent=null,statusFxEvent=null;
   let legendaryTraps=[...(publicState?.legendaryTraps||[])],beastTraps=[...(publicState?.beastTraps||[])];
   const removeCard=()=>{ai.hand=(ai.hand||[]).filter(c=>c.id!==card.id);ai.honor=Math.max(0,Number(ai.honor||0)-cost);ai.maxHonor=Math.max(HALLVALLA_RT_CFG.initialMana,Number(ai.maxHonor||HALLVALLA_RT_CFG.initialMana));};
@@ -566,6 +571,7 @@ async function hallvallaRtAiResolvePlay(choice,ai,units,now){
   hallvallaRtState.lastAiDeployAt=now;
   patch={units:nextUnits,adventureAiState:ai,legendaryTraps,beastTraps,battleFxEvent:battleFxEvent||null,floatFxEvent:floatFxEvent||null,statusFxEvent:statusFxEvent||null,["playerStats/2"]:{...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:ai.maxHonor,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length},log:[log,...(publicState?.log||[])].filter(Boolean).slice(0,18)};
   const ok=await updatePublic(patch);if(!ok)return false;
+  if(hallvallaRtIsSpellTrapCard(card))hallvallaRtMarkSpellTrapPlayed(2,cost,now);
   if(choice.kind==="damage")await finalizeBattle(nextUnits,log);
   return true;
 }

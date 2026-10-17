@@ -13,6 +13,10 @@ function getCardPaymentCommitState(card,paidCost=null){
   return{hand,honor,maxHonor,exactCost};
 }
 async function commitCardPlay(card,publicPatch={},paidCost=null,actionLog=""){
+  const isSummon=card?.type==="unit";
+  const timed=typeof hallvallaRtIsSpellTrapCard==="function"&&hallvallaRtIsSpellTrapCard(card);
+  if(isSummon&&typeof hallvallaRtSummonCooldownRemaining==="function"&&hallvallaRtSummonCooldownRemaining(myPlayer)>0)return false;
+  if(timed&&typeof hallvallaRtSpellTrapCooldownRemaining==="function"&&hallvallaRtSpellTrapCooldownRemaining(myPlayer)>0)return false;
   const payment=getCardPaymentCommitState(card,paidCost);
   if(!payment)return false;
   const nextStats={
@@ -41,6 +45,8 @@ async function commitCardPlay(card,publicPatch={},paidCost=null,actionLog=""){
     kind:`card:${card.key||card.type||"play"}`
   });
   if(!committed)return false;
+  if(isSummon&&typeof hallvallaRtMarkSummoned==="function")hallvallaRtMarkSummoned(myPlayer);
+  if(timed&&typeof hallvallaRtMarkSpellTrapPlayed==="function")hallvallaRtMarkSpellTrapPlayed(myPlayer,payment.exactCost);
   // ACCOUNT MASTERY: solo después de que la jugada quedó confirmada.
   // Las categorías son excluyentes: Equipo > Trampa > Magia.
   // Así una carta con metadata auxiliar no puede sumar a dos maestrías.

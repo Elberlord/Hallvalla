@@ -105,7 +105,23 @@ function hallvallaRtGetSpawnCells(owner,units=publicState?.units||[]){
 function hallvallaRtFindBestSpawnCell(owner,units=publicState?.units||[]){
   return hallvallaRtGetSpawnCells(owner,units)[0]||null;
 }
-function hallvallaRtSummonCooldownRemaining(){return 0;}
+function hallvallaRtSummonCooldownRemaining(owner,now=hallvallaRtNow()){
+  const last=Number(hallvallaRtState.lastSummonAt?.[Number(owner)]||0);
+  if(!last)return 0;
+  return Math.max(0,Math.ceil(last+HALLVALLA_RT_CFG.summonCooldownMs-Number(now)));
+}
+// v288: Magias/trampas comparten cooldown independiente de invocaciones y equipos.
+function hallvallaRtIsSpellTrapCard(card){
+  return !!card&&card.type!=="equipment"&&(card.type==="spell"||card.type==="trap"||!!card.spell||!!card.trap);
+}
+function hallvallaRtSpellTrapCooldownRemaining(owner,now=hallvallaRtNow()){
+  return Math.max(0,Math.ceil(Number(hallvallaRtState.lastSpellTrapUntilAt?.[Number(owner)]||0)-Number(now)));
+}
+function hallvallaRtMarkSpellTrapPlayed(owner,paidCost,now=hallvallaRtNow()){
+  const cost=Math.max(0,Number(paidCost)||0);
+  if(!hallvallaRtState.lastSpellTrapUntilAt||typeof hallvallaRtState.lastSpellTrapUntilAt!=="object")hallvallaRtState.lastSpellTrapUntilAt={1:0,2:0};
+  hallvallaRtState.lastSpellTrapUntilAt[Number(owner)]=Number(now)+Math.ceil(cost*HALLVALLA_RT_CFG.spellTrapCooldownPerManaMs);
+}
 function hallvallaRtMarkSummoned(owner,now=hallvallaRtNow()){
   if(!hallvallaRtState.lastSummonAt||typeof hallvallaRtState.lastSummonAt!=="object")hallvallaRtState.lastSummonAt={1:0,2:0};
   hallvallaRtState.lastSummonAt[Number(owner)]=Number(now||hallvallaRtNow());
@@ -485,6 +501,8 @@ function hallvallaRtPlayerUnitPlayState(card){
   if(isBattleEnded())return {canPlay:false,reason:"La batalla ya terminó."};
   const hand=Array.isArray(privateState?.hand)?privateState.hand:[];
   if(!hand.some(c=>String(c?.id)===String(card.id)))return {canPlay:false,reason:"La carta ya no está en tu arsenal."};
+  const cooldown=hallvallaRtSummonCooldownRemaining(owner);
+  if(cooldown>0)return {canPlay:false,reason:`Invocación en recarga: ${(cooldown/1000).toFixed(1)} s.`,cooldownRemainingMs:cooldown};
   const cost=Math.max(0,Number(effectiveCardCost(card,owner)||0));
   const mana=Math.max(0,Number(privateState?.honor||0));
   if(mana<cost)return {canPlay:false,reason:`Necesitas ${cost} MANÁ. Tienes ${mana}.`,cost,mana};
@@ -539,6 +557,11 @@ function hallvallaRtCastUnitCore({owner,card,aiState=null,preferredCell=null,sou
     hallvallaRtState.lastPlayerSummonAttempt={at:inputAt,stage:"validate",cardId:card.id,key:card.key,name:card.name,owner:ownerNum,mana,cost,spawnCells:cells.length,source};
   }
   if(!liveCard){if(isPlayer)hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"hand",ok:false,reason:"card_not_in_hand"};return {ok:false,reason:"card_not_in_hand"};}
+  const cooldown=hallvallaRtSummonCooldownRemaining(ownerNum,inputAt);
+  if(cooldown>0){
+    if(isPlayer)hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"cooldown",ok:false,reason:"summon_cooldown",remainingMs:cooldown};
+    return {ok:false,reason:"summon_cooldown",remainingMs:cooldown};
+  }
   if(mana<cost){if(isPlayer)hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"payment",ok:false,reason:"not_enough_mana",mana,cost};return {ok:false,reason:"not_enough_mana",mana,cost};}
   if(!cell){if(isPlayer)hallvallaRtState.lastPlayerSummonAttempt={...hallvallaRtState.lastPlayerSummonAttempt,stage:"spawn",ok:false,reason:"no_spawn_cell"};return {ok:false,reason:"no_spawn_cell"};}
 
@@ -605,6 +628,7 @@ function hallvallaRtPlayUnitImmediate(card){
     if(result.reason==="card_not_in_hand")setHint("La carta ya no está en tu arsenal.");
     else if(result.reason==="not_enough_mana")setHint(`Necesitas ${result.cost} MANÁ. Tienes ${result.mana}.`);
     else if(result.reason==="no_spawn_cell")setHint("No queda ninguna celda libre en tu zona de despliegue.");
+    else if(result.reason==="summon_cooldown")setHint(`Invocación en recarga: ${(Number(result.remainingMs||0)/1000).toFixed(1)} s.`);
     else setHint(`No se pudo invocar ${card.name}.`);
     hallvallaRtRenderArsenal();return false;
   }

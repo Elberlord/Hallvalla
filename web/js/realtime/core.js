@@ -19,7 +19,8 @@ const HALLVALLA_RT_CFG=Object.freeze({
   handMax:99,
   aiThinkEveryMs:180,
   aiDeployCooldownMs:280,
-  summonCooldownMs:0,
+  summonCooldownMs:2000,
+  spellTrapCooldownPerManaMs:1000,
   spawnEgressDelayMs:250,
   // v216: respaldo/fallback. El ritmo real se calcula por unidad en unit-load-profiles.
   // Todas las unidades: ataque 2 s más rápido y movimiento 3 s más rápido respecto a v176.
@@ -82,6 +83,7 @@ const hallvallaRtState={
   lastSummonedByOwner:{1:null,2:null},
   summonHistory:{1:[],2:[]},
   lastSummonAt:{1:0,2:0},
+  lastSpellTrapUntilAt:{1:0,2:0},
   lastPlayerSummonAttempt:null,
   lastPlayerCardInput:null,
   onlineCastSeq:0,
