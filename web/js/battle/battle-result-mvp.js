@@ -168,6 +168,17 @@
       oldDialog.classList.add("hidden");oldDialog.setAttribute("aria-hidden","true");
     }
     document.getElementById("battleMenuPanel")?.classList.add("hidden");
+    // La locucion usa exactamente el MVP que aparece en el resultado.
+    // Una unidad todavía oculta no se identifica por audio.
+    if(mvp){
+      const unit=mvp.unit;
+      let concealed=false;
+      try{concealed=typeof isStealthedUnit==="function"?isStealthedUnit(unit):!!(unit?.stealth||unit?.hidden)&&unit?.revealed!==true;}catch(_){concealed=true;}
+      if(!concealed){
+        try{globalThis.hv280Announcer?.mvp?.(mvp.name,mvp.key||unit?.key||"");}
+        catch(error){console.warn("[HallValla MVP] Voz final",error);}
+      }
+    }
   }
   if(typeof maybePlayBattleFx==="function"){
     const original=maybePlayBattleFx;

@@ -8,12 +8,19 @@
 
   const synth=globalThis.speechSynthesis||null;
   const speechSupported=!!globalThis.HV281_VOICE_ASSETS;
-  let activeAudio=null;
+  let activeAudio=null, activePriority=0;
   const queue=[];
   const recent=new Map();
   const skillEvents=new Set();
   let session="",active=false,lastSpeechAt=0,voices=[],visualTimer=0,watchdog=0;
+  let lastMvpSession="";
   const now=()=>Date.now();
+  const isConcealed=(unit)=>{
+    if(!unit||unit.leader)return false;
+    try{if(typeof isStealthedUnit==="function")return isStealthedUnit(unit);}catch(_){ }
+    return (unit.stealth===true||unit.hidden===true)&&unit.revealed!==true;
+  };
+  const flatName=(value)=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
   const localOwner=()=>{try{return Number(myPlayer)||1;}catch(_){return 1;}};
   const settingsOk=()=>{
     try{return (typeof gameSettings==="undefined"||(gameSettings.sound!==false&&gameSettings.sfx!==false))&&localStorage.getItem("hallvalla_announcer_enabled")!=="0";}catch(_){return true;}
@@ -48,21 +55,35 @@
   }
   function finish(){
     active=false;
+    activePriority=0;
     clearTimeout(watchdog);
-    if(!battleOpen()){queue.length=0;return;}
-    setTimeout(drain,180);
+    if(!battleOpen()){
+      for(let i=queue.length-1;i>=0;i--){if(queue[i].kind!=="streak"&&queue[i].kind!=="boss"&&queue[i].kind!=="mvp"&&queue[i].kind!=="mvp_name"&&queue[i].kind!=="fallen"&&queue[i].kind!=="revived"&&queue[i].kind!=="life_name")queue.splice(i,1);}
+      if(!queue.length)return;
+    }
+    setTimeout(drain,70);
   }
   function drain(){
-    if(active||!queue.length||!battleOpen()||!settingsOk())return;
+    if(active||!queue.length||!settingsOk())return;
+    if(!battleOpen()){
+      for(let i=queue.length-1;i>=0;i--){if(queue[i].kind!=="streak"&&queue[i].kind!=="boss"&&queue[i].kind!=="mvp"&&queue[i].kind!=="mvp_name"&&queue[i].kind!=="fallen"&&queue[i].kind!=="revived"&&queue[i].kind!=="life_name")queue.splice(i,1);}
+      if(!queue.length)return;
+    }
     const delta=now()-lastSpeechAt;
-    if(delta<1450){setTimeout(drain,1450-delta);return;}
+    if(delta<600){setTimeout(drain,600-delta);return;}
     const item=queue.shift();
-    const url=globalThis.HV281_VOICE_ASSETS?.resolve(item.kind,item.name,item.key,item.leaderType)||"";
-    if(!url){console.info("[HV281] MP3 no disponible",item.kind,item.name,item.key);setTimeout(drain,80);return;}
-    const audio=new Audio(url);
+    if(item.kind==="summon"&&item.unitId){
+      const live=(Array.isArray(publicState?.units)?publicState.units:[]).find(u=>String(u?.id||"")===item.unitId);
+      if(!live||isConcealed(live)){setTimeout(drain,0);return;}
+    }
+    if(now()-item.queuedAt>6500){setTimeout(drain,0);return;}
+    const url=item.url||globalThis.HV281_VOICE_ASSETS?.resolve(item.kind,item.name,item.key,item.leaderType)||"";
+    if(!url){setTimeout(drain,0);return;}
+    const audio=item.audio||new Audio(url);
     audio.preload="auto";
     audio.volume=Math.max(0,Math.min(1,Number(typeof gameSettings!=="undefined"?gameSettings.sfxVolume:.9)||.9));
     activeAudio=audio;
+    activePriority=Number(item.priority||0);
     active=true;
     lastSpeechAt=now();
     let settled=false;
@@ -78,9 +99,9 @@
     watchdog=setTimeout(()=>{try{audio.pause();}catch(_){ }completed();},12000);
     try{const p=audio.play();if(p&&p.catch)p.catch(completed);}catch(_){completed();}
   }
-  function announce(kind,name,priority=1,cardKey="",leaderType=""){
+  function announce(kind,name,priority=1,cardKey="",leaderType="",unitId=""){
     const safe=String(name||"").trim().replace(/\s+/g," ").slice(0,75);
-    if(!safe||!settingsOk()||!battleOpen())return false;
+    if(!safe||!settingsOk()||(!battleOpen()&&kind!=="streak"&&kind!=="boss"&&kind!=="mvp"&&kind!=="mvp_name"&&kind!=="fallen"&&kind!=="life_name"))return false;
     const key=`${kind}:${safe.toLowerCase()}`;
     const t=now();
     if(t-(recent.get(key)||0)<4500)return false;
@@ -94,8 +115,20 @@
       if(queue[minimum].priority>priority)return false;
       queue.splice(minimum,1);
     }
-    queue.push({kind,name:safe,priority,key:String(cardKey||""),leaderType:String(leaderType||"")});
+    const url=globalThis.HV281_VOICE_ASSETS?.resolve(kind,safe,cardKey,leaderType)||"";
+    if(!url)return false;
+    const audio=new Audio(url);
+    audio.preload="auto";
+    try{audio.load();}catch(_){ }
+    queue.push({kind,name:safe,priority,key:String(cardKey||""),leaderType:String(leaderType||""),unitId:String(unitId||""),url,audio,queuedAt:t});
     queue.sort((a,b)=>b.priority-a.priority);
+    // Una racha puede interrumpir solo una locucion de menor prioridad.
+    if(priority>=8&&activeAudio&&priority>activePriority){
+      const oldAudio=activeAudio;
+      activeAudio=null;active=false;activePriority=0;lastSpeechAt=0;
+      clearTimeout(watchdog);
+      try{oldAudio.pause();}catch(_){ }
+    }
     drain();
     return true;
   }
@@ -163,10 +196,20 @@
     const before=new Map(prev.units.map(u=>[String(u.id),u]));
     const after=new Map(next.units.map(u=>[String(u.id),u]));
     for(const unit of next.units){
-      if(!unit||unit.leader||before.has(String(unit.id)))continue;
-      // El motor visual ya resuelve por separado la invocacion; esto sustituye
-      // el pitido por el nombre de la carta.
-      announce("summon",unit.name||unit.key,Number(unit.owner)===localOwner()?2:1,unit.key||"");
+      if(!unit||unit.leader||isConcealed(unit))continue;
+      const oldUnit=before.get(String(unit.id));
+      const returned=(unit.resurrectedByHealer===true||unit.reanimated===true||
+        unit.summonOrigin==="reanimation"||(Array.isArray(prev.undeadRemains)&&
+        prev.undeadRemains.some(r=>String(r?.originalUnitId||"")===String(unit.id))));
+      if(oldUnit){
+        // Se anuncia una sola vez cuando la unidad ya existente PIERDE sigilo.
+        if(isConcealed(oldUnit)&&!returned)
+          announce("summon",unit.name||unit.key,Number(unit.owner)===localOwner()?2:1,unit.key||"","",unit.id||"");
+        continue;
+      }
+      // La resurreccion tiene un evento propio; nunca se narra como invocacion.
+      if(returned)continue;
+      announce("summon",unit.name||unit.key,Number(unit.owner)===localOwner()?2:1,unit.key||"","",unit.id||"");
     }
     const catalog=globalThis.HV_LEADER_NINE_SKILLS?.catalog||{};
     const leaders=next.units.filter(u=>u?.leader&&Number(u.hp||0)>0&&catalog[u.leaderType]);
@@ -221,7 +264,11 @@
     const log=String(next.log?.[0]||"");
     if(log&&log!==String(prev.log?.[0]||"")){
       const match=/\bJ[12]\s+(?:usa|activa|coloca)\s+(.+?)(?:\s+(?:sobre|en una|en el|a una|a un|contra|:)\b|\s*:\s*|[.!]|$)/i.exec(log);
-      if(match&&match[1])announce("card",match[1].trim(),3);
+      if(match&&match[1]){
+        const spoken=flatName(match[1].trim());
+        const hidden=next.units.some(u=>isConcealed(u)&&flatName(u.name||u.key)===spoken);
+        if(!hidden)announce("card",match[1].trim(),3);
+      }
     }
     if(skillEvents.size>300)skillEvents.clear();
   }
@@ -237,7 +284,42 @@
     supported:speechSupported,
     enable(value){try{localStorage.setItem("hallvalla_announcer_enabled",value?"1":"0");}catch(_){ }if(!value){queue.length=0;try{activeAudio?.pause?.();}catch(_){ }activeAudio=null;active=false;}},
     test(name="Aquiles"){announce("test",name,8);},
-    queueSize(){return queue.length;}
+    cinematic(kind,label,assetKey){
+      if(kind!=="streak"&&kind!=="boss")return false;
+      return announce(kind,label,kind==="boss"?10:9,assetKey||"");
+    },
+    life(kind,name,key=""){
+      if(kind!=="fallen"&&kind!=="revived")return false;
+      const label=String(name||"").trim();
+      if(!label||!settingsOk())return false;
+      const priority=kind==="fallen"?7.1:7.3;
+      const intro=announce(kind,kind==="fallen"?"Fallen":"Resurrected",priority,kind);
+      // Los nombres se reutilizan del catalogo original de 198 MP3.
+      // No se sintetizan nombres ni se revelan nombres ocultos.
+      const nameAudio=globalThis.HV281_VOICE_ASSETS?.resolve("summon",label,key)||"";
+      const spoken=nameAudio?announce("life_name",label,priority-.05,key):false;
+      return intro||spoken;
+    },
+    queueSize(){return queue.length;},
+    mvp(name,key=""){
+      const label=String(name||"").trim();
+      if(!label||!settingsOk())return false;
+      const battleId=(typeof gameId!=="undefined"?String(gameId||""):"")+":"+session+":"+label.toLowerCase();
+      if(lastMvpSession===battleId)return false;
+      lastMvpSession=battleId;
+      // Al cerrar la batalla se descartan voces corrientes retrasadas.
+      // Una racha final que YA está sonando puede terminar antes del MVP.
+      queue.length=0;
+      if(activeAudio&&activePriority<9){
+        const interrupted=activeAudio;
+        activeAudio=null;active=false;activePriority=0;lastSpeechAt=0;
+        clearTimeout(watchdog);
+        try{interrupted.pause();}catch(_){ }
+      }
+      const intro=announce("mvp","MVP",8,"mvp");
+      const unit=announce("mvp_name",label,7,String(key||""));
+      return intro||unit;
+    }
   });
-  console.info("[HallValla v280] Anunciador y FX conectados; voz del sistema:",speechSupported);
+  console.info("[HallValla v285] Locuciones MP3, rachas y sigilo:",speechSupported);
 })();
