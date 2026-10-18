@@ -716,6 +716,11 @@ async function normalizePublicPatchBeforeCommit(sourcePatch={},options={}){
     cleanPatch.units=hvReconcileLegacyTriggerWindows(beforeUnits,cleanPatch.units);
     const baseGraveyard=Array.isArray(cleanPatch.erictoGraveyard)?cleanPatch.erictoGraveyard:(publicState?.erictoGraveyard||[]);
     cleanPatch.erictoGraveyard=captureErictoGraveyard(baseGraveyard,beforeUnits,cleanPatch.units);
+    if(typeof globalThis.hvLastRitesOnNewGraves==='function'){
+      const rites=globalThis.hvLastRitesOnNewGraves(cleanPatch.erictoGraveyard,cleanPatch.units,baseGraveyard);
+      cleanPatch.erictoGraveyard=rites.grave;
+      cleanPatch.units=rites.units;
+    }
     const baseUndeadRemains=Array.isArray(cleanPatch.undeadRemains)?cleanPatch.undeadRemains:(publicState?.undeadRemains||[]);
     const undeadCapture=captureUndeadRemains(baseUndeadRemains,beforeUnits,cleanPatch.units,{incineratedIds:cleanPatch._undeadIncineratedIds||[],frozenIds:cleanPatch._undeadFrozenIds||[]});
     cleanPatch.undeadRemains=undeadCapture.remains;
@@ -736,7 +741,7 @@ async function normalizePublicPatchBeforeCommit(sourcePatch={},options={}){
   return{patch:cleanPatch,beforeUnits};
 }
 async function updatePublic(patch){
-  
+
   const writeGameId=gameId;
   const writeLifecycleToken=getBattleLifecycleToken();
   const writeContextActive=()=>writeGameId&&gameId===writeGameId&&isBattleLifecycleTokenActive(writeLifecycleToken);
@@ -932,7 +937,7 @@ globalThis.getBattleCardsSortedByCurrentCost=getBattleCardsSortedByCurrentCost;
 
 async function commitGameplayAction({publicPatch={},privatePatch={},kind="",rtClientSeq=0,alreadyApplied=false}={}){
   privatePatch=normalizeBattlePrivateHandOrder(privatePatch,myPlayer||1);
-  
+
   if(globalThis.hallvallaRtShouldNetworkGameplayAction?.(kind))return commitRealtimeOnlineCheckpoint(publicPatch,privatePatch,kind,{rtClientSeq,alreadyApplied});
   if(!globalThis.hallvallaRtUseLocalBattleRuntime?.()&&isPvpStep6fAtomicActionMode(publicState))return commitPvpStep6fAtomicAction(publicPatch,privatePatch);
   if(Object.keys(publicPatch||{}).length&&!(await updatePublic(publicPatch)))return false;
@@ -940,7 +945,7 @@ async function commitGameplayAction({publicPatch={},privatePatch={},kind="",rtCl
   return true;
 }
 async function updatePrivate(patch){
-  
+
   const writeGameId=gameId;
   const writePlayer=myPlayer;
   const writeLifecycleToken=getBattleLifecycleToken();
@@ -1039,8 +1044,8 @@ async function finalizeBattle(units,actionLog="",stateOverride=null){
   clearBattleTransientUiState();
   selectedCard=null;
   selectedUnitId=null;
-  
-  
+
+
   cardInspectSelection=null;
   unitContextSelection=null;
   hideUnitContextMenu();
@@ -1570,7 +1575,7 @@ function enterLocalGame(pub,priv,player=1){
   render();
   globalThis.hallvallaRtSyncPreparedBattle?.();
   setHint("Modo local de prueba: tablero real sin Firebase. Ajusta Rareza CTRL aquí mismo.");
-  
+
 }
 function enterGame(code,player){
   networkPublicStateRaw=null;
@@ -1619,12 +1624,12 @@ function enterGame(code,player){
     syncBattleMusic();
     maybePlayBattleFx(prevPublic,publicState);
     maybeProcessVeilCurseKillEvent(prevPublic,publicState);
-    
+
     maybeShowBattleResult();
     void maybeFinalizeUnitExhaustionFromPublicState();
     void maybeResolveStage8StealthAreaDamage();
     void maybeResolveStage8StealthDetectionAndAura();
-    
+
     });
   },e=>handleBattleListenerError("public:onValue",e)),"firebase","battle-public");
   unsubPriv=battleOwnDisposable(onValue(getGamePrivatePlayerRef(code,player),snap=>{
@@ -1650,7 +1655,7 @@ function enterGame(code,player){
     maybeShowBattleResult();
     void maybeResolveStage8StealthAreaDamage();
     void maybeResolveStage8StealthDetectionAndAura();
-    
+
     });
   },e=>handleBattleListenerError("private:onValue",e)),"firebase","battle-private");
 }

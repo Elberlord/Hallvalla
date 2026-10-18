@@ -25,7 +25,7 @@ const HALLVALLA_TRIGGER_SKILL_COOLDOWN_SECONDS=30;
 function hvSkillUsesTriggerCooldown(skill){
   const trigger=hvSkillNorm(skill?.trigger);
   if(!trigger||trigger==="pasiva")return false;
-  if(skill?.name==="Muro de Picas")return true;
+  if(skill?.name==="Muro de Picas"||skill?.id==="HV-197")return true;
   const passiveExact=new Set([
     "aliados cercanos",
     "unidad aliada mas adelantada",
@@ -578,15 +578,22 @@ function hvSkillCombatMods(mods,{attacker,defender,attackContext}={}){
     let used=false;
     if(["HV-166","HV-167","HV-168"].includes(skill.id)){
       const power=Math.max(1,hvSkillRarityIndex(attacker));
-      if(skill.id==="HV-166")next.hvCurseWeakTarget={id:defender.id,power};
+      if(skill.id==="HV-166")next.hvCurseWeakTarget={id:defender.id,power,sourceId:attacker.id};
       if(skill.id==="HV-167")next.defenderGuard=(next.defenderGuard||0)-power;
-      if(skill.id==="HV-168")next.hvCurseSlowTarget={id:defender.id,power};
+      if(skill.id==="HV-168")next.hvCurseSlowTarget={id:defender.id,power,sourceId:attacker.id};
       next.attackerSkillCooldownMarks=[...(next.attackerSkillCooldownMarks||[]),
         {unitId:attacker.id,skillId:skill.id,until:skillNow+30000}];
       hvSkillAddNote(next,skill.name+": -"+power+" por rareza; recarga 30 s.");
       continue;
     }
-    if(value>0&&(effect.includes("aumenta at")||effect.includes("bonus de at")||effect.includes("bonificacion de at")||effect.includes("gana at")||(cat.includes("ofensiva")&&scale==="at"))){next.attackerAtk=(next.attackerAtk||0)+value;used=true;}
+    if(skill.id==="HV-197"){
+      if(attacker.hvMountedFlankTargetId===defender.id){
+        next.attackerAtk=(next.attackerAtk||0)+Math.max(1,hvSkillRarityIndex(attacker));used=true;
+      }
+    }else if(skill.id==="HV-201"){
+      let near=false;try{near=dist(attacker,defender)<=1;}catch(_){}
+      if(near&&Number(attacker.movedSpaces||0)>0){next.attackerAtk=(next.attackerAtk||0)+value;used=true;}
+    }else if(value>0&&(effect.includes("aumenta at")||effect.includes("bonus de at")||effect.includes("bonificacion de at")||effect.includes("gana at")||(cat.includes("ofensiva")&&scale==="at"))){next.attackerAtk=(next.attackerAtk||0)+value;used=true;}
     if(value>0&&(effect.includes("aumenta dx")||effect.includes("bonus de dx")||effect.includes("bonificacion de dx")||cat.includes("ofensiva")&&scale==="dx")){next.attackerDex=(next.attackerDex||0)+value;used=true;}
     if(value>0&&(effect.includes("reduce guardia")||effect.includes("ignora parte de la guardia")||scale.includes("gd ignorada")||scale.includes("guardia ignorada"))){next.defenderGuard=(next.defenderGuard||0)-value;used=true;}
     if(value>0&&effect.includes("reduce agi")){next.defenderAgi=(next.defenderAgi||0)-value;used=true;}
@@ -657,21 +664,76 @@ function hvSkillCombatMods(mods,{attacker,defender,attackContext}={}){
   }catch(_){}
   return next;
 }
+// v305 — rituales persistentes, con vigencia real y sin acumulación entre zonas.
+function hvSacredZones(now=Date.now()){
+  return (Array.isArray(publicState?.hvSacredZones)?publicState.hvSacredZones:[])
+    .filter(z=>z&&Number(z.until||0)>now&&Number.isFinite(Number(z.x))&&Number.isFinite(Number(z.y)));
+}
+function hvSacredZoneAt(x,y,now=Date.now()){
+  return hvSacredZones(now).some(z=>
+    Math.max(Math.abs(Number(x)-Number(z.x)),Math.abs(Number(y)-Number(z.y)))<=Number(z.radius||1));
+}
+function hvSacredPenalty(unit,stat,now=Date.now()){
+  if(!unit||!(unit.reanimated||unit.undead||unit.noMuerto)||Number(unit.hp||0)<=0)return 0;
+  const nearby=hvSacredZones(now).filter(z=>Number(z.owner)!==Number(unit.owner)&&
+    Math.max(Math.abs(Number(unit.x)-Number(z.x)),Math.abs(Number(unit.y)-Number(z.y)))<=Number(z.radius||1));
+  return nearby.reduce((max,z)=>Math.max(max,(stat==='agi'&&z.kind!=='holy')?0:Number(z.power||0)),0);
+}
+function hvLastRitesOnNewGraves(grave,units,oldGrave=[],now=Date.now()){
+  let outUnits=[...(units||[])],sealed=0;
+  const existing=new Set((oldGrave||[]).map(r=>String(r?.graveId||'')));
+  const outGrave=(grave||[]).map(rec=>{
+    if(!rec||existing.has(String(rec.graveId||''))||rec.used||rec.hvLastRitesOwner!=null||!rec.snapshot)return rec;
+    const dead=rec.snapshot;
+    const caster=outUnits.find(u=>u&&Number(u.hp||0)>0&&!u.leader&&
+      Number(u.owner)===Number(dead.owner)&&hvSkillOwns(u,'HV-221')&&
+      hvSkillCooldownReady(u,HALLVALLA_UNIT_SKILL_BANK['HV-221'],now)&&
+      Math.max(Math.abs(Number(u.x)-Number(dead.x)),Math.abs(Number(u.y)-Number(dead.y)))<=2);
+    if(!caster)return rec;
+    const sk=HALLVALLA_UNIT_SKILL_BANK['HV-221'];
+    outUnits=outUnits.map(u=>u.id===caster.id?hvSkillMarkCooldown(u,sk,now):u);
+    sealed++;
+    return {...rec,hvLastRitesOwner:Number(dead.owner),hvLastRitesAt:now};
+  });
+  return{grave:outGrave,units:outUnits,sealed};
+}
+function hvCanReanimateRecord(record,caster,now=Date.now()){
+  if(!record)return false;
+  if(record.hvLastRitesOwner!=null&&caster&&Number(record.hvLastRitesOwner)!==Number(caster.owner))return false;
+  const at=record.snapshot||record;
+  if(Number.isFinite(Number(at.x))&&Number.isFinite(Number(at.y))&&hvSacredZoneAt(at.x,at.y,now))return false;
+  return true;
+}
+Object.assign(globalThis,{hvSacredZoneAt,hvSacredPenalty,hvCanReanimateRecord,hvLastRitesOnNewGraves});
 // Las maldiciones de acción se almacenan una vez terminado el golpe que las declaró.
 // Así el debuff no es eliminado por el consumo de la defensa del mismo ataque.
 function hvApplyDeclaredSkillCurses(units,mods){
   const weak=mods?.hvCurseWeakTarget,slow=mods?.hvCurseSlowTarget;
   if(!weak&&!slow)return units;
-  return (units||[]).map(u=>{
-    if(!u||Number(u.hp||0)<=0)return u;
-    let next=u;
-    if(weak&&String(weak.id)===String(u.id))next={...next,
-      hvNextAttackAtkDebuff:Math.max(Number(next.hvNextAttackAtkDebuff||0),Number(weak.power||0))};
-    if(slow&&String(slow.id)===String(u.id))next={...next,
-      hvNextDefenseAgiDebuff:Math.max(Number(next.hvNextDefenseAgiDebuff||0),Number(slow.power||0)),
-      hvNextMoveDelayMs:Math.max(Number(next.hvNextMoveDelayMs||0),Number(slow.power||0)*1000)};
-    return next;
-  });
+  const now=Date.now(),initial=[...(units||[])];
+  let out=initial;
+  for(const curse of [weak,slow].filter(Boolean)){
+    const victim=out.find(u=>u&&String(u.id)===String(curse.id)&&Number(u.hp||0)>0);
+    if(!victim)continue;
+    const reversal=hvSkillEntries(victim).find(s=>s?.id==='HV-186');
+    const proc=Number(reversal?hvSkillScale(reversal,victim).proc:0);
+    const reflect=!!reversal&&hvSkillCooldownReady(victim,reversal,now)&&
+      Number.isFinite(proc)&&Math.random()*100<proc&&
+      out.some(u=>u&&String(u.id)===String(curse.sourceId)&&Number(u.hp||0)>0);
+    const destId=reflect?curse.sourceId:curse.id;
+    const reflectedPower=reflect?Math.max(1,Math.ceil(Number(curse.power||0)/2)):Math.max(0,Number(curse.power||0));
+    out=out.map(u=>{
+      if(!u)return u;
+      let n=u;
+      if(reflect&&String(u.id)===String(victim.id))n=hvSkillMarkCooldown(n,reversal,now);
+      if(String(u.id)!==String(destId)||Number(u.hp||0)<=0)return n;
+      if(curse===weak)return {...n,hvNextAttackAtkDebuff:Math.max(Number(n.hvNextAttackAtkDebuff||0),reflectedPower)};
+      return {...n,
+        hvNextDefenseAgiDebuff:Math.max(Number(n.hvNextDefenseAgiDebuff||0),reflectedPower),
+        hvNextMoveDelayMs:Math.max(Number(n.hvNextMoveDelayMs||0),reflectedPower*1000)};
+    });
+  }
+  return out;
 }
 function hvSkillEffectiveAgi(value,{unit}={}){
   let next=Math.max(0,Number(value||0));if(!unit)return next;
@@ -964,6 +1026,17 @@ async function hallvallaRtAutoUnitSkills(caster,now=Date.now()){
     let live=units.find(u=>u.id===caster.id)||caster;if(!hvSkillCooldownReady(live,skill,now))continue;
     const scaled=hvSkillScale(skill,live),value=Math.max(1,Math.round(Number(scaled.value||2)));
     let log="",statusFxEvent=null,floatFxEvent=null,changed=false;
+    if(skill.id==="HV-175"||skill.id==="HV-220"){
+      const zones=hvSacredZones(now).filter(z=>String(z.sourceId)!==String(live.id));
+      const holy=skill.id==="HV-220",seconds=Math.max(1,Number(scaled.duration||6));
+      zones.push({id:skill.id+':'+String(live.id),sourceId:live.id,owner:Number(live.owner),
+        x:Number(live.x),y:Number(live.y),radius:2,kind:holy?'holy':'consecration',
+        power:Math.max(1,value),until:now+seconds*1000});
+      units=units.map(u=>u.id===live.id?hvSkillMarkCooldown(u,skill,now):u);
+      await updatePublic({units,hvSacredZones:zones.slice(-16),
+        log:[live.name+' activa '+skill.name+': zona sagrada durante '+seconds+' s; recarga 30 s.',...(publicState?.log||[])].slice(0,18)});
+      return true;
+    }
     if(skill.name==="Curación"||skill.name==="Curación Gradual"){
       const target=hvSkillNearestWounded(live,units);if(!target)continue;
       units=units.map(u=>u.id===target.id?{...u,hp:Math.min(Math.max(1,Number(u.maxHp||u.hp||1)),Number(u.hp||0)+value)}:u);
@@ -989,7 +1062,7 @@ async function hallvallaRtAutoUnitSkills(caster,now=Date.now()){
         const rec=remains[0];remains=remains.slice(1);log=`${live.name} usa ${skill.name} y purga restos del campo.`;changed=true;
       }else continue;
     }else if(tags.has("death")&&(skill.name.includes("Nigromancia")||skill.name.includes("Resurrección")||skill.name==="Levantamiento Masivo")){
-      const available=grave.filter(rec=>rec&&!rec.used&&rec.snapshot&&!rec.snapshot.leader);if(!available.length)continue;
+      const available=grave.filter(rec=>rec&&!rec.used&&rec.snapshot&&!rec.snapshot.leader&&hvCanReanimateRecord(rec,live,now));if(!available.length)continue;
       const cells=typeof getAdjacentFreeCells==="function"?getAdjacentFreeCells(live,units):[];if(!cells.length)continue;
       const count=skill.name==="Levantamiento Masivo"?Math.min(3,available.length,cells.length):1;
       const chosen=[...available].sort((a,b)=>Number(b.battlePower||0)-Number(a.battlePower||0)).slice(0,count);
@@ -1341,6 +1414,13 @@ function hvSkillPlayerText(skill,entity={rarity:"Básica"}){
     return "Al estar disponible, gana +"+power+" "+names+" para su "+when+". Una activación y 30 s de recarga.";
   }
   const power=hvSkillRarityIndex(entity);
+  if(skill.id==='HV-175')return 'Cada 30 s crea una zona sagrada de radio 2 durante '+hvSkillNumberForPlayer(hvSkillScale(skill,entity).duration)+' s. Impide reanimar dentro y reduce AT de reanimados enemigos cercanos.';
+  if(skill.id==='HV-220')return 'Cada 30 s crea Tierra Santa de radio 2 durante '+hvSkillNumberForPlayer(hvSkillScale(skill,entity).duration)+' s. Impide reanimaciones y reduce AT y AGI de reanimados enemigos cercanos.';
+  if(skill.id==='HV-221')return 'Si muere un aliado a 2 casillas o menos, protege su cadáver de reanimaciones enemigas. Los aliados compatibles todavía pueden revivirlo. Recarga 30 s.';
+  if(skill.id==='HV-186')return 'Al recibir Maldición de Debilidad o Lentitud, puede reflejar la mitad de su potencia al hechicero, cancelándola en esta unidad. Recarga 30 s; no refleja Exorcismo.';
+  if(skill.id==='HV-195')return 'Mientras combate a distancia, intenta retirarse del cuerpo a cuerpo a una casilla libre, sin abandonar la proximidad obligatoria del líder.';
+  if(skill.id==='HV-197')return 'Busca una casilla lateral libre junto al objetivo para flanquearlo. Tras esa maniobra, gana +'+power+' AT en un ataque contra ese objetivo. Recarga 30 s.';
+  if(skill.id==='HV-201')return 'Si se desplazó antes de atacar a un objetivo adyacente, gana la bonificación AT de esta habilidad en ese ataque. Recarga 30 s.';
   if(skill.id==="HV-242"&&String(entity?.key||"")==="african_elephant")return "Pisotón: al acertar un ataque cuerpo a cuerpo, golpea a los enemigos adyacentes (rango 1) con "+(1+power)+" de daño cada uno. Consume Guardia antes de Vida. Cada enemigo alcanzado tiene 25 % de probabilidad de perder su próximo movimiento. Se activa una sola vez y espera 30 segundos de recarga. Es independiente de Arremetida Colosal.";
   if(skill.id==="HV-024")return "Después de un disparo, retrocede una casilla hacia una posición libre y más alejada del enemigo. Recarga: 30 segundos.";
   if(skill.id==="HV-143")return "Después de atacar, se repliega una casilla libre si puede alejarse del objetivo. Recarga: 30 segundos.";

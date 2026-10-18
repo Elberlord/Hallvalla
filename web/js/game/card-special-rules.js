@@ -483,7 +483,8 @@ function getErictoLinkedReanimated(ericto,units=publicState?.units||[]){
   return (units||[]).filter(u=>u?.reanimated&&u.reanimatedByErictoId===ericto.id&&Number(u.hp||0)>0);
 }
 function getErictoEligibleCorpses(_ericto,graveyard=publicState?.erictoGraveyard||[]){
-  const corpses=normalizeErictoGraveyard(graveyard).filter(rec=>!rec.used&&rec.snapshot&&!rec.snapshot.leader&&!rec.snapshot.reanimated&&!rec.snapshot.solomonSummon);
+  const corpses=normalizeErictoGraveyard(graveyard).filter(rec=>!rec.used&&rec.snapshot&&!rec.snapshot.leader&&!rec.snapshot.reanimated&&!rec.snapshot.solomonSummon&&
+    (typeof globalThis.hvCanReanimateRecord!=="function"||globalThis.hvCanReanimateRecord(rec,_ericto)));
   return applyHallvallaValueHooks("ericto.eligibleCorpses",corpses,{ericto:_ericto,graveyard});
 }
 function resolveErictoLifecycle(afterUnits=[]){
@@ -1378,6 +1379,9 @@ function advanceUndeadRemainsForOwner(remains=[],units=[],owner){
     if(Number(r.owner)!==Number(owner)){outRemains.push(r);continue;}
     r.cyclesRemaining=Math.max(0,Number(r.cyclesRemaining||0)-1);
     if(r.cyclesRemaining>0){outRemains.push(r);continue;}
+    if(typeof globalThis.hvSacredZoneAt==="function"&&globalThis.hvSacredZoneAt(r.x,r.y)){
+      r.cyclesRemaining=0;outRemains.push(r);continue;
+    }
     const occupied=outUnits.some(u=>u&&!u.leader&&Number(u.hp||0)>0&&Number(u.x)===Number(r.x)&&Number(u.y)===Number(r.y));
     if(occupied){r.cyclesRemaining=0;outRemains.push(r);logs.push(`REANIMACIÓN de ${r.name} espera: su casilla está ocupada.`);continue;}
     const revived=reviveUnitFromUndeadRemains(r);

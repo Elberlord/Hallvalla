@@ -1402,7 +1402,7 @@ async function resolveSharedAttackOutcome({
   hvSkillOrderTraceSafe('13.antes_consumir_estados',{a,d,units,mods,hit});
   // Consumir las penalizaciones después de resolver la acción afectada.
   units=units.map(u=>u.id===a.id?{...u,
-      saboteadorDexZeroNextAttack:false,saboteadorDexZeroWindowKey:"",hvNextAttackAtkDebuff:0,hvSunTzuNextAttackDex:0,
+      saboteadorDexZeroNextAttack:false,saboteadorDexZeroWindowKey:"",hvNextAttackAtkDebuff:0,hvSunTzuNextAttackDex:0,hvMountedFlankTargetId:'',
       buffAtk:0,tempAtkBuff:0,tempAtkDebuff:0,tempDexBuff:0,
       hvSimpleBuff:typeof hvSkillConsumeSimpleBuff==="function"?hvSkillConsumeSimpleBuff(u.hvSimpleBuff,"attack"):u.hvSimpleBuff,
       tempDexDebuff:u.solomonSealSourceId?Math.min(3,Math.max(0,Number(u.tempDexDebuff||0))):0,
