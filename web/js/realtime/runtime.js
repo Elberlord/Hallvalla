@@ -24,6 +24,7 @@ async function hallvallaRtLoop(){
     await hallvallaRtSafeStage("estados especiales del líder",()=>hallvallaRtLeaderSkillDotTick(now));
     await hallvallaRtSafeStage("soporte",()=>hallvallaRtSupportTick(now));
     await hallvallaRtSafeStage("Recovery",()=>hallvallaRtRecoveryTick(now));
+    await hallvallaRtSafeStage("Sangre del Pelida",()=>hallvallaRtPelidGrowthTick(now));
     await hallvallaRtSafeStage("estados",()=>hallvallaRtStatusTick(now));
     hallvallaRtScheduleLocalSnapshot(false);
     if(now-hallvallaRtState.lastUiAt>=300){hallvallaRtState.lastUiAt=now;hallvallaRtUpdateUi();}

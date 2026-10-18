@@ -240,6 +240,26 @@ async function hallvallaRtManaOrbTick(now){
   }
   return true;
 }
+async function hallvallaRtPelidGrowthTick(now){
+  const before=publicState?.units||[];
+  if(!before.some(u=>u&&u.key==="achilles"&&Number(u.hp||0)>0))return false;
+  let changed=false;
+  const units=before.map(u=>{
+    if(!u||u.key!=="achilles"||Number(u.hp||0)<=0)return u;
+    const nextAt=Number(u.hvCardCooldowns?.sangre_pelida||0);
+    if(nextAt<=0){
+      changed=true;
+      return {...u,hvCardCooldowns:{...(u.hvCardCooldowns||{}),sangre_pelida:now+30000}};
+    }
+    if(now<nextAt)return u;
+    changed=true;
+    const grown={...u,maxHp:Math.max(1,Number(u.maxHp??u.hp??1))+1,hp:Number(u.hp||0)+1};
+    return hvCardMark(grown,"sangre_pelida",false,now);
+  });
+  if(!changed)return false;
+  await updatePublic({units});
+  return true;
+}
 async function hallvallaRtCombatRefreshTick(now){
   if(now-hallvallaRtState.lastCombatRefreshAt<HALLVALLA_RT_CFG.combatRefreshEveryMs)return false;
   hallvallaRtState.lastCombatRefreshAt=now;hallvallaRtState.combatWindow+=1;
@@ -247,8 +267,7 @@ async function hallvallaRtCombatRefreshTick(now){
   let units=[...(publicState?.units||[])].map(u=>u&&Number(u.hp||0)>0&&typeof clearCycleTempStatsForUnit==="function"?clearCycleTempStatsForUnit(u,combatWindowKey):u);
   let legendaryTraps=[...(publicState?.legendaryTraps||[])],undeadRemains=[...(publicState?.undeadRemains||[])],logs=[];
 
-  // Sangre del Pélida: la antigua curación de inicio de turno pasa a cada ciclo TR de 10 s.
-  units=units.map(u=>u&&u.key==="achilles"&&Number(u.hp||0)>0&&hvCardReady(u,"sangre_pelida")?hvCardMark({...u,hp:Math.min(effectiveMaxHp(u),Number(u.hp||0)+1)},"sangre_pelida"):u);
+
 
   // Restos Persistentes: cada ciclo equivale a una cuenta de reanimación. 3 ciclos ≈ 30 s; congelado 5 ≈ 50 s.
   if(typeof advanceUndeadRemainsForOwner==="function"){
