@@ -5,14 +5,13 @@
   if(globalThis.__HV283_STREAK_ANNOUNCER__)return;
   globalThis.__HV283_STREAK_ANNOUNCER__=true;
   let session="";
-  const counts=new Map(),seen=new Set(),bossSaid=new Set();
+  const counts=new Map(),seen=new Set();
   const str=value=>String(value??"");
   const hidden=u=>{
     if(!u||u.leader)return false;
     try{if(typeof isStealthedUnit==="function")return isStealthedUnit(u);}catch(_){ }
     return (u.stealth===true||u.hidden===true)&&u.revealed!==true;
   };
-  const hero=u=>!!u&&(u.hero===true||u.isHero===true||u.battleHero===true||u.heroPromoted===true||u.heroicAwakened===true);
   const announce=(kind,name,key)=>{
     if(typeof globalThis.hv280Announcer?.cinematic==="function"){
       globalThis.hv280Announcer.cinematic(kind,name,key);
@@ -23,18 +22,10 @@
     const game=(typeof gameId!=="undefined"?str(gameId):"");
     const match=[game,str(next.createdAt||next.startedAt||next.battleStartedAt||""),str(next.mode||"")].join(":");
     if(session!==match||prev.phase==="ended"&&next.phase!=="ended"){
-      session=match;counts.clear();seen.clear();bossSaid.clear();
+      session=match;counts.clear();seen.clear();
     }
     const before=new Map(prev.units.filter(u=>u?.id!=null).map(u=>[str(u.id),u]));
     const after=new Map(next.units.filter(u=>u?.id!=null).map(u=>[str(u.id),u]));
-    // Boss: solo una verdadera transicion desde no-heroe a heroe.
-    for(const unit of next.units){
-      if(!unit||unit.id==null||unit.leader||hidden(unit))continue;
-      const old=before.get(str(unit.id));
-      if(old&&!hero(old)&&hero(unit)&&!bossSaid.has(str(unit.id))){
-        bossSaid.add(str(unit.id));announce("boss","Boss","boss");
-      }
-    }
     const fx=next.battleFxEvent;
     if(!fx?.eventId||str(fx.eventId)===str(prev.battleFxEvent?.eventId)||fx.privateStealthEvent===true)return;
     const eventId=str(fx.eventId);
@@ -55,8 +46,8 @@
     if(!confirmed.length)return;
     const current=(counts.get(attackerId)||0)+confirmed.length;
     counts.set(attackerId,current);
-    const tiers={2:["Double Kill","double_kill"],3:["Triple Kill","triple_kill"],4:["Multi Kill","multi_kill"],5:["Penta Kill","penta_kill"]};
-    for(let level=Math.min(current,5);level>=2;level--){
+    const tiers={2:["Double Kill","double_kill"],3:["Triple Kill","triple_kill"],4:["Multi Kill","multi_kill"],5:["Penta Kill","penta_kill"],6:["Mega Kill","mega_kill"],7:["Ultra Kill","ultra_kill"],8:["Monster Kill","monster_kill"],9:["God Like","god_like"]};
+    for(let level=Math.min(current,9);level>=2;level--){
       if(level>current-confirmed.length){
         const [name,key]=tiers[level];
         // Jamás delatar por audio la identidad ni los logros de una unidad oculta.

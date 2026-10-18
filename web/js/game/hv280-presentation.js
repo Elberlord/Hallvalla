@@ -58,7 +58,7 @@
     activePriority=0;
     clearTimeout(watchdog);
     if(!battleOpen()){
-      for(let i=queue.length-1;i>=0;i--){if(queue[i].kind!=="streak"&&queue[i].kind!=="boss"&&queue[i].kind!=="mvp"&&queue[i].kind!=="mvp_name"&&queue[i].kind!=="revived"&&queue[i].kind!=="life_name")queue.splice(i,1);}
+      for(let i=queue.length-1;i>=0;i--){if(queue[i].kind!=="streak"&&queue[i].kind!=="mvp"&&queue[i].kind!=="mvp_name"&&queue[i].kind!=="revived"&&queue[i].kind!=="life_name")queue.splice(i,1);}
       if(!queue.length)return;
     }
     setTimeout(drain,70);
@@ -66,16 +66,12 @@
   function drain(){
     if(active||!queue.length||!settingsOk())return;
     if(!battleOpen()){
-      for(let i=queue.length-1;i>=0;i--){if(queue[i].kind!=="streak"&&queue[i].kind!=="boss"&&queue[i].kind!=="mvp"&&queue[i].kind!=="mvp_name"&&queue[i].kind!=="revived"&&queue[i].kind!=="life_name")queue.splice(i,1);}
+      for(let i=queue.length-1;i>=0;i--){if(queue[i].kind!=="streak"&&queue[i].kind!=="mvp"&&queue[i].kind!=="mvp_name"&&queue[i].kind!=="revived"&&queue[i].kind!=="life_name")queue.splice(i,1);}
       if(!queue.length)return;
     }
     const delta=now()-lastSpeechAt;
     if(delta<600){setTimeout(drain,600-delta);return;}
     const item=queue.shift();
-    if(item.kind==="summon"&&item.unitId){
-      const live=(Array.isArray(publicState?.units)?publicState.units:[]).find(u=>String(u?.id||"")===item.unitId);
-      if(!live||isConcealed(live)){setTimeout(drain,0);return;}
-    }
     if(now()-item.queuedAt>6500){setTimeout(drain,0);return;}
     const url=item.url||globalThis.HV281_VOICE_ASSETS?.resolve(item.kind,item.name,item.key,item.leaderType)||"";
     if(!url){setTimeout(drain,0);return;}
@@ -101,7 +97,7 @@
   }
   function announce(kind,name,priority=1,cardKey="",leaderType="",unitId=""){
     // Suprimir todos los anuncios de muerte, incluso desde consumidores antiguos.
-    if(kind==="fallen")return false;
+    if(kind==="fallen"||kind==="summon"||kind==="boss")return false;
     const safe=String(name||"").trim().replace(/\s+/g," ").slice(0,75);
     if(!safe||!settingsOk()||(!battleOpen()&&kind!=="streak"&&kind!=="boss"&&kind!=="mvp"&&kind!=="mvp_name"&&kind!=="life_name"))return false;
     const key=`${kind}:${safe.toLowerCase()}`;
@@ -196,23 +192,6 @@
     resetSession(id);
     if(!battleOpen())return;
     const before=new Map(prev.units.map(u=>[String(u.id),u]));
-    const after=new Map(next.units.map(u=>[String(u.id),u]));
-    for(const unit of next.units){
-      if(!unit||unit.leader||isConcealed(unit))continue;
-      const oldUnit=before.get(String(unit.id));
-      const returned=(unit.resurrectedByHealer===true||unit.reanimated===true||
-        unit.summonOrigin==="reanimation"||(Array.isArray(prev.undeadRemains)&&
-        prev.undeadRemains.some(r=>String(r?.originalUnitId||"")===String(unit.id))));
-      if(oldUnit){
-        // Se anuncia una sola vez cuando la unidad ya existente PIERDE sigilo.
-        if(isConcealed(oldUnit)&&!returned)
-          announce("summon",unit.name||unit.key,Number(unit.owner)===localOwner()?2:1,unit.key||"","",unit.id||"");
-        continue;
-      }
-      // La resurreccion tiene un evento propio; nunca se narra como invocacion.
-      if(returned)continue;
-      announce("summon",unit.name||unit.key,Number(unit.owner)===localOwner()?2:1,unit.key||"","",unit.id||"");
-    }
     const catalog=globalThis.HV_LEADER_NINE_SKILLS?.catalog||{};
     const leaders=next.units.filter(u=>u?.leader&&Number(u.hp||0)>0&&catalog[u.leaderType]);
     const toShow=[];
@@ -287,8 +266,8 @@
     enable(value){try{localStorage.setItem("hallvalla_announcer_enabled",value?"1":"0");}catch(_){ }if(!value){queue.length=0;try{activeAudio?.pause?.();}catch(_){ }activeAudio=null;active=false;}},
     test(name="Aquiles"){announce("test",name,8);},
     cinematic(kind,label,assetKey){
-      if(kind!=="streak"&&kind!=="boss")return false;
-      return announce(kind,label,kind==="boss"?10:9,assetKey||"");
+      if(kind!=="streak")return false;
+      return announce(kind,label,9,assetKey||"");
     },
     life(kind,name,key=""){
       if(kind!=="revived")return false;

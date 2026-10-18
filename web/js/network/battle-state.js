@@ -1141,33 +1141,6 @@ function prepareAiPrincipalInitialState(battle,initial){
   const result=extractPrincipalsFromInitialState(initial,keys,principalSlots);
   return{...result,principalSlots,principalCard:result.principalCards[0]||null,principalKey:result.principalKeys[0]||""};
 }
-function getPrincipalStartCell(owner,units=[],slotIndex=0){
-  const y=owner===1?Math.max(0,ROWS-2):Math.min(ROWS-1,1);
-  const center=Math.floor(COLS/2);
-  const preferred=[center,center-1,center+1];
-  const first=preferred[Math.max(0,Math.min(DECK_RULES.maxPrincipalSlots-1,Number(slotIndex)||0))];
-  const xs=[first,...preferred,0,COLS-1].filter((x,index,arr)=>x>=0&&x<COLS&&arr.indexOf(x)===index);
-  const occupied=new Set((units||[]).map(u=>`${u.x},${u.y}`));
-  const x=xs.find(value=>!occupied.has(`${value},${y}`));
-  return Number.isFinite(x)?{x,y}:null;
-}
-function makeStartingPrincipalUnit(card,owner,leaderType,units=[],slotIndex=0){
-  if(!card||card.type!=="unit")return null;
-  const cell=getPrincipalStartCell(owner,units,slotIndex);
-  if(!cell)return null;
-  const unit=makeUnit({...card,owner,leaderType,summonOrigin:"principal",fieldGeneratedSummon:true},cell.x,cell.y);
-  const principal={...unit,principal:true,principalStart:true,principalSlot:slotIndex+1,summonOrigin:"principal",fieldGeneratedSummon:true,summonedWindowKey:"opening",summonedWindowIndex:0,summonedRuntimeMode:"opening",hallvallaReadyOnSummon:true};
-  return applyHallvallaValueHooks("principal.makeUnit",principal,{card,owner,leaderType,units,slotIndex});
-}
-function makeStartingPrincipalUnits(cards=[],owner,leaderType,units=[],principalSlots=(cards||[]).length){
-  runHallvallaEffectHooks("principal.beforeMakeUnits",{cards,owner,leaderType,units,principalSlots});
-  const out=[];
-  (cards||[]).slice(0,principalSlots).forEach((card,index)=>{
-    const unit=makeStartingPrincipalUnit(card,owner,leaderType,[...(units||[]),...out],index);
-    if(unit)out.push(unit);
-  });
-  return out;
-}
 function applyStartingPrincipalEntryEffects(units=[]){
   let out=[...(units||[])],logs=[];
   out=out.map(unit=>{

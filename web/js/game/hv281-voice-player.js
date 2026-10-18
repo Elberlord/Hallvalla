@@ -9,9 +9,12 @@
     triple_kill:"assets/announcer/announcements/triple_kill.mp3",
     multi_kill:"assets/announcer/announcements/multi_kill.mp3",
     penta_kill:"assets/announcer/announcements/penta_kill.mp3",
+    mega_kill:"assets/announcer/announcements/mega_kill.mp3",
+    ultra_kill:"assets/announcer/announcements/ultra_kill.mp3",
+    monster_kill:"assets/announcer/announcements/monster_kill.mp3",
+    god_like:"assets/announcer/announcements/god_like.mp3",
     boss:"assets/announcer/announcements/boss.mp3",
     mvp:"assets/announcer/announcements/mvp.mp3",
-    fallen:"assets/announcer/announcements/fallen.mp3",
     revived:"assets/announcer/announcements/revived.mp3"
   });
   const normalize=(s)=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
@@ -50,7 +53,7 @@
     return nameToCard.get(n)||"";
   }
   function resolve(kind,name,key,leaderType){
-    if(kind==="streak"||kind==="boss"||kind==="mvp"||kind==="fallen"||kind==="revived")return announcements[String(key||"")]||"";
+    if(kind==="streak"||kind==="boss"||kind==="mvp"||kind==="revived")return announcements[String(key||"")]||"";
     if(kind==="mvp_name"||kind==="life_name")return resolve("summon",name,key,leaderType);
     const k=String(key||"").trim();
     const category=kind==="summon"?"units":kind==="leader"?"leaders":null;
