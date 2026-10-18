@@ -592,24 +592,8 @@ function hallvallaHasAdjacentLanceAlly(unit,units){
 }
 
 function hallvallaIsFrontalCharge(attacker,defender){
-  if(
-    !attacker||
-    !defender||
-    dist(attacker,defender)!==1||
-    Number(attacker.movedSpaces||0)<2
-  )return false;
-
-  const lastDx=Number(attacker.lastMoveDx||0);
-  const lastDy=Number(attacker.lastMoveDy||0);
-
-  if(lastDx===0&&lastDy===0)return true;
-
-  return (
-    lastDx===Math.sign(Number(defender.x)-Number(attacker.x))&&
-    lastDy===Math.sign(Number(defender.y)-Number(attacker.y))
-  );
+  return !!attacker&&!!defender&&dist(attacker,defender)<=1;
 }
-
 function resolveHallvallaPikeWall(attacker,defender,units,now=Date.now()){
   let out=[...(units||[])];
 
@@ -1379,8 +1363,7 @@ async function resolveSharedAttackOutcome({
   const masteryKillText=`${unitMasteryRankUpText(masteryKillResult)}${unitMasteryRankUpText(elephantMasteryKillResult)}`;
   const equipmentRetreatResult=units.some(u=>u.id===a.id)?applyPostCombatEquipmentRetreat(units,a,d):{units,moved:false,text:""};
   units=equipmentRetreatResult.units;
-  const skillRetreatResult=typeof hvResolvePostAttackMobilitySkills==="function"?hvResolvePostAttackMobilitySkills(units,a,d,!!hit.hit):{units,changed:false,text:""};
-  units=skillRetreatResult.units;
+  const skillRetreatResult={units,changed:false,text:""};
   const yabusameRetreatResult=units.some(u=>u.id===d.id)?applyYabusameRetreatIfPossible(units,d.id):{units,moved:false,text:""};
   units=yabusameRetreatResult.units;
   const scythianRetreatResult=units.some(u=>u.id===a.id)&&isRangedAttack(a,d)&&hit.hit?applyScythianRetreatIfPossible(units,a.id,d.id):{units,moved:false,text:""};
@@ -1402,7 +1385,7 @@ async function resolveSharedAttackOutcome({
   hvSkillOrderTraceSafe('13.antes_consumir_estados',{a,d,units,mods,hit});
   // Consumir las penalizaciones después de resolver la acción afectada.
   units=units.map(u=>u.id===a.id?{...u,
-      saboteadorDexZeroNextAttack:false,saboteadorDexZeroWindowKey:"",hvNextAttackAtkDebuff:0,hvSunTzuNextAttackDex:0,hvMountedFlankTargetId:'',
+      saboteadorDexZeroNextAttack:false,saboteadorDexZeroWindowKey:"",hvNextAttackAtkDebuff:0,hvSunTzuNextAttackDex:0,
       buffAtk:0,tempAtkBuff:0,tempAtkDebuff:0,tempDexBuff:0,
       hvSimpleBuff:typeof hvSkillConsumeSimpleBuff==="function"?hvSkillConsumeSimpleBuff(u.hvSimpleBuff,"attack"):u.hvSimpleBuff,
       tempDexDebuff:u.solomonSealSourceId?Math.min(3,Math.max(0,Number(u.tempDexDebuff||0))):0,

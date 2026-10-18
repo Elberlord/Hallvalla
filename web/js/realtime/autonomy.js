@@ -82,35 +82,11 @@ function hallvallaRtLeaderHoldRadius(unit,units=publicState?.units||[]){
   const ids=[...(unit.unitSkillIds||[]),...(unit.unitLearnedSkillIds||[]),...(unit.unitSkillRuntimeIds||[]),...(meta?.innate||[])];
   return ids.includes("HV-232")?2:0;
 }
-function hallvallaRtHas(unit,id){return typeof hvSkillEntries==='function'&&hvSkillEntries(unit).some(s=>s?.id===id);}
-function hallvallaRtFlankStep(unit,target,units=publicState?.units||[],now=Date.now()){
-  if(!unit||!target||!hallvallaRtHas(unit,'HV-197')||String(unit.hvMountedFlankTargetId||'')===String(target.id))return null;
-  if(typeof hvSkillCooldownReady==='function'&&!hvSkillCooldownReady(unit,HALLVALLA_UNIT_SKILL_BANK['HV-197'],now))return null;
-  const d=dist(unit,target),range=Math.max(1,Number(getUnitAttackRange(unit)||1));
-  if(d>2)return null;
-  const blocked=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&Number(u.hp||0)>0).map(u=>hallvallaRtCellKey(u.x,u.y)));
-  const vx=Number(target.x)-Number(unit.x),vy=Number(target.y)-Number(unit.y);
-  return hallvallaRtNeighbors(Number(unit.x),Number(unit.y))
-    .filter(c=>!blocked.has(hallvallaRtCellKey(c.x,c.y))&&dist(c,target)<=range)
-    .filter(c=>vx*(Number(c.y)-Number(unit.y))-vy*(Number(c.x)-Number(unit.x))!==0)
-    .filter(c=>typeof isCellBlockedForUnit!=='function'||!isCellBlockedForUnit(unit,c.x,c.y,units))
-    .sort((a,b)=>dist(a,target)-dist(b,target)||a.y-b.y||a.x-b.x)[0]||null;
-}
 function hallvallaRtChooseStep(unit,target,units=publicState?.units||[]){
   if(!unit||!target||isRtTrapLocked(unit,"move",hallvallaRtNow())||Number(typeof effectiveMov==='function'?effectiveMov(unit):unit.mov||0)<=0)return null;
   const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&Number(u.hp||0)>0).map(u=>hallvallaRtCellKey(u.x,u.y)));
   const lane=hallvallaRtStableLane(unit);
   const currentDistance=dist(unit,target);
-  const flank=hallvallaRtFlankStep(unit,target,units);
-  const escortRadius=hallvallaRtLeaderHoldRadius(unit,units);
-  if(!escortRadius&&flank)return flank;
-  if(!escortRadius&&hallvallaRtHas(unit,'HV-195')&&currentDistance<=1){
-    const retreat=hallvallaRtNeighbors(Number(unit.x),Number(unit.y))
-      .filter(c=>!occupied.has(hallvallaRtCellKey(c.x,c.y))&&dist(c,target)>currentDistance)
-      .filter(c=>typeof isCellBlockedForUnit!=='function'||!isCellBlockedForUnit(unit,c.x,c.y,units))
-      .sort((a,b)=>dist(b,target)-dist(a,target))[0];
-    if(retreat)return retreat;
-  }
   const ownLeader=hallvallaRtGetOwnerLeader(unit.owner,units);
   const radius=hallvallaRtLeaderHoldRadius(unit,units);
   if(radius&&ownLeader){
@@ -1114,10 +1090,6 @@ async function hallvallaRtAttackReadyUnits(now,maxAttacks=HALLVALLA_RT_CFG.maxAt
       }
       continue;
     }
-    const flankMovementReady=now-Number(hallvallaRtState.moveAt.get(live.id)||0)>=hallvallaRtMoveCooldown(live)&&
-      !isRtTrapLocked(live,'move',now)&&Number(typeof effectiveMov==='function'?effectiveMov(live):live.mov||0)>0&&
-      hallvallaRtLeaderHoldRadius(live,publicState?.units||[])===0;
-    if(!mulanFollowup&&flankMovementReady&&hallvallaRtFlankStep(live,target,publicState?.units||[],now))continue;
     hallvallaRtState.attackAt.set(live.id,now);
     if(await hallvallaRtAttackUnit(live,target))attacks++;
   }
@@ -1179,9 +1151,7 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
         if(!target&&holdRadius>0&&ownLeader&&dist(live,ownLeader)>holdRadius)step=hallvallaRtChooseStep(live,ownLeader,units);
         if(!target&&!step)continue;
         // Mantener su puesto si ya puede atacar dentro de su zona.
-        if(target&&hallvallaRtCanAttackNow(live,target)&&
-          !(holdRadius===0&&hallvallaRtFlankStep(live,target,units,now))&&
-          !(hallvallaRtHas(live,'HV-195')&&dist(live,target)<=1))continue;
+        if(target&&hallvallaRtCanAttackNow(live,target))continue;
         if(now-lastMove<Math.max(1000,hallvallaRtMoveCooldown(live)-Math.max(0,Number(live.hvLeaderNextMoveAccelerateMs||0)))+Math.max(0,Number(live.hvNextMoveDelayMs||0)))continue;
         if(!step&&target)step=hallvallaRtChooseStep(live,target,units);
         if(!step&&target){
@@ -1192,16 +1162,12 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
 
     if(!step)continue;
     if(units.some(u=>u.id!==live.id&&Number(u.hp||0)>0&&Number(u.x)===Number(step.x)&&Number(u.y)===Number(step.y)))continue;
-    const targetForFlank=hallvallaRtChooseTarget(live,units);
     const movedNow=Math.max(1,dist(live,step));
     const dx=Math.sign(step.x-live.x),dy=Math.sign(step.y-live.y);
     let trapMove;
     try{trapMove=resolveMovementLegendaryTraps(live,{x:step.x,y:step.y},units,legendaryTraps);}catch(_){trapMove={cancel:false,units,traps:legendaryTraps,logs:[]};}
     legendaryTraps=[...(trapMove.traps||legendaryTraps)];
-    units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveWindowKey:publicState?.combatWindowKey||'RT',hvNextMoveDelayMs:0,hvLeaderNextMoveAccelerateMs:0,hvNextMoveSkip:false,hvSubotaiNextMoveBoostMs:0,hvSkiparFirstMoveConsumed:u.key==='skipar_del_drakkar'?true:u.hvSkiparFirstMoveConsumed,rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false,
-      hvMountedFlankTargetId:!holdRadius&&targetForFlank&&hallvallaRtFlankStep(live,targetForFlank,units,now)&&
-        hallvallaRtCellKey(step.x,step.y)===hallvallaRtCellKey(hallvallaRtFlankStep(live,targetForFlank,units,now).x,hallvallaRtFlankStep(live,targetForFlank,units,now).y)
-          ?targetForFlank.id:''}:u);
+    units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveWindowKey:publicState?.combatWindowKey||'RT',hvNextMoveDelayMs:0,hvLeaderNextMoveAccelerateMs:0,hvNextMoveSkip:false,hvSubotaiNextMoveBoostMs:0,hvSkiparFirstMoveConsumed:u.key==='skipar_del_drakkar'?true:u.hvSkiparFirstMoveConsumed,rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false}:u);
     if(!trapMove.cancel){
       units=units.map(u=>u.id===live.id?(()=>{
         let n={...u,tempMovBuff:0,tempMovDebuff:0,tempMovDebuffSource:"",movedSpaces:Number(u.movedSpaces||0),

@@ -716,11 +716,6 @@ async function normalizePublicPatchBeforeCommit(sourcePatch={},options={}){
     cleanPatch.units=hvReconcileLegacyTriggerWindows(beforeUnits,cleanPatch.units);
     const baseGraveyard=Array.isArray(cleanPatch.erictoGraveyard)?cleanPatch.erictoGraveyard:(publicState?.erictoGraveyard||[]);
     cleanPatch.erictoGraveyard=captureErictoGraveyard(baseGraveyard,beforeUnits,cleanPatch.units);
-    if(typeof globalThis.hvLastRitesOnNewGraves==='function'){
-      const rites=globalThis.hvLastRitesOnNewGraves(cleanPatch.erictoGraveyard,cleanPatch.units,baseGraveyard);
-      cleanPatch.erictoGraveyard=rites.grave;
-      cleanPatch.units=rites.units;
-    }
     const baseUndeadRemains=Array.isArray(cleanPatch.undeadRemains)?cleanPatch.undeadRemains:(publicState?.undeadRemains||[]);
     const undeadCapture=captureUndeadRemains(baseUndeadRemains,beforeUnits,cleanPatch.units,{incineratedIds:cleanPatch._undeadIncineratedIds||[],frozenIds:cleanPatch._undeadFrozenIds||[]});
     cleanPatch.undeadRemains=undeadCapture.remains;

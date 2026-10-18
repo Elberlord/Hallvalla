@@ -310,8 +310,8 @@ function openUnitContextMenu(u,x,y){
   if(isStealthHiddenFromViewer(u)){
     unitContextSelection=null;
     selectedUnitId=null;
-    
-    
+
+
     highlights=[];
     hideUnitContextMenu();
     hideCardInspectModal();
@@ -613,6 +613,13 @@ function applyUnitEffectState(caster,choice,units=publicState?.units||[]){
     const record=getErictoEligibleCorpses(liveCaster,graveyard).find(r=>r.graveId===selection.graveId);
     const cell=cells.find(c=>c.x===Number(selection.x)&&c.y===Number(selection.y));
     if(!record||!cell)return{success:false,reason:"El cadáver o la celda elegida ya no están disponibles."};
+    const rites=typeof globalThis.hvLastRitesInterceptAttempt==='function'
+      ?globalThis.hvLastRitesInterceptAttempt(record,liveCaster,out,erictoNow)
+      :{blocked:false,units:out,log:''};
+    if(rites.blocked){
+      out=rites.units.map(it=>it.id===liveCaster.id?{...it,acted:true,erictoUsedWindowKey:publicState?.combatWindowKey||'',erictoNecromancyCooldownUntil:erictoNow+30000}:it).filter(it=>Number(it.hp||0)>0);
+      return{success:true,units:out,erictoGraveyard:graveyard,log:rites.log};
+    }
     const revived=makeErictoReanimatedUnit(liveCaster,record,cell);
     const nextGraveyard=graveyard.map(r=>r.graveId===record.graveId?{...r,used:true,usedByErictoId:liveCaster.id,usedWindowKey:publicState?.combatWindowKey||""}:r);
     out=out.map(it=>it.id===liveCaster.id?{...it,acted:true,erictoUsedWindowKey:publicState?.combatWindowKey||"",erictoNecromancyCooldownUntil:erictoNow+30000}:it).concat(revived);
