@@ -1,18 +1,17 @@
 "use strict";
 /* HallValla v280 — Presentacion solamente. Sin mutaciones de batalla.
-   Anunciador via voces locales del navegador/SO; FX de habilidades por snapshot.
+   Anunciador con MP3 locales; FX de habilidades por snapshot.
    Compatible con el motor TR compartido PvE/PvP. */
 (function(){
   if(globalThis.__HV_PRESENTATION_280__)return;
   globalThis.__HV_PRESENTATION_280__=true;
 
-  const synth=globalThis.speechSynthesis||null;
   const speechSupported=!!globalThis.HV281_VOICE_ASSETS;
   let activeAudio=null, activePriority=0;
   const queue=[];
   const recent=new Map();
   const skillEvents=new Set();
-  let session="",active=false,lastSpeechAt=0,voices=[],visualTimer=0,watchdog=0;
+  let session="",active=false,lastSpeechAt=0,visualTimer=0,watchdog=0;
   let lastMvpSession="";
   const now=()=>Date.now();
   const isConcealed=(unit)=>{
@@ -28,21 +27,6 @@
   const battleOpen=()=>{
     try{return !!publicState&&publicState.phase!=="ended"&&!(typeof isBattleEnded==="function"&&isBattleEnded());}catch(_){return true;}
   };
-  function refreshVoices(){try{voices=synth?.getVoices?.()||[];}catch(_){voices=[];}}
-  if(speechSupported){
-    refreshVoices();
-    try{synth.addEventListener?.("voiceschanged",refreshVoices);}catch(_){ }
-  }
-  function language(text){
-    const root=String(document.documentElement.lang||navigator.language||"es").toLowerCase();
-    if(/[áéíóúñü¡¿]/i.test(text))return "es";
-    if(/^(en|es)(-|$)/.test(root))return root.slice(0,2);
-    return "es";
-  }
-  function chooseVoice(lang){
-    const matches=voices.filter(v=>String(v.lang||"").toLowerCase().startsWith(lang));
-    return matches.find(v=>/daniel|jorge|pablo|carlos|alonso|enrique|jorge|microsoft|google|male/i.test(v.name||""))||matches.find(v=>v.localService)||matches[0]||null;
-  }
   function resetSession(id){
     if(session===id)return;
     session=id;
@@ -95,11 +79,11 @@
     watchdog=setTimeout(()=>{try{audio.pause();}catch(_){ }completed();},12000);
     try{const p=audio.play();if(p&&p.catch)p.catch(completed);}catch(_){completed();}
   }
-  function announce(kind,name,priority=1,cardKey="",leaderType="",unitId=""){
+  function announce(kind,name,priority=1,cardKey="",leaderType=""){
     // Suprimir todos los anuncios de muerte, incluso desde consumidores antiguos.
     if(kind==="fallen"||kind==="summon"||kind==="boss")return false;
     const safe=String(name||"").trim().replace(/\s+/g," ").slice(0,75);
-    if(!safe||!settingsOk()||(!battleOpen()&&kind!=="streak"&&kind!=="boss"&&kind!=="mvp"&&kind!=="mvp_name"&&kind!=="life_name"))return false;
+    if(!safe||!settingsOk()||(!battleOpen()&&kind!=="streak"&&kind!=="mvp"&&kind!=="mvp_name"&&kind!=="life_name"))return false;
     const key=`${kind}:${safe.toLowerCase()}`;
     const t=now();
     if(t-(recent.get(key)||0)<4500)return false;
@@ -118,7 +102,7 @@
     const audio=new Audio(url);
     audio.preload="auto";
     try{audio.load();}catch(_){ }
-    queue.push({kind,name:safe,priority,key:String(cardKey||""),leaderType:String(leaderType||""),unitId:String(unitId||""),url,audio,queuedAt:t});
+    queue.push({kind,name:safe,priority,key:String(cardKey||""),leaderType:String(leaderType||""),url,audio,queuedAt:t});
     queue.sort((a,b)=>b.priority-a.priority);
     // Una racha puede interrumpir solo una locucion de menor prioridad.
     if(priority>=8&&activeAudio&&priority>activePriority){
