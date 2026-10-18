@@ -137,6 +137,33 @@ function hallvallaRtChooseSpawnExitStep(unit,units=publicState?.units||[]){
 }
 
 
+// v307: robo de todo el maná disponible y retraso de UNA sola regeneración por víctima.
+function hallvallaRtArcaneDrainPatch(event){
+  if(!event||![1,2].includes(event.sourceOwner)||![1,2].includes(event.targetOwner)||event.sourceOwner===event.targetOwner)return null;
+  const from=event.targetOwner,to=event.sourceOwner;
+  const amount=Math.max(0,Math.floor(Number(hallvallaRtOwnerMana(from)||0)));
+  const current=Math.max(0,Math.floor(Number(hallvallaRtOwnerMana(to)||0)));
+  const cap=Math.max(current,Number(hallvallaRtOwnerMaxMana(to)||current));
+  const received=Math.min(amount,Math.max(0,cap-current));
+  const former=publicState?.hvArcaneManaSlow||{};
+  const seq=Math.max(0,Math.floor(Number(former[from]?.seq||0)))+1;
+  const slow={...former,[from]:{seq,at:Number(event.at||Date.now())}};
+  const publicPatch={hvArcaneManaSlow:slow};
+  const fromStats={...(publicState?.playerStats?.[from]||{}),honor:0};
+  const toStats={...(publicState?.playerStats?.[to]||{}),honor:current+received};
+  publicPatch['playerStats/'+from]=fromStats;
+  publicPatch['playerStats/'+to]=toStats;
+  if(publicState?.adventureAiState){
+    const ai={...publicState.adventureAiState};
+    if(from===2)ai.honor=0;
+    if(to===2)ai.honor=current+received;
+    publicPatch.adventureAiState=ai;
+  }
+  const privatePatch={};
+  if(Number(myPlayer)===to)privatePatch.honor=current+received;
+  if(Number(myPlayer)===from){privatePatch.honor=0;privatePatch.hvArcaneManaSyncedSeq=seq;}
+  return{publicPatch,privatePatch,received,amount,sourceOwner:to,targetOwner:from};
+}
 async function hallvallaRtAttackUnit(attacker,target){
   let units=[...(publicState?.units||[])];
   let a=units.find(u=>u.id===attacker.id&&Number(u.hp||0)>0),d=units.find(u=>u.id===target.id&&Number(u.hp||0)>0);
@@ -176,6 +203,7 @@ async function hallvallaRtAttackUnit(attacker,target){
       combatWindowKey:publicState?.combatWindowKey||"RT"
     });
     units=outcome.units||prep.units;
+    const arcaneMana=outcome.hvArcaneManaDrainEvent?hallvallaRtArcaneDrainPatch(outcome.hvArcaneManaDrainEvent):null;
     if(globalThis.HV_LEADER_NINE_SKILLS){const r=globalThis.HV_LEADER_NINE_SKILLS.extraAttack({units,a,d,hit:prep.hit});if(r?.units)units=r.units;}
     // En TR no existe la bandera "ya actuó": el cooldown temporal manda.
     units=units.map(u=>u&&u.id===a.id?{...u,acted:false}:u);
@@ -200,7 +228,9 @@ async function hallvallaRtAttackUnit(attacker,target){
         globalThis.hvPlayUnitReactionMotion(defenderNow,reaction,attackerNow);
       }catch(_){}
     }
-    await updatePublic({units,_clockKillCreditMode:"opposite-owner",beastTraps:prep.beastTraps||publicState?.beastTraps||[],legendaryTraps,battleFxEvent,defenseFxEvent,floatFxEvent,statusFxEvent:outcome.statusFxEvent||outcome.dragonCompanionResult?.statusFxEvent||outcome.veilCurseResult?.statusFxEvent||outcome.arcaneAdeptStatusEvent||outcome.poisonStatusEvent||outcome.unitSkillStatusEvent||outcome.miyamotoCounterBleedEvent||outcome.lionFearCombat?.statusFxEvent||outcome.porcupineResult?.statusFxEvent||outcome.genghisDebuffResult?.statusFxEvent||null});
+    const attackPatch={units,_clockKillCreditMode:"opposite-owner",beastTraps:prep.beastTraps||publicState?.beastTraps||[],legendaryTraps,battleFxEvent,defenseFxEvent,floatFxEvent,statusFxEvent:outcome.statusFxEvent||outcome.dragonCompanionResult?.statusFxEvent||outcome.veilCurseResult?.statusFxEvent||outcome.arcaneAdeptStatusEvent||outcome.poisonStatusEvent||outcome.unitSkillStatusEvent||outcome.miyamotoCounterBleedEvent||outcome.lionFearCombat?.statusFxEvent||outcome.porcupineResult?.statusFxEvent||outcome.genghisDebuffResult?.statusFxEvent||null,...(arcaneMana?.publicPatch||{})};
+    const wrote=arcaneMana?await commitGameplayAction({publicPatch:attackPatch,privatePatch:arcaneMana.privatePatch}):await updatePublic(attackPatch);
+    if(!wrote)throw Error('No se pudo guardar el ataque / Drenaje Arcano');
     // Espada Invicta: una baja habilita el siguiente ataque sin esperar el cooldown normal.
     // No se serializa un "khalidChainReady": la única memoria persistente es la penalización AT acumulada.
     if(outcome.khalidChainTriggered===true)hallvallaRtState.attackAt.set(a.id,0);
@@ -225,20 +255,33 @@ async function hallvallaRtInitializeResources(){
   return !!ok;
 }
 async function hallvallaRtResourceAndDrawTick(now){
+  const slow=publicState?.hvArcaneManaSlow||{};
+  const mine=slow[myPlayer]||{};
+  const mySeq=Math.max(0,Number(mine.seq||0));
+  if(mySeq>Math.max(0,Number(privateState?.hvArcaneManaSyncedSeq||0))){
+    // Una baja enemiga puede llegar desde otro cliente: quitar maná ANTES de cualquier acción local.
+    return !!(await updatePrivate({honor:0,hvArcaneManaSyncedSeq:mySeq}));
+  }
   const elapsed=Math.max(0,now-hallvallaRtState.lastResourceAt);
   if(elapsed<HALLVALLA_RT_CFG.resourceEveryMs)return false;
-  // La recarga NO aumenta capacidad: restaura un solo punto ya ganado cada 4.5 s.
+  // La recarga NO aumenta capacidad: restaura un solo punto ya ganado cada 4 s.
   // La única forma de subir el máximo es capturar el orbe de MANÁ.
   hallvallaRtState.lastResourceAt=now;
   hallvallaRtState.cycle+=1;
   const max=Math.max(HALLVALLA_RT_CFG.initialMana,Math.min(HALLVALLA_RT_CFG.resourceCap,Number(privateState?.maxHonor||HALLVALLA_RT_CFG.initialMana)));
-  const honor=Math.min(max,Math.max(0,Number(privateState?.honor||0))+1);
-  const privatePatch={honor,maxHonor:max};
+  const consumed=Math.max(0,Number(privateState?.hvArcaneManaConsumedSeq||0));
+  const skip=mySeq>consumed;
+  const honor=Math.min(max,Math.max(0,Number(privateState?.honor||0))+(skip?0:1));
+  const privatePatch={honor,maxHonor:max,hvArcaneManaConsumedSeq:skip?mySeq:consumed};
   const publicPatch={runtimeMode:'continuous',[`playerStats/${myPlayer}`]:{...(publicState?.playerStats?.[myPlayer]||{}),honor,maxHonor:max,deck:(privateState?.deck||[]).length,hand:(privateState?.hand||[]).length}};
   if(publicState?.adventureAiState){
     const ai={...publicState.adventureAiState};
     const aiMax=Math.max(HALLVALLA_RT_CFG.initialMana,Math.min(HALLVALLA_RT_CFG.resourceCap,Number(ai.maxHonor||HALLVALLA_RT_CFG.initialMana)));
-    ai.maxHonor=aiMax;ai.honor=Math.min(aiMax,Math.max(0,Number(ai.honor||0))+1);
+    ai.maxHonor=aiMax;
+    const aiSeq=Math.max(0,Number(slow[2]?.seq||0)),aiConsumed=Math.max(0,Number(ai.hvArcaneManaConsumedSeq||0));
+    const aiSkip=aiSeq>aiConsumed;
+    ai.honor=Math.min(aiMax,Math.max(0,Number(ai.honor||0))+(aiSkip?0:1));
+    ai.hvArcaneManaConsumedSeq=aiSkip?aiSeq:aiConsumed;
     publicPatch.adventureAiState=ai;
     publicPatch['playerStats/2']={...(publicState?.playerStats?.[2]||{}),honor:ai.honor,maxHonor:aiMax,deck:(ai.deck||[]).length,hand:(ai.hand||[]).length};
   }
@@ -704,7 +747,11 @@ async function hallvallaRtLeaderSkillDotTick(now){
 }
 
 function hallvallaRtOwnerMana(owner){
-  if(Number(owner)===Number(myPlayer))return Math.max(0,Number(privateState?.honor||0));
+  if(Number(owner)===Number(myPlayer)){
+    const seq=Math.max(0,Number(publicState?.hvArcaneManaSlow?.[owner]?.seq||0));
+    if(seq>Math.max(0,Number(privateState?.hvArcaneManaSyncedSeq||0)))return 0;
+    return Math.max(0,Number(privateState?.honor||0));
+  }
   if(publicState?.mode==="adventure"&&Number(owner)===2)return Math.max(0,Number(publicState?.adventureAiState?.honor||0));
   return Math.max(0,Number(publicState?.playerStats?.[owner]?.honor||0));
 }

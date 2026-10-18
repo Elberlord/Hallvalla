@@ -1083,6 +1083,8 @@ async function resolveSharedAttackOutcome({
   if(defenderFell&&a.key==="solomon_ifrit"&&hit.hit&&hpLoss>0&&solomonIfritResult.triggered){
     units=units.map(u=>u.id===a.id?{...u,hp:Math.min(effectiveMaxHp(u),Number(u.hp||0)+2)}:u);
   }
+  const arcaneDrain=defenderFell&&typeof hvArcaneDrainKill==='function'?hvArcaneDrainKill(units,a,d):{units,triggered:false,event:null};
+  if(arcaneDrain.triggered)units=arcaneDrain.units;
   const masteryKillResult=defenderFell?registerLocalUnitMasteryKill(a,d):null;
   units=applyUnitMasteryRankUpToUnits(units,a,masteryKillResult);
   const naginataDaimyoResult=defenderFell?applyNaginataDaimyoPunishment(units,d,a.id,dist(a,d)<=1):{units,triggered:false,text:""};
@@ -1430,7 +1432,8 @@ async function resolveSharedAttackOutcome({
     rhinoStunTriggered,
     mulanExecutionTriggered,
     khalidChainTriggered,
-    alreadyBleeding
+    alreadyBleeding,
+    hvArcaneManaDrainEvent:arcaneDrain.event||null
   };
 }
 

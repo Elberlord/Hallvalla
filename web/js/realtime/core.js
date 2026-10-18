@@ -10,7 +10,7 @@
 const HALLVALLA_RT_CFG=Object.freeze({
   resourceCap:10,
   initialMana:2,
-  resourceEveryMs:4500,
+  resourceEveryMs:4000,
   manaOrbEveryMs:14000,
   manaOrbLifetimeMs:10000,
   manaOrbStealAfterMs:4000,
