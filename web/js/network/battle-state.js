@@ -1104,18 +1104,6 @@ function maybeShowBattleResult(){
 }
 /* Crear/Unirse PvP viven únicamente en el módulo clean-room. */
 
-function extractPrincipalCardsFromDeck(cards=[],principalKeys=[],principalSlots=DECK_RULES.maxPrincipalSlots){
-  const deck=[...(cards||[])];
-  const requested=[];
-  (Array.isArray(principalKeys)?principalKeys:[principalKeys]).forEach(key=>{const safe=String(key||"");if(safe&&!requested.includes(safe))requested.push(safe);});
-  const principalCards=[];
-  requested.slice(0,principalSlots).forEach(key=>{
-    const index=deck.findIndex(card=>card?.key===key&&card.type==="unit");
-    if(index>=0)principalCards.push(deck.splice(index,1)[0]);
-  });
-  return{deck,principalCards,principalKeys:principalCards.map(card=>card.key)};
-}
-
 function extractPrincipalsFromInitialState(initial={},principalKeys=[],principalSlots=DECK_RULES.maxPrincipalSlots){
   let deck=[...(initial.deck||[])],hand=[...(initial.hand||[])];
   const requested=[];
@@ -1378,16 +1366,9 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     if(!mustUseStarterAdventureDeck)openDeckBuilder();
     return;
   }
-  const requestedPlayerPrincipals=playerPrincipalSlots<=0
-    ? []
-    : (mustUseStarterAdventureDeck
-      ? chooseFallbackAiPrincipalKeys({deck:rawPlayerBase,hand:[]},[],playerPrincipalSlots)
-      : sanitizePrincipalKeysForDeck(getSavedPrincipalKeys(),rawPlayerBase,playerPrincipalSlots));
-  if(!mustUseStarterAdventureDeck){
-    const principalValidation=validatePrincipalSelection(requestedPlayerPrincipals,rawPlayerBase,playerPrincipalSlots);
-    if(!principalValidation.valid){await hvAlert(principalValidation.errors.join(" "),"Faltan Personajes Principales");openDeckBuilder();return;}
-  }
-  const playerPrincipalPrep=extractPrincipalCardsFromDeck(rawPlayerBase,requestedPlayerPrincipals,playerPrincipalSlots);
+  // Mazo completo en Tiempo Real: no se extraen Principales ni se invocan gratis.
+  // El validador de tamaño y copias se ejecuta antes de este punto.
+  const playerPrincipalPrep={deck:[...rawPlayerBase],principalCards:[],principalKeys:[]};
   if(playerPrincipalPrep.principalCards.length!==0||playerPrincipalPrep.deck.length!==playerRequiredDeckSize){
     await hvAlert(`Tu líder está en ${getPrincipalTierSummary(leaderLevel)}. El mazo debe contener exactamente ${playerRequiredDeckSize} cartas.`,"Mazo inválido");
     if(!mustUseStarterAdventureDeck)openDeckBuilder();
