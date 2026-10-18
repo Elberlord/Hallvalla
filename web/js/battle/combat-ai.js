@@ -261,12 +261,12 @@ function applyPostCombatEquipmentRetreat(units,attackerBefore,defenderBefore){
   const combatWindowKey=publicState?.combatWindowKey||"";
   const ranged=dist(attackerBefore,defenderBefore)>=2;
   let eligible=false,markKey="",label="";
-  if(ranged&&hasUnitEquipment(live,"retreat_strap")&&live.retreatStrapUsedWindowKey!==combatWindowKey){eligible=true;markKey="retreatStrapUsedWindowKey";label="Correa de Retirada";}
-  if(!eligible&&hasUnitEquipment(live,"withdrawal_stirrups")&&Number(attackerBefore.movedSpaces||0)>=2&&live.withdrawalStirrupsUsedWindowKey!==combatWindowKey){eligible=true;markKey="withdrawalStirrupsUsedWindowKey";label="Estribos de Repliegue";}
+  if(ranged&&hasUnitEquipment(live,"retreat_strap")&&hvCardReady(live,"eq_retreat_strap")){eligible=true;markKey="retreatStrapUsedWindowKey";label="Correa de Retirada";}
+  if(!eligible&&hasUnitEquipment(live,"withdrawal_stirrups")&&Number(attackerBefore.movedSpaces||0)>=2&&hvCardReady(live,"eq_withdrawal_stirrups")){eligible=true;markKey="withdrawalStirrupsUsedWindowKey";label="Estribos de Repliegue";}
   if(!eligible)return{units:out,moved:false,text:""};
   const cell=getEquipmentRetreatCell(live,defenderBefore,out);
   if(!cell)return{units:out,moved:false,text:""};
-  out=out.map(u=>u.id===live.id?{...u,x:cell.x,y:cell.y,[markKey]:combatWindowKey}:u);
+  out=out.map(u=>u.id===live.id?hvCardMark({...u,x:cell.x,y:cell.y},markKey==="retreatStrapUsedWindowKey"?"eq_retreat_strap":"eq_withdrawal_stirrups"):u);
   return{units:out,moved:true,text:` ${label}: ${live.name} se repliega 1 casilla.`};
 }
 function getFalconDiveRecoilDamage(attacker,defender,mods={},hit=null){
@@ -823,7 +823,9 @@ function resolveSharedAttackPreparation({
   const preTrap=inState(()=>resolvePreAttackLegendaryTraps(a,liveUnits,legendaryTraps),snapshot(liveUnits,legendaryTraps,beastTraps));
   hvSkillOrderTraceSafe('01.trampas_previas',{a,d,units:preTrap.units||liveUnits});
   if(preTrap.cancel){
-    const cancelSpend=spendActionStatsByAttack(a,d,preTrap.units,getCombatMods(a,d),{hit:false});
+    const cancelledUnits=(preTrap.units||[]).map(u=>u.id===a.id?{...u,buffAtk:0,tempAtkBuff:0,tempAtkDebuff:0,tempDexBuff:0,hvNextAttackAtkDebuff:0,hvSunTzuNextAttackDex:0,movedSpaces:0}:u);
+    preTrap.units=cancelledUnits;
+    const cancelSpend=spendActionStatsByAttack(a,d,cancelledUnits,getCombatMods(a,d),{hit:false});
     return{terminal:"pretrap_cancel",a,d,units:preTrap.units,liveUnits,preTrap,cancelSpend,beastTraps};
   }
 
@@ -1012,7 +1014,7 @@ async function resolveSharedAttackOutcome({
   const actionSpend=spendActionStatsByAttack(a,d,units,mods,hit);
   units=actionSpend.units;
   hvSkillOrderTraceSafe('06.consumo_atributos',{a,d,units,mods,hit});
-  const dmgTrap=runInState(()=>applyDamageTrapModifiers(d,getBattleDamage(a,mods),preTrap.traps),{units,legendaryTraps:preTrap.traps,beastTraps});
+  const dmgTrap=runInState(()=>applyDamageTrapModifiers(d,getBattleDamage(a,mods),preTrap.traps,hit.hit),{units,legendaryTraps:preTrap.traps,beastTraps});
   let resolvedLegendaryTraps=dmgTrap.traps||preTrap.traps;
   const ulfhednarCritResult=rollUlfhednarCritical(a,hit);
   const battleAtk=Math.max(0,Math.round((dmgTrap.damage||0)*(ulfhednarCritResult.multiplier||1)));
@@ -1046,7 +1048,7 @@ async function resolveSharedAttackOutcome({
     }
     if(u.id===d.id){
       if(!hit.hit)return u;
-      const attackIgnoresGuard=shouldIgnoreGuardForAttack(a,d,units)||a.hvLeaderNextIgnoreGuard===true;
+      const attackIgnoresGuard=shouldIgnoreGuardForAttack(a,d,units)||a.hvLeaderNextIgnoreGuard===true||isRtTrapLocked(u,"defense");
       let damaged=(dmgTrap.ignoreGuard||attackIgnoresGuard)?applyDirectHpDamageWithEquipment(u,battleAtk).unit:applyGuardDamage(u,battleAtk,mods.defenderGuard||0,0);
       if(typeof routeHannibalMountedHpDamage==="function"&&Number(damaged.lastHpLoss||0)>0){
         const routed=routeHannibalMountedHpDamage(u,damaged,a);
@@ -1060,6 +1062,10 @@ async function resolveSharedAttackOutcome({
     }
     return u;
   });
+  if(hit.hit&&battleAtk>0)units=units.map(u=>u.id===d.id?{
+    ...u,doubleNextDamagePending:false,ignoreGuardNextDamagePending:false,
+    doubleNextDamageWindowKey:"",ignoreGuardNextDamageWindowKey:""
+  }:u);
   hvSkillOrderTraceSafe('07.dano_principal',{a,d,units,mods,hit});
   let geishaFanKillResult={units,triggered:false,text:""};
   if(hit.hit){units=applyAttackSideEffects(a,d,units,{hit:true,hpLoss,allowGuardian:false});}if(hit.hit&&hpLoss>0){geishaFanKillResult=applyGeishaFanKill(units,a,d,hpLoss,attackContext);units=geishaFanKillResult.units;}
@@ -1395,8 +1401,16 @@ async function resolveSharedAttackOutcome({
   const interpositionLogText=interposition.protector?` ${interposition.text}`:"";
   hvSkillOrderTraceSafe('13.antes_consumir_estados',{a,d,units,mods,hit});
   // Consumir las penalizaciones después de resolver la acción afectada.
-  units=units.map(u=>u.id===a.id?{...u,saboteadorDexZeroNextAttack:false,saboteadorDexZeroWindowKey:"",hvNextAttackAtkDebuff:0,hvSunTzuNextAttackDex:0}:
-    u.id===d.id?{...u,hvNextDefenseAgiDebuff:0,hvSunTzuNextDefenseGuard:0}:u);
+  units=units.map(u=>u.id===a.id?{...u,
+      saboteadorDexZeroNextAttack:false,saboteadorDexZeroWindowKey:"",hvNextAttackAtkDebuff:0,hvSunTzuNextAttackDex:0,
+      buffAtk:0,tempAtkBuff:0,tempAtkDebuff:0,tempDexBuff:0,
+      tempDexDebuff:u.solomonSealSourceId?Math.min(3,Math.max(0,Number(u.tempDexDebuff||0))):0,
+      fearWindowKey:"",fearSourceName:"",movedSpaces:0
+    }:u.id===d.id?{...u,
+      hvNextDefenseAgiDebuff:0,hvSunTzuNextDefenseGuard:0,tempAgiBuff:0,
+      tempAgiDebuff:u.solomonSealSourceId?Math.min(2,Math.max(0,Number(u.tempAgiDebuff||0))):0,
+      tempGuardBuff:u.yiSunDebuffed?Math.min(0,Number(u.tempGuardBuff||0)):0
+    }:u);
   // Las maldiciones se colocan después de consumir los estados del golpe actual.
   if(typeof hvApplyDeclaredSkillCurses==="function")units=hvApplyDeclaredSkillCurses(units,mods);
   const veilActionResult=typeof hvAdvanceVeilCurseOnAction==="function"

@@ -240,6 +240,29 @@ async function hallvallaRtManaOrbTick(now){
   }
   return true;
 }
+async function hallvallaRtTimedTrapTick(now){
+  const pending=publicState?.legendaryTraps||[];
+  if(!pending.length)return false;
+  let units=[...(publicState?.units||[])],traps=pending.filter(trap=>units.some(u=>u&&u.id===trap.targetId&&Number(u.hp||0)>0&&Number(u.owner)!==Number(trap.owner)&&u.hvShadowCutConsumedTrapId!==trap.id));
+  const due=traps.some(t=>["primordial_poison","traitors_bed","ash_banquet","night_without_guard","camp_betrayal"].includes(t.trapKey)&&now>=Number(t.triggerAt||Number(t.createdAt||now)+10000));
+  if(!due&&traps.length===pending.length)return false;
+  const previousState=publicState,logs=[];
+  try{
+    for(const owner of [1,2]){
+      publicState={...(previousState||{}),units,legendaryTraps:traps};
+      const next=resolveWindowStartLegendaryTraps(units,owner,publicState.combatWindowKey||"RT",false,true);
+      units=next.units;traps=next.traps;logs.push(...(next.logs||[]));
+      publicState={...(previousState||{}),units,legendaryTraps:traps};
+      const camp=resolveBattlePhaseLegendaryTraps(units,owner);
+      units=camp.units;traps=camp.traps;logs.push(...(camp.logs||[]));
+    }
+    traps=traps.filter(trap=>units.some(u=>u&&u.id===trap.targetId&&Number(u.hp||0)>0&&Number(u.owner)!==Number(trap.owner)&&u.hvShadowCutConsumedTrapId!==trap.id));
+  }finally{publicState=previousState;}
+  if(await finalizeBattle(units,logs.join(" ")))return true;
+  await updatePublic({units,legendaryTraps:traps,...(logs.length?{log:[...logs,...(publicState?.log||[])].slice(0,18)}:{})});
+  return true;
+}
+
 async function hallvallaRtPelidGrowthTick(now){
   const before=publicState?.units||[];
   if(!before.some(u=>u&&u.key==="achilles"&&Number(u.hp||0)>0))return false;
@@ -289,13 +312,7 @@ async function hallvallaRtCombatRefreshTick(now){
     if(typeof resolveWindowStartLegendaryTraps==="function"){
       for(const owner of [1,2]){
         publicState={...(publicState||{}),units,combatWindowKey,combatWindowIndex:hallvallaRtState.combatWindow,legendaryTraps,undeadRemains};
-        const tr=resolveWindowStartLegendaryTraps(units,owner,combatWindowKey);units=tr.units;legendaryTraps=tr.traps;logs.push(...(tr.logs||[]));
-      }
-    }
-    if(typeof resolveBattlePhaseLegendaryTraps==="function"){
-      for(const owner of [1,2]){
-        publicState={...(publicState||{}),units,combatWindowKey,combatWindowIndex:hallvallaRtState.combatWindow,legendaryTraps,undeadRemains};
-        const br=resolveBattlePhaseLegendaryTraps(units,owner);units=br.units;legendaryTraps=br.traps;logs.push(...(br.logs||[]));
+        const tr=resolveWindowStartLegendaryTraps(units,owner,combatWindowKey,true,false);units=tr.units;legendaryTraps=tr.traps;logs.push(...(tr.logs||[]));
       }
     }
   }finally{publicState=previousState;}
@@ -721,7 +738,7 @@ function hallvallaRtInstallRecovery(caster,units,now){
       ...unit,
       rtRecoveryUntil:until,
       rtRecoveryNextTickAt:now+HALLVALLA_RT_RECOVERY_TICK_MS,
-      rtRecoveryHealPerTick:HALLVALLA_RT_RECOVERY_HP_PER_TICK,
+      rtRecoveryHealPerTick:HALLVALLA_RT_RECOVERY_HP_PER_TICK*getEquipmentHealingMultiplier(caster),
       rtRecoverySourceId:caster.id,
       rtRecoverySourceName:caster.name||"Acolita sanadora"
     };
@@ -759,7 +776,7 @@ async function hallvallaRtAutoAcolyte(caster,now){
   await updatePublic({
     units:nextUnits,
     log:[
-      `${caster.name} instala Recovery sobre ${count} unidad${count===1?"":"es"} aliada${count===1?"":"s"}: +3 Vida por segundo durante 10 s. Proxima activacion en 30 s.`,
+      `${caster.name} instala Recovery sobre ${count} unidad${count===1?"":"es"} aliada${count===1?"":"s"}: +${HALLVALLA_RT_RECOVERY_HP_PER_TICK*getEquipmentHealingMultiplier(caster)} Vida por segundo durante 10 s. Proxima activacion en 30 s.`,
       ...(publicState?.log||[])
     ].slice(0,18)
   });
@@ -1065,7 +1082,7 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
   const ids=hallvallaRtFairUnitIds(units,{leaders:false,nonLeaders:true});
   for(const id of ids){
     if(moves>=maxMoves)break;
-    const live=units.find(u=>u.id===id&&Number(u.hp||0)>0);if(!live||isRtTrapLocked(live,"move",now))continue;
+    const live=units.find(u=>u.id===id&&Number(u.hp||0)>0);if(!live||Number(live.rtExiledUntil||0)>now||isRtTrapLocked(live,"move",now))continue;
     if(hallvallaRtIsRearSupportUnit(live))continue;
     const mulanReposition=live.key==="mulan"&&live.mulanRepositionReady===true;
     const ownLeader=hallvallaRtGetOwnerLeader(live.owner,units);
@@ -1126,6 +1143,11 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
     legendaryTraps=[...(trapMove.traps||legendaryTraps)];
     units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveWindowKey:publicState?.combatWindowKey||'RT',hvNextMoveDelayMs:0,hvLeaderNextMoveAccelerateMs:0,hvNextMoveSkip:false,hvSubotaiNextMoveBoostMs:0,hvSkiparFirstMoveConsumed:u.key==='skipar_del_drakkar'?true:u.hvSkiparFirstMoveConsumed,rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false}:u);
     if(!trapMove.cancel){
+      units=units.map(u=>u.id===live.id?(()=>{
+        let n={...u,tempMovBuff:0,tempMovDebuff:0,tempMovDebuffSource:"",movedSpaces:Number(u.movedSpaces||0)};
+        if(hasUnitEquipment(live,"marching_greaves")&&hvCardReady(live,"eq_marching_greaves"))n=hvCardMark(n,"eq_marching_greaves",false,now);
+        return n;
+      })():u);
       const moved=units.find(u=>u.id===live.id&&Number(u.hp||0)>0);
       if(moved){
         try{

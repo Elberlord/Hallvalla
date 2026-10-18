@@ -11,13 +11,15 @@ function isEquipmentCardAllowedForLeader(card,leaderType){return !isEquipmentCar
 function getEquipmentLeaderLabel(card){const data=typeof LEADER_DATA!=="undefined"?LEADER_DATA?.[card?.equipmentLeader]:null;return data?.name||card?.equipmentGroup||"Líder compatible";}
 function applyInstinctCollarDuration(unit,turns){
   const duration=Math.max(1,Number(turns||1));
-  if(!hasUnitEquipment(unit,"instinct_collar"))return{unit,turns:duration,reduced:false};
-  const combatWindowKey=typeof publicState!=="undefined"?(publicState?.combatWindowKey||""):"";
-  if(combatWindowKey&&unit?.instinctCollarUsedWindowKey===combatWindowKey)return{unit,turns:duration,reduced:false};
+  if(!hasUnitEquipment(unit,"instinct_collar")||!hvCardReady(unit,"eq_instinct_collar"))return{unit,turns:duration,reduced:false};
   const nextTurns=Math.max(1,duration-1);
-  return{unit:{...unit,instinctCollarUsedWindowKey:combatWindowKey||`local_${Date.now()}`},turns:nextTurns,reduced:nextTurns<duration};
+  return{unit:nextTurns<duration?hvCardMark(unit,"eq_instinct_collar"):unit,turns:nextTurns,reduced:nextTurns<duration};
 }
-
+function applyInstinctCollarTimedDuration(unit,durationMs){
+  const ms=Math.max(0,Number(durationMs||0));
+  if(ms<=1000||!hasUnitEquipment(unit,"instinct_collar")||!hvCardReady(unit,"eq_instinct_collar"))return{unit,durationMs:ms};
+  return{unit:hvCardMark(unit,"eq_instinct_collar"),durationMs:Math.max(1000,ms-1000)};
+}
 const STARTER_BASIC_DECK_KEYS=[
   "scout","scout",
   "archer","archer",
@@ -1426,13 +1428,8 @@ function reduceDamageForHoneyBadger(unit,amount){
 const PORCUPINE_FEAR_CHANCE=0.25;
 function applyFearToUnit(unit,sourceName="Puercoespín"){
   if(!unit)return unit;
-  if(unit.key==="berserker_de_oso")return {...unit,fearSourceName:"",fearWindowKey:""};
-  return {
-    ...unit,
-    tempAtkDebuff:Math.max(Number(unit.tempAtkDebuff||0),3),
-    fearSourceName:sourceName,
-    fearWindowKey:nextWindowKeyForOwner(unit.owner)
-  };
+  if(unit.key==="berserker_de_oso")return unit;
+  return {...unit,hvNextAttackAtkDebuff:Math.max(Number(unit.hvNextAttackAtkDebuff||0),3),fearSourceName:sourceName};
 }
 function clearCycleTempStatsForUnit(u,combatWindowKey){
   if(u&&u.key==="berserker_de_oso")u={...u,fearSourceName:"",fearWindowKey:"",tempAtkDebuff:u.fearWindowKey?0:u.tempAtkDebuff};
@@ -1443,38 +1440,38 @@ function clearCycleTempStatsForUnit(u,combatWindowKey){
   const next={
     ...u,
     moved:false,
-    movedSpaces:0,
+    movedSpaces:Number(u.movedSpaces||0),
     lastMoveStraightDistance:0,
-    lastMoveDistance:0,
-    lastMoveDx:0,
-    lastMoveDy:0,
+    lastMoveDistance:Number(u.lastMoveDistance||0),
+    lastMoveDx:Number(u.lastMoveDx||0),
+    lastMoveDy:Number(u.lastMoveDy||0),
     lastMoveWindowKey:"",
     acted:false,
-    buffAtk:0,
-    tempMovDebuff:0,
-    tempMovDebuffSource:"",
+    buffAtk:Number(u.buffAtk||0),
+    tempMovDebuff:Number(u.tempMovDebuff||0),
+    tempMovDebuffSource:u.tempMovDebuffSource||"",
     genghisMovDebuff:genghisMovStillActive?Math.max(1,Number(u.genghisMovDebuff||1)):0,
     genghisMovDebuffWindowKey:genghisMovStillActive?u.genghisMovDebuffWindowKey:"",
     genghisMovDebuffSource:genghisMovStillActive?(u.genghisMovDebuffSource||"Gengis Kan"):"",
     hannibalMovDebuff:hannibalMovStillActive?Math.max(1,Number(u.hannibalMovDebuff||1)):0,
     hannibalMovDebuffWindowKey:hannibalMovStillActive?u.hannibalMovDebuffWindowKey:"",
     hannibalMovDebuffSource:hannibalMovStillActive?(u.hannibalMovDebuffSource||"Hannibal Barca"):"",
-    tempMovBuff:0,
-    tempAtkBuff:0,
-    tempGuardBuff:0,
-    tempAtkDebuff: fearStillActive ? 3 : 0,
-    fearSourceName: fearStillActive ? (u.fearSourceName||"Miedo") : "",
-    fearWindowKey: fearStillActive ? u.fearWindowKey : "",
+    tempMovBuff:Number(u.tempMovBuff||0),
+    tempAtkBuff:Number(u.tempAtkBuff||0),
+    tempGuardBuff:Number(u.tempGuardBuff||0),
+    tempAtkDebuff:Number(u.tempAtkDebuff||0),
+    fearSourceName:u.fearSourceName||"",
+    fearWindowKey:u.fearWindowKey||"",
     hannibalAtkDebuff:hannibalAtkStillActive?Math.max(1,Number(u.hannibalAtkDebuff||1)):0,
     hannibalAtkDebuffWindowKey:hannibalAtkStillActive?u.hannibalAtkDebuffWindowKey:"",
     hannibalAtkDebuffSource:hannibalAtkStillActive?(u.hannibalAtkDebuffSource||"Hannibal Barca"):"",
     lionFearAppliedWindowKey:"",
-    tempDexBuff:0,
-    tempDexDebuff:0,
+    tempDexBuff:Number(u.tempDexBuff||0),
+    tempDexDebuff:Number(u.tempDexDebuff||0),
     saboteadorDexZeroWindowKey:"",
     saboteadorDexZeroSource:"",
-    tempAgiBuff:0,
-    tempAgiDebuff:0,
+    tempAgiBuff:Number(u.tempAgiBuff||0),
+    tempAgiDebuff:Number(u.tempAgiDebuff||0),
     counterUsedWindow:false,
     lanceFirstStrikeUsedWindow:false,
     caesarUsedWindow:false,
@@ -1533,7 +1530,7 @@ function applyPorcupineSpinesAndFear(attackerBefore,defenderBefore,units){
   if(feared.length)logs.push("Miedo: "+feared.join(", ")+" pierde(n) "+rank+" AT solo en su siguiente ataque.");
   return {units:out,logs,statusFxEvent,floatFxEvent};
 }
-function hasActiveFearStatus(unit){return !!(unit&&Number(unit.tempAtkDebuff||0)>=3&&unit.fearWindowKey);}
+function hasActiveFearStatus(unit){return !!(unit&&Number(unit.hvNextAttackAtkDebuff||0)>0);}
 function applyFearToUnitOnce(unit,sourceName="León Africano"){
   if(!unit)return unit;
   const combatWindowKey=publicState?.combatWindowKey||"";

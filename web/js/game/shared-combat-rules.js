@@ -187,7 +187,7 @@ function isUnitCompatibleWithEquipmentLeader(unit,leaderType){
   return unitHasLeaderBuffTrait(unit,leaderType);
 }
 function canEquipCardToUnit(card,unit,owner=unit?.owner,units=publicState?.units||[]){
-  if(!isEquipmentCard(card)||!unit||unit.leader||unit.owner!==owner||Number(unit.hp||0)<=0)return false;
+  if(!isEquipmentCard(card)||!unit||unit.leader||unit.owner!==owner||Number(unit.hp||0)<=0||Number(unit.rtExiledUntil||0)>Date.now())return false;
   const leader=(units||[]).find(u=>u&&u.owner===owner&&u.leader&&Number(u.hp||0)>0);
   if(!leader||leader.leaderType!==card.equipmentLeader)return false;
   if(!isUnitCompatibleWithEquipmentLeader(unit,card.equipmentLeader))return false;
@@ -444,14 +444,17 @@ function getRtTrapDebuff(unit,stat,now=hallvallaTrapNow()){
 function withRtTrapDebuff(unit,stat,amount,durationMs,source="Trampa"){
   const cap=String(stat||"").replace(/^./,c=>c.toUpperCase());
   const amountKey=`rtTrap${cap}Debuff`,untilKey=`rtTrap${cap}DebuffUntil`,sourceKey=`rtTrap${cap}DebuffSource`;
-  const now=hallvallaTrapNow(),until=now+Math.max(0,Number(durationMs||0));
+  const now=hallvallaTrapNow(),adjusted=applyInstinctCollarTimedDuration(unit,durationMs),until=now+adjusted.durationMs;
+  unit=adjusted.unit;
   return {...unit,[amountKey]:Math.max(Number(unit?.[amountKey]||0),Math.max(0,Number(amount||0))),[untilKey]:Math.max(Number(unit?.[untilKey]||0),until),[sourceKey]:source};
 }
 function withRtTrapLock(unit,kind,durationMs,source="Trampa"){
   if(kind==='stun'&&/par[aá]lisi|electr|rayo|chispa|tormenta|descarga|precisi[oó]n/i.test(String(source||''))&&typeof globalThis.hvSkillHasAdaptation==='function'&&globalThis.hvSkillHasAdaptation(unit))return unit;
   const field={move:"rtMoveLockedUntil",attack:"rtAttackLockedUntil",counter:"rtCounterLockedUntil",defense:"rtDefLockedUntil",silence:"rtSilencedUntil",heal:"rtNoHealUntil",reduction:"rtNoReductionUntil",stun:"rtStunnedUntil"}[kind];
   if(!field)return unit;
-  const until=hallvallaTrapNow()+Math.max(0,Number(durationMs||0));
+  const adjusted=applyInstinctCollarTimedDuration(unit,durationMs);
+  unit=adjusted.unit;
+  const until=hallvallaTrapNow()+adjusted.durationMs;
   return {...unit,[field]:Math.max(Number(unit?.[field]||0),until),rtTrapLockSource:source};
 }
 function isRtTrapLocked(unit,kind,now=hallvallaTrapNow()){
@@ -487,7 +490,7 @@ function getPikeWallMovDebuff(u,now=Date.now()){
 function effectiveMov(u){
   const bonus=getLeaderBonus(u);
   const summonBonus=isSkiparSummonMoveActive(u)?1:0;
-  const equipmentMoveBonus=(!u?.leader&&hasUnitEquipment(u,"marching_greaves")&&!u?.moved)?2:0;
+  const equipmentMoveBonus=(!u?.leader&&hasUnitEquipment(u,"marching_greaves")&&hvCardReady(u,"eq_marching_greaves"))?2:0;
   const canonical=getCanonicalNaturalMovement(u);
   const hasFixedMov=u?.fixedMov!==null&&u?.fixedMov!==undefined&&u?.fixedMov!==""&&Number.isFinite(Number(u.fixedMov));
   const canonicalBaseMov=hasFixedMov?Math.max(0,Number(u.fixedMov)):(canonical?canonical.finalMov:(u?.mov||0));
@@ -901,12 +904,12 @@ function consumeEquipmentPrecisionDefenseForAttack(defender,attacker,units,mods=
   if(!defender||!attacker||defender.leader)return{defender,units,mods,consumed:false};
   const combatWindowKey=publicState?.combatWindowKey||"";
   let penalty=0,markKey="",label="";
-  if(hasUnitEquipment(defender,"executioner_mantle")&&defender.executionerMantleUsedWindowKey!==combatWindowKey&&hvCardReady(defender,"eq_executioner_mantle")){penalty=5;markKey="executionerMantleUsedWindowKey";label="Manto del Ejecutor";}
-  if(!penalty&&hasUnitEquipment(defender,"skirmisher_cloak")&&dist(attacker,defender)<=1&&defender.skirmisherCloakUsedWindowKey!==combatWindowKey&&hvCardReady(defender,"eq_skirmisher_cloak")){penalty=5;markKey="skirmisherCloakUsedWindowKey";label="Capa de Escaramuza";}
-  if(!penalty&&hasUnitEquipment(defender,"light_barding")&&dist(attacker,defender)>=2&&defender.lightBardingUsedWindowKey!==combatWindowKey&&hvCardReady(defender,"eq_light_barding")){penalty=5;markKey="lightBardingUsedWindowKey";label="Barda Ligera";}
+  if(hasUnitEquipment(defender,"executioner_mantle")&&hvCardReady(defender,"eq_executioner_mantle")){penalty=5;markKey="executionerMantleUsedWindowKey";label="Manto del Ejecutor";}
+  if(!penalty&&hasUnitEquipment(defender,"skirmisher_cloak")&&dist(attacker,defender)<=1&&hvCardReady(defender,"eq_skirmisher_cloak")){penalty=5;markKey="skirmisherCloakUsedWindowKey";label="Capa de Escaramuza";}
+  if(!penalty&&hasUnitEquipment(defender,"light_barding")&&dist(attacker,defender)>=2&&hvCardReady(defender,"eq_light_barding")){penalty=5;markKey="lightBardingUsedWindowKey";label="Barda Ligera";}
   if(!penalty)return{defender,units,mods,consumed:false};
   const nextMods={...mods,attackerPrecisionPenalty:(mods.attackerPrecisionPenalty||0)+penalty,notes:[...(mods.notes||[]),`${attacker.name} -${penalty} PREC por ${label}.`]};
-  const nextUnits=(units||[]).map(u=>u.id===defender.id?hvCardMark({...u,[markKey]:combatWindowKey},"eq_"+({executionerMantleUsedWindowKey:"executioner_mantle",skirmisherCloakUsedWindowKey:"skirmisher_cloak",lightBardingUsedWindowKey:"light_barding"}[markKey])):u);
+  const nextUnits=(units||[]).map(u=>u.id===defender.id?hvCardMark(u,"eq_"+({executionerMantleUsedWindowKey:"executioner_mantle",skirmisherCloakUsedWindowKey:"skirmisher_cloak",lightBardingUsedWindowKey:"light_barding"}[markKey])):u);
   return{defender:nextUnits.find(u=>u.id===defender.id)||defender,units:nextUnits,mods:nextMods,consumed:true};
 }
 function applyCombatPrecisionPercentPenalty(score,mods={}){
@@ -926,6 +929,7 @@ function getAttackPrecisionScore(attacker,mods={}){
   return applyCombatPrecisionPercentPenalty(raw,mods);
 }
 function getDefenseEvasionScore(defender,mods={}){
+  if(isRtTrapLocked(defender,"defense"))return 0;
   const override=resolveHallvallaOverride("combat.defenseEvasion",{defender,mods});
   if(override.handled)return override.value;
   if(typeof mods.defenderDefenseOverride==="number")return Math.max(0,mods.defenderDefenseOverride);
@@ -1068,11 +1072,9 @@ function resolveLanceFirstStrike(attacker,defender,units){
 }
 function applyEquipmentHpDamageReduction(unit,damage){
   const incoming=Math.max(0,Number(damage)||0);
-  if(!unit||incoming<=0||!hasUnitEquipment(unit,"tanned_hide_harness"))return{unit,damage:incoming,reduced:0};
-  const combatWindowKey=publicState?.combatWindowKey||"";
-  if(unit.tannedHideHarnessUsedWindowKey===combatWindowKey)return{unit,damage:incoming,reduced:0};
+  if(!unit||incoming<=0||!hasUnitEquipment(unit,"tanned_hide_harness")||!hvCardReady(unit,"eq_tanned_hide_harness"))return{unit,damage:incoming,reduced:0};
   const reduced=Math.min(5,incoming);
-  return{unit:{...unit,tannedHideHarnessUsedWindowKey:combatWindowKey},damage:Math.max(0,incoming-reduced),reduced};
+  return{unit:hvCardMark(unit,"eq_tanned_hide_harness"),damage:Math.max(0,incoming-reduced),reduced};
 }
 const HALLVALLA_MAGIC_DAMAGE_TYPES=Object.freeze(["fire","ice","lightning","nature","arcane","sand","dark","light"]);
 function normalizeMagicDamageType(type){
@@ -1121,6 +1123,14 @@ function applyHallvallaRtLeaderShieldDamage(unit,damage){
 }
 globalThis.isHallvallaRtLeaderShieldActive=isHallvallaRtLeaderShieldActive;
 
+function hvShadowCutOnHpLoss(before,after,damage){
+  if(!before||!after||Number(damage||0)<=0)return after;
+  const trap=getActiveLegendaryTraps().find(t=>t.trapKey==="shadow_cut"&&t.targetId===before.id);
+  if(!trap||after.hvShadowCutConsumedTrapId===trap.id)return after;
+  let next={...after,hvShadowCutConsumedTrapId:trap.id};
+  if(Number(next.hp||0)>0&&Number(next.hp||0)<effectiveMaxHp(next)/2)next={...next,hp:0};
+  return next;
+}
 function applyMagicHpDamage(unit,damage,damageType="arcane"){
   const raw=Math.max(0,Number(damage)||0);
   const type=normalizeMagicDamageType(damageType);
@@ -1131,14 +1141,14 @@ function applyMagicHpDamage(unit,damage,damageType="arcane"){
   scaled=Math.max(0,Number(reduceDamageForHoneyBadger(unit,scaled))||0);
   scaled=applyHallvallaRtLeaderShieldDamage(unit,scaled).damage;
   const damaged=resolveBlessedArmorTransition(unit,{...unit,hp:Number(unit?.hp||0)-scaled,lastGuardLoss:0,lastHpLoss:scaled,damagedThisWindow:scaled>0||!!unit?.damagedThisWindow});
-  return{unit:damaged,damage:scaled,rawDamage:raw,damageType:type,multiplier,immune:multiplier===0,weak:multiplier>1,resistant:multiplier>0&&multiplier<1};
+  return{unit:hvShadowCutOnHpLoss(unit,damaged,scaled),damage:scaled,rawDamage:raw,damageType:type,multiplier,immune:multiplier===0,weak:multiplier>1,resistant:multiplier>0&&multiplier<1};
 }
 
 function applyDirectHpDamageWithEquipment(unit,damage){
   const shield=applyHallvallaRtLeaderShieldDamage(unit,damage);
   const prep=applyEquipmentHpDamageReduction(unit,Math.max(0,shield.damage-Math.max(0,Number(unit?.hvLeaderShield||0))));
   const damaged=resolveBlessedArmorTransition(prep.unit,{...prep.unit,hp:Number(prep.unit?.hp||0)-prep.damage,lastGuardLoss:0,lastHpLoss:prep.damage,damagedThisWindow:prep.damage>0||!!prep.unit?.damagedThisWindow});
-  return{unit:damaged,damage:prep.damage,reduced:prep.reduced};
+  return{unit:hvShadowCutOnHpLoss(unit,damaged,prep.damage),damage:prep.damage,reduced:prep.reduced};
 }
 function applyGuardDamage(defender,damage,guardMod=0,minHpDamage=0){
   const shield=applyHallvallaRtLeaderShieldDamage(defender,Math.max(0,Number(damage)||0));
@@ -1413,7 +1423,8 @@ function getActiveLegendaryTraps(state=publicState){return Array.isArray(state?.
 
 function removeTrapById(traps,id){return (traps||[]).filter(t=>t.id!==id);}
 function makeTrapMark(card,target,owner){
-  return {id:uid8(),owner,cardKey:card.key,cardName:card.name,trapKey:card.legendaryTrap,targetId:target.id,targetName:target.name,createdWindowKey:publicState?.combatWindowKey||"",createdAt:Date.now()};
+  return {id:uid8(),owner,cardKey:card.key,cardName:card.name,trapKey:card.legendaryTrap,targetId:target.id,targetName:target.name,createdWindowKey:publicState?.combatWindowKey||"",createdAt:Date.now(),
+    triggerAt:["primordial_poison","traitors_bed","ash_banquet","night_without_guard","camp_betrayal"].includes(card.legendaryTrap)?Date.now()+10000:0};
 }
 function canMarkLegendaryTrapForOwner(card,target,owner){
   if(!card||card.trap!=="legendary_mark")return false;
@@ -1463,10 +1474,10 @@ function applyHeroicEdgeStartHealing(units,owner){
   });
   return {units:out,logs:healed?[`Filo de mando: ${healed} unidad${healed===1?" aliada recupera":"es aliadas recuperan"} 1 HP sin superar su máximo.`]:[]};
 }
-function resolveWindowStartLegendaryTraps(units,turnOwner,combatWindowKey){
+function resolveWindowStartLegendaryTraps(units,turnOwner,combatWindowKey,applyPoison=true,resolveTimed=true){
   let out=[...(units||[])],traps=[...getActiveLegendaryTraps()],logs=[],statusFxEvent=null,floatFxEvent=null;
-  // Poison ticks first.
-  out=out.map(u=>{
+  // Poison ticks first. Independent 10s periodic status, never processed by trap timer.
+  if(applyPoison)out=out.map(u=>{
     if(u.owner!==turnOwner||!u.poisonTurns||!u.poisonDamage)return u;
     if(isPoisonImmuneUnit(u)){
       logs.push(`${u.name} ignora el Veneno por Inmunidad al Veneno.`);
@@ -1485,8 +1496,11 @@ function resolveWindowStartLegendaryTraps(units,turnOwner,combatWindowKey){
     return next;
   }).filter(u=>u.hp>0);
   for(const trap of [...traps]){
+    if(!resolveTimed)break;
     const target=out.find(u=>u.id===trap.targetId);
     if(!target||target.owner!==turnOwner)continue;
+    if(!["primordial_poison","traitors_bed","ash_banquet","night_without_guard"].includes(trap.trapKey))continue;
+    if(Date.now()<Number(trap.triggerAt||Number(trap.createdAt||Date.now())+10000))continue;
     const tier=getUnitTrapTier(target);
     let n={...target},triggered=false;
     if(trap.trapKey==="primordial_poison"){
@@ -1510,8 +1524,8 @@ function resolveWindowStartLegendaryTraps(units,turnOwner,combatWindowKey){
       triggered=true;
       const trapMs=getTrapTimedDurationMs(n,"hard");
       n=withRtTrapLock(withRtTrapLock(withRtTrapLock(n,"move",trapMs,trap.cardName),"attack",trapMs,trap.cardName),"counter",trapMs,trap.cardName);
-      if(tier==="special")n.ignoreGuardNextDamageWindowKey=combatWindowKey;
-      if(tier==="legendary"){n.doubleNextDamageWindowKey=combatWindowKey;n.ignoreGuardNextDamageWindowKey=combatWindowKey;}
+      if(tier==="special")n.ignoreGuardNextDamagePending=true;
+      if(tier==="legendary"){n.doubleNextDamagePending=true;n.ignoreGuardNextDamagePending=true;}
       logs.push(`${trap.cardName} se revela: ${target.name} queda Dormida durante ${Math.round(trapMs/1000)} s.`);
     }
     if(trap.trapKey==="ash_banquet"){
@@ -1564,7 +1578,7 @@ function resolveMovementLegendaryTraps(unit,dest,units,trapList=null){
         n=moveGentlyAwayFromLeader(n,owner,out,2);
         const controlMs=getTrapTimedDurationMs(n,tier==="legendary"?"hard":"medium");
         n=withRtTrapLock(n,"attack",controlMs,trap.cardName);
-        if(tier==="legendary")n=withRtTrapLock(withRtTrapLock(n,"counter",controlMs,trap.cardName),"move",controlMs,trap.cardName);
+        if(tier==="legendary")n=withRtTrapLock(n,"stun",controlMs,trap.cardName);
       }
       out=out.map(u=>u.id===moving.id?n:u).filter(u=>u.hp>0);
       logs.push(`${trap.cardName} se revela: ${moving.name} recibe ${dmg} daño directo y es rechazado.`);
@@ -1602,6 +1616,9 @@ function resolvePreAttackLegendaryTraps(attacker,units,trapList=null){
   return {units:out,traps,logs,cancel,redirect,bonusAtk};
 }
 function resolveBuffHealLegendaryTraps(target,kind,units){
+  if(Number(target?.rtExiledUntil||0)>Date.now())return{
+    units:[...(units||[])],traps:[...getActiveLegendaryTraps()],logs:[(target?.name||"La unidad")+" está en Exilio y no puede recibir ayuda."],cancel:true
+  };
   let out=[...(units||[])],traps=[...getActiveLegendaryTraps()],logs=[],cancel=false,statusFxEvent=null,floatFxEvent=null;
   for(const trap of [...traps]){
     if(trap.targetId!==target?.id)continue;
@@ -1633,19 +1650,25 @@ function resolveBuffHealLegendaryTraps(target,kind,units){
   }
   return {units:out,traps,logs,cancel};
 }
-function applyDamageTrapModifiers(defender,damage,trapList=null){
-  let traps=[...(Array.isArray(trapList)?trapList:getActiveLegendaryTraps())],logs=[],nextDamage=damage,forceKill=false,shadowCut=false,ignoreGuard=false;
-  for(const trap of [...traps]){
-    if(trap.targetId!==defender.id)continue;
-    if(trap.trapKey==="shadow_cut"){
+function applyDamageTrapModifiers(defender,damage,trapList=null,attackHit=true){
+  let traps=[...(Array.isArray(trapList)?trapList:getActiveLegendaryTraps())];
+  const logs=[],raw=Math.max(0,Number(damage)||0),affected=!!attackHit&&raw>0;
+  let nextDamage=raw,shadowCut=false,ignoreGuard=false;
+  if(affected){
+    const double=defender.doubleNextDamagePending===true||
+      (!!defender.doubleNextDamageWindowKey&&defender.doubleNextDamageWindowKey===publicState?.combatWindowKey);
+    ignoreGuard=defender.ignoreGuardNextDamagePending===true||
+      (!!defender.ignoreGuardNextDamageWindowKey&&defender.ignoreGuardNextDamageWindowKey===publicState?.combatWindowKey);
+    if(double){nextDamage*=2;logs.push(defender.name+" recibe daño duplicado por Expuesta.");}
+    if(ignoreGuard)logs.push(defender.name+" no puede usar Guardia contra este daño.");
+    for(const trap of [...traps]){
+      if(trap.targetId!==defender.id||trap.trapKey!=="shadow_cut")continue;
       shadowCut=true;
-      logs.push(`${trap.cardName} se revela: si ${defender.name} queda con menos de la mitad de su Vida máxima después de este daño, muere.`);
+      logs.push(trap.cardName+" se revela: si "+defender.name+" queda con menos de la mitad de su Vida máxima después de este daño, muere.");
       traps=removeTrapById(traps,trap.id);
     }
-    if((defender.doubleNextDamageWindowKey&&defender.doubleNextDamageWindowKey===publicState.combatWindowKey)){nextDamage*=2;logs.push(`${defender.name} recibe daño duplicado por Expuesta.`);}
-    if((defender.ignoreGuardNextDamageWindowKey&&defender.ignoreGuardNextDamageWindowKey===publicState.combatWindowKey)){ignoreGuard=true;logs.push(`${defender.name} no puede usar Guardia contra este daño.`);}
   }
-  return {damage:nextDamage,traps,logs,forceKill,shadowCut,ignoreGuard};
+  return {damage:nextDamage,traps,logs,forceKill:false,shadowCut,ignoreGuard};
 }
 function resolveAfterKillLegendaryTraps(attacker,defender,units,trapList=null){
   let out=[...(units||[])],traps=[...(Array.isArray(trapList)?trapList:getActiveLegendaryTraps())],logs=[];
@@ -1672,8 +1695,9 @@ function resolveBattlePhaseLegendaryTraps(units,turnOwner){
   for(const trap of [...traps]){
     const target=out.find(u=>u.id===trap.targetId);
     if(!target||target.owner!==turnOwner||trap.trapKey!=="camp_betrayal")continue;
+    if(Date.now()<Number(trap.triggerAt||Number(trap.createdAt||Date.now())+10000))continue;
     const adjacentOwn=out.filter(u=>u.owner===target.owner&&u.id!==target.id&&dist(u,target)<=1);
-    if(!adjacentOwn.length)continue;
+    if(!adjacentOwn.length){traps=removeTrapById(traps,trap.id);logs.push(trap.cardName+" se disipa: no había aliados adyacentes cuando se cumplieron los 10 s.");continue;}
     const tier=getUnitTrapTier(target);
     const sources=tier==="basic"?adjacentOwn.slice(0,1):adjacentOwn;
     const dmgEach=tier==="legendary"?3:2;
