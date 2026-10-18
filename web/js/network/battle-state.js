@@ -1354,7 +1354,6 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   // depende del Tier canónico del líder: T1=10, T2=15, T3=20, T4=25, T5=30.
   const playerPrincipalUnlocked=canAccessDecks();
   const playerPrincipalSlots=0;
-  const playerRequiredDeckSize=typeof getDeckSizeForLeaderLevel==="function"?getDeckSizeForLeaderLevel(leaderLevel):getCurrentDeckSize();
   const starterLocked=!playerPrincipalUnlocked;
   const mustUseStarterAdventureDeck=!!battle.isGuardian||battle.id===ADVENTURE_GUARDIAN_BATTLE.id||starterLocked;
   const rawPlayerBase=mustUseStarterAdventureDeck
@@ -1366,14 +1365,8 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     if(!mustUseStarterAdventureDeck)openDeckBuilder();
     return;
   }
-  // Mazo completo en Tiempo Real: no se extraen Principales ni se invocan gratis.
-  // El validador de tamaño y copias se ejecuta antes de este punto.
-  const playerPrincipalPrep={deck:[...rawPlayerBase],principalCards:[],principalKeys:[]};
-  if(playerPrincipalPrep.principalCards.length!==0||playerPrincipalPrep.deck.length!==playerRequiredDeckSize){
-    await hvAlert(`Tu líder está en ${getPrincipalTierSummary(leaderLevel)}. El mazo debe contener exactamente ${playerRequiredDeckSize} cartas.`,"Mazo inválido");
-    if(!mustUseStarterAdventureDeck)openDeckBuilder();
-    return;
-  }
+  // TR: validateDeckList ya verifico tamano, copias y restricciones del mazo.
+  // No existe un conjunto separado de Personajes Principales del jugador.
   if(battle.beastEvent&&!HALLVALLA_LOCALHOST_TEST_MODE){
     const entryCost=Math.max(0,Number(battle.entryGoldCost||BEASTMASTER_DUEL_GOLD_COST)||0);
     const profile=getPlayerProfile();
@@ -1418,13 +1411,13 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     renderPlayerProfile(profile);
     battle={...battle,dragonContractEntryGoldCost:entryCost};
   }
-  const playerCombatDeck=shuffle([...(playerPrincipalPrep.deck||[]),...(playerPrincipalPrep.principalCards||[])]);
+  const playerCombatDeck=shuffle([...rawPlayerBase]);
   const playerBattleDrawDeck=injectLeaderEquipmentIntoDrawDeck(playerCombatDeck,leaderType,1);
   const playerDraw={deck:[],hand:getBattleCardsSortedByCurrentCost(playerBattleDrawDeck,1)};
   const playerDeck=playerDraw.deck;
   const playerHand=playerDraw.hand;
   const adaptivePlayerSnapshot=typeof buildAdventureAdaptivePlayerSnapshot==="function"
-    ?buildAdventureAdaptivePlayerSnapshot(rawPlayerBase,playerPrincipalPrep.principalKeys||[])
+    ?buildAdventureAdaptivePlayerSnapshot(rawPlayerBase,[])
     :null;
   const enemyLeaderType=battle.enemyLeaderType||"mage";
   const enemyLeaderLevel=getAdventureEnemyLeaderLevel(battle,leaderLevel);
