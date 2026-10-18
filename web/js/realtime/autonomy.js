@@ -348,6 +348,16 @@ async function hallvallaRtPelidGrowthTick(now){
   await updatePublic({units});
   return true;
 }
+async function hallvallaRtReanimatedUpkeepTick(now){
+  if(typeof applyHallvallaReanimatedUpkeep!=='function')return false;
+  // PvP: cada cliente liquida únicamente sus propias tropas.
+  const ownerFilter=publicState?.mode==='online'?Number(myPlayer||0):0;
+  if(publicState?.mode==='online'&&![1,2].includes(ownerFilter))return false;
+  const r=applyHallvallaReanimatedUpkeep(publicState?.units||[],now,ownerFilter);
+  if(!r.changed)return false;
+  await updatePublic({units:r.units,log:r.logs.length?[...r.logs,...(publicState?.log||[])].slice(0,18):(publicState?.log||[])});
+  return true;
+}
 async function hallvallaRtCombatRefreshTick(now){
   if(now-hallvallaRtState.lastCombatRefreshAt<HALLVALLA_RT_CFG.combatRefreshEveryMs)return false;
   hallvallaRtState.lastCombatRefreshAt=now;hallvallaRtState.combatWindow+=1;
@@ -364,11 +374,6 @@ async function hallvallaRtCombatRefreshTick(now){
     }
   }
 
-  // Ericto paga su mantenimiento cada 10 s en lugar de End Phase.
-  if(typeof applyErictoCycleUpkeep==="function"){
-    for(const owner of [1,2]){const er=applyErictoCycleUpkeep(units,owner);units=er.units;logs.push(...(er.logs||[]));}
-    if(typeof resolveErictoLifecycle==="function"){const life=resolveErictoLifecycle(units);units=life.units;logs.push(...(life.logs||[]));}
-  }
 
   // Trampas que antes esperaban Start/Battle Phase ahora abren en el siguiente ciclo táctico.
   const previousState=publicState;

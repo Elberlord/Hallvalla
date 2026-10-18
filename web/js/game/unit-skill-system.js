@@ -1164,7 +1164,7 @@ async function hallvallaRtAutoUnitSkills(caster,now=Date.now()){
         }
         let snapshot={...(rec.snapshot||{})};try{if(typeof resetErictoReanimatedTransientState==="function")snapshot=resetErictoReanimatedTransientState(snapshot);}catch(_){}
         const maxHp=Math.max(1,Number(snapshot.maxHp||snapshot.hp||1)),ratio=String(skill.scale||"").includes("% HP")?Math.max(.2,Math.min(1,Number(scaled.value||40)/100)):.4;
-        const revived={...snapshot,id:typeof uid8==="function"?uid8():hvSkillCopyId(),owner:live.owner,x:cell.x,y:cell.y,nexoX:cell.x,nexoY:cell.y,hp:Math.max(1,Math.ceil(maxHp*ratio)),maxHp,moved:true,acted:true,hallvallaReadyOnSummon:false,summonOrigin:"skill_reanimation",fieldGeneratedSummon:true,reanimated:true,skillReanimatedById:live.id,skillReanimatedFromGraveId:rec.graveId};
+        const revived={...snapshot,id:typeof uid8==="function"?uid8():hvSkillCopyId(),owner:live.owner,x:cell.x,y:cell.y,nexoX:cell.x,nexoY:cell.y,hp:Math.max(1,Math.ceil(maxHp*ratio)),maxHp,moved:true,acted:true,hallvallaReadyOnSummon:false,summonOrigin:"skill_reanimation",fieldGeneratedSummon:true,reanimated:true,hvReanimationUpkeepDueAt:now+30000,skillReanimatedById:live.id,skillReanimatedFromGraveId:rec.graveId};
         units.push(revived);revivedCount++;grave=grave.map(row=>row.graveId===rec.graveId?{...row,used:true}:row);
       }
       if(!revivedCount&&!deniedCount)continue;
@@ -1524,18 +1524,11 @@ function hvSkillPlayerText(skill,entity={rarity:"Básica"}){
   const power=hvSkillRarityIndex(entity);
   if(skill.id==='HV-175')return 'Cada 30 s crea una zona sagrada de radio 2 durante '+hvSkillNumberForPlayer(hvSkillScale(skill,entity).duration)+' s. Impide reanimar dentro y reduce AT de reanimados enemigos cercanos.';
   if(skill.id==='HV-220')return 'Cada 30 s crea Tierra Santa de radio 2 durante '+hvSkillNumberForPlayer(hvSkillScale(skill,entity).duration)+' s. Impide reanimaciones y reduce AT y AGI de reanimados enemigos cercanos.';
-  if(skill.id==='HV-221')return 'Si muere un aliado a 2 casillas o menos, protege su cadáver de reanimaciones enemigas. Los aliados compatibles todavía pueden revivirlo. Recarga 30 s.';
   if(skill.id==='HV-186')return 'Al recibir Maldición de Debilidad o Lentitud, puede reflejar la mitad de su potencia al hechicero, cancelándola en esta unidad. Recarga 30 s; no refleja Exorcismo.';
-  if(skill.id==='HV-195')return 'Mientras combate a distancia, intenta retirarse del cuerpo a cuerpo a una casilla libre, sin abandonar la proximidad obligatoria del líder.';
-  if(skill.id==='HV-197')return 'Busca una casilla lateral libre junto al objetivo para flanquearlo. Tras esa maniobra, gana +'+power+' AT en un ataque contra ese objetivo. Recarga 30 s.';
-  if(skill.id==='HV-201')return 'Si se desplazó antes de atacar a un objetivo adyacente, gana la bonificación AT de esta habilidad en ese ataque. Recarga 30 s.';
   if(skill.id==="HV-242"&&String(entity?.key||"")==="african_elephant")return "Pisotón: al acertar un ataque cuerpo a cuerpo, golpea a los enemigos adyacentes (rango 1) con "+(1+power)+" de daño cada uno. Consume Guardia antes de Vida. Cada enemigo alcanzado tiene 25 % de probabilidad de perder su próximo movimiento. Se activa una sola vez y espera 30 segundos de recarga. Es independiente de Arremetida Colosal.";
-  if(skill.id==="HV-024")return "Después de un disparo, retrocede una casilla hacia una posición libre y más alejada del enemigo. Recarga: 30 segundos.";
-  if(skill.id==="HV-143")return "Después de atacar, se repliega una casilla libre si puede alejarse del objetivo. Recarga: 30 segundos.";
   if(skill.id==="HV-173")return "Al defenderse de un ataque a distancia, reduce el daño de ese ataque según su rareza. Recarga: 30 segundos.";
   if(skill.id==="HV-185")return "Pasiva: revela a enemigos en Sigilo a 3 casillas o menos. No tiene recarga.";
   if(skill.id==="HV-192")return "Al acertar un ataque cuerpo a cuerpo contra un enemigo de menor Vida máxima, causa daño adicional según rareza (primero Guardia) y lo empuja una casilla si hay espacio. Recarga: 30 segundos. No requiere desplazamiento previo.";
-  if(skill.id==="HV-194")return "Después de atacar contra un enemigo más ofensivo que la Guardia propia, retrocede a una casilla libre si aumenta distancia. Recarga: 30 segundos.";
   if(skill.id==="HV-202")return "Aura pasiva: toda la caballería aliada obtiene +1 DX y +1 MOV mientras esta unidad esté en batalla. No se acumula.";
   if(skill.id==="HV-166")return "Al fijar un objetivo, reduce "+power+" AT en su próximo ataque. Recarga: 30 segundos.";
   if(skill.id==="HV-167")return "Al atacar a un enemigo, reduce "+power+" GD durante la defensa contra ese ataque. Recarga: 30 segundos.";

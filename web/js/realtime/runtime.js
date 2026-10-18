@@ -20,6 +20,7 @@ async function hallvallaRtLoop(){
     await hallvallaRtSafeStage("IA",()=>hallvallaRtAiDeploy(now));
     // El ciclo táctico abre primero; después se aplican buffs/efectos para que duren el ciclo completo.
     await hallvallaRtSafeStage("ciclo táctico TR",()=>hallvallaRtCombatRefreshTick(now));
+    await hallvallaRtSafeStage("mantenimiento de reanimados",()=>hallvallaRtReanimatedUpkeepTick(now));
     await hallvallaRtSafeStage("efectos de líder",()=>hallvallaRtLeaderEffectsTick(now));
     await hallvallaRtSafeStage("estados especiales del líder",()=>hallvallaRtLeaderSkillDotTick(now));
     await hallvallaRtSafeStage("soporte",()=>hallvallaRtSupportTick(now));

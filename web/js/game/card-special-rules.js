@@ -488,34 +488,58 @@ function getErictoEligibleCorpses(_ericto,graveyard=publicState?.erictoGraveyard
   return applyHallvallaValueHooks("ericto.eligibleCorpses",corpses,{ericto:_ericto,graveyard});
 }
 function resolveErictoLifecycle(afterUnits=[]){
-  let units=[...(afterUnits||[])],logs=[];
-  for(let guard=0;guard<8;guard++){
-    const liveIds=new Set(units.filter(u=>u&&u.key==="ericto"&&Number(u.hp||0)>0).map(u=>u.id));
-    const dismissed=units.filter(u=>u?.reanimated&&!liveIds.has(u.reanimatedByErictoId));
-    if(!dismissed.length)break;
-    const dismissedIds=new Set(dismissed.map(u=>u.id));
-    dismissed.forEach(u=>logs.push(`${u.name} regresa al cementerio al romperse la necromancia de Ericto.`));
-    units=units.filter(u=>!dismissedIds.has(u.id));
-  }
-  units=units.filter(u=>Number(u.hp||0)>0);
-  return {units,logs};
+  // v308: los reanimados se mantienen con la Vida del líder, no con la vida de Ericto.
+  return {units:[...(afterUnits||[])].filter(u=>u&&Number(u.hp||0)>0),logs:[]};
 }
-function applyErictoCycleUpkeep(units,owner){
-  let out=[...(units||[])],logs=[],noClockKillIds=[];
-  const erictos=out.filter(u=>u.owner===owner&&u.key==="ericto"&&Number(u.hp||0)>0);
-  for(const ericto of erictos){
-    const count=getErictoLinkedReanimated(ericto,out).length;
-    if(count<=0)continue;
-    out=out.map(u=>u.id===ericto.id?{...u,hp:Number(u.hp||0)-count,damagedThisWindow:true,erictoUpkeepPaidWindowKey:publicState?.combatWindowKey||""}:u);
-    const after=out.find(u=>u.id===ericto.id);
-    logs.push(`Necromancia de Farsalia: ${ericto.name} pierde ${count} Vida inevitable por mantener ${count} reanimado${count===1?"":"s"}.`);
-    if(!after||Number(after.hp||0)<=0)noClockKillIds.push(ericto.id);
+// v308: desaparece el pago legado cada 10 s de Ericto.
+function applyHallvallaReanimatedUpkeep(units, now=Date.now(), ownerFilter=0){
+  const next=[...(units||[])],logs=[];
+  const period=30000;
+  let changed=false,paid=0,dismissed=0;
+  for(const owner of [1,2]){
+    if(Number(ownerFilter)>0&&Number(ownerFilter)!==owner)continue;
+    const leader=next.find(u=>u&&u.leader&&Number(u.owner)===owner&&Number(u.hp||0)>0);
+    // Orden estable por vencimiento y por ID. Cada reanimado paga su propia cuota.
+    const revivedList=next.filter(u=>u&&u.reanimated&&!u.leader&&Number(u.owner)===owner&&Number(u.hp||0)>0)
+      .sort((a,b)=>Number(a.hvReanimationUpkeepDueAt||0)-Number(b.hvReanimationUpkeepDueAt||0)||String(a.id).localeCompare(String(b.id)));
+    let available=Number(leader?.hp||0);
+    for(const revived of revivedList){
+      const i=next.findIndex(u=>u?.id===revived.id);
+      if(i<0)continue;
+      if(!leader){
+        next.splice(i,1);dismissed++;changed=true;
+        logs.push(revived.name+' abandona el campo: cayó su líder.');
+        continue;
+      }
+      const deadline=Number(revived.hvReanimationUpkeepDueAt||0);
+      if(!deadline){
+        // Compatibilidad con reanimados de partidas anteriores: primera cuota en 30 s.
+        next[i]={...revived,hvReanimationUpkeepDueAt:now+period};changed=true;
+        continue;
+      }
+      if(now<deadline)continue;
+      const cost=Math.max(1,Math.min(8,typeof hvSkillRarityIndex==='function'?hvSkillRarityIndex(revived):1));
+      if(available<=cost){
+        // No se mata automáticamente al líder por mantenimiento: se pierde la unidad impagable.
+        next.splice(i,1);dismissed++;changed=true;
+        logs.push(revived.name+' abandona el campo: no se pueden pagar '+cost+' Vida.');
+        continue;
+      }
+      available-=cost;paid+=cost;changed=true;
+      next[i]={...revived,hvReanimationUpkeepDueAt:now+period};
+    }
+    if(leader&&available!==Number(leader.hp||0)){
+      const i=next.findIndex(u=>u?.id===leader.id);
+      if(i>=0)next[i]={...next[i],hp:available,damagedThisWindow:true};
+      logs.push('Mantenimiento de reanimados: '+leader.name+' paga '+(Number(leader.hp||0)-available)+' Vida.');
+    }
   }
-  return {units:out,logs,noClockKillIds};
+  return {units:next,logs,changed,paid,dismissed};
 }
+
 function resetErictoReanimatedTransientState(snapshot){
   const n={...(snapshot||{})};
-  ["id","x","y","nexoX","nexoY","owner","hp","moved","acted","defenseModeReady","damagedThisWindow","lastMoveStraightDistance","lastMoveDistance","lastMoveDx","lastMoveDy","lastMoveWindowKey","summonedWindowKey","summonedWindowIndex","summonedRuntimeMode","yiSunDebuffed","tempAtkBuff","tempGuardBuff","tempDexBuff","tempAgiBuff","tempMovBuff","tempAtkDebuff","tempGuardDebuff","tempDexDebuff","tempAgiDebuff","tempMovDebuff","burnTurns","burnDamage","burnPersistent","burnSource","bleedTurns","bleedDamage","bleedSource","poisonTurns","poisonDamage","poisonBaseDamage","poisonMaxDamage","poisonPersistent","poisonSource","stunnedUntilWindowKey","noDefWindowKey","noHealWindowKey","solomonOrder","solomonUsedEntities","solomonCurrentEntity","solomonPending","solomonSummon","solomonSourceId","solomonSealSourceId","mulanFirstAttackUsed","mulanRepositionReady","mulanFollowupReady","mulanExecutionMoveReady","mulanExecutionChoiceReady","khalidChainReady","khalidAttackPenalty","richardHpGrowth","richardBuffSource","richardBuffStacks","richardGrowthLastWindowIndex","alexanderHpGrowth","alexanderGrowthLastWindowIndex","joanGuardBuff","joanGuardUntilWindowIndex","joanLastProcWindowIndex","genghisGuardDebuff","genghisGuardUntilWindowIndex","genghisMovDebuff","genghisMovDebuffWindowKey","genghisMovDebuffSource","hvOrbGainedAtk","hvOrbLostBySource"].forEach(k=>delete n[k]);
+  ["id","x","y","nexoX","nexoY","owner","hp","moved","acted","defenseModeReady","damagedThisWindow","lastMoveStraightDistance","lastMoveDistance","lastMoveDx","lastMoveDy","lastMoveWindowKey","summonedWindowKey","summonedWindowIndex","summonedRuntimeMode","yiSunDebuffed","tempAtkBuff","tempGuardBuff","tempDexBuff","tempAgiBuff","tempMovBuff","tempAtkDebuff","tempGuardDebuff","tempDexDebuff","tempAgiDebuff","tempMovDebuff","burnTurns","burnDamage","burnPersistent","burnSource","bleedTurns","bleedDamage","bleedSource","poisonTurns","poisonDamage","poisonBaseDamage","poisonMaxDamage","poisonPersistent","poisonSource","stunnedUntilWindowKey","noDefWindowKey","noHealWindowKey","solomonOrder","solomonUsedEntities","solomonCurrentEntity","solomonPending","solomonSummon","solomonSourceId","solomonSealSourceId","mulanFirstAttackUsed","mulanRepositionReady","mulanFollowupReady","mulanExecutionMoveReady","mulanExecutionChoiceReady","khalidChainReady","khalidAttackPenalty","richardHpGrowth","richardBuffSource","richardBuffStacks","richardGrowthLastWindowIndex","alexanderHpGrowth","alexanderGrowthLastWindowIndex","joanGuardBuff","joanGuardUntilWindowIndex","joanLastProcWindowIndex","genghisGuardDebuff","genghisGuardUntilWindowIndex","genghisMovDebuff","genghisMovDebuffWindowKey","genghisMovDebuffSource","hvOrbGainedAtk","hvOrbLostBySource","hvReanimationUpkeepDueAt","erictoUpkeepPaidWindowKey"].forEach(k=>delete n[k]);
   return n;
 }
 function makeErictoReanimatedUnit(ericto,record,cell){
@@ -531,7 +555,7 @@ function makeErictoReanimatedUnit(ericto,record,cell){
     summonedWindowKey:publicState?.combatWindowKey||"",summonedWindowIndex:publicState?.combatWindowIndex||0,summonedRuntimeMode:getRuntimeMode?.()||"continuous",
     hallvallaReadyOnSummon:false,
     summonOrigin:"reanimation",fieldGeneratedSummon:true,
-    reanimated:true,reanimatedByErictoId:ericto.id,reanimatedFromGraveId:record.graveId,reanimatedOriginalUnitId:record.originalUnitId,
+    reanimated:true,hvReanimationUpkeepDueAt:Date.now()+30000,reanimatedByErictoId:ericto.id,reanimatedFromGraveId:record.graveId,reanimatedOriginalUnitId:record.originalUnitId,
     text:record?.snapshot?.text||record?.snapshot?.effectText||record?.snapshot?.ability||""
   };
 }

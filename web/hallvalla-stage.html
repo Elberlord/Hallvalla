@@ -27,10 +27,11 @@
 </script>
 <title>HallValla v8 Modular · Stage 10.3 · Forja + trampas</title>
 <meta name="application-name" content="HallValla">
-<meta name="hallvalla-version" content="20261018.303">
-<meta name="hallvalla-build" content="v8_MODULAR_20261018.303">
+<meta name="hallvalla-version" content="20261018.308">
+<meta name="hallvalla-build" content="v8_MODULAR_20261018.308">
 <meta name="hallvalla-build-name" content="Design Stage fijo 1366×636 · v192 arquitectura modular · canon v191 preservado">
 <link rel="stylesheet" href="styles.css?h=79f4417ae47f"/>
+<link rel="stylesheet" href="styles/pvp-join-field.css?v=308"/>
 <link rel="stylesheet" href="styles/mvp-result.css?v=276"/>
 <link rel="stylesheet" href="styles/leader-nine-skills.css?v=278"/>
 <link rel="stylesheet" href="styles/forge-leader-portraits.css?v=279"/>
@@ -1309,8 +1310,9 @@
       <img data-hv-src="assets/modal/btn_create_match.webp" data-hv-asset-group="pvp-lobby" decoding="async" alt="">
     </button>
 
-    <div class="visual-input-wrap">
-      <input id="joinCode" class="visual-code-input" aria-label="Código de partida" maxlength="8" autocomplete="off"/>
+    <div class="visual-input-wrap" data-hv-join-code-visible="308">
+      <label for="joinCode" class="hv-join-code-label">CÓDIGO DE PARTIDA</label>
+      <input id="joinCode" class="visual-code-input" type="text" aria-label="Código de partida de ocho caracteres" placeholder="ESCRIBE EL CÓDIGO" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text"/>
     </div>
 
     <button id="joinBtn" class="visual-btn visual-join" type="button" aria-label="Unirse">

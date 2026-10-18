@@ -1,0 +1,35 @@
+/* HallValla v308 · El mismo #joinCode existente, visible encima del botón Unirse. */
+#onlineLobby .online-modal-art .visual-input-wrap[data-hv-join-code-visible="308"] {
+  position:absolute!important;left:55.5%!important;top:61%!important;width:27%!important;
+  min-width:270px!important;height:auto!important;box-sizing:border-box!important;
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  gap:5px!important;margin:0!important;padding:6px 11px 8px!important;transform:none!important;
+  z-index:40!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important;
+  border:2px solid rgba(232,185,87,.95)!important;border-radius:9px!important;
+  background:linear-gradient(180deg,rgba(24,19,13,.96),rgba(8,12,17,.96))!important;
+  box-shadow:inset 0 1px 0 rgba(255,224,151,.25),0 3px 14px rgba(0,0,0,.87),0 0 13px rgba(208,140,41,.26)!important;
+}
+#onlineLobby .online-modal-art .hv-join-code-label {
+  display:block!important;color:#fbe0a5!important;font:700 13px/1.2 Georgia,serif!important;
+  letter-spacing:.15em!important;text-align:center!important;text-shadow:0 1px 3px #000!important;
+}
+#onlineLobby .online-modal-art #joinCode.visual-code-input {
+  position:relative!important;inset:auto!important;display:block!important;
+  width:100%!important;min-width:0!important;height:37px!important;min-height:37px!important;
+  box-sizing:border-box!important;margin:0!important;padding:3px 9px!important;transform:none!important;
+  opacity:1!important;visibility:visible!important;pointer-events:auto!important;
+  color:#fff3d6!important;caret-color:#fbd77b!important;-webkit-text-fill-color:#fff3d6!important;
+  background:rgba(4,8,13,.98)!important;border:1px solid #c89c4c!important;
+  border-radius:5px!important;outline:none!important;
+  box-shadow:inset 0 1px 7px rgba(0,0,0,.92)!important;
+  font:700 19px/1.2 Consolas,monospace!important;text-align:center!important;
+  letter-spacing:.12em!important;text-transform:uppercase!important;
+}
+#onlineLobby .online-modal-art #joinCode::placeholder {
+  color:#baa778!important;opacity:1!important;-webkit-text-fill-color:#baa778!important;
+  font:600 12px/1.4 Georgia,serif!important;letter-spacing:.12em!important;
+}
+#onlineLobby .online-modal-art #joinCode:focus {
+  border-color:#ffe5a7!important;box-shadow:0 0 0 2px rgba(245,200,101,.6),0 0 18px rgba(251,216,128,.45)!important;
+}
+#onlineLobby .online-modal-art.pvp-room-active .visual-input-wrap[data-hv-join-code-visible="308"]{display:none!important}
