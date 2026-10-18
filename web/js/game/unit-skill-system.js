@@ -307,6 +307,7 @@ function hvSkillChoose(pendingId,skillId){
 }
 
 function hvSkillDescribe(skill,entity){
+  if(skill?.simple)return hvSkillPlayerText(skill,entity);
   const scaled=hvSkillScale(skill,entity),parts=[];
   if(scaled.value!==null&&String(skill.scale||"").trim())parts.push(`${skill.scale}: ${Number(scaled.value.toFixed?.(2)??scaled.value)}`);
   if(scaled.proc!==null)parts.push(`Probabilidad: ${Math.round(scaled.proc)}%`);
@@ -457,6 +458,15 @@ function hvSkillConsumeSimpleBuff(buff,action){
   const stats={...(buff.stats||{})};for(const k of keys)delete stats[k];
   return Object.values(stats).some(v=>Number(v||0)>0)?{...buff,stats}:null;
 }
+function hvSkillFinalizeDefenderNextAction(unit){
+  if(!unit)return unit;
+  const next={...unit,
+    hvNextDefenseAgiDebuff:Math.max(0,Number(unit.hvPendingNextDefenseAgiDebuff||0)),
+    hvNextDefenseGuardDebuff:Math.max(0,Number(unit.hvPendingNextDefenseGuardDebuff||0))};
+  delete next.hvPendingNextDefenseAgiDebuff;
+  delete next.hvPendingNextDefenseGuardDebuff;
+  return next;
+}
 function hvSimpleReadySkill(unit,kind,now=Date.now()){
   return hvSkillEntries(unit).find(skill=>skill?.simple?.kind===kind&&hvSkillCooldownReady(unit,skill,now))||null;
 }
@@ -524,8 +534,8 @@ function hvSimpleHitEffects(units,attacker,defender,now=Date.now()){
     updateTarget(u=>{
       if(effect==="weaken_atk")return {...u,hvNextAttackAtkDebuff:Math.max(Number(u.hvNextAttackAtkDebuff||0),power)};
       if(effect==="weaken_dex")return {...u,tempDexDebuff:Math.max(Number(u.tempDexDebuff||0),power)};
-      if(effect==="weaken_agi")return {...u,tempAgiDebuff:Math.max(Number(u.tempAgiDebuff||0),power)};
-      return {...u,tempGuardBuff:Number(u.tempGuardBuff||0)-power};
+      if(effect==="weaken_agi")return {...u,hvPendingNextDefenseAgiDebuff:Math.max(Number(u.hvPendingNextDefenseAgiDebuff||0),power)};
+      return {...u,hvPendingNextDefenseGuardDebuff:Math.max(Number(u.hvPendingNextDefenseGuardDebuff||0),power)};
     });
   }else if(["slow_move","slow_attack","slow_both"].includes(effect)&&typeof withHallvallaTimingPenalty==="function"){
     const moveMs=effect==="slow_attack"?0:150*power;
@@ -934,7 +944,7 @@ function applyHallvallaUnitSkillAttackEffects(units,attacker,defender,context={}
 
 function hvSkillClearNegativeStates(unit){
   let n={...unit};
-  for(const key of ["bleedTurns","bleedCyclesRemaining","bleedDamage","bleedSource","poisonTurns","poisonStage","poisonDamage","poisonBaseDamage","poisonMaxDamage","poisonPersistent","poisonSourceId","poisonSourceName","burnTurns","burnDamage","burnPersistent","burnSource","rtTimingPenalties","attackTimePenaltyMs","moveTimePenaltyMs","attackTimePenaltyUntil","moveTimePenaltyUntil","rtMoveLockedUntil","rtAttackLockedUntil","rtStunnedUntil","rtSilencedUntil","hvNextAttackAtkDebuff","hvNextDefenseAgiDebuff","hvNextMoveDelayMs","hvNextMoveSkip","veilCurseCyclesRemaining","veilCurseSourceId","veilCurseSourceKey","veilCurseSourceName","veilCurseSourceOwner","veilCurseSourcePortrait","veilCurseSourceRarity","veilCurseAppliedWindowKey"])delete n[key];
+  for(const key of ["bleedTurns","bleedCyclesRemaining","bleedDamage","bleedSource","poisonTurns","poisonStage","poisonDamage","poisonBaseDamage","poisonMaxDamage","poisonPersistent","poisonSourceId","poisonSourceName","burnTurns","burnDamage","burnPersistent","burnSource","rtTimingPenalties","attackTimePenaltyMs","moveTimePenaltyMs","attackTimePenaltyUntil","moveTimePenaltyUntil","rtMoveLockedUntil","rtAttackLockedUntil","rtStunnedUntil","rtSilencedUntil","hvNextAttackAtkDebuff","hvNextDefenseAgiDebuff","hvNextDefenseGuardDebuff","hvPendingNextDefenseAgiDebuff","hvPendingNextDefenseGuardDebuff","hvNextMoveDelayMs","hvNextMoveSkip","veilCurseCyclesRemaining","veilCurseSourceId","veilCurseSourceKey","veilCurseSourceName","veilCurseSourceOwner","veilCurseSourcePortrait","veilCurseSourceRarity","veilCurseAppliedWindowKey"])delete n[key];
   return n;
 }
 function hvSkillNearestWounded(caster,units){
@@ -960,7 +970,7 @@ async function hallvallaRtAutoUnitSkills(caster,now=Date.now()){
       log=`${live.name} usa ${skill.name}: ${target.name} recupera ${value} HP.`;changed=true;statusFxEvent=hvSkillStatusEvent("heal",target,value);
     }else if(skill.name==="Purificación"){
       const target=(units||[]).filter(u=>u&&u.owner===live.owner&&!u.leader&&u.id!==live.id&&Number(u.hp||0)>0&&
-        ((typeof hasVeilCurse==="function"&&hasVeilCurse(u))||Number(u.hvNextAttackAtkDebuff||0)>0||Number(u.hvNextDefenseAgiDebuff||0)>0||Number(u.hvNextMoveDelayMs||0)>0||u.bleedDamage||u.poisonDamage||u.burnDamage||u.rtStunnedUntil||u.rtTimingPenalties?.length))
+        ((typeof hasVeilCurse==="function"&&hasVeilCurse(u))||Number(u.hvNextAttackAtkDebuff||0)>0||Number(u.hvNextDefenseAgiDebuff||0)>0||Number(u.hvNextDefenseGuardDebuff||0)>0||Number(u.hvPendingNextDefenseAgiDebuff||0)>0||Number(u.hvPendingNextDefenseGuardDebuff||0)>0||Number(u.hvNextMoveDelayMs||0)>0||u.bleedDamage||u.poisonDamage||u.burnDamage||u.rtStunnedUntil||u.rtTimingPenalties?.length))
         .sort((a,b)=>{
           const priority=u=>(typeof hasVeilCurse==="function"&&hasVeilCurse(u))
             ?(Number(u.veilCurseCyclesRemaining||3)===1?100:50):0;
@@ -1220,7 +1230,7 @@ function hvSkillNumberForPlayer(value){
 function hvSkillSimplePlayerText(skill,entity){
   const scaled=hvSkillScale(skill,entity),simple=skill?.simple;
   if(!simple)return "";
-  const power=Math.max(1,Math.min(6,Math.round(Number(scaled.value||1))));
+  const power=hvSimplePower(entity);
   const duration=Math.max(1,Math.round(Number(simple.seconds||scaled.duration||3)));
   const cd=30;
   const stats=Array.isArray(simple.stats)?simple.stats:[];
@@ -1780,6 +1790,7 @@ Object.assign(globalThis,{
   hvSkillActiveIds,
   hvSkillEntries,
   hvSkillConsumeSimpleBuff,
+  hvSkillFinalizeDefenderNextAction,
   getHallvallaUnitSkillSectionsForEntity,
   openHallvallaEffectsGlossary,
   hvGlossaryEntries,

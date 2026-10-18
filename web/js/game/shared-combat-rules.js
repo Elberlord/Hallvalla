@@ -508,7 +508,7 @@ function maxWindowGuard(u){
   const base=typeof u.baseGuard==="number"?u.baseGuard:(u.guard||0);
   return Math.max(0,base+(getLeaderBonus(u).guard||0));
 }
-function effectiveGuard(u){return Math.max(0,(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"guard"):0)+(u?.guard||0)+(u?.tempGuardBuff||0)+getJoanGuardBuff(u)-getGenghisGuardDebuff(u)-getRtTrapDebuff(u,"guard")+hectorGuardAura(u)+achillesConcentrationGuard(u)+attilaEnemyAura(u).guard+solomonJinnGuardAura(u)+hoplitePhalanxGuard(u)+(typeof hvLeaderSkillGuard==="function"?hvLeaderSkillGuard(u):0))}
+function effectiveGuard(u){return Math.max(0,(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"guard"):0)+(u?.guard||0)+(u?.tempGuardBuff||0)-Number(u?.hvNextDefenseGuardDebuff||0)+getJoanGuardBuff(u)-getGenghisGuardDebuff(u)-getRtTrapDebuff(u,"guard")+hectorGuardAura(u)+achillesConcentrationGuard(u)+attilaEnemyAura(u).guard+solomonJinnGuardAura(u)+hoplitePhalanxGuard(u)+(typeof hvLeaderSkillGuard==="function"?hvLeaderSkillGuard(u):0))}
 function displayEffectiveGuard(u){return Math.max(0,effectiveGuard(u)+(u?.defenseModeReady?2:0))}
 function getEvasionPressure(u){return Math.max(0,Number(u?.evasionSpent||0))}
 function getBaseEvasionScore(u){return Math.max(0,effectiveDex(u)+effectiveAgi(u))}

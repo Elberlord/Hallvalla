@@ -1129,7 +1129,7 @@ async function resolveSharedAttackOutcome({
       grab?hvCardMark(constrict?hvCardMark(u,"constriccion"):u,"agarre"):hvCardMark(u,"constriccion")
     ):u.id===d.id?{...u,
       hvNextMoveDelayMs:constrict?Math.max(Number(u.hvNextMoveDelayMs||0),rank*1000):u.hvNextMoveDelayMs,
-      hvNextDefenseAgiDebuff:constrict?Math.max(Number(u.hvNextDefenseAgiDebuff||0),rank):u.hvNextDefenseAgiDebuff,
+      hvPendingNextDefenseAgiDebuff:constrict?Math.max(Number(u.hvPendingNextDefenseAgiDebuff||0),rank):u.hvPendingNextDefenseAgiDebuff,
       hvNextMoveSkip:grab||u.hvNextMoveSkip===true
     }:u);
   }
@@ -1294,7 +1294,7 @@ async function resolveSharedAttackOutcome({
     attackerAfter=units.find(u=>u.id===attackerAfter.id)||attackerAfter;
     const cHit=rollHit(defenderAfter,attackerAfter,cMods);
     const cSpend=spendActionStatsByAttack(defenderAfter,attackerAfter,units,cMods,cHit);
-    units=cSpend.units.map(u=>u.id===defenderAfter.id?{...u,hvSimpleBuff:typeof hvSkillConsumeSimpleBuff==="function"?hvSkillConsumeSimpleBuff(u.hvSimpleBuff,"attack"):u.hvSimpleBuff}:u.id===attackerAfter.id?{...u,hvSimpleBuff:typeof hvSkillConsumeSimpleBuff==="function"?hvSkillConsumeSimpleBuff(u.hvSimpleBuff,"defense"):u.hvSimpleBuff}:u);
+    units=cSpend.units.map(u=>u.id===defenderAfter.id?{...u,hvSimpleBuff:typeof hvSkillConsumeSimpleBuff==="function"?hvSkillConsumeSimpleBuff(u.hvSimpleBuff,"attack"):u.hvSimpleBuff}:u.id===attackerAfter.id?{...u,hvNextDefenseAgiDebuff:0,hvNextDefenseGuardDebuff:0,hvSimpleBuff:typeof hvSkillConsumeSimpleBuff==="function"?hvSkillConsumeSimpleBuff(u.hvSimpleBuff,"defense"):u.hvSimpleBuff}:u);
     defenderAfter=units.find(u=>u.id===defenderAfter.id)||defenderAfter;
     if(cHit.hit){
       let cGuard=0,cHp=0,counterHannibalSplitText="";
@@ -1408,7 +1408,8 @@ async function resolveSharedAttackOutcome({
       tempDexDebuff:u.solomonSealSourceId?Math.min(3,Math.max(0,Number(u.tempDexDebuff||0))):0,
       fearWindowKey:"",fearSourceName:"",movedSpaces:0
     }:u.id===d.id?{...u,
-      hvNextDefenseAgiDebuff:0,hvSunTzuNextDefenseGuard:0,tempAgiBuff:0,
+      ...(typeof hvSkillFinalizeDefenderNextAction==="function"?hvSkillFinalizeDefenderNextAction(u):{...u,hvNextDefenseAgiDebuff:0,hvNextDefenseGuardDebuff:0}),
+      hvSunTzuNextDefenseGuard:0,tempAgiBuff:0,
       hvSimpleBuff:typeof hvSkillConsumeSimpleBuff==="function"?hvSkillConsumeSimpleBuff(u.hvSimpleBuff,"defense"):u.hvSimpleBuff,
       tempAgiDebuff:u.solomonSealSourceId?Math.min(2,Math.max(0,Number(u.tempAgiDebuff||0))):0,
       tempGuardBuff:u.yiSunDebuffed?Math.min(0,Number(u.tempGuardBuff||0)):0
