@@ -73,11 +73,32 @@ function hallvallaRtCrowdPenalty(cell,owner,units){
   }
   return adjacent*.28+sameLane*.08;
 }
+function hallvallaRtLeaderHoldRadius(unit,units=publicState?.units||[]){
+  if(!unit||unit.leader)return 0;
+  const leader=hallvallaRtGetOwnerLeader(unit.owner,units);
+  if(!leader||Number(leader.hp||0)<=0)return 0;
+  if(leader.leaderType==="mage"&&typeof isMageUnitCardLike==="function"&&isMageUnitCardLike(unit))return 1;
+  const meta=globalThis.HALLVALLA_UNIT_SKILL_ASSIGNMENTS?.[String(unit.key||"")];
+  const ids=[...(unit.unitSkillIds||[]),...(unit.unitLearnedSkillIds||[]),...(unit.unitSkillRuntimeIds||[]),...(meta?.innate||[])];
+  return ids.includes("HV-232")?2:0;
+}
 function hallvallaRtChooseStep(unit,target,units=publicState?.units||[]){
   if(!unit||!target||isRtTrapLocked(unit,"move",hallvallaRtNow())||Number(typeof effectiveMov==='function'?effectiveMov(unit):unit.mov||0)<=0)return null;
   const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&Number(u.hp||0)>0).map(u=>hallvallaRtCellKey(u.x,u.y)));
   const lane=hallvallaRtStableLane(unit);
   const currentDistance=dist(unit,target);
+  const ownLeader=hallvallaRtGetOwnerLeader(unit.owner,units);
+  const radius=hallvallaRtLeaderHoldRadius(unit,units);
+  if(radius&&ownLeader){
+    const leaderDist=dist(unit,ownLeader);
+    const allowed=hallvallaRtNeighbors(Number(unit.x),Number(unit.y))
+      .filter(c=>!occupied.has(hallvallaRtCellKey(c.x,c.y)))
+      .filter(c=>leaderDist>radius?dist(c,ownLeader)<leaderDist:dist(c,ownLeader)<=radius)
+      .map(c=>({cell:c,dLeader:dist(c,ownLeader),dTarget:dist(c,target)}));
+    if(leaderDist>radius){allowed.sort((a,b)=>a.dLeader-b.dLeader||a.dTarget-b.dTarget);return allowed[0]?.cell||null;}
+    const advance=allowed.filter(c=>c.dTarget<currentDistance).sort((a,b)=>a.dTarget-b.dTarget||a.dLeader-b.dLeader);
+    return advance[0]?.cell||null;
+  }
 
   // TR v119 · estilo MTGB: persecución local directa, sin pathfinding global.
   // Solo se inspeccionan las 8 celdas vecinas y se elige una libre que acerque
@@ -107,8 +128,9 @@ function hallvallaRtChooseSpawnExitStep(unit,units=publicState?.units||[]){
   const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&Number(u.hp||0)>0).map(u=>hallvallaRtCellKey(u.x,u.y)));
   const target=hallvallaRtChooseTarget(unit,units);
   const lane=hallvallaRtStableLane(unit);
+  const radius=hallvallaRtLeaderHoldRadius(unit,units);
   const candidates=hallvallaRtNeighbors(Number(unit.x),Number(unit.y))
-    .filter(cell=>!occupied.has(hallvallaRtCellKey(cell.x,cell.y))&&dist(cell,leader)>1)
+    .filter(cell=>!occupied.has(hallvallaRtCellKey(cell.x,cell.y))&&(radius===1?dist(cell,leader)===1:dist(cell,leader)>1&&(!radius||dist(cell,leader)<=radius)))
     .map(cell=>({cell,score:(target?dist(cell,target)*10:0)+hallvallaRtCrowdPenalty(cell,unit.owner,units)*2+Math.abs(cell.x-lane)*.035}))
     .sort((a,b)=>(a.score-b.score)||(a.cell.y-b.cell.y)||(a.cell.x-b.cell.x));
   return candidates[0]?.cell||null;
@@ -1083,11 +1105,13 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
   for(const id of ids){
     if(moves>=maxMoves)break;
     const live=units.find(u=>u.id===id&&Number(u.hp||0)>0);if(!live||Number(live.rtExiledUntil||0)>now||isRtTrapLocked(live,"move",now))continue;
-    if(hallvallaRtIsRearSupportUnit(live))continue;
     const mulanReposition=live.key==="mulan"&&live.mulanRepositionReady===true;
     const ownLeader=hallvallaRtGetOwnerLeader(live.owner,units);
+    const holdRadius=hallvallaRtLeaderHoldRadius(live,units);
+    if(hallvallaRtIsRearSupportUnit(live)&&(!holdRadius||!ownLeader||dist(live,ownLeader)<=holdRadius))continue;
     const inSpawnRing=!!ownLeader&&dist(live,ownLeader)<=1;
-    const freshSpawn=live.rtSpawnExitPending===true||Number(live.rtSummonedAt||0)>0&&inSpawnRing;
+    // Con vínculo arcano radio 1, salir del anillo rompe el efecto.
+    const freshSpawn=holdRadius===1?false:(live.rtSpawnExitPending===true||Number(live.rtSummonedAt||0)>0&&inSpawnRing);
     // PERF v119: para unidades normales, ni targeting ni steering local se ejecutan
     // hasta que el cooldown real de movimiento vence. La reposición de Hua Lan
     // es una reacción inmediata y, por diseño, no espera ese cooldown.
@@ -1123,12 +1147,14 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
         step=hallvallaRtChooseSpawnExitStep(live,units);
       }
       if(!step){
-        const target=hallvallaRtChooseTarget(live,units);if(!target)continue;
-        // Fuera del corredor de salida, si ya puede atacar conserva su posición.
-        if(hallvallaRtCanAttackNow(live,target))continue;
+        const target=hallvallaRtChooseTarget(live,units);
+        if(!target&&holdRadius>0&&ownLeader&&dist(live,ownLeader)>holdRadius)step=hallvallaRtChooseStep(live,ownLeader,units);
+        if(!target&&!step)continue;
+        // Mantener su puesto si ya puede atacar dentro de su zona.
+        if(target&&hallvallaRtCanAttackNow(live,target))continue;
         if(now-lastMove<Math.max(1000,hallvallaRtMoveCooldown(live)-Math.max(0,Number(live.hvLeaderNextMoveAccelerateMs||0)))+Math.max(0,Number(live.hvNextMoveDelayMs||0)))continue;
-        step=hallvallaRtChooseStep(live,target,units);
-        if(!step){
+        if(!step&&target)step=hallvallaRtChooseStep(live,target,units);
+        if(!step&&target){
           for(const alt of hallvallaRtTargetCandidates(live,units).slice(1)){step=hallvallaRtChooseStep(live,alt,units);if(step)break;}
         }
       }
@@ -1144,7 +1170,8 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
     units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveWindowKey:publicState?.combatWindowKey||'RT',hvNextMoveDelayMs:0,hvLeaderNextMoveAccelerateMs:0,hvNextMoveSkip:false,hvSubotaiNextMoveBoostMs:0,hvSkiparFirstMoveConsumed:u.key==='skipar_del_drakkar'?true:u.hvSkiparFirstMoveConsumed,rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false}:u);
     if(!trapMove.cancel){
       units=units.map(u=>u.id===live.id?(()=>{
-        let n={...u,tempMovBuff:0,tempMovDebuff:0,tempMovDebuffSource:"",movedSpaces:Number(u.movedSpaces||0)};
+        let n={...u,tempMovBuff:0,tempMovDebuff:0,tempMovDebuffSource:"",movedSpaces:Number(u.movedSpaces||0),
+          hvSimpleBuff:typeof hvSkillConsumeSimpleBuff==="function"?hvSkillConsumeSimpleBuff(u.hvSimpleBuff,"move"):u.hvSimpleBuff};
         if(hasUnitEquipment(live,"marching_greaves")&&hvCardReady(live,"eq_marching_greaves"))n=hvCardMark(n,"eq_marching_greaves",false,now);
         return n;
       })():u);

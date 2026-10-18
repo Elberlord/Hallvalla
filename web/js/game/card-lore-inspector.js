@@ -250,13 +250,13 @@ const DET_CARD_EFFECT_SECTIONS={
     {title:"DAÑO DIRECTO",body:"Hace 2 de daño a una unidad o líder rival.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"},
     {title:"MALDICIÓN DE ARENA",body:"Si el objetivo es una unidad, pierde MOV según la regla vigente de Maldición de arena.",icon:"assets/ui/status_icons/status_debuff.webp",kind:"debuff"}
   ],
-  blessing:[{title:"BENDICIÓN DE ATENEA",body:"La unidad aliada elegida obtiene +1 AT durante el ciclo táctico actual.",icon:"assets/ui/status_icons/status_buff.webp",kind:"buff"}],
+  blessing:[{title:"BENDICIÓN DE ATENEA",body:"La unidad aliada elegida obtiene +1 AT para su próximo ataque.",icon:"assets/ui/status_icons/status_buff.webp",kind:"buff"}],
   fireball:[
     {title:"DAÑO DE FUEGO",body:"Hace 2 de daño mágico de Fuego a una unidad o líder rival.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"},
     {title:"QUEMADURA",body:"Si el objetivo es una unidad y puede arder, aplica Quemadura. Los líderes reciben el impacto directo pero no la Quemadura.",icon:"assets/ui/status_icons/status_burn.webp",kind:"debuff"}
   ],
   heal:[{title:"SANACIÓN",body:"Cura 3 HP a una unidad aliada sin superar su Vida máxima. No limpia estados.",icon:"assets/ui/status_icons/status_hp.webp",kind:"buff"}],
-  shield_wall:[{title:"MURO DE ESCUDOS",body:"Otorga +2 Guardia a una unidad aliada durante la duración táctica vigente.",icon:"assets/ui/status_icons/status_guard.webp",kind:"buff"}],
+  shield_wall:[{title:"MURO DE ESCUDOS",body:"Otorga +2 Guardia para la próxima defensa de una unidad aliada.",icon:"assets/ui/status_icons/status_guard.webp",kind:"buff"}],
   smoke_bomb:[
     {title:"BOMBA DE HUMO",body:"Marca una invocación rival con una penalización temporal de movilidad.",icon:"assets/ui/effect_icons/bomba_de_humo.webp",kind:"debuff"},
     {title:"MOV -1",body:"La unidad afectada pierde 1 MOV por 18/15/12 s según sea Básica/Especial/Legendaria.",icon:"assets/ui/status_icons/status_lock.webp",kind:"debuff"},
@@ -316,8 +316,8 @@ const DET_CARD_EFFECT_SECTIONS={
     {title:"GUARDIA +3",body:"En el primer ataque recibido concede +3 Guardia durante ese combate y luego se consume.",icon:"assets/ui/status_icons/status_guard.webp",kind:"buff"}
   ],
   sand_curse_plus:[{title:"DAÑO DE ARENA",body:"Hace 4 de daño a una unidad o líder rival.",icon:"assets/ui/status_icons/status_hp.webp",kind:"effect"}],
-  pharaoh_blessing_plus:[{title:"AT +3",body:"Otorga +3 AT a una unidad aliada durante el ciclo táctico actual.",icon:"assets/ui/status_icons/status_buff.webp",kind:"buff"}],
-  dust_guard_plus:[{title:"GUARDIA +4",body:"Otorga +4 Guardia a una unidad aliada hasta el final del ciclo táctico actual.",icon:"assets/ui/status_icons/status_guard.webp",kind:"buff"}],
+  pharaoh_blessing_plus:[{title:"AT +3",body:"Otorga +3 AT para su próximo ataque.",icon:"assets/ui/status_icons/status_buff.webp",kind:"buff"}],
+  dust_guard_plus:[{title:"GUARDIA +4",body:"Otorga +4 Guardia para su próxima defensa.",icon:"assets/ui/status_icons/status_guard.webp",kind:"buff"}],
 
   // Trampas legendarias
   false_alliance_legendary:[
@@ -455,8 +455,3 @@ function getStatusEntryGlyph(entry={}){
   if(looksLikeGlyph)return raw;
   return getStatusGlyphFromName(`${entry.kind||""} ${raw} ${entry.name||""} ${entry.label||""}`);
 }
-
-
-
-
-
