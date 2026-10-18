@@ -656,8 +656,6 @@ function savePrincipalKeys(){
   try{localStorage.removeItem(HALLVALLA_PRINCIPAL_UNITS_KEY);localStorage.removeItem(HALLVALLA_PRINCIPAL_UNIT_KEY);}catch(_){ }
   return [];
 }
-function sanitizePrincipalKeysForDeck(){return [];}
-function validatePrincipalSelection(){return {valid:true,errors:[],keys:[],principalSlots:0};}
 function isBeastCollectionCard(card){
   if(!card)return false;
   const key=String(card.key||"");
@@ -1001,7 +999,6 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
   const actionBtn=mode==="deck"
     ? `<button class="deck-mini-remove" type="button" data-remove-index="${index}" aria-label="Quitar ${name}">×</button>`
     : (readOnly?"":`<button class="deck-mini-plus${addDisabled?" is-add-locked":""}" type="button" data-add-card="${escapeHtml(card.key||"")}" ${addStateAttrs} aria-label="Añadir ${name} al mazo">+</button>`);
-  const principalBtn="";
   const pendingSkills=card?.type==="unit"&&typeof globalThis.hvSkillDeckUnclaimedCount==="function"
     ?globalThis.hvSkillDeckUnclaimedCount(card.key,mode==="deck"?card.unitCopyId||"":""):0;
   const skillButton=pendingSkills>0
@@ -1013,7 +1010,6 @@ function deckBuilderMiniCardHtml(card,{mode="collection",index=0,disabled=false,
     <div class="deck-mini-art">${getDeckBuilderMiniImageHtml(card)}</div>
     ${newBadge}
     ${actionBtn}
-    ${principalBtn}
     ${skillButton}
   </div>`;
 }

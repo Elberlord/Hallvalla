@@ -960,20 +960,12 @@ function showAdventureGuardianIntro(specialKey=pendingAdventureSpecial,battleId=
     ?makeEnemyDeckForBattle(battle,battle.enemyLeaderType||"mage")
     :[];
   hvPrefetchAdventureBattleContext(battle,pendingAdventureSpecial,previewInitial);
-  const principalKeys=getAiPrincipalKeysForBattle(battle,previewInitial);
-  const principalCards=principalKeys.map(key=>getAdventureDeckCardTemplateByKey(key)).filter(Boolean);
-  const rtPreview=typeof isHallvallaRealtimeRequested==="function"&&isHallvallaRealtimeRequested();
-  const principalLine=principalCards.length
-    ?(rtPreview
-      ?`\nLos Personajes Principales no comienzan desplegados; entran al mazo como unidades normales.`
-      :`\nPersonajes Principales enemigos: ${principalCards.map(card=>card.name).join(", ")}. Comenzarán ya convocados.`)
-    :"";
   const guardianText=$("adventureGuardianText");
   guardianText.replaceChildren();
   const storyText=document.createElement("span");
   storyText.className="guardian-story-main";
   const advanceLine=battle.isGuardian?"":`Derrota a ${battle.enemyName||"el rival"} para avanzar en el mapa.`;
-  storyText.textContent=[battle.enemyIntro||battle.desc,introConflict,advanceLine].filter(Boolean).join("\n\n")+principalLine;
+  storyText.textContent=[battle.enemyIntro||battle.desc,introConflict,advanceLine].filter(Boolean).join("\n\n");
   setAdventureGrimoireContent(battle.isGuardian?battle.title:`${introChapter.number}.${battle.num} ${battle.title}`,battle.enemyIntro||battle.desc,battle.isGuardian?"Guardián":`Mapa ${introChapter.number}${introChapter.levelRange?` · Nivel ${introChapter.levelRange}`:""}`);
   const rewardText=document.createElement("span");
   rewardText.className="guardian-reward-line";
