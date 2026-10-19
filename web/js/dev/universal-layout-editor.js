@@ -25,7 +25,6 @@
     {key:"apuestas.volver",label:"Apuestas · Volver",selector:"#backMenuFromLobby",stage:".online-modal-art",refW:1060,refH:737}
   ];
   const byKey=new Map(TARGETS.map(t=>[t.key,t]));
-  const defaults=()=>({x:0,y:0,scale:1});
   let config={version:1,units:"design-px",targets:{}};
   let selectedKey="matchmaking.player.principal1";
   let editing=false;
@@ -627,7 +626,6 @@
 
   const $=id=>document.getElementById(id);
   const nextFrame=()=>new Promise(resolve=>requestAnimationFrame(()=>resolve()));
-  const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   const isShown=node=>{
     if(!node||node.classList?.contains("hidden"))return false;
     try{
