@@ -1,13 +1,6 @@
 "use strict";
 /* HallValla 7BOARDCTRL8AC · Guías exactas, limpieza final y soporte móvil */
 
-
-
-
-
-
-
-
 function getExactEffectGuideData(entity,effectText=""){
   if(entity?.leader)return getLeaderExactEffectGuideData(entity);
   const name=entity?.name||"Esta carta";
@@ -24,14 +17,6 @@ function getExactEffectGuideData(entity,effectText=""){
   }).filter(Boolean).join("\n\n")||source||"Esta carta no tiene una habilidad especial descrita.";
   return {title:`✦ Efecto exacto: ${name}`,short:"",formula,example:"",hideCombatButton:true,card:entity};
 }
-/* 7HBE: bloque de control/debug eliminado: 7HAV panel de controles en tablero real */
-
-
-/* 7HBE: bloque de control/debug eliminado: 7HAX controles extra */
-
-
-/* 7HBE: bloque de control/debug eliminado: 7HBA controles maestros */
-
 /* ==========================================================
    7HEG · Mobile landscape guard
    ========================================================== */
