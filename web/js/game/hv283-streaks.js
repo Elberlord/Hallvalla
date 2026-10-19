@@ -4,7 +4,7 @@
 (()=>{
   if(globalThis.__HV283_STREAK_ANNOUNCER__)return;
   globalThis.__HV283_STREAK_ANNOUNCER__=true;
-  let session="";
+  let session="",best=null;
   const counts=new Map(),seen=new Set();
   const str=value=>String(value??"");
   const hidden=u=>{
@@ -18,12 +18,13 @@
     }
   };
   function observe(prev,next){
-    if(!prev||!next||!Array.isArray(prev.units)||!Array.isArray(next.units))return;
+    if(!next||!Array.isArray(next.units))return;
     const game=(typeof gameId!=="undefined"?str(gameId):"");
     const match=[game,str(next.createdAt||next.startedAt||next.battleStartedAt||""),str(next.mode||"")].join(":");
-    if(session!==match||prev.phase==="ended"&&next.phase!=="ended"){
-      session=match;counts.clear();seen.clear();
+    if(session!==match||(prev?.phase==="ended"&&next.phase!=="ended")){
+      session=match;counts.clear();seen.clear();best=null;
     }
+    if(!prev||!Array.isArray(prev.units))return;
     const before=new Map(prev.units.filter(u=>u?.id!=null).map(u=>[str(u.id),u]));
     const after=new Map(next.units.filter(u=>u?.id!=null).map(u=>[str(u.id),u]));
     const fx=next.battleFxEvent;
@@ -47,6 +48,11 @@
     const current=(counts.get(attackerId)||0)+confirmed.length;
     counts.set(attackerId,current);
     const tiers={2:["Double Kill","double_kill"],3:["Triple Kill","triple_kill"],4:["Multi Kill","multi_kill"],5:["Penta Kill","penta_kill"],6:["Mega Kill","mega_kill"],7:["Ultra Kill","ultra_kill"],8:["Monster Kill","monster_kill"],9:["God Like","god_like"]};
+    const peak=Math.min(current,9);
+    if(peak>=2&&(!best||peak>best.level)){
+      const [name,key]=tiers[peak];
+      best={level:peak,name,key};
+    }
     for(let level=Math.min(current,9);level>=2;level--){
       if(level>current-confirmed.length){
         const [name,key]=tiers[level];
@@ -68,6 +74,6 @@
       return response;
     };
   }
-  globalThis.hv283Streaks=Object.freeze({version:283});
+  globalThis.hv283Streaks=Object.freeze({version:312,getBest:()=>best?{...best}:null});
   console.info("[HallValla v283] Rachas confirmadas y ascenso heroico conectados.");
 })();

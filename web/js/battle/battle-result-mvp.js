@@ -128,6 +128,14 @@
       }else hero.appendChild(el("div","hv-mvp-figure-missing","Figura oficial no disponible"));
     }else hero.appendChild(el("div","hv-mvp-figure-missing","Sin historial suficiente"));
     layout.appendChild(hero);
+    // El titulo de racha procede del anunciador existente; no altera puntuaciones.
+    let bestStreak=null;
+    try{bestStreak=globalThis.hv283Streaks?.getBest?.()||null;}
+    catch(error){console.warn("[HallValla MVP] Mejor racha",error);}
+    const streakBox=el("aside","hv-mvp-best-streak");
+    streakBox.appendChild(el("div","hv-mvp-best-streak-title","â˜… MEJOR RACHA â˜…"));
+    streakBox.appendChild(el("strong","hv-mvp-best-streak-name",bestStreak?.name||"Sin racha destacada"));
+    layout.appendChild(streakBox);
     const panel=el("div","hv-mvp-info");
     panel.appendChild(el("div","hv-mvp-kicker","★ MVP DE LA BATALLA ★"));
     panel.appendChild(el("h2","hv-mvp-name",mvp?mvp.name:"Sin datos suficientes"));

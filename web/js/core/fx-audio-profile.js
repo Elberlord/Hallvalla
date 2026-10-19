@@ -1126,8 +1126,15 @@ function startSeamlessDuelMusic(name,vol){
   audio.volume=vol;
   currentMusic=audio;
   currentMusicName=name;
+  // v312: si el navegador congela el timer del crossfade, no dejar la batalla muda.
+  audio.addEventListener("ended",()=>{
+    if(generation!==musicLoopGeneration||currentMusic!==audio||currentMusicSecondary||currentMusicName!==name)return;
+    if(!gameSettings.sound||!gameSettings.music)return;
+    try{audio.currentTime=0;audio.play().catch(e=>console.warn("[HallValla Music] Loop de duelo",e));}
+    catch(e){console.warn("[HallValla Music] Reinicio de pista",e);}
+  });
   const playAttempt=audio.play();
-  if(playAttempt&&playAttempt.catch)playAttempt.catch(()=>{});
+  if(playAttempt&&playAttempt.catch)playAttempt.catch(e=>console.warn("[HallValla Music] Inicio de duelo",e));
   musicLoopTimer=setInterval(()=>{
     if(generation!==musicLoopGeneration||currentMusicName!==name||!currentMusic||currentMusicSecondary)return;
     const active=currentMusic;
@@ -1145,7 +1152,7 @@ function startSeamlessDuelMusic(name,vol){
     if(incomingPlay&&incomingPlay.catch)incomingPlay.catch(()=>{
       if(generation!==musicLoopGeneration)return;
       currentMusicSecondary=null;
-      try{outgoing.loop=true;outgoing.volume=currentMusicBaseVolume;}catch(e){}
+      try{outgoing.loop=true;outgoing.volume=currentMusicBaseVolume;if(outgoing.ended){outgoing.currentTime=0;outgoing.play().catch(()=>{});}}catch(e){}
     });
     const fadeStep=(now)=>{
       if(generation!==musicLoopGeneration||currentMusicName!==name)return;
@@ -1239,6 +1246,27 @@ function syncBattleMusic(){
     playMusic("home_theme");
   }else stopMusic(true);
 }
+// v312: restaurar musica solo al reabrirse el campo o al volver la pestaÃ±a.
+// Conservar los ajustes del jugador: no reproducir cuando sonido/musica esten desactivados.
+(function installHv312BattleMusicRecovery(){
+  const shell=document.getElementById("gameShell");
+  if(shell&&typeof MutationObserver==="function"){
+    let wasHidden=shell.classList.contains("hidden");
+    const observer=new MutationObserver(()=>{
+      const hidden=shell.classList.contains("hidden");
+      if(wasHidden&&!hidden){
+        queueMicrotask(()=>{try{syncBattleMusic();}catch(error){console.warn("[HallValla Music] Entrada al campo",error);}});
+      }
+      wasHidden=hidden;
+    });
+    observer.observe(shell,{attributes:true,attributeFilter:["class"]});
+  }
+  document.addEventListener("visibilitychange",()=>{
+    if(!document.hidden&&gameSettings.sound&&gameSettings.music){
+      try{syncBattleMusic();}catch(error){console.warn("[HallValla Music] Reanudacion",error);}
+    }
+  });
+})();
 function getSummonSoundForUnit(unit){
   const cls=getFxRarityClass(unit);
   if(cls==="fx-demigod")return "summon_demigod";
