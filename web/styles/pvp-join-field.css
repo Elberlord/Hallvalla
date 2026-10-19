@@ -1,6 +1,6 @@
-/* HallValla v308 · El mismo #joinCode existente, visible encima del botón Unirse. */
+/* HallValla v311 · Separación visual de #joinCode respecto del botón Unirse. */
 #onlineLobby .online-modal-art .visual-input-wrap[data-hv-join-code-visible="308"] {
-  position:absolute!important;left:55.5%!important;top:61%!important;width:27%!important;
+  position:absolute!important;left:55.5%!important;top:48%!important;width:27%!important;
   min-width:270px!important;height:auto!important;box-sizing:border-box!important;
   display:flex!important;flex-direction:column!important;align-items:stretch!important;
   gap:5px!important;margin:0!important;padding:6px 11px 8px!important;transform:none!important;
@@ -33,3 +33,6 @@
   border-color:#ffe5a7!important;box-shadow:0 0 0 2px rgba(245,200,101,.6),0 0 18px rgba(251,216,128,.45)!important;
 }
 #onlineLobby .online-modal-art.pvp-room-active .visual-input-wrap[data-hv-join-code-visible="308"]{display:none!important}
+
+/* v311: el marcador técnico del lobby se conserva para el motor, pero no se pinta. */
+#onlineLobby .online-modal-art > #lobbyStatus.visual-status { display:none!important; }
