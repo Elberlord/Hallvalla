@@ -1,15 +1,8 @@
 "use strict";
 /* HallValla STAGE8PRIV1 · Interacción de tablero y efectos de unidad */
 
-const STEALTH_BOARD_MASK_SRC="assets/effects/status/stealth/stealth_smoke.webp";
 function isStealthHiddenFromViewer(u){
   return !!u&&typeof isStealthedUnit==="function"&&isStealthedUnit(u)&&u.owner!==myPlayer;
-}
-function getStealthBoardCoverHtml(){
-  return `<span class="stealth-board-cover" aria-label="Presencia Oculta · Sigilo"><img src="${STEALTH_BOARD_MASK_SRC}" alt="" aria-hidden="true" draggable="false"></span>`;
-}
-function getStealthContextPortraitHtml(){
-  return `<span class="stealth-context-cover" aria-label="Presencia Oculta · Sigilo"><img src="${STEALTH_BOARD_MASK_SRC}" alt="" aria-hidden="true" draggable="false"></span>`;
 }
 
 let boardDragListenerDisposers=[];
@@ -91,7 +84,8 @@ function getBoardCellFromPoint(clientX,clientY){
   if(!cell||!grid||!grid.contains(cell))return null;
   const x=Number(cell.dataset.x),y=Number(cell.dataset.y);
   if(!Number.isFinite(x)||!Number.isFinite(y))return null;
-  return {x,y,unit:getUnitAt(x,y)};
+  const unit=getUnitAt(x,y);
+  return {x,y,unit:isStealthHiddenFromViewer(unit)?null:unit};
 }
 function clearBoardDragVisuals({rerender=true}={}){
   dragSummonHighlights=[];
@@ -223,7 +217,8 @@ function flashBoardSelectedCell(x,y){
 }
 
 async function cellClick(x,y){
-  const u=getUnitAt(x,y);
+  const candidate=getUnitAt(x,y);
+  const u=isStealthHiddenFromViewer(candidate)?null:candidate;
   if(selectedCard)return playCardOn(x,y,u);
   if(u)return openUnitContextMenu(u,x,y);
   selectedUnitId=null;
@@ -233,7 +228,7 @@ async function cellClick(x,y){
 
 
 function getUnitPortraitHtml(u,depthLayer=false){
-  if(isStealthHiddenFromViewer(u))return getStealthContextPortraitHtml();
+  if(isStealthHiddenFromViewer(u))return "";
   const alt=escapeHtml(u?.name||"Unidad");
   if(u?.leader){
     const portrait=String(u?.portrait||"")||((u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:"");
@@ -261,7 +256,7 @@ function getUnitPortraitHtml(u,depthLayer=false){
 }
 
 function getBoardUnitPortraitHtml(u){
-  if(isStealthHiddenFromViewer(u))return getStealthContextPortraitHtml();
+  if(isStealthHiddenFromViewer(u))return "";
   if(u?.leader){
     const portrait=String(u?.portrait||"")||((u?.leaderType&&LEADER_DATA[u.leaderType])?LEADER_DATA[u.leaderType].portrait:"");
     if(!portrait)return `<span>${u?.icon||"✦"}</span>`;

@@ -8,6 +8,7 @@
   globalThis.__HV_RESULT_MVP_V1__=true;
 
   const session={id:"",seen:new Set(),units:new Map(),events:0};
+  let currentMvpId="";
   const number=(value)=>{const n=Number(value);return Number.isFinite(n)?n:0;};
   const safe=(value)=>String(value??"");
   const resultKey=(state)=>{

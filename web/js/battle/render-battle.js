@@ -610,37 +610,28 @@ function syncBattleBoardUndeadRemains(record,remain){
   record.remainsKey=remainsKey;
 }
 function getBattleBoardUnitSpec(u,x,y){
-  const stealthed=isStealthedUnit(u);
-  const hiddenFromViewer=stealthed&&u.owner!==myPlayer;
-  const ownerStealth=stealthed&&u.owner===myPlayer;
-  const visualUnitKey=hiddenFromViewer?"stealth":String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase();
-  const principalClass=!hiddenFromViewer&&u.principal?"principal-unit":"";
-  const rarityClass=hiddenFromViewer?"":getCardVisualClass(u);
-  const stealthClass=hiddenFromViewer?"unit-stealthed":(ownerStealth?"unit-stealthed-owner":"");
-  const directSelectedClass=!hiddenFromViewer&&u.owner===myPlayer&&selectedUnitId===u.id&&!selectedCard?"unit-direct-selected":"";
+  const ownerStealth=isStealthedUnit(u)&&u.owner===myPlayer;
+  const visualUnitKey=String(u.key||"unit").replace(/[^a-z0-9_-]/gi,"-").toLowerCase();
+  const principalClass=u.principal?"principal-unit":"";
+  const rarityClass=getCardVisualClass(u);
+  const stealthClass=ownerStealth?"unit-stealthed-owner":"";
+  const directSelectedClass=u.owner===myPlayer&&selectedUnitId===u.id&&!selectedCard?"unit-direct-selected":"";
   const className=`unit-card unit-key-${visualUnitKey} ${u.owner===1?"p1":"p2"} ${u.owner===myPlayer?"ally":"enemy"} ${principalClass} ${stealthClass} ${directSelectedClass} ${rarityClass}`.replace(/\s+/g," ").trim();
-  let markup="";
-  if(hiddenFromViewer){
-    markup=getStealthBoardCoverHtml();
-  }else{
-    const fieldFigureHtml=typeof getFieldFigureHtml==="function"?getFieldFigureHtml(u):"";
-    const boardPortraitHtml=getBoardUnitPortraitHtml(u);
-    const portraitLayerHtml=boardPortraitHtml?`<div class="unit-portrait">${boardPortraitHtml}</div>`:"";
-    const persistentElementFxHtml=getPersistentUnitElementFxHtml(u);
-    markup=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div>${portraitLayerHtml}${fieldFigureHtml}${persistentElementFxHtml}${getVeilCurseCountdownHtml(u)}${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}${u.principal?`<span class="unit-principal-badge" title="Personaje Principal" aria-label="Personaje Principal">★</span>`:""}`;
-  }
+  const fieldFigureHtml=typeof getFieldFigureHtml==="function"?getFieldFigureHtml(u):"";
+  const boardPortraitHtml=getBoardUnitPortraitHtml(u);
+  const portraitLayerHtml=boardPortraitHtml?`<div class="unit-portrait">${boardPortraitHtml}</div>`:"";
+  const persistentElementFxHtml=getPersistentUnitElementFxHtml(u);
+  const markup=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div>${portraitLayerHtml}${fieldFigureHtml}${persistentElementFxHtml}${getVeilCurseCountdownHtml(u)}${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}${u.principal?`<span class="unit-principal-badge" title="Personaje Principal" aria-label="Personaje Principal">★</span>`:""}`;
   return{
-    className,
-    markup,
-    title:hiddenFromViewer?"Presencia Oculta · Sigilo":`${u.name}${u.principal?" · Personaje Principal":""}${ownerStealth?" · Sigilo privado":""} · HP ${getDisplayHp(u)}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`,
-    unitKey:hiddenFromViewer?"stealth":String(u.key||"").trim().toLowerCase(),
-    visibilityTag:hiddenFromViewer?"stealth":(ownerStealth?"stealth-owner":"visible"),
-    invisible:hiddenFromViewer,
-    unitId:String(u.id||""),
-    x:String(x),y:String(y)
+    className,markup,
+    title:`${u.name}${u.principal?" · Personaje Principal":""}${ownerStealth?" · Sigilo privado":""} · HP ${getDisplayHp(u)}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`,
+    unitKey:String(u.key||"").trim().toLowerCase(),
+    visibilityTag:ownerStealth?"stealth-owner":"visible",
+    unitId:String(u.id||""),x:String(x),y:String(y)
   };
 }
 function syncBattleBoardUnit(record,u,x,y){
+  if(u&&isStealthHiddenFromViewer(u))u=null;
   if(!u){
     if(record.unitEl){
       const removedId=String(record.unitEl.dataset?.unitId||"");
@@ -670,7 +661,7 @@ function syncBattleBoardUnit(record,u,x,y){
   el.dataset.visibilityTag=spec.visibilityTag;
   el.dataset.x=spec.x;
   el.dataset.y=spec.y;
-  el.classList.toggle("unit-invisible-to-viewer",spec.invisible);
+
   if(record.unitMarkup!==spec.markup){
     el.innerHTML=spec.markup;
     record.unitMarkup=spec.markup;
@@ -690,7 +681,7 @@ function renderBoard(){
     buildBattleBoardSkeleton(grid,flipSouth);
   }
   const unitsByCell=new Map();
-  (publicState.units||[]).forEach(u=>{if(u&&!u.leader&&Number(u.hp||0)>0)unitsByCell.set(`${u.x},${u.y}`,u);});
+  (publicState.units||[]).forEach(u=>{if(u&&!u.leader&&Number(u.hp||0)>0&&!isStealthHiddenFromViewer(u))unitsByCell.set(`${u.x},${u.y}`,u);});
   const trapsByCell=new Map();
   getBeastTraps(publicState).forEach(trap=>{if(trap)trapsByCell.set(`${trap.x},${trap.y}`,trap);});
   const remainsByCell=new Map();
