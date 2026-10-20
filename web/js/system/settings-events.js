@@ -196,22 +196,7 @@ on("gemsPlusBtn","click",()=>showComingSoon("Comprar gemas"));
 on("fragmentsPlusBtn","click",()=>showComingSoon("Conseguir fragmentos"));
 /* Paquete de bienvenida y cadena de recompensas diarias extraídos a account/rewards.js en v226. */
 
-document.addEventListener("keydown",async(e)=>{
-  if(e.shiftKey && e.key.toLowerCase()==="x"){
-    addPlayerXp(25);
-  }
-  if(e.shiftKey && e.key.toLowerCase()==="l"){
-    selectedLeaderType="";
-    localStorage.removeItem("hallvalla_selected_leader");
-    if(uid){
-      try{await update(ref(db,`users/${uid}/profile`),{leaderType:null,updatedAt:Date.now()});}
-      catch(err){console.warn("No se pudo borrar líder en Firebase:",err);}
-    }
-    leaderProfileLoaded=true;
-    renderSelectedLeaderBadge();
-    requireLeaderSelection(true);
-  }
-});
+
 
 
 

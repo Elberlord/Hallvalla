@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - "windows/**"
-      - "web/**"
       - ".github/workflows/build-hallvalla-windows.yml"
   workflow_dispatch:
 
