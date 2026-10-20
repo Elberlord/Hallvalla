@@ -4,8 +4,8 @@
 (()=>{
   if(globalThis.__HV283_STREAK_ANNOUNCER__)return;
   globalThis.__HV283_STREAK_ANNOUNCER__=true;
-  let session="",best=null;
-  const counts=new Map(),seen=new Set();
+  let session="";
+  const counts=new Map(),seen=new Set(),bestByUnit=new Map();
   const str=value=>String(value??"");
   const hidden=u=>{
     if(!u||u.leader)return false;
@@ -22,7 +22,7 @@
     const game=(typeof gameId!=="undefined"?str(gameId):"");
     const match=[game,str(next.createdAt||next.startedAt||next.battleStartedAt||""),str(next.mode||"")].join(":");
     if(session!==match||(prev?.phase==="ended"&&next.phase!=="ended")){
-      session=match;counts.clear();seen.clear();best=null;
+      session=match;counts.clear();seen.clear();bestByUnit.clear();
     }
     if(!prev||!Array.isArray(prev.units))return;
     const before=new Map(prev.units.filter(u=>u?.id!=null).map(u=>[str(u.id),u]));
@@ -49,9 +49,10 @@
     counts.set(attackerId,current);
     const tiers={2:["Double Kill","double_kill"],3:["Triple Kill","triple_kill"],4:["Multi Kill","multi_kill"],5:["Penta Kill","penta_kill"],6:["Mega Kill","mega_kill"],7:["Ultra Kill","ultra_kill"],8:["Monster Kill","monster_kill"],9:["God Like","god_like"]};
     const peak=Math.min(current,9);
-    if(peak>=2&&(!best||peak>best.level)){
+    const unitBest=bestByUnit.get(attackerId);
+    if(peak>=2&&(!unitBest||peak>unitBest.level)){
       const [name,key]=tiers[peak];
-      best={level:peak,name,key};
+      bestByUnit.set(attackerId,{level:peak,name,key});
     }
     for(let level=Math.min(current,9);level>=2;level--){
       if(level>current-confirmed.length){
@@ -74,6 +75,6 @@
       return response;
     };
   }
-  globalThis.hv283Streaks=Object.freeze({version:312,getBest:()=>best?{...best}:null});
+  globalThis.hv283Streaks=Object.freeze({version:313,getBestFor:id=>{const data=bestByUnit.get(str(id));return data?{...data}:null;}});
   console.info("[HallValla v283] Rachas confirmadas y ascenso heroico conectados.");
 })();

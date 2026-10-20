@@ -934,7 +934,7 @@ function maybePlayBattleFx(prevPub,nextPub){
 */
 const GAME_SETTINGS_KEY="hallvalla_game_settings";
 let gameSettings=loadGameSettings();
-let currentMusic=null,currentMusicName="",audioUnlocked=false,currentMusicSecondary=null,musicLoopTimer=null,musicCrossfadeRaf=null,musicLoopGeneration=0,currentMusicBaseVolume=.32;
+let currentMusic=null,currentMusicName="",audioUnlocked=false;
 function loadGameSettings(){
   try{
     const saved=JSON.parse(localStorage.getItem(GAME_SETTINGS_KEY)||"{}")||{};
@@ -1028,7 +1028,10 @@ async function deleteCurrentFirebaseBattleSafe(){
     return false;
   }
 }
-function unlockAudio(){audioUnlocked=true;syncBattleMusic();}
+function unlockAudio(){
+  // Intentar de nuevo con una interaccion genuina; evita bloqueos de autoplay.
+  if(!audioUnlocked||currentMusic?.paused){audioUnlocked=true;hv313RetryAt=0;syncBattleMusic();}
+}
 function tryStartPageMusicImmediately(){
   try{
     if(!gameSettings.sound||!gameSettings.music)return;
@@ -1045,8 +1048,8 @@ function tryStartPageMusicImmediately(){
   }catch(e){}
 }
 if(typeof window!=="undefined"){
-  window.addEventListener("pointerdown",unlockAudio,{once:true});
-  window.addEventListener("keydown",unlockAudio,{once:true});
+  window.addEventListener("pointerdown",unlockAudio,{passive:true});
+  window.addEventListener("keydown",unlockAudio);
   document.addEventListener("click",ev=>{if(ev.target&&ev.target.closest&&ev.target.closest("button"))tryPlaySound("button_click",.35);},true);
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",tryStartPageMusicImmediately,{once:true});
   else queueMicrotask(tryStartPageMusicImmediately);
@@ -1109,99 +1112,79 @@ function tryPlaySound(name,volume=1){
     audio.play().catch(()=>{});
   }catch(e){}
 }
-const SEAMLESS_DUEL_LOOP_CROSSFADE_SECONDS=5;
-function clearSeamlessMusicLoop(){
-  musicLoopGeneration+=1;
-  if(musicLoopTimer){clearInterval(musicLoopTimer);musicLoopTimer=null;}
-  if(musicCrossfadeRaf){cancelAnimationFrame(musicCrossfadeRaf);musicCrossfadeRaf=null;}
-  if(currentMusicSecondary){try{currentMusicSecondary.pause();currentMusicSecondary.currentTime=0;}catch(e){}currentMusicSecondary=null;}
+// v313: una sola pista en loop nativo; nunca usar pistas duplicadas a volumen cero.
+// La narracion se reproduce por separado en hv280-presentation.js.
+const hv313FailedTracks=new Set();
+let hv313RetryAt=0;
+let hv313LastWarning="";
+function hv313MusicAllowed(){
+  return !!(gameSettings.sound&&gameSettings.music&&clampAudioVolume(gameSettings.musicVolume??.32,.32)>0);
 }
-function startSeamlessDuelMusic(name,vol){
-  const src=audioPath("music",name);
-  const generation=++musicLoopGeneration;
-  currentMusicBaseVolume=vol;
-  const audio=new Audio(src);
-  audio.loop=false;
+function hv313MusicWarning(type,name,error){
+  const message=String(error?.message||error?.name||error||"Error desconocido");
+  const signature=`${type}:${name}:${message}`;
+  if(hv313LastWarning!==signature){
+    hv313LastWarning=signature;
+    console.warn(`[HallValla Music] ${type} ${name}: ${message}`);
+  }
+}
+function hv313TryPlay(audio){
+  if(!audio||currentMusic!==audio||!hv313MusicAllowed()||document.hidden)return;
+  const now=Date.now();
+  if(now<hv313RetryAt)return;
+  hv313RetryAt=now+1200;
+  try{
+    const attempt=audio.play();
+    if(attempt?.then){
+      attempt.then(()=>{if(currentMusic===audio){hv313RetryAt=0;hv313LastWarning="";}})
+        .catch(error=>{if(currentMusic===audio)hv313MusicWarning("Reproduccion rechazada",currentMusicName,error);});
+    }
+  }catch(error){hv313MusicWarning("No se pudo iniciar",currentMusicName,error);}
+}
+function playMusic(name){
+  if(!name||!hv313MusicAllowed()){
+    if(name&&name.startsWith("duel_")&&gameSettings.music===false){
+      hv313MusicWarning("Ajustes desactivan musica",name,"Activa Musica en ajustes del juego");
+    }
+    stopMusic(true);
+    return;
+  }
+  const vol=clampAudioVolume(gameSettings.musicVolume??.32,.32);
+  const isBattleTrack=name.startsWith("duel_");
+  let selected=name;
+  if(isBattleTrack&&hv313FailedTracks.has(selected)){
+    selected=name==="duel_hallvalla_focus"?"duel_hallvalla_war_chant":"duel_hallvalla_focus";
+  }
+  if(isBattleTrack&&hv313FailedTracks.has(selected)){return;}
+  if(currentMusic&&currentMusicName===selected){
+    currentMusic.volume=vol;
+    if(currentMusic.paused)hv313TryPlay(currentMusic);
+    return;
+  }
+  stopMusic(true);
+  const audio=new Audio(audioPath("music",selected));
+  audio.loop=true;
   audio.preload="auto";
   audio.volume=vol;
   currentMusic=audio;
-  currentMusicName=name;
-  // v312: si el navegador congela el timer del crossfade, no dejar la batalla muda.
-  audio.addEventListener("ended",()=>{
-    if(generation!==musicLoopGeneration||currentMusic!==audio||currentMusicSecondary||currentMusicName!==name)return;
-    if(!gameSettings.sound||!gameSettings.music)return;
-    try{audio.currentTime=0;audio.play().catch(e=>console.warn("[HallValla Music] Loop de duelo",e));}
-    catch(e){console.warn("[HallValla Music] Reinicio de pista",e);}
-  });
-  const playAttempt=audio.play();
-  if(playAttempt&&playAttempt.catch)playAttempt.catch(e=>console.warn("[HallValla Music] Inicio de duelo",e));
-  musicLoopTimer=setInterval(()=>{
-    if(generation!==musicLoopGeneration||currentMusicName!==name||!currentMusic||currentMusicSecondary)return;
-    const active=currentMusic;
-    const duration=Number(active.duration||0);
-    if(!Number.isFinite(duration)||duration<=SEAMLESS_DUEL_LOOP_CROSSFADE_SECONDS+1)return;
-    if(duration-Number(active.currentTime||0)>SEAMLESS_DUEL_LOOP_CROSSFADE_SECONDS)return;
-    const incoming=new Audio(src);
-    incoming.loop=false;
-    incoming.preload="auto";
-    incoming.volume=0;
-    currentMusicSecondary=incoming;
-    const fadeStart=performance.now();
-    const outgoing=active;
-    const incomingPlay=incoming.play();
-    if(incomingPlay&&incomingPlay.catch)incomingPlay.catch(()=>{
-      if(generation!==musicLoopGeneration)return;
-      currentMusicSecondary=null;
-      try{outgoing.loop=true;outgoing.volume=currentMusicBaseVolume;if(outgoing.ended){outgoing.currentTime=0;outgoing.play().catch(()=>{});}}catch(e){}
-    });
-    const fadeStep=(now)=>{
-      if(generation!==musicLoopGeneration||currentMusicName!==name)return;
-      const progress=Math.max(0,Math.min(1,(now-fadeStart)/(SEAMLESS_DUEL_LOOP_CROSSFADE_SECONDS*1000)));
-      const base=clampAudioVolume(currentMusicBaseVolume,.32);
-      try{outgoing.volume=base*(1-progress);}catch(e){}
-      try{incoming.volume=base*progress;}catch(e){}
-      if(progress<1){musicCrossfadeRaf=requestAnimationFrame(fadeStep);return;}
-      musicCrossfadeRaf=null;
-      try{outgoing.pause();outgoing.currentTime=0;}catch(e){}
-      if(generation!==musicLoopGeneration)return;
-      currentMusic=incoming;
-      currentMusicSecondary=null;
-      try{incoming.volume=base;}catch(e){}
-    };
-    musicCrossfadeRaf=requestAnimationFrame(fadeStep);
-  },200);
-}
-function playMusic(name){
-  if(!gameSettings.sound||!gameSettings.music||!name){stopMusic(false);return;}
-  const vol=clampAudioVolume(gameSettings.musicVolume??.32,.32);
-  currentMusicBaseVolume=vol;
-  if(currentMusic&&currentMusicName===name){
-    try{
-      if(!currentMusicSecondary)currentMusic.volume=vol;
-      if(currentMusic.paused&&audioUnlocked)currentMusic.play().catch(()=>{});
-    }catch(e){}
-    return;
-  }
-  stopMusic(false);
-  try{
-    if(name==="duel_hallvalla_focus"){
-      startSeamlessDuelMusic(name,vol);
-      return;
+  currentMusicName=selected;
+  hv313RetryAt=0;
+  audio.addEventListener("error",()=>{
+    if(currentMusic!==audio)return;
+    const code=audio.error?.code||"sin codigo";
+    hv313MusicWarning("Error del recurso",selected,`MediaError ${code}`);
+    if(isBattleTrack){
+      hv313FailedTracks.add(selected);
+      const backup=selected==="duel_hallvalla_focus"?"duel_hallvalla_war_chant":"duel_hallvalla_focus";
+      if(!hv313FailedTracks.has(backup))playMusic(backup);
     }
-    const audio=new Audio(audioPath("music",name));
-    audio.loop=true;
-    audio.preload="auto";
-    audio.volume=vol;
-    const playAttempt=audio.play();
-    currentMusic=audio;
-    currentMusicName=name;
-    if(playAttempt&&playAttempt.catch)playAttempt.catch(()=>{});
-  }catch(e){}
+  },{once:true});
+  hv313TryPlay(audio);
 }
 function stopMusic(clearName=true){
-  clearSeamlessMusicLoop();
-  if(currentMusic){try{currentMusic.pause();currentMusic.currentTime=0;}catch(e){}currentMusic=null;}
+  if(currentMusic){try{currentMusic.pause();currentMusic.currentTime=0;}catch(_){ }currentMusic=null;}
   if(clearName)currentMusicName="";
+  hv313RetryAt=0;
 }
 function refreshAudioState(){
   if(!gameSettings.sound||!gameSettings.music)stopMusic(true);
@@ -1246,9 +1229,9 @@ function syncBattleMusic(){
     playMusic("home_theme");
   }else stopMusic(true);
 }
-// v312: restaurar musica solo al reabrirse el campo o al volver la pestaÃ±a.
+// v313: resincronizar la musica al abrir la arena o volver a la pestana.
 // Conservar los ajustes del jugador: no reproducir cuando sonido/musica esten desactivados.
-(function installHv312BattleMusicRecovery(){
+(function installHv313BattleMusicRecovery(){
   const shell=document.getElementById("gameShell");
   if(shell&&typeof MutationObserver==="function"){
     let wasHidden=shell.classList.contains("hidden");
@@ -1267,6 +1250,16 @@ function syncBattleMusic(){
     }
   });
 })();
+// Lectura de estado sin acciones ni datos de partida; util para diagnosticar autoplay.
+globalThis.hvBattleMusicDiagnostics=()=>({
+  enabled:!!gameSettings.music,soundEnabled:!!gameSettings.sound,
+  volume:clampAudioVolume(gameSettings.musicVolume??.32,.32),
+  track:currentMusicName||"",paused:currentMusic?currentMusic.paused:null,
+  readyState:currentMusic?currentMusic.readyState:null,
+  mediaError:currentMusic?.error?.code||null,
+  currentTime:currentMusic?Math.round(currentMusic.currentTime||0):null,
+  failedTracks:[...hv313FailedTracks]
+});
 function getSummonSoundForUnit(unit){
   const cls=getFxRarityClass(unit);
   if(cls==="fx-demigod")return "summon_demigod";

@@ -114,6 +114,7 @@
     const title=el("h1","hv-mvp-result hv-mvp-result-"+result,result==="victory"?"¡GANASTE!":result==="defeat"?"PERDISTE":"EMPATE");
     layout.appendChild(title);
     const mvp=chooseMvp(typeof publicState!=="undefined"?publicState:null);
+    currentMvpId=mvp?.id||"";
     const hero=el("div","hv-mvp-figure-zone");
     const pedestal=el("div","hv-mvp-pedestal");hero.appendChild(pedestal);
     const star=el("span","hv-mvp-figure-star","★");hero.appendChild(star);
@@ -128,14 +129,6 @@
       }else hero.appendChild(el("div","hv-mvp-figure-missing","Figura oficial no disponible"));
     }else hero.appendChild(el("div","hv-mvp-figure-missing","Sin historial suficiente"));
     layout.appendChild(hero);
-    // El titulo de racha procede del anunciador existente; no altera puntuaciones.
-    let bestStreak=null;
-    try{bestStreak=globalThis.hv283Streaks?.getBest?.()||null;}
-    catch(error){console.warn("[HallValla MVP] Mejor racha",error);}
-    const streakBox=el("aside","hv-mvp-best-streak");
-    streakBox.appendChild(el("div","hv-mvp-best-streak-title","â˜… MEJOR RACHA â˜…"));
-    streakBox.appendChild(el("strong","hv-mvp-best-streak-name",bestStreak?.name||"Sin racha destacada"));
-    layout.appendChild(streakBox);
     const panel=el("div","hv-mvp-info");
     panel.appendChild(el("div","hv-mvp-kicker","★ MVP DE LA BATALLA ★"));
     panel.appendChild(el("h2","hv-mvp-name",mvp?mvp.name:"Sin datos suficientes"));
@@ -198,6 +191,23 @@
       const out=original.apply(this,arguments);
       try{show(result,options);}catch(e){console.warn("[HallValla MVP] Visualización",e);}
       return out;
+    };
+  }
+  // El renderer de recompensas corre despues de showBattleOutcomeSplash.
+  // Decoramos SOLO su resultado visual; no tocamos EXP, ranking ni partidas.
+  if(typeof renderPvpBattleOutcomeRewards==="function"){
+    const originalRenderPvpRewards=renderPvpBattleOutcomeRewards;
+    globalThis.renderPvpBattleOutcomeRewards=function(reward){
+      const output=originalRenderPvpRewards.apply(this,arguments);
+      const rows=document.querySelector("#battleOutcomeSplash .battle-outcome-rewards .battle-outcome-reward-list");
+      if(!rows)return output;
+      rows.querySelector(".hv-mvp-pvp-streak")?.remove();
+      const streak=globalThis.hv283Streaks?.getBestFor?.(currentMvpId)||null;
+      const tile=el("div","battle-outcome-reward-item hv-mvp-pvp-streak");
+      tile.appendChild(el("span","battle-outcome-reward-label","MEJOR RACHA MVP"));
+      tile.appendChild(el("strong","battle-outcome-reward-value",streak?.name||"Sin racha"));
+      rows.appendChild(tile);
+      return output;
     };
   }
   console.info("[HallValla MVP] Resultado único listo; imágenes desde field_figures_light.");
