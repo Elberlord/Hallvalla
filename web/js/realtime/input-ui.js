@@ -635,6 +635,8 @@ function hallvallaRtPlayUnitImmediate(card){
   selectedCard=null;highlights=[];highlightType="";
   setHint(`${card.name} fue invocada por ${result.cost} MANÁ.`);
   hallvallaRtRenderArsenal();
+  // Orden inicial opcional: si no se elige ninguna, la IA automatica sigue intacta.
+  globalThis.hallvallaRtTacticalSelectUnit?.(result.unit);
   return true;
 }
 

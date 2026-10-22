@@ -520,13 +520,17 @@ function ensureBattleBoardDelegation(grid){
       if(handleDirectBoardTargetEvent(ev,x,y))return;
       ev.stopPropagation();
       const u=getUnit(unitEl.dataset.unitId);
-      if(u)showUnit(u);
+      if(u){
+        if(globalThis.hallvallaRtTacticalTargeting?.())globalThis.hallvallaRtTacticalTargetAt?.(x,y);
+        else if(!globalThis.hallvallaRtTacticalSelectUnit?.(u))showUnit(u);
+      }
       return;
     }
     const cell=ev.target&&ev.target.closest?ev.target.closest(".cell"):null;
     if(!cell||!grid.contains(cell))return;
     const x=Number(cell.dataset.x),y=Number(cell.dataset.y);
     flashBoardSelectedCell(x,y);
+    if(globalThis.hallvallaRtTacticalTargeting?.())return globalThis.hallvallaRtTacticalTargetAt?.(x,y);
     if(shouldDirectBoardTarget())return handleDirectBoardTargetEvent(ev,x,y);
     cellClick(x,y);
   });

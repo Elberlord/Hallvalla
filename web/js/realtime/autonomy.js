@@ -28,12 +28,18 @@ function hallvallaRtTargetCandidates(unit,units=publicState?.units||[]){
   if(!candidates.length)return[];
   const nonLeaders=candidates.filter(t=>!t.leader);
   const pool=[...(nonLeaders.length?nonLeaders:candidates)];
+  const tactical=globalThis.hallvallaRtGetTacticalOrder?.(unit)||null;
+  if(tactical?.mode==="attack")return candidates.filter(t=>String(t.id)===String(tactical.targetId));
   // TR: cada unidad persigue la amenaza rival físicamente más cercana a ella.
   // Si ya no quedan invocaciones rivales, el líder enemigo pasa a ser el objetivo.
   pool.sort((a,b)=>{
     const da=dist(unit,a),db=dist(unit,b);
     return (da-db)||(Number(a.hp||0)-Number(b.hp||0))||String(a.id||'').localeCompare(String(b.id||''));
   });
+  if(tactical?.mode==="priority"){
+    const priority=candidates.find(t=>String(t.id)===String(tactical.targetId));
+    if(priority)return [priority,...pool.filter(t=>t.id!==priority.id)];
+  }
   return pool;
 }
 function hallvallaRtChooseTarget(unit,units=publicState?.units||[]){return hallvallaRtTargetCandidates(unit,units)[0]||null;}
@@ -1131,7 +1137,9 @@ async function hallvallaRtAttackReadyUnits(now,maxAttacks=HALLVALLA_RT_CFG.maxAt
     // el único seguimiento de Hua Lan habilitado por una baja.
     const last=Number(hallvallaRtState.attackAt.get(live.id)||0);
     if(!mulanFollowup&&now-last<Math.max(1000,hallvallaRtAttackCooldown(live)-Math.max(0,Number(live.hvLeaderNextAttackAccelerateMs||0))))continue;
-    const target=mulanFollowup?hallvallaRtFindAttackableTarget(live,publicState?.units||[]):hallvallaRtChooseTarget(live,publicState?.units||[]);
+    const order=globalThis.hallvallaRtGetTacticalOrder?.(live)||null;
+    const direct=order&&["priority","defend","follow","retreat"].includes(order.mode);
+    const target=(mulanFollowup||direct)?hallvallaRtFindAttackableTarget(live,publicState?.units||[]):hallvallaRtChooseTarget(live,publicState?.units||[]);
     if(!target||!hallvallaRtCanAttackNow(live,target)){
       // Si el objetivo desapareció entre la reposición y este pulso, el seguimiento
       // automático cae a la rama defensiva en vez de quedar pendiente indefinidamente.
@@ -1160,7 +1168,8 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
     const mulanReposition=live.key==="mulan"&&live.mulanRepositionReady===true;
     const ownLeader=hallvallaRtGetOwnerLeader(live.owner,units);
     const holdRadius=hallvallaRtLeaderHoldRadius(live,units);
-    if(hallvallaRtIsRearSupportUnit(live)&&(!holdRadius||!ownLeader||dist(live,ownLeader)<=holdRadius))continue;
+    const tactical=globalThis.hallvallaRtGetTacticalOrder?.(live)||null;
+    if(hallvallaRtIsRearSupportUnit(live)&&!["follow","retreat"].includes(tactical?.mode)&&(!holdRadius||!ownLeader||dist(live,ownLeader)<=holdRadius))continue;
     const inSpawnRing=!!ownLeader&&dist(live,ownLeader)<=1;
     // Con vínculo arcano radio 1, salir del anillo rompe el efecto.
     const freshSpawn=holdRadius===1?false:(live.rtSpawnExitPending===true||Number(live.rtSummonedAt||0)>0&&inSpawnRing);
@@ -1193,6 +1202,14 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
         continue;
       }
     }else{
+      // Las órdenes tácticas nunca eluden las restricciones de MOV, trampas ni cooldowns.
+      if(tactical?.mode==="defend"&&!freshSpawn)continue;
+      if((tactical?.mode==="follow"||tactical?.mode==="retreat")&&ownLeader&&!freshSpawn){
+        const keepRadius=tactical.mode==="retreat"?1:(holdRadius||2);
+        if(dist(live,ownLeader)<=keepRadius)continue;
+        step=hallvallaRtChooseStep(live,ownLeader,units);
+        if(!step)continue;
+      }
       if(freshSpawn&&now-Number(live.rtSummonedAt||0)>=HALLVALLA_RT_CFG.spawnEgressDelayMs){
         // Prioridad absoluta tras invocar: abandonar el anillo del líder para no bloquear
         // la siguiente convocatoria, incluso si ya podría atacar desde la casilla de aparición.

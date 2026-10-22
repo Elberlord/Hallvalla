@@ -219,6 +219,7 @@ function flashBoardSelectedCell(x,y){
 async function cellClick(x,y){
   const candidate=getUnitAt(x,y);
   const u=isStealthHiddenFromViewer(candidate)?null:candidate;
+  if(globalThis.hallvallaRtTacticalTargeting?.())return globalThis.hallvallaRtTacticalTargetAt?.(x,y);
   if(selectedCard)return playCardOn(x,y,u);
   if(u)return openUnitContextMenu(u,x,y);
   selectedUnitId=null;
@@ -314,6 +315,7 @@ function openUnitContextMenu(u,x,y){
     return;
   }
   hideUnitContextMenu();
+  if(globalThis.hallvallaRtTacticalSelectUnit?.(u))return;
   showUnit(u);
 }
 const hallvallaUnitContextDelegatedMenus=new WeakSet();

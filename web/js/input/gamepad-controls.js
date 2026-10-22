@@ -894,7 +894,9 @@ function hvGamepadPressed(gp,index){
   return down&&!was;
 }
 function hvGamepadDirection(gp){
-  const axisX=Number(gp?.axes?.[0]||0),axisY=Number(gp?.axes?.[1]||0);
+  // En batalla TR la cruceta navega órdenes; el stick izquierdo queda libre para el futuro líder móvil.
+  const tacticalBattle=typeof isHallvallaRealtime==="function"&&isHallvallaRealtime()&&!!publicState&&!!document.getElementById("gameShell")&&!document.getElementById("gameShell").classList.contains("hidden");
+  const axisX=tacticalBattle?0:Number(gp?.axes?.[0]||0),axisY=tacticalBattle?0:Number(gp?.axes?.[1]||0);
   let dx=0,dy=0;
   if(hvGamepadButtonDown(gp,HV_GAMEPAD_BUTTONS.LEFT)||axisX<=-HV_GAMEPAD_DEADZONE)dx=-1;
   else if(hvGamepadButtonDown(gp,HV_GAMEPAD_BUTTONS.RIGHT)||axisX>=HV_GAMEPAD_DEADZONE)dx=1;
@@ -917,6 +919,9 @@ function hvGamepadUseDirection(dx,dy){
   const modal=hvGamepadVisibleModal();
   if(modal){hvGamepadState.mode="ui";hvGamepadMoveUi(dx,dy);return;}
   if(hvGamepadBattleOpen()&&typeof isHallvallaRealtime==="function"&&isHallvallaRealtime()&&typeof hallvallaRtGetInputState==="function"){
+    if(globalThis.hallvallaRtTacticalIsOpen?.()){
+      globalThis.hallvallaRtTacticalDirection?.(dx,dy);return;
+    }
     if(hallvallaRtGetInputState()==="targeting"&&typeof hallvallaRtMoveTargetCursor==="function")hallvallaRtMoveTargetCursor(dx,dy);
     return;
   }
@@ -965,6 +970,17 @@ function hvGamepadHandleButtons(gp){
   const rt=battle&&!modal&&typeof isHallvallaRealtime==="function"&&isHallvallaRealtime()&&typeof hallvallaRtGetInputState==="function";
   if(rt){
     const level=hallvallaRtGetInputState();
+    if(globalThis.hallvallaRtTacticalIsOpen?.()){
+      if(pressed.LB&&typeof hallvallaRtCollectManaOrb==="function")void hallvallaRtCollectManaOrb(null,"gamepad");
+      if(pressed.RB&&typeof hallvallaRtActivateLeaderShield==="function")hallvallaRtActivateLeaderShield(myPlayer);
+      if(pressed.B)globalThis.hallvallaRtTacticalBack?.();
+      if(pressed.Y)globalThis.hallvallaRtTacticalDet?.();
+      if(pressed.A){
+        if(globalThis.hallvallaRtTacticalTargeting?.())globalThis.hallvallaRtTacticalGamepadTarget?.();
+        else globalThis.hallvallaRtTacticalConfirm?.();
+      }
+      return;
+    }
     // TR canónico: LB y RB quedan reservados para recursos defensivos del duelo.
     // LB captura SOLO el orbe propio; RB protege al líder 3 s y no prolonga un escudo ya activo.
     if(pressed.LB&&typeof hallvallaRtCollectManaOrb==="function")void hallvallaRtCollectManaOrb(null,"gamepad");
@@ -977,9 +993,12 @@ function hvGamepadHandleButtons(gp){
     if(pressed.B&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("cancel","gamepad");
     if(pressed.X&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice1","gamepad");
     if(pressed.A){
-      const unitAtCursor=(level==="root"&&hvGamepadState.mode==="board"&&typeof getUnitAt==="function"&&hvGamepadInitBoardCursor())
-        ?getUnitAt(Number(hvGamepadState.boardX),Number(hvGamepadState.boardY)):null;
-      if(unitAtCursor&&typeof showUnit==="function")showUnit(unitAtCursor);
+      const cell=hvGamepadState.pointerVisible?hvGamepadPointerTarget()?.closest?.("#grid .cell"):null;
+      const pointerUnit=cell&&typeof getUnitAt==="function"?getUnitAt(Number(cell.dataset.x),Number(cell.dataset.y)):null;
+      const unitAtCursor=pointerUnit||(!hvGamepadState.pointerVisible&&level==="root"&&hvGamepadState.mode==="board"&&typeof getUnitAt==="function"&&hvGamepadInitBoardCursor()
+        ?getUnitAt(Number(hvGamepadState.boardX),Number(hvGamepadState.boardY)):null);
+      if(level==="root"&&unitAtCursor&&globalThis.hallvallaRtTacticalSelectUnit?.(unitAtCursor)){}
+      else if(level==="root"&&unitAtCursor&&typeof showUnit==="function")showUnit(unitAtCursor);
       else if(typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice2","gamepad");
     }
     if(pressed.Y&&typeof hallvallaRtInputAction==="function")hallvallaRtInputAction("choice3","gamepad");
