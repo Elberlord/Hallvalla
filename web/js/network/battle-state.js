@@ -1356,10 +1356,23 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
   const playerPrincipalSlots=0;
   const starterLocked=!playerPrincipalUnlocked;
   const mustUseStarterAdventureDeck=!!battle.isGuardian||battle.id===ADVENTURE_GUARDIAN_BATTLE.id||starterLocked;
+  // PvE: una vez desbloqueado el editor, la unica fuente es el mazo activo guardado.
+  // No permitir que makeDeck reemplace silenciosamente un mazo invalido por uno inicial.
+  const savedAdventurePlayerTemplates=mustUseStarterAdventureDeck?null:
+    (typeof getSavedDeck==="function"?getSavedDeck().map(hydrateCardVisualData):[]);
+  const adventurePlayerDeckOptions={leaderType,leaderLevel,deckSize:getDeckSizeForLeaderLevel(leaderLevel)};
+  if(!mustUseStarterAdventureDeck){
+    const savedDeckValidation=validateDeckList(savedAdventurePlayerTemplates,adventurePlayerDeckOptions);
+    if(!savedDeckValidation.valid){
+      await hvAlert(savedDeckValidation.errors.join(" ")||"No hay un mazo valido guardado. Configuralo en Construccion de Mazo.","Mazo invalido");
+      openDeckBuilder();
+      return;
+    }
+  }
   const rawPlayerBase=mustUseStarterAdventureDeck
     ? shuffle(getStarterAdventureDeckTemplates(specialKey,playerPrincipalSlots,leaderType).map(card=>makeCard(card,1,leaderType)))
-    : makeDeck(1,leaderType,{principalSlots:playerPrincipalSlots});
-  const playerDeckValidation=validateDeckList(rawPlayerBase,playerPrincipalSlots);
+    : shuffle(savedAdventurePlayerTemplates.map(card=>makeCard(card,1,leaderType)));
+  const playerDeckValidation=validateDeckList(rawPlayerBase,adventurePlayerDeckOptions);
   if(!playerDeckValidation.valid){
     await hvAlert(playerDeckValidation.errors.join(" "),"Mazo inválido");
     if(!mustUseStarterAdventureDeck)openDeckBuilder();
