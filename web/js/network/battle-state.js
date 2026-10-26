@@ -1425,7 +1425,7 @@ async function startAdventure(specialKey,battleId=ADVENTURE_GUARDIAN_BATTLE.id){
     battle={...battle,dragonContractEntryGoldCost:entryCost};
   }
   const playerCombatDeck=shuffle([...rawPlayerBase]);
-  const playerBattleDrawDeck=injectLeaderEquipmentIntoDrawDeck(playerCombatDeck,leaderType,1);
+  const playerBattleDrawDeck=playerCombatDeck; // PvE: respetar exactamente el mazo guardado del jugador.
   const playerDraw={deck:[],hand:getBattleCardsSortedByCurrentCost(playerBattleDrawDeck,1)};
   const playerDeck=playerDraw.deck;
   const playerHand=playerDraw.hand;
