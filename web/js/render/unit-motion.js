@@ -16,13 +16,13 @@
   let syncCount=0;
 
   const PROFILE_TIMING=Object.freeze({
-    light:480,
-    foot:540,
-    heavy:620,
-    mounted:520,
-    beast:460,
-    flying:620,
-    supernatural:600,
+    light:760,
+    foot:880,
+    heavy:1100,
+    mounted:740,
+    beast:780,
+    flying:1050,
+    supernatural:940,
     immobile:0
   });
 
@@ -73,6 +73,65 @@
     if(el.style.getPropertyValue("--hv-motion-phase")!==phase)el.style.setProperty("--hv-motion-phase",phase);
   }
 
+
+  // v322: camino continuo entre casillas para la figura visible. No cambia posiciones de combate.
+  const hv322Transits=new Map();
+  function hv322StopTransit(id){
+    const active=hv322Transits.get(id);
+    if(!active)return null;
+    const pos=active.ghost?.getBoundingClientRect?.()||null;
+    clearTimeout(active.timer);
+    try{active.animation?.cancel?.();}catch(_){}
+    active.ghost?.remove();
+    if(active.real?.isConnected)active.real.style.removeProperty("visibility");
+    hv322Transits.delete(id);
+    return pos;
+  }
+  function hv322AnimateTransit(el,unit,previous,x,y,duration){
+    if(!el?.isConnected||typeof document==="undefined")return;
+    if(globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches)return;
+    const id=String(unit.id||unit.key||"");
+    if(!id)return;
+    const priorView=hv322StopTransit(id);
+    const current=el.getBoundingClientRect();
+    const oldCell=document.querySelector('#grid .cell[data-x="'+Number(previous.x)+'"][data-y="'+Number(previous.y)+'"]');
+    const newCell=el.parentElement;
+    const old=oldCell?.getBoundingClientRect?.(),next=newCell?.getBoundingClientRect?.();
+    if(!current.width||!current.height||(!priorView&&!old)||!next)return;
+    const fromLeft=priorView?priorView.left:current.left+(old.left+old.width/2-next.left-next.width/2);
+    const fromTop=priorView?priorView.top:current.top+(old.top+old.height/2-next.top-next.height/2);
+    if(Math.hypot(fromLeft-current.left,fromTop-current.top)<6)return;
+    const ghost=el.cloneNode(true);
+    ghost.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));
+    ghost.removeAttribute('id');ghost.removeAttribute('tabindex');ghost.setAttribute('aria-hidden','true');
+    ghost.classList.add('hv322-motion-ghost');
+    Object.assign(ghost.style,{position:'fixed',left:fromLeft+'px',top:fromTop+'px',width:current.width+'px',height:current.height+'px',margin:'0',pointerEvents:'none',zIndex:'9998',opacity:'1',transition:'none',animation:'none'});
+    ghost.style.setProperty('transform','none','important');
+    ghost.style.setProperty('translate','none','important');
+    ghost.style.setProperty('scale','none','important');
+    document.body.appendChild(ghost);
+    el.style.setProperty('visibility','hidden','important');
+    const arc=Math.min(16,Math.hypot(current.left-fromLeft,current.top-fromTop)*.09);
+    let animation=null;
+    try{
+      if(typeof ghost.animate==='function')animation=ghost.animate([
+        {left:fromLeft+'px',top:fromTop+'px',offset:0},
+        {left:((fromLeft+current.left)/2)+'px',top:((fromTop+current.top)/2-arc)+'px',offset:.5},
+        {left:current.left+'px',top:current.top+'px',offset:1}
+      ],{duration,easing:'ease-in-out',fill:'forwards'});
+    }catch(e){console.warn('[HallValla][Movimiento] Animacion omitida',e);}
+    if(!animation){ghost.remove();el.style.removeProperty('visibility');return;}
+    const timer=setTimeout(()=>{
+      const record=hv322Transits.get(id);
+      if(record?.ghost!==ghost)return;
+      try{animation.cancel();}catch(_){}
+      ghost.remove();if(el.isConnected)el.style.removeProperty('visibility');
+      hv322Transits.delete(id);
+      if(el.isConnected)el.dataset.hvMotion='idle';
+    },duration+35);
+    hv322Transits.set(id,{ghost,real:el,timer,animation});
+  }
+
   function beginMove(el,unit,previous,x,y,profile){
     const personality=unitMotionPersonality(unit,profile);
     const tuning=personalityTuning(personality);
@@ -107,6 +166,7 @@
     el.style.setProperty("--hv-motion-move-ms",`${duration}ms`);
     el.dataset.hvMotion="move";
 
+    hv322AnimateTransit(el,unit,previous,x,y,duration);
     const until=performance.now()+duration+40;
     const token=`${unit?.id||unit?.key||"unit"}:${Date.now()}:${Math.random()}`;
     el.dataset.hvMotionToken=token;
@@ -489,6 +549,7 @@
   }
 
   function hvResetUnitVisualMotion(){
+    for(const id of [...hv322Transits.keys()])hv322StopTransit(id);
     for(const record of records.values())clearTimer(record);
     for(const timer of actionTimers.values())clearTimeout(timer);
     for(const timer of reactionTimers.values())clearTimeout(timer);

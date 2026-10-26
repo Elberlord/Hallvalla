@@ -196,7 +196,8 @@
         if(skillEvents.has(onceKey))continue;
         skillEvents.add(onceKey);
         const family=fxFamily(skill.id,leader.leaderType);
-        const targetEnemy=next.units.filter(u=>u&&!u.leader&&Number(u.hp||0)>0&&Number(u.owner)!==Number(leader.owner));
+        const arrowVolley=leader.leaderType==="archer"&&["arrow_rain","fire_arrows","poison_arrows","stun_arrows"].includes(skill.id);
+        const targetEnemy=(arrowVolley?prev.units:next.units).filter(u=>u&&!u.leader&&Number(u.hp||0)>0&&Number(u.owner)!==Number(leader.owner)&&(!arrowVolley||typeof dist!=="function"||dist(leader,u)<=(skill.id==="fire_arrows"||skill.id==="poison_arrows"?5:8)));
         const targetAlly=next.units.filter(u=>u&&!u.leader&&Number(u.hp||0)>0&&Number(u.owner)===Number(leader.owner));
         const defensive=family==="guard"||/bless|heal|shield|aura|order_offense|fortify|iron_shell|banner|rage|frenzy|galop|war_cry/i.test(skill.id);
         const arrowRanges={arrow_rain:8,fire_arrows:5,poison_arrows:5,stun_arrows:8};

@@ -760,6 +760,7 @@ function playArrowBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impac
 
 function getBattleFxImpactDelay(fx){
   if(!fx)return 120;
+  if(fx.attackStyle==="ranged"&&fx.weaponKind==="arrow")return 2640;
   if(isIceDragonBattleFx(fx))return getIceDragonTravelMs(fx)+55;
   if(isMagicBattleFx(fx))return getMagicFxTravelMs(fx)+45;
   return fx.attackStyle==="ranged"?360:300;
@@ -965,6 +966,10 @@ function maybePlayBattleFx(prevPub,nextPub){
   /* PERF6D · Registro visual ligero.
      Orden: invocación/magia/ataque -> resultado especial -> muerte.
      Los eventos ocultos por Sigilo nunca se fabrican desde una unidad no visible. */
+  const hv322ArcherVolley=nextUnits.some(u=>u?.leader&&u.leaderType==='archer'&&prevMap[u.id]&&['arrow_rain','fire_arrows','poison_arrows','stun_arrows'].some(k=>{
+    const newAt=Number(u.hvLeaderSkillLast?.[k]||0),oldAt=Number(prevMap[u.id].hvLeaderSkillLast?.[k]||0);return newAt>0&&newAt!==oldAt;
+  }));
+  const hv322ArrowDeathDelay=hv322ArcherVolley?3270:(explicitAttackFx?.weaponKind==='arrow'&&explicitAttackFx?.attackStyle==='ranged'?2680:0);
   const visibleAdded=added.filter(u=>typeof isStealthHiddenFromViewer!=="function"||!isStealthHiddenFromViewer(u));
   const visibleDestroyed=destroyed.filter(u=>typeof isStealthHiddenFromViewer!=="function"||!isStealthHiddenFromViewer(u));
   const summonVisuals=visibleAdded.map((u,i)=>makeSummonVisualEvent(u,`${nextPub.combatWindowKey||nextPub.combatWindowIndex||0}:${i}`)).filter(Boolean);
@@ -980,9 +985,9 @@ function maybePlayBattleFx(prevPub,nextPub){
   if(eventSplashPayloads.length){
     battleSetTimeout(()=>queueEventSplashGroup(eventSplashPayloads),Math.max(0,primaryVisuals.length*80));
   }
-  deathVisuals.slice(0,2).forEach((item,i)=>battleSetTimeout(()=>queueEventSplashGroup([item]),Math.max(120,(primaryVisuals.length*80)+120+(i*80))));
+  deathVisuals.slice(0,2).forEach((item,i)=>battleSetTimeout(()=>queueEventSplashGroup([item]),Math.max(hv322ArrowDeathDelay,120,(primaryVisuals.length*80)+120+(i*80))));
   if(deathVisuals.length>2)appendEventSplashHistory(deathVisuals.slice(2));
-  destroyed.forEach((unit,i)=>battleSetTimeout(()=>playDestroyFx(unit),280+(i*130)));
+  destroyed.forEach((unit,i)=>battleSetTimeout(()=>playDestroyFx(unit),Math.max(hv322ArrowDeathDelay,280)+(i*130)));
 }
 
 

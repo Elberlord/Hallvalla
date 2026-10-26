@@ -419,6 +419,7 @@ let hallvallaBoardRenderLayoutKey="";
 let hallvallaBoardRenderCells=new Map();
 const hallvallaBoardDelegatedGrids=new WeakSet();
 function resetHallvallaBoardRenderCache(){
+  if(typeof hv322ClearVisualProjection==="function")hv322ClearVisualProjection();
   hallvallaBoardRenderGrid=null;
   hallvallaBoardRenderLayoutKey="";
   hallvallaBoardRenderCells=new Map();
@@ -673,6 +674,63 @@ function syncBattleBoardUnit(record,u,x,y){
   }
   if(typeof globalThis.hvSyncUnitVisualMotion==="function")globalThis.hvSyncUnitVisualMotion(el,u,{x,y});
 }
+
+// v322: proyeccion de unidades durante el vuelo de flechas. No se toca publicState.
+const hv322Visual={session:'',prev:new Map(),held:new Map(),fxId:''};
+function hv322ClearVisualProjection(){
+  hv322Visual.prev.clear();hv322Visual.held.clear();hv322Visual.fxId='';hv322Visual.session='';
+}
+function hv322BoardVisualUnits(actual){
+  const now=Date.now();
+  const session=String(gameId||'')+':'+String(publicState?.createdAt||publicState?.startedAt||'');
+  if(session!==hv322Visual.session){hv322ClearVisualProjection();hv322Visual.session=session;}
+  const prev=hv322Visual.prev;
+  const current=new Map(actual.filter(u=>u&&u.id).map(u=>[String(u.id),u]));
+  const hold=(old,ms)=>{
+    if(!old||old.leader||Number(old.hp||0)<=0)return;
+    const id=String(old.id||'');if(!id)return;
+    const until=now+ms;
+    const older=hv322Visual.held.get(id);
+    if(!older||until>older.until)hv322Visual.held.set(id,{unit:older?.unit||old,until});
+    setTimeout(()=>{
+      if(hv322Visual.session!==session)return;
+      if((hv322Visual.held.get(id)?.until||0)>Date.now())return;
+      hv322Visual.held.delete(id);
+      if(typeof requestBattleRender==='function')requestBattleRender('v322-projectile-arrival');
+    },ms+40);
+  };
+  const fx=publicState?.battleFxEvent;
+  if(prev.size&&fx?.eventId&&fx.eventId!==hv322Visual.fxId){
+    const arrow=String(fx.weaponKind||'')==='arrow'&&String(fx.attackStyle||'')==='ranged'&&fx.hit!==false;
+    if(arrow){
+      const old=prev.get(String(fx.targetId||'')),newTarget=current.get(String(fx.targetId||''));
+      if(old&&(!newTarget||Number(newTarget.hp||0)<Number(old.hp||0)||Number(newTarget.guard||0)<Number(old.guard||0)))hold(old,2650);
+    }
+  }
+  hv322Visual.fxId=String(fx?.eventId||'');
+  if(prev.size){
+    for(const leader of actual.filter(u=>u?.leader&&u.leaderType==='archer')){
+      const older=prev.get(String(leader.id||''));if(!older)continue;
+      for(const [skillId,range] of [['arrow_rain',8],['fire_arrows',5],['poison_arrows',5],['stun_arrows',8]]){
+        const recent=Number(leader.hvLeaderSkillLast?.[skillId]||0),prior=Number(older.hvLeaderSkillLast?.[skillId]||0);
+        if(!recent||recent===prior)continue;
+        for(const enemy of prev.values()){
+          if(!enemy||enemy.leader||Number(enemy.hp||0)<=0||Number(enemy.owner)===Number(leader.owner))continue;
+          const distance=typeof dist==='function'?dist(older,enemy):Math.max(Math.abs(Number(older.x)-Number(enemy.x)),Math.abs(Number(older.y)-Number(enemy.y)));
+          if(distance<=range)hold(enemy,3250);
+        }
+      }
+    }
+  }
+  hv322Visual.prev=new Map(actual.filter(u=>u&&u.id).map(u=>[String(u.id),{...u}]));
+  const result=new Map(current);
+  for(const [id,record] of hv322Visual.held){
+    if(record.until<=now){hv322Visual.held.delete(id);continue;}
+    result.set(id,record.unit);
+  }
+  return [...result.values()];
+}
+
 function renderBoard(){
   const grid=$("grid");
   if(!grid||!publicState)return;
@@ -685,7 +743,7 @@ function renderBoard(){
     buildBattleBoardSkeleton(grid,flipSouth);
   }
   const unitsByCell=new Map();
-  (publicState.units||[]).forEach(u=>{if(u&&!u.leader&&Number(u.hp||0)>0&&!isStealthHiddenFromViewer(u))unitsByCell.set(`${u.x},${u.y}`,u);});
+  hv322BoardVisualUnits(publicState.units||[]).forEach(u=>{if(u&&!u.leader&&Number(u.hp||0)>0&&!isStealthHiddenFromViewer(u))unitsByCell.set(`${u.x},${u.y}`,u);});
   const trapsByCell=new Map();
   getBeastTraps(publicState).forEach(trap=>{if(trap)trapsByCell.set(`${trap.x},${trap.y}`,trap);});
   const remainsByCell=new Map();
