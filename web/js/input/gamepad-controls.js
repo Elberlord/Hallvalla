@@ -919,10 +919,12 @@ function hvGamepadUseDirection(dx,dy){
   const modal=hvGamepadVisibleModal();
   if(modal){hvGamepadState.mode="ui";hvGamepadMoveUi(dx,dy);return;}
   if(hvGamepadBattleOpen()&&typeof isHallvallaRealtime==="function"&&isHallvallaRealtime()&&typeof hallvallaRtGetInputState==="function"){
-    if(globalThis.hallvallaRtTacticalIsOpen?.()){
-      globalThis.hallvallaRtTacticalDirection?.(dx,dy);return;
+    // La cruceta controla al lÃ­der, salvo cuando ya se estÃ¡ apuntando una carta.
+    if(globalThis.hvLeaderMenuIsOpen?.()){globalThis.hvLeaderMenuDirection?.(dx,dy);return;}
+    if(hallvallaRtGetInputState()==="targeting"&&typeof hallvallaRtMoveTargetCursor==="function"){
+      hallvallaRtMoveTargetCursor(dx,dy);return;
     }
-    if(hallvallaRtGetInputState()==="targeting"&&typeof hallvallaRtMoveTargetCursor==="function")hallvallaRtMoveTargetCursor(dx,dy);
+    if(globalThis.hvLeaderMenuDirection?.(dx,dy))return;
     return;
   }
   if(hvGamepadBattleOpen()){
@@ -970,15 +972,11 @@ function hvGamepadHandleButtons(gp){
   const rt=battle&&!modal&&typeof isHallvallaRealtime==="function"&&isHallvallaRealtime()&&typeof hallvallaRtGetInputState==="function";
   if(rt){
     const level=hallvallaRtGetInputState();
-    if(globalThis.hallvallaRtTacticalIsOpen?.()){
+    if(globalThis.hvLeaderMenuIsOpen?.()){
       if(pressed.LB&&typeof hallvallaRtCollectManaOrb==="function")void hallvallaRtCollectManaOrb(null,"gamepad");
       if(pressed.RB&&typeof hallvallaRtActivateLeaderShield==="function")hallvallaRtActivateLeaderShield(myPlayer);
-      if(pressed.B)globalThis.hallvallaRtTacticalBack?.();
-      if(pressed.Y)globalThis.hallvallaRtTacticalDet?.();
-      if(pressed.A){
-        if(globalThis.hallvallaRtTacticalTargeting?.())globalThis.hallvallaRtTacticalGamepadTarget?.();
-        else globalThis.hallvallaRtTacticalConfirm?.();
-      }
+      if(pressed.B)globalThis.hvLeaderMenuBack?.();
+      if(pressed.A)globalThis.hvLeaderMenuConfirm?.();
       return;
     }
     // TR canónico: LB y RB quedan reservados para recursos defensivos del duelo.

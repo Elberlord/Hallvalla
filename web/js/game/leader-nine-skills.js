@@ -176,12 +176,17 @@
       }
     }
     if(leader.leaderType==="archer"){
+      // Las cuatro habilidades de flechas iniciales tienen alcance desde el lÃ­der.
+      const enemies8=enemies.filter(u=>typeof dist==="function"&&dist(leader,u)<=8);
+      const enemies5=enemies.filter(u=>typeof dist==="function"&&dist(leader,u)<=5);
+      const foes8=enemies8.filter(u=>!u.leader);
+      const foes5=enemies5.filter(u=>!u.leader);
       if(!enemies.length)return null;
       switch(entry.id){
-        case "arrow_rain":return foes.length?{units:hpHit(units,foes,1)}:null;
-        case "fire_arrows":return{units:dot(units,enemies,"burn",1,5000,now)};
-        case "poison_arrows":return{units:poisoned(units,foes)};
-        case "stun_arrows":return{units:lock(units,enemies,"stun",2000)};
+        case "arrow_rain":return foes8.length?{units:hpHit(units,foes8,1)}:null;
+        case "fire_arrows":return enemies5.length?{units:dot(units,enemies5,"burn",1,5000,now)}:null;
+        case "poison_arrows":return foes5.length?{units:poisoned(units,foes5)}:null;
+        case "stun_arrows":return enemies8.length?{units:lock(units,enemies8,"stun",2000)}:null;
         case "piercing_arrows":return{units:guardHit(units,foes,3)};
         case "silence_arrows":return{units:lock(units,enemies,"silence",5000)};
         case "fear_arrows":return{units:lock(units,enemies,"attack",4000)};
@@ -281,6 +286,40 @@
       }
     }
     return null;
+  }
+  // Estado real de una habilidad seleccionada manualmente: una sola fuente
+  // para UI y motor. No consume manÃ¡ ni cooldown cuando el efecto falla.
+  function manualStatus(units,owner,id,now){
+    const out=Array.isArray(units)?units:[];
+    const leader=out.find(u=>u?.leader&&Number(u.owner)===Number(owner)&&N(u.hp)>0);
+    if(!leader)return{available:false,reason:"LÃ­der no disponible"};
+    const entries=C[leader.leaderType]||[];
+    const index=entries.findIndex(entry=>entry.id===id);
+    const entry=index>=0?entries[index]:null;
+    if(!entry||entry.mode==="passive")return{available:false,reason:"Habilidad no activable"};
+    if(N(leader.leaderLevel)<levelForIndex(index))return{available:false,reason:"Nivel insuficiente"};
+    if(entry.mode==="one_use"&&leader.hvLeaderSkillUsed?.[id])return{available:false,reason:"Ya utilizada"};
+    const last=N(leader.hvLeaderSkillLast?.[id]);
+    if(entry.mode!=="one_use"&&last>0&&now-last<CD)return{available:false,reason:"En recarga",remainingMs:CD-(now-last)};
+    const lastActive=Math.max(N(leader.hvLeaderLastActiveAt),...Object.values(leader.hvLeaderSkillLast||{}).map(N));
+    if(lastActive>0&&now-lastActive<LEADER_ACTIVE_GAP_MS)return{available:false,reason:"Recarga global",remainingMs:LEADER_ACTIVE_GAP_MS-(now-lastActive)};
+    if(typeof isRtTrapLocked==="function"&&(isRtTrapLocked(leader,"silence",now)||isRtTrapLocked(leader,"attack",now)))return{available:false,reason:"LÃ­der silenciado o paralizado"};
+    return{available:true,leader,entry,index};
+  }
+  function manualActivate(units,owner,id,now,availableMana){
+    if(!Number.isFinite(Number(availableMana))||Number(availableMana)<1)return{changed:false,reason:"Necesitas 1 MANÃ"};
+    const check=manualStatus(units,owner,id,now);
+    if(!check.available)return{changed:false,reason:check.reason};
+    let result=null;
+    try{result=applyActive(units,check.leader,check.entry,check.index,now);}catch(error){console.error("[HallValla] habilidad manual",error);return{changed:false,reason:"Error al ejecutar"};}
+    if(!result||!Array.isArray(result.units))return{changed:false,reason:"No hay objetivos vÃ¡lidos"};
+    const updated=result.units.map(u=>u.id===check.leader.id?{...u,
+      hvLeaderSkillLast:{...(u.hvLeaderSkillLast||{}),[id]:now},
+      hvLeaderSkillUsed:check.entry.mode==="one_use"?{...(u.hvLeaderSkillUsed||{}),[id]:true}:(u.hvLeaderSkillUsed||{}),
+      hvLeaderActivationCount:N(u.hvLeaderActivationCount)+1,
+      hvLeaderLastActiveAt:now
+    }:u);
+    return{changed:true,units:updated,logs:result.logs||[],battleFxEvent:result.battleFxEvent||null};
   }
   function resolve(units,owner,now){
     const oldUnits=Array.isArray(units)?units:[];
@@ -382,7 +421,7 @@
         return `<div class="hv-leader-nine-tile ${locked?"hv-leader-nine-locked":"hv-leader-nine-unlocked"}" aria-label="${locked?"Bloqueada":"Desbloqueada"}: ${s.name}"><span class="hv-leader-nine-icon">${locked?"🔒":"✦"}</span><div><strong>${s.name}</strong><small>Nv. ${need} · ${s.mode==="passive"?"Pasiva":s.mode==="one_use"?"1 uso por batalla · 5 s entre habilidades":"30 s de recarga · 5 s entre habilidades"}</small><p>${s.desc}</p></div></div>`;
       }).join("")+`</div></section>`;
   }
-  globalThis.HV_LEADER_NINE_SKILLS=Object.freeze({catalog:C,levelForIndex,resolve,dotTick,html,attackBonus,defenseBonus,dexBonus,agiBonus,extraAttack,activeStat});
+  globalThis.HV_LEADER_NINE_SKILLS=Object.freeze({catalog:C,levelForIndex,resolve,manualStatus,manualActivate,dotTick,html,attackBonus,defenseBonus,dexBonus,agiBonus,extraAttack,activeStat});
   globalThis.hvLeaderAbilityGridHtml=(type,level)=>html(type,level);
   globalThis.hvLeaderSkillAtk=(u)=>attackBonus(u);
   globalThis.hvLeaderSkillGuard=(u)=>defenseBonus(u);

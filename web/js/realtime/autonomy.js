@@ -714,12 +714,17 @@ async function hallvallaRtLeaderEffectsTick(now){
   hallvallaRtState.lastLeaderEffectAt=now;
   if(!globalThis.HV_LEADER_NINE_SKILLS)return false;
   const before=[...(publicState?.units||[])];
-  let units=before,logs=[],changed=false,battleFxEvent=null;
+  let units=before,logs=[],changed=false,battleFxEvent=null,aiManaSpent=0;
   const owners=(Number(hallvallaRtState.cycle||0)%2===0)?[1,2]:[2,1];
   for(const owner of owners){
     try{
+      // Los jugadores activan manualmente. Nunca disparar habilidades en PvP.
+      if(publicState?.mode==="online"||Number(owner)===Number(myPlayer||1))continue;
+      // PvE: la IA tambiÃ©n paga 1 MANÃ por habilidad automÃ¡tica.
+      if(Number(owner)===2&&Number(publicState?.adventureAiState?.honor||0)-aiManaSpent<1)continue;
       const r=globalThis.HV_LEADER_NINE_SKILLS.resolve(units,owner,now);
       if(!r?.changed)continue;
+      if(Number(owner)===2)aiManaSpent++;
       units=r.units;
       logs.push(...(r.logs||[]));
       if(r.battleFxEvent)battleFxEvent=r.battleFxEvent;
@@ -736,7 +741,13 @@ async function hallvallaRtLeaderEffectsTick(now){
   }
   const logText=logs.join(' ');
   if(await finalizeBattle(units,logText))return true;
-  await updatePublic({units,battleFxEvent:battleFxEvent||null,log:logText?[logText,...(publicState?.log||[])].slice(0,18):(publicState?.log||[])});
+  const patch={units,battleFxEvent:battleFxEvent||null,log:logText?[logText,...(publicState?.log||[])].slice(0,18):(publicState?.log||[])};
+  if(aiManaSpent>0&&publicState?.adventureAiState){
+    const nextHonor=Math.max(0,Number(publicState.adventureAiState.honor||0)-aiManaSpent);
+    patch.adventureAiState={...publicState.adventureAiState,honor:nextHonor};
+    patch["playerStats/2/honor"]=nextHonor;
+  }
+  await updatePublic(patch);
   return true;
 }
 async function hallvallaRtLeaderSkillDotTick(now){
