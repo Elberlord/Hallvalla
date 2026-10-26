@@ -727,8 +727,8 @@ function hv321PlayArrowVolley(leader,targets,skillId){
       const offset=(j-(count-1)/2)*10;
       const to={x:at.x+offset,y:at.y};
       const length=Math.hypot(to.x-from.x,to.y-from.y);
-      const duration=3000; // Lluvia: 3 segundos de vuelo visible por proyectil.
-      const stagger=i*46+j*96;
+      const duration=2000; // v325: descarga de lider, dos segundos de trayectoria.
+      const stagger=i*18+j*50;
       battleSetTimeout(()=>{
         hv321FlyArrow(from,to,{variant,duration,curveSign:(i+j)%2?-1:1});
         battleSetTimeout(()=>{
@@ -744,7 +744,7 @@ function hv321PlayArrowVolley(leader,targets,skillId){
 globalThis.hv321PlayArrowVolley=hv321PlayArrowVolley;
 
 function getArrowFxTravelMsByDistance(distance){
-  return 2500; // Arqueros: 2.5 segundos de vuelo visual independientemente de la distancia.
+  return 1500; // v325: 1.5 segundos de trayectoria de flecha ordinaria.
 }
 function playArrowBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impactSound,impactVolume){
   const travelMs=getArrowFxTravelMsByDistance(len);
@@ -760,7 +760,7 @@ function playArrowBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impac
 
 function getBattleFxImpactDelay(fx){
   if(!fx)return 120;
-  if(fx.attackStyle==="ranged"&&fx.weaponKind==="arrow")return 2640;
+  if(fx.attackStyle==="ranged"&&fx.weaponKind==="arrow")return 1640;
   if(isIceDragonBattleFx(fx))return getIceDragonTravelMs(fx)+55;
   if(isMagicBattleFx(fx))return getMagicFxTravelMs(fx)+45;
   return fx.attackStyle==="ranged"?360:300;

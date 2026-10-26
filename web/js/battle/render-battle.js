@@ -704,7 +704,7 @@ function hv322BoardVisualUnits(actual){
     const arrow=String(fx.weaponKind||'')==='arrow'&&String(fx.attackStyle||'')==='ranged'&&fx.hit!==false;
     if(arrow){
       const old=prev.get(String(fx.targetId||'')),newTarget=current.get(String(fx.targetId||''));
-      if(old&&(!newTarget||Number(newTarget.hp||0)<Number(old.hp||0)||Number(newTarget.guard||0)<Number(old.guard||0)))hold(old,2650);
+      if(old&&(!newTarget||Number(newTarget.hp||0)<Number(old.hp||0)||Number(newTarget.guard||0)<Number(old.guard||0)))hold(old,1650);
     }
   }
   hv322Visual.fxId=String(fx?.eventId||'');
@@ -717,7 +717,7 @@ function hv322BoardVisualUnits(actual){
         for(const enemy of prev.values()){
           if(!enemy||enemy.leader||Number(enemy.hp||0)<=0||Number(enemy.owner)===Number(leader.owner))continue;
           const distance=typeof dist==='function'?dist(older,enemy):Math.max(Math.abs(Number(older.x)-Number(enemy.x)),Math.abs(Number(older.y)-Number(enemy.y)));
-          if(distance<=range)hold(enemy,3250);
+          if(distance<=range)hold(enemy,2250);
         }
       }
     }

@@ -15,7 +15,7 @@ const HALLVALLA_WEIGHT_PENALTY_THRESHOLDS=Object.freeze({
    Respecto al modelo v216, una unidad sana ataca y se mueve 2 s antes.
    Ventanas sanas aproximadas: ataque 6â€“12 s; movimiento 5â€“13 s.
    DespuÃ©s se suman penalizaciones fÃ­sicas/estados, con tope de +4 s por acciÃ³n. */
-const HALLVALLA_SPEED_MODEL_VERSION="20261009.218";
+const HALLVALLA_SPEED_MODEL_VERSION="20261026.325";
 const HALLVALLA_SPEED_TIMING=Object.freeze({
   attackBaseMs:13000,
   attackMinMs:10000,
@@ -104,7 +104,37 @@ function clearHallvallaTimingPenalty(unit,key=""){
   if(!wanted)return {...unit,rtTimingPenalties:[]};
   return {...unit,rtTimingPenalties:(Array.isArray(unit.rtTimingPenalties)?unit.rtTimingPenalties:[]).filter(entry=>String(entry?.key||"")!==wanted)};
 }
-function getHallvallaUnitBaseAttackCooldownMs(unit){
+// v325: el golpe/tiro (animacion) no es la cadencia completa de ataques.
+// Valores base de un combatiente entrenado, modificados por AGI y carga.
+// La ballesta se recarga mas despacio; las criaturas y magias son convenciones de juego.
+const HALLVALLA_ATTACK_CADENCE_MS=Object.freeze({
+  dagger:2700,sword:3300,spear:3800,axe:4500,
+  bow:6000,crossbow:30000,firearm:12000,
+  magic:6000,beast:3600,dragon:7000,unarmed:3600
+});
+function hallvallaRealisticAttackWeapon(unit){
+  const key=String(unit?.key||'').toLowerCase();
+  const cls=String(unit?.weaponClass||'').toLowerCase();
+  const explicit=String(unit?.weaponKind||unit?.attackWeapon||'').toLowerCase();
+  const tags=[...(Array.isArray(unit?.weaponTags)?unit.weaponTags:[]),...(Array.isArray(unit?.classTags)?unit.classTags:[])].join(' ').toLowerCase();
+  const leader=String(unit?.leaderType||'').toLowerCase();
+  const text=[key,cls,explicit,tags,leader,String(unit?.name||'')].join(' ').toLowerCase();
+  // Clasificaciones mas especificas antes de tipos amplios; sin reglas de dano ni alcance.
+  if(/crossbow|ballesta|arbalest|arbalesta/.test(text))return 'crossbow';
+  if(/musket|arquebus|firearm|fusil|rifle|pistol|arcabuz/.test(text))return 'firearm';
+  if(/dragon/.test(key)||unit?.dragonBoss===true||unit?.dragonCompanion===true)return 'dragon';
+  if(/bow|archer|arquero|arquera|arco|flecha|tirador|sagittarius|yabusame/.test(text)||explicit==='arrow'||cls==='bow')return 'bow';
+  if(unit?.caster||unit?.hechicero||unit?.hechicera||unit?.nigromante||/mage|magic|magia|mago|hechic|sorcer|wizard|necrom/.test(text)||explicit==='fire_magic')return 'magic';
+  if(/dagger|knife|daga|punal|puñal|ninja|assassin|asesin/.test(text))return 'dagger';
+  if(/spear|lance|lancer|lanza|pike|pica|naginata|hoplite|piquer/.test(text)||explicit==='spear')return 'spear';
+  if(/axe|hacha|berserker|ulfhednar/.test(text)||explicit==='axe')return 'axe';
+  if(/beast|bestia|wolf|lobo|tiger|tigre|lion|leon|león|rhino|rino|boar|jabali|jabalí|bear|oso|horse|caballo|elephant|elefante|snake|serpiente/.test(text)||unit?.beast)return 'beast';
+  if(/sword|espada|sable|katana|samurai|guerrero|warrior|caballero|knight/.test(text)||explicit==='sword')return 'sword';
+  return 'unarmed';
+}
+// Reproduce exactamente la ventana historica de ataques que usaba el movimiento v218.
+// De este modo, cambiar la cadencia de las armas NO acelera/desacelera MOV.
+function hallvallaLegacyAttackWindowMs(unit){
   const agi=hallvallaSpeedEffectiveAgi(unit);
   const profile=hallvallaSpeedLoadProfile(unit);
   const burden=Math.max(0,Number(profile?.burdenRatio||unit?.loadBurdenRatio||0));
@@ -114,8 +144,20 @@ function getHallvallaUnitBaseAttackCooldownMs(unit){
   const agilityFactor=hallvallaClamp(1-(agi-5)*0.055,0.72,1.28);
   const loadFactor=1+Math.min(0.16,burden*0.08)+Math.min(0.14,weaponKg*0.012)+Math.min(0.08,(armorKg+shieldKg)*0.003);
   const raw=HALLVALLA_SPEED_TIMING.attackBaseMs*agilityFactor*loadFactor;
-  const legacyWindow=hallvallaClamp(raw,HALLVALLA_SPEED_TIMING.attackMinMs,HALLVALLA_SPEED_TIMING.attackMaxMs);
-  return Math.max(1000,Math.round(legacyWindow-HALLVALLA_SPEED_TIMING.attackSpeedupMs));
+  return hallvallaClamp(raw,HALLVALLA_SPEED_TIMING.attackMinMs,HALLVALLA_SPEED_TIMING.attackMaxMs);
+}
+function getHallvallaUnitBaseAttackCooldownMs(unit){
+  const agi=hallvallaSpeedEffectiveAgi(unit);
+  const profile=hallvallaSpeedLoadProfile(unit);
+  const burden=Math.max(0,Number(profile?.burdenRatio||unit?.loadBurdenRatio||0));
+  const weaponKg=Math.max(0,Number(profile?.weaponWeightKg||0));
+  const armorKg=Math.max(0,Number(profile?.armorWeightKg||unit?.armorWeightKg||0));
+  const shieldKg=Math.max(0,Number(profile?.shieldGearWeightKg||0));
+  const kind=hallvallaRealisticAttackWeapon(unit);
+  const base=HALLVALLA_ATTACK_CADENCE_MS[kind]||HALLVALLA_ATTACK_CADENCE_MS.unarmed;
+  const agilityFactor=hallvallaClamp(1-(agi-5)*0.035,0.82,1.2);
+  const loadFactor=1+Math.min(.12,burden*.07)+Math.min(.12,weaponKg*.009)+Math.min(.07,(armorKg+shieldKg)*.0025);
+  return Math.max(1600,Math.round(base*agilityFactor*loadFactor));
 }
 function getHallvallaUnitAttackCooldownMs(unit){
   const ms=getHallvallaUnitBaseAttackCooldownMs(unit)+hallvallaSpeedStatusPenaltyMs(unit,'attack');
@@ -136,7 +178,7 @@ function getHallvallaUnitBaseMoveCooldownMs(unit){
   const agilityFactor=hallvallaClamp(1-(agi-5)*0.04,0.80,1.20);
   const loadFactor=1+Math.min(0.18,burden*0.10)+Math.min(0.10,(armorKg+shieldKg)*0.0025);
   const raw=locomotionBase*agilityFactor*loadFactor;
-  const legacyAttackWindow=getHallvallaUnitBaseAttackCooldownMs(unit)+HALLVALLA_SPEED_TIMING.attackSpeedupMs;
+  const legacyAttackWindow=hallvallaLegacyAttackWindowMs(unit);
   const legacyAttackFloor=legacyAttackWindow+HALLVALLA_SPEED_TIMING.moveAttackGapMs;
   const legacyWindow=hallvallaClamp(Math.max(raw,legacyAttackFloor),HALLVALLA_SPEED_TIMING.moveMinMs,HALLVALLA_SPEED_TIMING.moveMaxMs);
   return Math.max(1000,Math.round(legacyWindow-HALLVALLA_SPEED_TIMING.moveSpeedupMs));
@@ -349,6 +391,8 @@ Object.assign(globalThis,{
   HALLVALLA_LOAD_MODEL_VERSION,
   HALLVALLA_SPEED_MODEL_VERSION,
   HALLVALLA_SPEED_TIMING,
+  HALLVALLA_ATTACK_CADENCE_MS,
+  hallvallaRealisticAttackWeapon,
   HALLVALLA_SPEED_STATUS_TIMING,
   HALLVALLA_WEIGHT_PENALTY_THRESHOLDS,
   HALLVALLA_NATURAL_MOV_BY_KEY,
