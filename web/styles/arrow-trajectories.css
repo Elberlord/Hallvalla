@@ -28,3 +28,28 @@
 @media (prefers-reduced-motion:reduce){
   #battleFxLayer .hv321-arrow-flight{will-change:auto}
 }
+
+/* v326: trayectoria legible del gesto de arma desde atacante hasta objetivo. */
+#battleFxLayer .hv326-weapon-flight{
+  position:absolute;z-index:8;pointer-events:none;
+  width:78px;height:78px;transform:translate(-50%,-50%);
+  transform-origin:50% 50%;will-change:transform,opacity;
+  filter:drop-shadow(0 0 7px rgba(255,209,105,.89));
+}
+#battleFxLayer .hv326-weapon-flight img,
+#battleFxLayer .hv326-weapon-flight svg{
+  position:relative;z-index:2;display:block;width:100%;height:100%;object-fit:contain;
+  filter:drop-shadow(0 0 4px rgba(255,244,202,.84));
+}
+#battleFxLayer .hv326-kind-axe{width:92px;height:92px;filter:drop-shadow(0 0 9px rgba(247,149,55,.86))}
+#battleFxLayer .hv326-kind-dagger{width:62px;height:62px;filter:drop-shadow(0 0 7px rgba(190,224,251,.84))}
+#battleFxLayer .hv326-kind-sword{width:82px;height:82px;filter:drop-shadow(0 0 8px rgba(188,224,255,.92))}
+#battleFxLayer .hv326-kind-spear{width:82px;height:82px;filter:drop-shadow(0 0 8px rgba(255,230,159,.86))}
+#battleFxLayer .hv326-weapon-trail{
+  position:absolute;z-index:1;top:48%;right:62%;width:65%;height:5px;
+  transform:rotate(-36deg);transform-origin:right center;pointer-events:none;
+  border-radius:50%;background:linear-gradient(90deg,transparent,rgba(255,230,167,.75));
+  box-shadow:0 0 10px rgba(255,205,128,.66);
+}
+#battleFxLayer .hv326-kind-dagger .hv326-weapon-trail{height:3px;width:54%;background:linear-gradient(90deg,transparent,rgba(200,229,255,.84))}
+@media (prefers-reduced-motion:reduce){#battleFxLayer .hv326-weapon-flight{will-change:auto}}

@@ -706,6 +706,16 @@ function hv322BoardVisualUnits(actual){
       const old=prev.get(String(fx.targetId||'')),newTarget=current.get(String(fx.targetId||''));
       if(old&&(!newTarget||Number(newTarget.hp||0)<Number(old.hp||0)||Number(newTarget.guard||0)<Number(old.guard||0)))hold(old,1650);
     }
+    // v326: conservar la representacion del objetivo hasta que termine el golpe.
+    const melee=String(fx.attackStyle||'')==='melee'&&['dagger','sword','axe','spear'].includes(String(fx.weaponKind||''));
+    const thrownAxe=String(fx.attackStyle||'')==='ranged'&&String(fx.weaponKind||'')==='axe';
+    if(melee||thrownAxe){
+      const old=prev.get(String(fx.targetId||'')),newTarget=current.get(String(fx.targetId||''));
+      if(old&&(!newTarget||Number(newTarget.hp||0)<Number(old.hp||0)||Number(newTarget.guard||0)<Number(old.guard||0))){
+        const time=thrownAxe?940:({dagger:570,sword:700,spear:730,axe:840})[fx.weaponKind]||700;
+        hold(old,time);
+      }
+    }
   }
   hv322Visual.fxId=String(fx?.eventId||'');
   if(prev.size){

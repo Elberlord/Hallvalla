@@ -655,24 +655,63 @@ function getPhysicalImpactAsset(fx,weaponKind){
   if(kind==="axe")return "assets/effects/axe/axe_impact_01.webp";
   return "assets/effects/melee/melee_impact_01.webp";
 }
+// v326: cada arma recorre del atacante al objetivo y se oye al impactar.
+function hv326MeleeTravelMs(kind){
+  return ({dagger:430,sword:560,spear:590,axe:700})[kind]||560;
+}
+function hv326MeleeIcon(kind){
+  if(kind==="axe")return '<img src="assets/effects/axe/axe_slash_01.webp" alt="" draggable="false">';
+  if(kind==="spear")return '<img src="assets/effects/spear/spear_projectile_01.webp" alt="" draggable="false">';
+  if(kind==="dagger")return '<svg viewBox="0 0 96 96" aria-hidden="true"><path d="M65 10 L78 20 45 61 37 53 Z" fill="#f5f8ff" stroke="#c3dded" stroke-width="2"/><path d="M37 53 L28 69 20 61 36 46 Z" fill="#ffc778" stroke="#e3a34f" stroke-width="2"/><path d="M18 60 L39 80" stroke="#f0d5a6" stroke-width="7" stroke-linecap="round"/><path d="M19 72 L29 82" stroke="#593b26" stroke-width="7" stroke-linecap="round"/></svg>';
+  return '<svg viewBox="0 0 96 96" aria-hidden="true"><path d="M79 9 L87 21 38 72 25 61 Z" fill="#e8f4ff" stroke="#9bd5f2" stroke-width="2"/><path d="M26 60 L11 73 24 86 38 72" fill="#e0c087" stroke="#f4d7a8" stroke-width="2"/><path d="M19 78 L10 87" stroke="#704422" stroke-width="8" stroke-linecap="round"/></svg>';
+}
+function hv326FlyWeaponFx(from,to,kind,sideClass,rarityClass,duration){
+  if(!from||!to)return false;
+  const dx=to.x-from.x,dy=to.y-from.y;
+  const length=Math.max(1,Math.hypot(dx,dy));
+  const start=.12,end=.96;
+  const point={x:from.x+dx*start,y:from.y+dy*start};
+  const travelX=dx*(end-start),travelY=dy*(end-start);
+  const angle=Math.atan2(dy,dx)*180/Math.PI;
+  const icon=hv326MeleeIcon(kind);
+  const trail='<span class="hv326-weapon-trail" aria-hidden="true"></span>';
+  const node=spawnBattleFxNode('hv326-weapon-flight hv326-kind-'+kind+' '+sideClass+' '+rarityClass,point.x,point.y,{},duration+130,icon+trail);
+  if(!node)return false;
+  const bend=kind==='axe'?Math.min(13,length*.055):kind==='spear'?0:Math.min(10,length*.05);
+  const frames=[
+    {offset:0,opacity:.38,transform:'translate(-50%, -50%) translate3d(0px,0px,0) rotate('+(angle-12)+'deg) scale(.72)'},
+    {offset:.22,opacity:1,transform:'translate(-50%, -50%) translate3d('+(travelX*.15).toFixed(1)+'px,'+(travelY*.15-bend).toFixed(1)+'px,0) rotate('+(angle+8)+'deg) scale(1)'},
+    {offset:.7,opacity:1,transform:'translate(-50%, -50%) translate3d('+(travelX*.70).toFixed(1)+'px,'+(travelY*.70-bend*.65).toFixed(1)+'px,0) rotate('+(angle+36)+'deg) scale(1.12)'},
+    {offset:1,opacity:.96,transform:'translate(-50%, -50%) translate3d('+travelX.toFixed(1)+'px,'+travelY.toFixed(1)+'px,0) rotate('+(angle+44)+'deg) scale(.96)'}
+  ];
+  try{if(typeof node.animate==='function')node.animate(frames,{duration,easing:kind==='axe'?'cubic-bezier(.3,0,.65,1)':'ease-in-out',fill:'forwards'});else node.style.transform=frames[3].transform;}
+  catch(_){node.style.transform=frames[3].transform;}
+  return true;
+}
 function playPhysicalMeleeBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impactSound,impactVolume,weaponKind){
-  const dashMs=Math.max(170,Math.min(300,Math.round(125 + len*0.42)));
-  const slashX=from.x + (to.x-from.x)*0.58;
-  const slashY=from.y + (to.y-from.y)*0.58;
-  const kind=String(weaponKind||"").toLowerCase();
+  const kind=['dagger','sword','axe','spear'].includes(String(weaponKind||''))?String(weaponKind):'sword';
+  const duration=hv326MeleeTravelMs(kind);
   const cavalry=isCavalryBattleFx(fx);
-  const slashClass=kind==="spear"?"battle-fx-melee-thrust":"battle-fx-melee-slash-img";
-  const slashTtl=680;
   if(cavalry){
-    spawnBattleFxNode(`battle-fx-charge-lines ${sideClass} ${rarityClass}`,from.x,from.y,{"--charge-angle":`${angle}deg`,"--charge-dx":`${(to.x-from.x)*0.58}px`,"--charge-dy":`${(to.y-from.y)*0.58}px`},720,'<img src="assets/effects/charge/charge_speed_lines_01.webp" alt="" draggable="false">');
-    battleSetTimeout(()=>spawnBattleFxNode(`battle-fx-charge-dust ${sideClass} ${rarityClass}`,to.x,to.y,{"--charge-angle":`${angle}deg`},920,'<img src="assets/effects/charge/charge_dust_01.webp" alt="" draggable="false">'),150);
+    spawnBattleFxNode('battle-fx-charge-lines '+sideClass+' '+rarityClass,from.x,from.y,{"--charge-angle":angle+'deg',"--charge-dx":((to.x-from.x)*.58)+'px',"--charge-dy":((to.y-from.y)*.58)+'px'},duration+120,'<img src="assets/effects/charge/charge_speed_lines_01.webp" alt="" draggable="false">');
   }
-  spawnBattleFxNode(`${slashClass} ${sideClass} ${rarityClass}`,slashX,slashY,{"--melee-angle":`${angle}deg`,"--melee-dx":`${(to.x-from.x)*0.18}px`,"--melee-dy":`${(to.y-from.y)*0.18}px`},slashTtl,`<img src="${getPhysicalMeleeSlashAsset(weaponKind)}" alt="" draggable="false">`);
-  battleSetTimeout(()=>{ if(fx.hit!==false) tryPlaySound(impactSound,impactVolume); },120);
+  hv326FlyWeaponFx(from,to,kind,sideClass,rarityClass,duration);
   battleSetTimeout(()=>{
     if(fx.hit===false)return;
-    spawnBattleFxNode(`battle-fx-melee-impact-img ${sideClass} ${rarityClass}`,to.x,to.y,{},980,`<img src="${getPhysicalImpactAsset(fx,weaponKind)}" alt="" draggable="false">`);
-  },Math.min(150, dashMs));
+    tryPlaySound(impactSound,impactVolume);
+    spawnBattleFxNode('battle-fx-melee-impact-img '+sideClass+' '+rarityClass,to.x,to.y,{},980,'<img src="'+getPhysicalImpactAsset(fx,kind)+'" alt="" draggable="false">');
+    if(cavalry)spawnBattleFxNode('battle-fx-charge-dust '+sideClass+' '+rarityClass,to.x,to.y,{"--charge-angle":angle+'deg'},820,'<img src="assets/effects/charge/charge_dust_01.webp" alt="" draggable="false">');
+  },duration);
+  return true;
+}
+function hv326PlayThrownAxe(fx,from,to,sideClass,rarityClass,impactSound,impactVolume){
+  const duration=800;
+  hv326FlyWeaponFx(from,to,'axe',sideClass,rarityClass,duration);
+  battleSetTimeout(()=>{
+    if(fx.hit===false)return;
+    tryPlaySound(impactSound,impactVolume);
+    spawnBattleFxNode('battle-fx-melee-impact-img '+sideClass+' '+rarityClass,to.x,to.y,{},980,'<img src="assets/effects/axe/axe_impact_01.webp" alt="" draggable="false">');
+  },duration);
   return true;
 }
 
@@ -761,6 +800,8 @@ function playArrowBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impac
 function getBattleFxImpactDelay(fx){
   if(!fx)return 120;
   if(fx.attackStyle==="ranged"&&fx.weaponKind==="arrow")return 1640;
+  if(fx.attackStyle==="ranged"&&fx.weaponKind==="axe")return 940;
+  if(fx.attackStyle==="melee"&&["axe","sword","dagger","spear"].includes(String(fx.weaponKind||"")))return hv326MeleeTravelMs(fx.weaponKind)+140;
   if(isIceDragonBattleFx(fx))return getIceDragonTravelMs(fx)+55;
   if(isMagicBattleFx(fx))return getMagicFxTravelMs(fx)+45;
   return fx.attackStyle==="ranged"?360:300;
@@ -795,6 +836,10 @@ function playBattleFxEvent(fx,attackerRef=null){
       playSpearBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impactSound,impactVolume);
       return;
     }
+    if(weaponKind==="axe"){
+      hv326PlayThrownAxe(fx,from,to,sideClass,rarityClass,impactSound,impactVolume);
+      return;
+    }
     const travelMs=Math.max(170,Math.min(380,Math.round(len*2.2)));
     battleSetTimeout(()=>tryPlaySound(impactSound,impactVolume),Math.max(80,travelMs-55));
     const projectileExtra=["fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-projectile-trail"></div>':'';
@@ -802,7 +847,7 @@ function playBattleFxEvent(fx,attackerRef=null){
     battleSetTimeout(()=>spawnBattleFxNode(`battle-fx-impact ranged ${sideClass} ${rarityClass}`,to.x,to.y,{},940,`<div class="battle-fx-impact-core"></div><div class="battle-fx-impact-ring"></div><div class="battle-fx-impact-sparks"></div>${impactExtra}`),Math.max(40,travelMs-12));
     return;
   }
-  if(["sword","axe","spear"].includes(String(weaponKind||"").toLowerCase())){
+  if(["sword","axe","spear","dagger"].includes(String(weaponKind||"").toLowerCase())){
     playPhysicalMeleeBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impactSound,impactVolume,weaponKind);
     return;
   }
@@ -1335,13 +1380,16 @@ function getSummonSoundForUnit(unit){
 function getUnitWeaponKind(unit){
   if(!unit)return "sword";
   const explicit=String(unit.weaponKind||unit.attackWeapon||"").toLowerCase();
-  if(["sword","axe","arrow","spear","fire_magic"].includes(explicit))return explicit;
+  if(["sword","axe","arrow","spear","fire_magic","dagger"].includes(explicit))return explicit;
   const key=String(unit.key||"").toLowerCase();
   const name=String(unit.name||"").toLowerCase();
   const icon=String(unit.icon||"");
   const leaderType=String(unit.leaderType||"").toLowerCase();
   const tactical=String(unit.weaponClass||getWeaponClassForCard(unit)||"").toLowerCase();
   const dragonElement=String(unit.dragonElement||unit.element||unit.elementalType||"").toLowerCase();
+  const skillMeta=globalThis.HALLVALLA_UNIT_SKILL_ASSIGNMENTS?.[key]||null;
+  const tags=[...(Array.isArray(skillMeta?.weaponTags)?skillMeta.weaponTags:[]),...(Array.isArray(skillMeta?.classTags)?skillMeta.classTags:[])].map(x=>String(x).toLowerCase());
+  if(leaderType==="assassin"||((tags.includes("dagger")||tactical==="dagger")&&(tags.includes("assassin")||tags.includes("ninja")||tactical==="dagger")))return "dagger";
 
   const isMage=leaderType==="mage"||tactical==="mage"||unit.caster||unit.hechicero||unit.hechicera||unit.nigromante||
     key.includes("mage")||key.includes("adept")||key.includes("arcane")||key.includes("ifrit")||
