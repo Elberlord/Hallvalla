@@ -6,7 +6,7 @@
 (()=>{
   "use strict";
 
-  const HALLVALLA_UNIT_MOTION_VERSION="20261010.4";
+  const HALLVALLA_UNIT_MOTION_VERSION="20261026.328";
   const records=new Map();
   const actionTimers=new Map();
   const reactionTimers=new Map();
@@ -101,30 +101,37 @@
     const fromLeft=priorView?priorView.left:current.left+(old.left+old.width/2-next.left-next.width/2);
     const fromTop=priorView?priorView.top:current.top+(old.top+old.height/2-next.top-next.height/2);
     if(Math.hypot(fromLeft-current.left,fromTop-current.top)<6)return;
+    // v328: se desplaza solo el personaje, no un clon de la carta con base y estadísticas.
     const ghost=el.cloneNode(true);
-    ghost.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));
+    ghost.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
     ghost.removeAttribute('id');ghost.removeAttribute('tabindex');ghost.setAttribute('aria-hidden','true');
-    ghost.classList.add('hv322-motion-ghost');
+    ghost.classList.add('hv328-motion-piece');
+    for(const child of ghost.children){
+      if(!child.matches('.unit-portrait,.field-figure-layer'))child.style.setProperty('display','none','important');
+    }
+    // Para cartas sin arte independiente, evitar mostrar una ficha flotante vacía.
+    if(!ghost.querySelector('.unit-portrait,.field-figure-layer'))return;
     Object.assign(ghost.style,{position:'fixed',left:fromLeft+'px',top:fromTop+'px',width:current.width+'px',height:current.height+'px',margin:'0',pointerEvents:'none',zIndex:'9998',opacity:'1',transition:'none',animation:'none'});
     ghost.style.setProperty('transform','none','important');
     ghost.style.setProperty('translate','none','important');
     ghost.style.setProperty('scale','none','important');
+    ghost.style.setProperty('background','transparent','important');
+    ghost.style.setProperty('border','0','important');
+    ghost.style.setProperty('box-shadow','none','important');
     document.body.appendChild(ghost);
     el.style.setProperty('visibility','hidden','important');
-    const arc=Math.min(16,Math.hypot(current.left-fromLeft,current.top-fromTop)*.09);
     let animation=null;
     try{
       if(typeof ghost.animate==='function')animation=ghost.animate([
         {left:fromLeft+'px',top:fromTop+'px',offset:0},
-        {left:((fromLeft+current.left)/2)+'px',top:((fromTop+current.top)/2-arc)+'px',offset:.5},
         {left:current.left+'px',top:current.top+'px',offset:1}
-      ],{duration,easing:'ease-in-out',fill:'forwards'});
+      ],{duration,easing:'linear',fill:'forwards'});
     }catch(e){console.warn('[HallValla][Movimiento] Animacion omitida',e);}
     if(!animation){ghost.remove();el.style.removeProperty('visibility');return;}
     const timer=setTimeout(()=>{
       const record=hv322Transits.get(id);
       if(record?.ghost!==ghost)return;
-      try{animation.cancel();}catch(_){}
+      try{animation.cancel();}catch(_){ }
       ghost.remove();if(el.isConnected)el.style.removeProperty('visibility');
       hv322Transits.delete(id);
       if(el.isConnected)el.dataset.hvMotion='idle';
@@ -141,31 +148,9 @@
       return {until:0,timer:0};
     }
 
-    const dx=Math.max(-3,Math.min(3,Number(x)-Number(previous.x)));
-    const dy=Math.max(-3,Math.min(3,Number(y)-Number(previous.y)));
-    const cell=el.parentElement;
-    const rect=cell?.getBoundingClientRect?.();
-    const cellW=Math.max(1,Number(rect?.width||64));
-    const cellH=Math.max(1,Number(rect?.height||64));
-
-    const fromX=-dx*cellW;
-    const fromY=-dy*cellH;
-    const midX=fromX*.34;
-    const midY=fromY*.34;
-    const overX=Math.sign(dx)*Math.min(4.5,Math.abs(dx)*2.6);
-    const overY=Math.sign(dy)*Math.min(3.5,Math.abs(dy)*2.0);
-    const direction=Math.sign(dx||dy||1);
-
-    el.style.setProperty("--hv-motion-from-x",`${fromX.toFixed(2)}px`);
-    el.style.setProperty("--hv-motion-from-y",`${fromY.toFixed(2)}px`);
-    el.style.setProperty("--hv-motion-mid-x",`${midX.toFixed(2)}px`);
-    el.style.setProperty("--hv-motion-mid-y",`${midY.toFixed(2)}px`);
-    el.style.setProperty("--hv-motion-over-x",`${overX.toFixed(2)}px`);
-    el.style.setProperty("--hv-motion-over-y",`${overY.toFixed(2)}px`);
-    el.style.setProperty("--hv-motion-lean",`${(-direction*1.8).toFixed(2)}deg`);
-    el.style.setProperty("--hv-motion-move-ms",`${duration}ms`);
-    el.dataset.hvMotion="move";
-
+    // v328: sin bamboleos, rebotes ni desplazamiento de la base del elemento real.
+    // El unico trayecto se genera en hv322AnimateTransit mediante la silueta.
+    el.dataset.hvMotion='idle';
     hv322AnimateTransit(el,unit,previous,x,y,duration);
     const until=performance.now()+duration+40;
     const token=`${unit?.id||unit?.key||"unit"}:${Date.now()}:${Math.random()}`;
@@ -222,7 +207,7 @@
       timer=started.timer;
       until=started.until;
     }else if(until>now){
-      if(el.dataset.hvMotion!=="move")el.dataset.hvMotion="move";
+      if(el.dataset.hvMotion!=="idle")el.dataset.hvMotion="idle";
     }else{
       if(el.dataset.hvMotion!=="idle")el.dataset.hvMotion="idle";
       timer=0;

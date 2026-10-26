@@ -460,14 +460,14 @@ function getFxRarityClass(unit){
 }
 function playSummonFx(unit){
   if(!unit)return;
-  // v280: la voz sustituye el sonido de entrada de las unidades.
+  // v328: portal arcano circular, la figura real emerge sobre su base.
+  // Visual exclusivo de invocacion, no utilizado al mover unidades.
   const point=getGridCellCenter(unit.x,unit.y);
   if(!point)return;
-  const sideClass=unit.owner===1?"player":"enemy";
+  const sideClass=unit.owner===1?'player':'enemy';
   const rarityClass=getFxRarityClass(unit);
-  const extraBurst=["fx-heroic","fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-aura"></div><div class="battle-fx-sigil"></div>':'';
-  const ttl=["fx-mythic","fx-demigod"].includes(rarityClass)?1500:["fx-glorious","fx-epic"].includes(rarityClass)?1320:["fx-heroic"].includes(rarityClass)?1220:1100;
-  spawnBattleFxNode(`battle-fx-summon ${sideClass} ${rarityClass}`,point.x,point.y,{},ttl,`<div class="battle-fx-ring"></div><div class="battle-fx-ring battle-fx-ring-2"></div><div class="battle-fx-core"></div><div class="battle-fx-rays"></div>${extraBurst}`);
+  const markup='<div class="hv328-portal-ring ring-outer"></div><div class="hv328-portal-ring ring-middle"></div><div class="hv328-portal-ring ring-inner"></div><div class="hv328-portal-runes" aria-hidden="true">✦ · ⟡ · ✧ · ⟡ · ✦</div><div class="hv328-portal-center"></div>';
+  spawnBattleFxNode('hv328-summon-portal '+sideClass+' '+rarityClass,point.x,point.y,{},850,markup);
 }
 function playBattleFx(attacker,target){
   if(!attacker||!target)return;

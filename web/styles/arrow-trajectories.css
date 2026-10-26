@@ -53,3 +53,26 @@
 }
 #battleFxLayer .hv326-kind-dagger .hv326-weapon-trail{height:3px;width:54%;background:linear-gradient(90deg,transparent,rgba(200,229,255,.84))}
 @media (prefers-reduced-motion:reduce){#battleFxLayer .hv326-weapon-flight{will-change:auto}}
+
+/* HallValla v328 - separacion estricta entre invocacion y desplazamiento. */
+#battleFxLayer .hv328-summon-portal{position:absolute;z-index:13;width:106px;height:106px;pointer-events:none;transform:translate(-50%,-50%);display:grid;place-items:center;filter:drop-shadow(0 0 5px #e7a842b8);animation:hv328PortalAppear .85s ease-out both}
+#battleFxLayer .hv328-portal-ring{position:absolute;inset:7%;border:3px solid #e8b762;border-radius:50%;box-shadow:0 0 11px #ffd37da6,inset 0 0 12px #daa2517a;animation:hv328PortalSpin 1.2s linear infinite}
+#battleFxLayer .hv328-portal-ring.ring-middle{inset:17%;border:2px dashed #ffd889;animation-direction:reverse;animation-duration:.9s}
+#battleFxLayer .hv328-portal-ring.ring-inner{inset:29%;border:2px solid #ffe2a0;animation-duration:.7s}
+#battleFxLayer .hv328-portal-runes{position:absolute;inset:0;display:grid;place-items:start center;padding-top:5px;color:#ffe7b0;font:700 13px Georgia,serif;letter-spacing:2px;text-shadow:0 0 6px #ffc565}
+#battleFxLayer .hv328-portal-center{width:36%;height:36%;border-radius:50%;background:radial-gradient(circle,#ffe2a87c 0%,#ce8c1855 45%,transparent 75%);animation:hv328PortalPulse .5s ease-out both}
+@keyframes hv328PortalAppear{0%{opacity:0;scale:.45}20%{opacity:1;scale:1}75%{opacity:.95}100%{opacity:0;scale:1.15}}
+@keyframes hv328PortalSpin{to{transform:rotate(360deg)}}
+@keyframes hv328PortalPulse{0%{scale:.4;opacity:.7}100%{scale:1.65;opacity:0}}
+/* Durante la invocacion aparece el personaje; el marco/base no se desplaza. */
+.grid .cell > .unit-card[data-hv-spawn="1"] .unit-portrait,
+.grid .cell > .unit-card[data-hv-spawn="1"] .field-figure-layer{animation:hv328SummonRise var(--hv-spawn-ms,520ms) ease-out both!important}
+.grid .cell > .unit-card[data-hv-spawn="1"] .field-figure-img{animation:none!important}
+.grid .cell > .unit-card[data-hv-spawn="1"] .hv-rig-2d .hv-rig-part{animation:none!important}
+@keyframes hv328SummonRise{0%{opacity:0;translate:0 19px;scale:.72}65%{opacity:1}100%{opacity:1;translate:0 0;scale:1}}
+/* Pieza visual solamente: nunca copiar marco, stats, base o sellos. */
+.unit-card.hv328-motion-piece{border:0!important;background:transparent!important;box-shadow:none!important;filter:none!important;isolation:visible!important;overflow:visible!important;pointer-events:none!important}
+.unit-card.hv328-motion-piece:before,.unit-card.hv328-motion-piece:after{content:none!important;display:none!important}
+.unit-card.hv328-motion-piece > :not(.unit-portrait):not(.field-figure-layer){display:none!important}
+.unit-card.hv328-motion-piece .unit-portrait,.unit-card.hv328-motion-piece .field-figure-layer{animation:none!important;transition:none!important}
+@media(prefers-reduced-motion:reduce){#battleFxLayer .hv328-summon-portal{animation-duration:.15s}.grid .cell > .unit-card[data-hv-spawn="1"] .unit-portrait,.grid .cell > .unit-card[data-hv-spawn="1"] .field-figure-layer{animation:none}}

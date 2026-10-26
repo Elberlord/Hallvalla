@@ -954,6 +954,16 @@ function hvGamepadHandleButtons(gp){
   hvGamepadState.perfButtonEdges++;
   const modal=hvGamepadVisibleModal();
   const battle=hvGamepadBattleOpen();
+  // v328: SELECT selecciona AUTO/MANUAL; START confirma solo cuando hay cambio pendiente.
+  // Fuera de un duelo y con otros modales se conservan las acciones existentes.
+  if(battle&&!modal&&typeof isHallvallaRealtime==='function'&&isHallvallaRealtime()){
+    if(pressed.VIEW&&typeof globalThis.hvControlCyclePending==='function'){
+      if(globalThis.hvControlCyclePending())return true;
+    }
+    if(pressed.MENU&&globalThis.hvControlHasPending?.()&&typeof globalThis.hvControlConfirmPending==='function'){
+      globalThis.hvControlConfirmPending();return true;
+    }
+  }
   /* Build 20260914.122: Menu/Start/Pause es SIEMPRE clic izquierdo.
      Si el cursor virtual ya existe, hace clic exactamente bajo el puntero aun cuando
      pointerMode haya sido desactivado por otra navegación. Si todavía no hay cursor

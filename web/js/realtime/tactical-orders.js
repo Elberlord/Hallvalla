@@ -132,7 +132,7 @@ document.addEventListener("keydown",ev=>{
 // HallValla v327: selector compacto visible y autonomia opcional del lider.
 // Este modulo no modifica los intervalos de ataque/movimiento ni el motor de dano.
 const HV_CONTROL_MODE_KEY='hallvalla_control_mode_v327';
-const hvControl={mode:'manual',session:'',autoBusy:false,ui:null,unitDialog:null,unitTimer:0,orderSignature:''};
+const hvControl={mode:'manual',session:'',autoBusy:false,ui:null,unitDialog:null,unitTimer:0,orderSignature:'',pending:null};
 try{hvControl.mode=localStorage.getItem(HV_CONTROL_MODE_KEY)==='auto'?'auto':'manual';}catch(_){ }
 function hvControlIsAuto(){return hvControl.mode==='auto';}
 function hvControlEnsureUI(){
@@ -140,11 +140,11 @@ function hvControlEnsureUI(){
  const existing=document.getElementById('hvModeControl');if(existing){hvControl.ui=existing;return existing;}
  if(!document.getElementById('hv327ModeStyle')){
   const css=document.createElement('style');css.id='hv327ModeStyle';
-  css.textContent=`#hvModeControl{position:absolute;right:1.8%;top:30.5%;z-index:185;width:116px;box-sizing:border-box;display:flex;flex-direction:column;gap:3px;padding:6px;background:rgba(7,13,22,.95);border:1px solid #bb9651;border-radius:9px;box-shadow:0 8px 19px #000b;color:#dfc48b;pointer-events:auto;font-family:inherit}#hvModeControl[hidden]{display:none!important}#hvModeControl .hv-mode-title{text-align:center;letter-spacing:.5px;font-size:9px;font-weight:700}#hvModeControl .hv-mode-options{display:flex;gap:3px}#hvModeControl button{flex:1;min-width:0;padding:6px 3px;border-radius:5px;border:1px solid #7f6746;background:#182236;color:#d8c6a1;font-weight:700;font-size:10px;cursor:pointer;touch-action:manipulation}#hvModeControl button[aria-pressed="true"]{background:linear-gradient(#4a401d,#806128);border-color:#f4d47b;color:#fff8d2;box-shadow:0 0 8px #e5b9556b}#hvModeControl button:focus-visible{outline:2px solid #fff2be}@media(max-width:720px){#hvModeControl{right:1%;top:30%;width:105px;padding:4px}#hvModeControl button{font-size:9px;padding:5px 2px}}`;
+  css.textContent=`#hvModeControl{position:absolute;right:1.8%;top:30.5%;z-index:185;width:116px;box-sizing:border-box;display:flex;flex-direction:column;gap:3px;padding:6px;background:rgba(7,13,22,.95);border:1px solid #bb9651;border-radius:9px;box-shadow:0 8px 19px #000b;color:#dfc48b;pointer-events:auto;font-family:inherit}#hvModeControl[hidden]{display:none!important}#hvModeControl .hv-mode-title{text-align:center;letter-spacing:.5px;font-size:9px;font-weight:700}#hvModeControl .hv-mode-options{display:flex;gap:3px}#hvModeControl button{flex:1;min-width:0;padding:6px 3px;border-radius:5px;border:1px solid #7f6746;background:#182236;color:#d8c6a1;font-weight:700;font-size:10px;cursor:pointer;touch-action:manipulation}#hvModeControl button[aria-pressed="true"]{background:linear-gradient(#4a401d,#806128);border-color:#f4d47b;color:#fff8d2;box-shadow:0 0 8px #e5b9556b}#hvModeControl button:focus-visible{outline:2px solid #fff2be}#hvModeControl button.hv328-mode-pending{outline:2px solid #62d8ff!important;outline-offset:1px;box-shadow:0 0 12px #38c7ff99!important}#hvModeControl .hv328-mode-hint{font:700 8px/1.3 Arial,sans-serif;text-align:center;color:#bad8dc;letter-spacing:.1px}@media(max-width:720px){#hvModeControl{right:1%;top:30%;width:105px;padding:4px}#hvModeControl button{font-size:9px;padding:5px 2px}}`;
   document.head.appendChild(css);
  }
  const panel=document.createElement('div');panel.id='hvModeControl';panel.setAttribute('role','group');panel.setAttribute('aria-label','Modo de control del jugador');
- panel.innerHTML='<span class="hv-mode-title">CONTROL</span><span class="hv-mode-options"><button type="button" data-hv-mode="auto">AUTO</button><button type="button" data-hv-mode="manual">MANUAL</button></span>';
+ panel.innerHTML='<span class="hv-mode-title">CONTROL</span><span class="hv-mode-options"><button type="button" data-hv-mode="auto">AUTO</button><button type="button" data-hv-mode="manual">MANUAL</button></span><span class="hv328-mode-hint">SELECT: elegir</span>';
  panel.addEventListener('click',event=>{const button=event.target.closest('button[data-hv-mode]');if(button)hvControlSetMode(button.dataset.hvMode);});
  shell.appendChild(panel);hvControl.ui=panel;return panel;
 }
@@ -152,7 +152,8 @@ function hvControlUpdateUI(){
  const panel=hvControlEnsureUI();if(!panel)return;
  panel.hidden=!hvLeaderMenuBattle();
  if(panel.hidden)return;
- panel.querySelectorAll('button[data-hv-mode]').forEach(button=>{const active=button.dataset.hvMode===hvControl.mode;button.setAttribute('aria-pressed',active?'true':'false');button.title=active?'Modo activo':'Cambiar a '+button.textContent;});
+ panel.querySelectorAll('button[data-hv-mode]').forEach(button=>{const active=button.dataset.hvMode===hvControl.mode;button.setAttribute('aria-pressed',active?'true':'false');button.classList.toggle('hv328-mode-pending',button.dataset.hvMode===hvControl.pending);button.title=active?'Modo activo':'Cambiar a '+button.textContent;});
+ const hint=panel.querySelector('.hv328-mode-hint');if(hint)hint.textContent=hvControl.pending?('START: confirmar '+hvControl.pending.toUpperCase()):'SELECT: elegir';
 }
 function hvControlSaveOrder(unit,mode,targetId=''){
  if(!unit||!unit.id||hvControlIsAuto()||Number(unit.owner)!==Number(myPlayer||1)||!hvLeaderMenuBattle())return false;
@@ -169,6 +170,7 @@ function hvControlCloseUnitDialog(){
 }
 function hvControlSetMode(value){
  if(!['auto','manual'].includes(value)||!hvLeaderMenuBattle())return hvControl.mode;
+ hvControl.pending=null;
  const was=hvControl.mode;
  hvControl.mode=value;
  try{localStorage.setItem(HV_CONTROL_MODE_KEY,value);}catch(_){ }
@@ -190,13 +192,33 @@ function hvControlSetMode(value){
  try{if(was!==value)setHint(value==='auto'?'AUTO: lider y unidades actuan automaticamente.':'MANUAL: cruceta para lider y ordenes en unidades.');}catch(_){ }
  return value;
 }
+// SELECT propone un modo sin activarlo; START confirma y evita cambios involuntarios.
+function hvControlCyclePending(){
+ if(!hvLeaderMenuBattle()||hvControl.unitDialog)return false;
+ const basis=hvControl.pending||hvControl.mode;
+ hvControl.pending=basis==='manual'?'auto':'manual';
+ hvControlUpdateUI();
+ try{setHint('Modo '+hvControl.pending.toUpperCase()+' seleccionado. START para confirmar.');}catch(_){ }
+ return true;
+}
+function hvControlHasPending(){return !!hvControl.pending;}
+function hvControlConfirmPending(){
+ if(!hvLeaderMenuBattle()||!hvControl.pending)return false;
+ const selected=hvControl.pending;
+ hvControl.pending=null;
+ hvControlSetMode(selected);
+ hvControlUpdateUI();
+ try{setHint('Modo '+selected.toUpperCase()+' confirmado.');}catch(_){ }
+ return true;
+}
 function hvControlSyncBattle(){
  const active=hvLeaderMenuBattle();
  const panel=hvControlEnsureUI();if(panel)panel.hidden=!active;
- if(!active){hvControl.session='';hvControlCloseUnitDialog();return;}
+ if(!active){hvControl.session='';hvControl.pending=null;hvControlCloseUnitDialog();return;}
  const key=String(gameId||publicState?.code||'local')+':'+String(publicState?.createdAt||publicState?.battleStartedAt||'');
  if(hvControl.session!==key){
   hvControl.session=key;
+  hvControl.pending=null;
   hvControlCloseUnitDialog();
   hvLeaderMenu.open=!hvControlIsAuto();hvLeaderMenu.category='';hvLeaderMenu.index=0;
   if(hvLeaderMenu.open){hvLeaderMenuRender();if(hvLeaderMenu.refresh===null)hvLeaderMenu.refresh=setInterval(()=>{if(!hvLeaderMenuBattle()||!hvLeaderMenu.open){clearInterval(hvLeaderMenu.refresh);hvLeaderMenu.refresh=null;return;}hvLeaderMenuRender();},350);}
@@ -280,7 +302,7 @@ function hvControlOpenUnitOrders(unit){
  draw();hvControl.unitTimer=setInterval(draw,500);
  return true;
 }
-Object.assign(globalThis,{hvControlIsAuto,hvControlSetMode,hvControlSyncBattle,hvControlOpenUnitOrders});
+Object.assign(globalThis,{hvControlIsAuto,hvControlSetMode,hvControlSyncBattle,hvControlOpenUnitOrders,hvControlCyclePending,hvControlHasPending,hvControlConfirmPending});
 setInterval(()=>{try{hvControlSyncBattle();hvControlAutoCast();}catch(error){console.warn('[HallValla v327] Control',error);}},1200);
 document.addEventListener('keydown',event=>{
  if(!hvControl.unitDialog||!['Escape','Backspace'].includes(event.code))return;
