@@ -676,25 +676,85 @@ function playPhysicalMeleeBattleFxEvent(fx,from,to,len,angle,sideClass,rarityCla
   return true;
 }
 
-function getArrowProjectileAsset(fx){
-  const key=String(fx?.attackerKey||"").toLowerCase();
-  const name=String(fx?.attackerName||"").toLowerCase();
-  if(key.includes("scyth")||key.includes("horse")||name.includes("caballo")||name.includes("montado"))return "assets/effects/arrows/arrow_projectile_02.webp";
-  return "assets/effects/arrows/arrow_projectile_01.webp";
+// v321: trayectoria real de flechas. Solo presentacion; el dano lo resuelve el motor.
+function hv321ArrowSprite(variant){
+  const key=String(variant||"normal");
+  return `assets/effects/arrows/hv321_arrow_${["poison","fire"].includes(key)?key:"normal"}.webp`;
 }
+function hv321FlyArrow(from,to,opts={}){
+  if(!from||!to)return false;
+  const dx=to.x-from.x,dy=to.y-from.y;
+  const length=Math.max(1,Math.hypot(dx,dy));
+  const variant=["poison","fire","stun"].includes(opts.variant)?opts.variant:"normal";
+  const duration=Math.max(250,Number(opts.duration)||700);
+  const img=hv321ArrowSprite(variant);
+  const node=spawnBattleFxNode(`hv321-arrow-flight hv321-arrow-${variant}`,from.x,from.y,{},duration+250,
+    `<img src="${img}" alt="" draggable="false"><span class="hv321-flight-tail" aria-hidden="true"></span>`);
+  if(!node)return false;
+  const curve=Math.min(34,Math.max(7,length*.055))*(opts.curveSign===-1?-1:1);
+  const nx=-dy/length,ny=dx/length;
+  const frames=[];
+  for(let i=0;i<=24;i++){
+    const t=i/24;
+    const sideways=curve*Math.sin(Math.PI*t);
+    const x=dx*t+nx*sideways,y=dy*t+ny*sideways;
+    const vx=dx+nx*curve*Math.PI*Math.cos(Math.PI*t);
+    const vy=dy+ny*curve*Math.PI*Math.cos(Math.PI*t);
+    // El sprite original apunta a -45 grados (diagonal superior derecha).
+    const rotation=Math.atan2(vy,vx)*180/Math.PI+45;
+    frames.push({offset:t,transform:`translate(-50%, -50%) translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) rotate(${rotation.toFixed(2)}deg)`,opacity:i===24?.96:1});
+  }
+  try{
+    if(typeof node.animate==="function")node.animate(frames,{duration,easing:"linear",fill:"forwards"});
+    else node.style.transform=frames[frames.length-1].transform;
+  }catch(_){node.style.transform=frames[frames.length-1].transform;}
+  return true;
+}
+function hv321PlayArrowVolley(leader,targets,skillId){
+  if(!leader||!Array.isArray(targets)||!targets.length)return false;
+  const kind=String(skillId||"");
+  if(!["arrow_rain","fire_arrows","poison_arrows","stun_arrows"].includes(kind))return false;
+  const origin=getGridCellCenter(leader.x,leader.y);
+  if(!origin)return false;
+  const variant=kind==="fire_arrows"?"fire":kind==="poison_arrows"?"poison":kind==="stun_arrows"?"stun":"normal";
+  const count=kind==="arrow_rain"&&targets.length<=8?2:1;
+  const from={x:origin.x,y:origin.y+(Number(leader.owner)===1?14:-14)};
+  const valid=targets.map(unit=>({unit,at:getGridCellCenter(unit.x,unit.y)})).filter(item=>item.at);
+  if(!valid.length)return false;
+  tryPlaySound("attack_ranged",.73);
+  valid.forEach(({unit,at},i)=>{
+    for(let j=0;j<count;j++){
+      const offset=(j-(count-1)/2)*10;
+      const to={x:at.x+offset,y:at.y};
+      const length=Math.hypot(to.x-from.x,to.y-from.y);
+      const duration=3000; // Lluvia: 3 segundos de vuelo visible por proyectil.
+      const stagger=i*46+j*96;
+      battleSetTimeout(()=>{
+        hv321FlyArrow(from,to,{variant,duration,curveSign:(i+j)%2?-1:1});
+        battleSetTimeout(()=>{
+          if(j===0&&i===0)tryPlaySound("impact_arrow",.45);
+          const cls=`hv321-arrow-impact hv321-arrow-${variant}`;
+          spawnBattleFxNode(cls,to.x,to.y,{},680,'<img src="assets/effects/arrows/arrow_impact_01.webp" alt="" draggable="false">');
+        },duration);
+      },stagger);
+    }
+  });
+  return true;
+}
+globalThis.hv321PlayArrowVolley=hv321PlayArrowVolley;
+
 function getArrowFxTravelMsByDistance(distance){
-  return Math.max(300,Math.min(620,Math.round(240 + distance*1.85)));
+  return 2500; // Arqueros: 2.5 segundos de vuelo visual independientemente de la distancia.
 }
 function playArrowBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impactSound,impactVolume){
   const travelMs=getArrowFxTravelMsByDistance(len);
-  const projectileExtra=["fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-arrow-trail"></div>':'';
-  spawnBattleFxNode(`battle-fx-arrow-projectile ${sideClass} ${rarityClass}`,from.x,from.y,{"--arrow-dx":`${to.x-from.x}px`,"--arrow-dy":`${to.y-from.y}px`,"--arrow-angle":`${angle}deg`,"--arrow-flight":`${travelMs}ms`},travelMs+240,`<img src="${getArrowProjectileAsset(fx)}" alt="" draggable="false">${projectileExtra}`);
+  hv321FlyArrow(from,to,{variant:String(fx?.arrowVariant||"normal"),duration:travelMs,curveSign:String(fx?.attackerId||"").length%2?-1:1});
   battleSetTimeout(()=>{
     if(fx.hit===false)return;
     tryPlaySound(impactSound,impactVolume);
     spawnBattleFxNode(`battle-fx-arrow-impact ${sideClass} ${rarityClass}`,to.x,to.y,{},920,'<img src="assets/effects/arrows/arrow_impact_01.webp" alt="" draggable="false">');
     spawnBattleFxNode(`battle-fx-arrow-stuck ${sideClass} ${rarityClass}`,to.x,to.y,{"--arrow-angle":`${angle}deg`},1780,'<img src="assets/effects/arrows/arrow_stuck_01.webp" alt="" draggable="false">');
-  },Math.max(100,travelMs-8));
+  },travelMs);
   return true;
 }
 

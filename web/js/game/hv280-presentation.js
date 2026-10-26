@@ -130,7 +130,7 @@
     return "guard";
   }
   let lastBannerAt=0;
-  function showSkillFx(name,family,owner,leader,targets){
+  function showSkillFx(name,family,owner,leader,targets,skillId=""){
     if(!battleOpen())return;
     let host=document.getElementById("hv280AnnouncerFx");
     if(!host){
@@ -156,6 +156,10 @@
     }
     if(typeof spawnBattleFxNode!=="function"||typeof getGridCellCenter!=="function")return;
     const unitList=Array.isArray(targets)?targets:[];
+    if(leader?.leaderType==="archer"&&["arrow_rain","fire_arrows","poison_arrows","stun_arrows"].includes(skillId)&&typeof globalThis.hv321PlayArrowVolley==="function"){
+      globalThis.hv321PlayArrowVolley(leader,unitList,skillId);
+      return;
+    }
     const picks=unitList.length?unitList.slice(0,4):[leader];
     for(const unit of picks){
       if(!unit||Number(unit.hp||0)<=0)continue;
@@ -195,7 +199,14 @@
         const targetEnemy=next.units.filter(u=>u&&!u.leader&&Number(u.hp||0)>0&&Number(u.owner)!==Number(leader.owner));
         const targetAlly=next.units.filter(u=>u&&!u.leader&&Number(u.hp||0)>0&&Number(u.owner)===Number(leader.owner));
         const defensive=family==="guard"||/bless|heal|shield|aura|order_offense|fortify|iron_shell|banner|rage|frenzy|galop|war_cry/i.test(skill.id);
-        toShow.push({name:skill.name,skillId:skill.id,leaderType:leader.leaderType,family,owner:Number(leader.owner),leader,targets:defensive?targetAlly:targetEnemy,tier:i});
+        const arrowRanges={arrow_rain:8,fire_arrows:5,poison_arrows:5,stun_arrows:8};
+        let skillTargets=defensive?targetAlly:targetEnemy;
+        if(leader.leaderType==="archer"&&Object.prototype.hasOwnProperty.call(arrowRanges,skill.id)){
+          const includeLeader=skill.id==="fire_arrows"||skill.id==="stun_arrows";
+          skillTargets=prev.units.filter(u=>u&&Number(u.hp||0)>0&&Number(u.owner)!==Number(leader.owner)
+            &&(includeLeader||!u.leader)&&!isConcealed(u)&&typeof dist==="function"&&dist(old,u)<=arrowRanges[skill.id]);
+        }
+        toShow.push({name:skill.name,skillId:skill.id,leaderType:leader.leaderType,family,owner:Number(leader.owner),leader,targets:skillTargets,tier:i});
       }
     }
     // Visualizaciones suficientes para identificar cada familia sin inundar el campo.
@@ -204,7 +215,7 @@
       if(shown.size>=3)break;
       if(shown.has(`${item.owner}:${item.family}`))continue;
       shown.add(`${item.owner}:${item.family}`);
-      showSkillFx(item.name,item.family,item.owner,item.leader,item.targets);
+      showSkillFx(item.name,item.family,item.owner,item.leader,item.targets,item.skillId);
     }
     // Solo 1 anuncio prioritario por bando y actualizacion; el log contiene todos.
     const said=new Set();
