@@ -82,7 +82,7 @@ const app=initializeApp(firebaseConfig),db=getDatabase(app),auth=getAuth(app);
 const FIELD_BOARD_TUNER_KEY="hallvalla_field_board_tuner_v5_final_80_5x9";
 const BATTLE_CLOCK_TUNER_KEY="hallvalla_battle_clock_tuner_v3_restored_positions";
 const HALLVALLA_CANONICAL_UI=globalThis.HALLVALLA_UI_CANONICAL||{};
-const FIELD_BOARD_DEFAULTS=Object.freeze({...HALLVALLA_CANONICAL_UI.fieldBoard||{rows:9,cols:5,cardScale:80}});
+const FIELD_BOARD_DEFAULTS=Object.freeze({...HALLVALLA_CANONICAL_UI.fieldBoard||{rows:12,cols:8,cardScale:65}});
 const FIELD_BOARD_LIMITS=Object.freeze({rows:[4,12],cols:[3,10],cardScale:[45,150]});
 function clampFieldBoardNumber(value,min,max,fallback){
   const n=Number(value);

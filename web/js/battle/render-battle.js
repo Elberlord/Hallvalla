@@ -140,6 +140,7 @@ function render(reason="direct"){
   hallvallaRecordRenderDomain("hand",renderHand);
   hallvallaRecordRenderDomain("log",renderLog);
   hallvallaRecordRenderDomain("chrome",renderBattleChrome);
+  if(typeof globalThis.hvControlSyncBattle==="function")globalThis.hvControlSyncBattle();
   if(publicState.mode==="tutorial")hallvallaRecordRenderDomain("tutorial",renderBasicTutorialCoach);
   if(publicState.mode==="adventure"&&publicState.aiActionText)setHint(publicState.aiActionText);
   maybeShowHonorRecharge();

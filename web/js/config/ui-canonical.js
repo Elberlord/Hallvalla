@@ -12,7 +12,7 @@
   };
   globalThis.HALLVALLA_UI_CANONICAL=deepFreeze({
     version:1,
-    fieldBoard:{rows:9,cols:5,cardScale:80},
+    fieldBoard:{rows:12,cols:8,cardScale:65},
     battleVisual:{
       playerLeaderScale:74,
       playerLeaderX:-4,
