@@ -919,7 +919,7 @@ function hvSkillRevealTrueSight(units){
     if(!u||Number(u.hp||0)<=0||(!u.stealth&&!u.hidden)||u.revealed)return u;
     const source=sources.find(s=>s.owner!==u.owner&&Math.max(Math.abs(Number(s.x)-Number(u.x)),Math.abs(Number(s.y)-Number(u.y)))<=3);
     if(!source)return u;
-    revealed++;return {...u,revealed:true,stealth:false,hidden:false};
+    revealed++;return hvStealthExit(u);
   });
   return{units:out,changed:revealed>0,amount:revealed};
 }

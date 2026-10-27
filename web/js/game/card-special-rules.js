@@ -269,10 +269,53 @@ function getBeastmasterYoungDragonElement(duelNumber){
 
 function isBeastUnit(u){return !!u&&!u.leader&&(u.beast===true||["honey_badger","porcupine","wild_boar","black_raven","constrictor_snake","african_buffalo","peregrine_falcon","inland_taipan","african_lion","bengal_tiger","white_rhino","african_elephant"].includes(String(u.key||"")));}
 function isStealthedUnit(u){return !!u&&!u.leader&&(u.stealth===true||u.hidden===true)&&!u.revealed;}
+/* v333 · Motor canónico de ESTADO Sigilo.
+   Una habilidad futura solo llama hvStealthEnter(unit,{hidden,durationMs,now}),
+   hvStealthExit(unit,reason,includeText) o hvStealthExpire(unit,now).
+   isStealthedUnit es la UNICA fuente para IA, render y privacidad PvP.
+   La habilidad decide CUANDO se activa o su cooldown; el motor resuelve COMO.
+   Una carta con stealth:true ya entra por makeUnit() sin código especial. */
+function hvStealthEnter(unit,{hidden=false,durationMs=0,now=Date.now()}={}){
+  if(!unit||unit.leader)return unit;
+  const ms=Math.max(0,Number(durationMs)||0);
+  return {...unit,stealth:true,hidden:!!hidden,revealed:false,hvLeaderStealthUntil:ms>0?now+ms:0};
+}
+function hvStealthExit(unit,reason="",includeText=false){
+  if(!unit||unit.leader)return unit;
+  // No marcar reveladas a todas las unidades normales cuando atacan:
+  // antes se colocaba revealed:true incluso si nunca estuvieron ocultas.
+  if(unit.stealth!==true&&unit.hidden!==true)return unit;
+  const wasActive=isStealthedUnit(unit);
+  const next={...unit,stealth:false,hidden:false,revealed:true,hvLeaderStealthUntil:0};
+  return includeText&&wasActive&&reason
+    ?{...next,text:[unit.text||"", "Revelada por "+String(reason)+"."].filter(Boolean).join(" ").trim()}:next;
+}
+function hvStealthExpire(unit,now=Date.now()){
+  if(!unit||!(Number(unit.hvLeaderStealthUntil)>0)||Number(unit.hvLeaderStealthUntil)>now)return unit;
+  const out=hvStealthExit(unit);
+  return {...out,hvLeaderStealthUntil:0};
+}
+function hvStealthHiddenFromViewer(unit,viewer){
+  return !!unit&&isStealthedUnit(unit)&&Number(unit.owner)!==Number(viewer);
+}
+// Diagnostico de solo lectura, util al probar nuevas unidades y Muerte Blanca.
+function hvStealthInspect(key=""){
+  const list=typeof publicState!=="undefined"&&Array.isArray(publicState?.units)?publicState.units:[];
+  const viewer=typeof myPlayer!=="undefined"?Number(myPlayer):0;
+  return list.filter(u=>u&&!u.leader&&(!key||String(u.key||"")===String(key))).map(u=>({
+    unidad:String(u.name||u.key||""),dueño:Number(u.owner),sigilo:isStealthedUnit(u),
+    stealth:u.stealth===true,hidden:u.hidden===true,revelado:u.revealed===true,
+    invisibleParaRival:isStealthedUnit(u)&&Number(u.owner)===viewer,
+    recargaMuerteBlancaSeg:Math.max(0,Math.ceil((Number(u.hvCardCooldowns?.muerte_blanca||0)-Date.now())/1000)),
+    sigiloTemporalSeg:Math.max(0,Math.ceil((Number(u.hvLeaderStealthUntil||0)-Date.now())/1000))
+  }));
+}
+globalThis.hvStealthInspect=hvStealthInspect;
+
 function canTargetStealth(source,target){return !isStealthedUnit(target)||source?.trap==="reveal_stealth"||source?.revealStealth;}
 // Regla global: Sigilo impide ser seleccionado directamente, pero NO protege contra daño de área/sector/global que cubra la casilla de la unidad.
 function canReceiveUntargetedAreaEffect(target,attacker=null){return !!target&&Number(target.hp||0)>0&&(!attacker||!(target.aerial||target.flight)||canUnitAttackAerialTarget(attacker,target));}
-function revealUnit(u,reason="revelada"){return isStealthedUnit(u)?{...u,revealed:true,stealth:false,text:`${u.text||""} Revelada por ${reason}.`.trim()}:u;}
+function revealUnit(u,reason="revelada"){return isStealthedUnit(u)?hvStealthExit(u,reason,true):u;}
 function revealStealthInRadius(units,owner,center,radius,reason="detección"){let count=0;const out=(units||[]).map(u=>{if(u.owner!==owner&&isStealthedUnit(u)&&dist(u,center)<=radius){count++;return revealUnit(u,reason);}return u;});return{units:out,count};}
 function applyMongolExplorerAura(units){const list=Array.isArray(units)?units:[];const mongols=list.filter(u=>u&&u.key==="mongol_explorer"&&Number(u.hp||0)>0&&!u.leader);if(!mongols.length)return{units:list,count:0};let count=0;const out=list.map(u=>{if(!u||u.leader||!isStealthedUnit(u))return u;const revealer=mongols.find(m=>m.owner!==u.owner&&dist(m,u)<=2);if(!revealer)return u;count++;return revealUnit(u,"Ojos de la estepa");});return{units:out,count};}
 function getBeastTraps(state=publicState){return Array.isArray(state?.beastTraps)?state.beastTraps:[];}

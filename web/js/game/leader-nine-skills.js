@@ -252,12 +252,12 @@
     }
     if(leader.leaderType==="assassin"){
       switch(entry.id){
-        case "shadow_cloak":return assassins.length?{units:mapLive(units,u=>assassins.some(x=>x.id===u.id),u=>({...u,hvLeaderStealthUntil:now+10000,stealth:true,hidden:true,revealed:false}))}:null;
+        case "shadow_cloak":return assassins.length?{units:mapLive(units,u=>assassins.some(x=>x.id===u.id),u=>hvStealthEnter(u,{hidden:true,durationMs:10000,now}))}:null;
         case "poisoned_blades":return assassins.length?{units:mark(assassins,"hvLeaderNextPoison",true)}:null;
         case "throat_cut":{const target=picked(foes);return target?{units:hpHit(units,[target],5)}:null;}
         case "silent_night":return enemies.length?{units:lock(units,enemies,"silence",4000)}:null;
         case "double_dagger":return assassins.length?{units:mark(assassins,"hvLeaderNextDoubleDagger",true)}:null;
-        case "smoke_curtain":return assassins.length?{units:mapLive(buff(units,assassins,"agi",5),u=>assassins.some(x=>x.id===u.id),u=>({...u,hvLeaderStealthUntil:now+5000,stealth:true,hidden:true,revealed:false}))}:null;
+        case "smoke_curtain":return assassins.length?{units:mapLive(buff(units,assassins,"agi",5),u=>assassins.some(x=>x.id===u.id),u=>hvStealthEnter(u,{hidden:true,durationMs:5000,now}))}:null;
         case "death_sentence":{const target=picked(foes);return target?{units:hpHit(units,[target],8)}:null;}
         case "blade_eclipse":{
           let out=foes.length?hpHit(units,foes,5):units;const l=enemies.find(x=>x.leader);if(l)out=hpHit(out,[l],2);
@@ -385,7 +385,7 @@
     });
     // El Sigilo prestado caduca incluso sin ataques.
     out=out.map(u=>{
-      if(N(u.hvLeaderStealthUntil)>0&&N(u.hvLeaderStealthUntil)<=now){changed=true;return {...u,stealth:false,hidden:false,hvLeaderStealthUntil:0};}
+      if(N(u.hvLeaderStealthUntil)>0&&N(u.hvLeaderStealthUntil)<=now){changed=true;return hvStealthExpire(u,now);}
       return u;
     });
     return{units:out,logs,changed};

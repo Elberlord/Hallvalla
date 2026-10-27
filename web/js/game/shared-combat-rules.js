@@ -839,7 +839,7 @@ function isHanzoContractAttack(attacker,defender,attackContext=null){
 function resolveHanzoContractAfterAttack(units,attacker,defender,triggered,defenderFell){
   if(!triggered||!attacker)return{units:units||[],triggered:false,succeeded:false,text:""};
   const succeeded=!!defenderFell;
-  const out=(units||[]).map(u=>u.id===attacker.id?{...u,hanzoContractPending:false,hanzoContractConsumed:true,hanzoContractTargetId:"",hanzoContractTargetName:"",stealth:succeeded,revealed:!succeeded,hidden:false}:u);
+  const out=(units||[]).map(u=>{if(u.id!==attacker.id)return u;const n={...u,hanzoContractPending:false,hanzoContractConsumed:true,hanzoContractTargetId:"",hanzoContractTargetName:""};return succeeded?hvStealthEnter(n):hvStealthExit(n);});
   return {units:out,triggered:true,succeeded,text:succeeded?` Contrato del Shogun cumplido: ${attacker.name} elimina a ${defender?.name||"su primer objetivo"} y conserva Sigilo.`:` Contrato del Shogun fallido: ${defender?.name||"el primer objetivo"} sobrevive y ${attacker.name} queda revelado.`};
 }
 function shouldKeepStealthAfterAttack(attacker,defender,attackContext=null){
@@ -850,12 +850,12 @@ function shouldKeepStealthAfterAttack(attacker,defender,attackContext=null){
 }
 function clearStealthAfterAttackIfNeeded(units,attackerId,keep=false){
   if(keep)return units||[];
-  return (units||[]).map(u=>u.id===attackerId?{...u,stealth:false,revealed:true}:u);
+  return (units||[]).map(u=>u.id===attackerId?hvStealthExit(u):u);
 }
 function grantSimoStealthAfterKill(units,attacker,defender,defenderFell){
   const triggered=!!(defenderFell&&attacker?.key==="simo_hayha"&&defender&&!defender.leader&&hvCardReady(attacker,"muerte_blanca")&&(units||[]).some(u=>u.id===attacker.id&&u.hp>0));
   if(!triggered)return{units:units||[],triggered:false,text:""};
-  const out=(units||[]).map(u=>u.id===attacker.id?hvCardMark({...u,stealth:true,hidden:false,revealed:false},"muerte_blanca"):u);
+  const out=(units||[]).map(u=>u.id===attacker.id?hvCardMark(hvStealthEnter(u),"muerte_blanca"):u);
   return{units:out,triggered:true,text:` Muerte Blanca: ${attacker.name} consigue el golpe final y obtiene Sigilo.`};
 }
 function canUnitAttackTarget(attacker,target){

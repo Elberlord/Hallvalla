@@ -2,7 +2,7 @@
 /* HallValla STAGE8PRIV1 · Interacción de tablero y efectos de unidad */
 
 function isStealthHiddenFromViewer(u){
-  return !!u&&typeof isStealthedUnit==="function"&&isStealthedUnit(u)&&u.owner!==myPlayer;
+  return !!u&&typeof hvStealthHiddenFromViewer==="function"&&hvStealthHiddenFromViewer(u,myPlayer);
 }
 
 let boardDragListenerDisposers=[];
