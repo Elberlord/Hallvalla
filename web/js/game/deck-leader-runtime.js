@@ -15,35 +15,49 @@ function getSelectedLeaderType(){
   return isInitialLeaderAllowed(selectedLeaderType)?selectedLeaderType:"";
 }
 async function loadLeaderProfile(forcePrompt=false){
+  // v329: nunca considerar elegido un lider solamente por existir en cache del navegador.
+  // Firebase /profile/leaderType es la eleccion explicita y canonica de la cuenta.
+  const requestingUid=String(uid||'');
   leaderProfileLoaded=false;
-  const cached=localStorage.getItem("hallvalla_selected_leader")||"";
-  selectedLeaderType=LEADER_DATA[cached]?cached:"";
-
-  if(uid){
+  selectedLeaderType='';
+  if(!requestingUid){
+    // Evita que el arranque anterior a la autenticacion reutilice el lider de otra cuenta.
+    leaderProfileLoaded=true;
+    renderSelectedLeaderBadge();
+    return;
+  }
+  const cached=String(localStorage.getItem('hallvalla_selected_leader')||'');
+  const cachedOwner=String(localStorage.getItem('__hallvalla_account_owner_uid_v1')||'');
+  if(requestingUid==='LOCALHOST_TEST_USER'){
+    // Pruebas locales: no hay perfil remoto, pero se conserva una eleccion local real.
+    selectedLeaderType=isInitialLeaderAllowed(cached)?cached:'';
+  }else{
     try{
-      const snap=await get(ref(db,`users/${uid}/profile/leaderType`));
-      const saved=snap.exists()?snap.val():"";
-      if(LEADER_DATA[saved]){
+      const snap=await get(ref(db,`users/${requestingUid}/profile/leaderType`));
+      if(String(uid||'')!==requestingUid)return; // cambio de sesion durante lectura.
+      const saved=String(snap.exists()?snap.val():'');
+      if(isInitialLeaderAllowed(saved)){
         selectedLeaderType=saved;
-        localStorage.setItem("hallvalla_selected_leader",saved);
-      }else if(selectedLeaderType){
-        await update(ref(db,`users/${uid}/profile`),{leaderType:selectedLeaderType,updatedAt:Date.now()});
+        localStorage.setItem('hallvalla_selected_leader',saved);
+      }else{
+        // Sin seleccion en la cuenta: la UI debe solicitarla, no registrar automaticamente Archer.
+        selectedLeaderType='';
+        localStorage.removeItem('hallvalla_selected_leader');
       }
     }catch(e){
-      if(String(e?.message||e||"").toLowerCase().includes("permission")){
-        console.info("Líder local activo: Firebase no permitió leer perfil remoto.");
-      }else{
-        console.warn("No se pudo cargar líder desde Firebase. Se usará el líder local si existe:",e);
-      }
+      // Fuera de linea, usar cache SOLO si pertenece al UID actual.
+      if(cachedOwner===requestingUid&&isInitialLeaderAllowed(cached))selectedLeaderType=cached;
+      const message=String(e?.message||e||'');
+      if(message.toLowerCase().includes('permission'))console.info('No fue posible leer el lider remoto. Se conserva solo cache de su propia cuenta.');
+      else console.warn('No se pudo comprobar el lider remoto:',e);
     }
   }
-
+  if(String(uid||'')!==requestingUid)return;
   leaderProfileLoaded=true;
   renderSelectedLeaderBadge();
-
+  const overlay=$('leaderSelectOverlay');
   if(getSelectedLeaderType()){
-    const overlay=$("leaderSelectOverlay");
-    if(overlay)overlay.classList.add("hidden");
+    if(overlay)overlay.classList.add('hidden');
   }else if(forcePrompt){
     requireLeaderSelection(true);
   }

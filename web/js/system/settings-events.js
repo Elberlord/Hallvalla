@@ -190,6 +190,23 @@ on("eventsBtn","click",openHallvallaEvents);
 on("clansBtn","click",()=>showComingSoon("Clanes"));
 on("rankingBtn","click",async()=>{try{if(typeof globalThis.hvEnsureFeature==="function")await globalThis.hvEnsureFeature("pvp-ranking");if(typeof globalThis.hvPvpRankingOpen==="function")await globalThis.hvPvpRankingOpen();else showComingSoon("Ranking");}catch(error){console.error("[HallValla][PERF2] No se pudo cargar Ranking PvP:",error);showComingSoon("Ranking");}});
 on("profileBtn","click",openProfilePanel);
+// v329: acceso a seleccion de lider para corregir una eleccion previamente heredada.
+(()=>{
+  const actions=document.querySelector('#profilePanel .adventure-actions');
+  if(!actions||document.getElementById('hv329ChangeLeaderBtn'))return;
+  const button=document.createElement('button');
+  button.id='hv329ChangeLeaderBtn';
+  button.type='button';
+  button.className='btn ghost';
+  button.textContent='Elegir lider';
+  actions.insertBefore(button,document.getElementById('closeProfilePanelBtn'));
+  button.addEventListener('click',()=>{
+    if(!String(uid||'')){setHint('Inicia sesion para elegir lider.');return;}
+    document.getElementById('profilePanel')?.classList.add('hidden');
+    globalThis.hvHydrateAssetGroup?.('leader-select');
+    document.getElementById('leaderSelectOverlay')?.classList.remove('hidden');
+  });
+})();
 on("friendsBtn","click",()=>showComingSoon("Amigos"));
 on("goldPlusBtn","click",()=>showComingSoon("Conseguir oro"));
 on("gemsPlusBtn","click",()=>showComingSoon("Comprar gemas"));
@@ -207,7 +224,8 @@ on("fragmentsPlusBtn","click",()=>showComingSoon("Conseguir fragmentos"));
 renderHomeProgress();
 renderSelectedLeaderBadge();
 renderNotificationBadge();
-loadLeaderProfile(false);
+// v329: no cargar lider local antes de conocer el UID; previene herencia entre cuentas.
+if(HALLVALLA_LOCALHOST_TEST_MODE)loadLeaderProfile(false);
 
 const joinInputEl = document.getElementById("joinCode");
 if(joinInputEl){
@@ -223,14 +241,19 @@ updateAuthActionButtons();
 if(HALLVALLA_LOCALHOST_TEST_MODE){
   uid="LOCALHOST_TEST_USER";
   authReady=true;
-  loadLeaderProfile(false).finally(()=>{resolveFirebaseAuthReady();setText("lobbyStatus","Modo local listo. Firebase no se usa para la prueba visual.");});
+  loadLeaderProfile(true).finally(()=>{resolveFirebaseAuthReady();setText("lobbyStatus","Modo local listo. Firebase no se usa para la prueba visual.");});
 }else{
   onAuthStateChanged(auth,async u=>{
     const googleReady=!!u&&!u.isAnonymous&&!!globalThis.hallvallaIsGoogleAccount?.(u);
     if(googleReady){
       uid=u.uid;
       setText("lobbyStatus","Cargando perfil...");
-      await loadLeaderProfile(false);
+      // v329: terminar la restauracion/sincronizacion de la cuenta ANTES de abrir el selector.
+      if(typeof globalThis.hallvallaBootstrapPermanentAccount==='function'){
+        await globalThis.hallvallaBootstrapPermanentAccount(u);
+      }
+      if(auth.currentUser?.uid!==u.uid)return;
+      await loadLeaderProfile(true);
       resolveFirebaseAuthReady();
       setText("lobbyStatus","Listo para jugar.");
     }else{
