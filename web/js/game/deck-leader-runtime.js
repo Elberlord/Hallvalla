@@ -63,6 +63,21 @@ async function loadLeaderProfile(forcePrompt=false){
   }
 }
 async function setSelectedLeaderType(type){
+  // v334: eleccion inicial e irreversible para la cuenta actual.
+  // No basta con ocultar botones: tambien se impide reemplazar Firebase por error.
+  if(!leaderProfileLoaded){
+    console.warn('[HallValla v334] Seleccion bloqueada mientras carga el perfil.');
+    return false;
+  }
+  const previous=getSelectedLeaderType();
+  if(previous){
+    const overlay=$('leaderSelectOverlay');
+    if(overlay)overlay.classList.add('hidden');
+    if(previous!==type&&typeof hvAlert==='function'){
+      await hvAlert('Ya elegiste '+(LEADER_DATA[previous]?.name||'tu lider')+'. La eleccion inicial es permanente; puedes consultar los demas lideres, pero no cambiarlos.','Lider permanente');
+    }
+    return false;
+  }
   if(!isInitialLeaderAllowed(type)){
     await hvAlert("Señor de las Bestias no está disponible como líder inicial. Debe desbloquearse por evento o progresión.","Líder bloqueado");
     return;
@@ -82,6 +97,7 @@ async function setSelectedLeaderType(type){
   if(nextAction==="adventure")openAdventureStory();
   if(nextAction==="beast_event")openBeastmasterEvent();
   if(nextAction==="hallvalla_events")openHallvallaEvents();
+  return true;
 }
 function requireLeaderSelection(force=false){
   if((force||leaderProfileLoaded)&&!getSelectedLeaderType()){

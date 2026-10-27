@@ -852,8 +852,8 @@ function renderForgeLeaderPortraitRail(){
       const active=type===current;
       return `<button type="button" class="hv-forge-leader-portrait ${active?"is-active":""}" data-forge-leader-det="${escapeHtml(type)}" title="${escapeHtml(data.name)} · ${count}/9 habilidades" aria-label="Detalles de ${escapeHtml(data.name)}, nivel ${level}, ${count} habilidades desbloqueadas">
         <img src="${escapeHtml(data.portrait||"")}" alt="" loading="lazy" decoding="async">
-        <span class="hv-forge-leader-label"><strong>${escapeHtml(data.name)}</strong><small>Nv. ${level} · Buff Tier ${getLeaderBuffTierFromLevel(level)} · ${escapeHtml(LEADER_DETAIL_META[type]?.target||"compatibles")}</small></span>
-        <span class="hv-forge-leader-indicator" aria-hidden="true">${active?"✦":"›"}</span>
+        <span class="hv-forge-leader-label"><strong>${escapeHtml(data.name)}</strong><small>Nv. ${level} · Buff Tier ${getLeaderBuffTierFromLevel(level)} · ${escapeHtml(LEADER_DETAIL_META[type]?.target||"compatibles")} · ${active?"LÍDER ELEGIDO":"Solo consulta"}</small></span>
+        <span class="hv-forge-leader-indicator" aria-hidden="true">${active?"✓":"›"}</span>
       </button>`;
     }).join("");
   rail.querySelectorAll("[data-forge-leader-det]").forEach(button=>{
@@ -1699,13 +1699,12 @@ function openLeaderDetailModal(type){
   </section>
   <section class="leader-info-actions">
     <button class="leader-info-ability-btn" type="button" data-leader-ability="${escapeHtml(type)}">Ver las 9 habilidades</button>
-    <button class="leader-info-select-btn" type="button" data-leader-choice="${escapeHtml(type)}">Seleccionar</button>
+    <p class="hv334-leader-choice-notice" aria-label="Eleccion permanente de lider">${getSelectedLeaderType()?(getSelectedLeaderType()===type?'Tu lider elegido · permanente':'Lider disponible solo para consultar'): 'La eleccion inicial se realiza en la pantalla de bienvenida'}</p>
   </section>`;
   if(typeof hvLeaderAbilityGridHtml==="function")body.insertAdjacentHTML("beforeend",hvLeaderAbilityGridHtml(type,level));
   const modal=$("leaderDetailModal");
   if(modal){modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");}
   body.querySelector("[data-leader-ability]")?.addEventListener("click",()=>openLeaderAbilityModal(type));
-  body.querySelector("[data-leader-choice]")?.addEventListener("click",async()=>{await setSelectedLeaderType(type);closeLeaderDetailModal();});
 }
 function closeLeaderDetailModal(){const modal=$("leaderDetailModal");if(modal){modal.classList.add("hidden");modal.setAttribute("aria-hidden","true");}}
 function openLeaderAbilityModal(type){
@@ -1736,7 +1735,8 @@ document.querySelectorAll(".leader-select-btn[data-leader-choice]").forEach(btn=
   btn.addEventListener("click",async ev=>{
     ev.stopPropagation();
     const type=btn.dataset.leaderChoice;
-    await setSelectedLeaderType(type);
+    const chosen=await setSelectedLeaderType(type);
+    if(chosen!==true)return;
     const data=LEADER_DATA[type];
     if(data)await hvAlert(`Líder elegido: ${data.name}. ${getLeaderProgressText(type,getLocalLeaderLevel(type),getLocalLeaderAbility(type))}`,"Líder elegido");
   });

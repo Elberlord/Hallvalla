@@ -190,23 +190,7 @@ on("eventsBtn","click",openHallvallaEvents);
 on("clansBtn","click",()=>showComingSoon("Clanes"));
 on("rankingBtn","click",async()=>{try{if(typeof globalThis.hvEnsureFeature==="function")await globalThis.hvEnsureFeature("pvp-ranking");if(typeof globalThis.hvPvpRankingOpen==="function")await globalThis.hvPvpRankingOpen();else showComingSoon("Ranking");}catch(error){console.error("[HallValla][PERF2] No se pudo cargar Ranking PvP:",error);showComingSoon("Ranking");}});
 on("profileBtn","click",openProfilePanel);
-// v329: acceso a seleccion de lider para corregir una eleccion previamente heredada.
-(()=>{
-  const actions=document.querySelector('#profilePanel .adventure-actions');
-  if(!actions||document.getElementById('hv329ChangeLeaderBtn'))return;
-  const button=document.createElement('button');
-  button.id='hv329ChangeLeaderBtn';
-  button.type='button';
-  button.className='btn ghost';
-  button.textContent='Elegir lider';
-  actions.insertBefore(button,document.getElementById('closeProfilePanelBtn'));
-  button.addEventListener('click',()=>{
-    if(!String(uid||'')){setHint('Inicia sesion para elegir lider.');return;}
-    document.getElementById('profilePanel')?.classList.add('hidden');
-    globalThis.hvHydrateAssetGroup?.('leader-select');
-    document.getElementById('leaderSelectOverlay')?.classList.remove('hidden');
-  });
-})();
+// v334: la seleccion de lider solo se ofrece durante el primer inicio.
 on("friendsBtn","click",()=>showComingSoon("Amigos"));
 on("goldPlusBtn","click",()=>showComingSoon("Conseguir oro"));
 on("gemsPlusBtn","click",()=>showComingSoon("Comprar gemas"));
