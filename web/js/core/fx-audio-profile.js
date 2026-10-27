@@ -460,14 +460,18 @@ function getFxRarityClass(unit){
 }
 function playSummonFx(unit){
   if(!unit)return;
-  // v328: portal arcano circular, la figura real emerge sobre su base.
-  // Visual exclusivo de invocacion, no utilizado al mover unidades.
+  // v331: el portal esta ligado al tamano REAL de la celda, no a pixeles fijos.
   const point=getGridCellCenter(unit.x,unit.y);
   if(!point)return;
+  const cell=document.querySelector('#grid .cell[data-x="'+Number(unit.x)+'"][data-y="'+Number(unit.y)+'"]');
+  const rect=cell?.getBoundingClientRect?.();
+  const shortest=Math.min(Number(rect?.width||48),Number(rect?.height||48));
+  const portalSize=Math.max(10,Math.floor(shortest*.88));
+  const runeSize=Math.max(5,Math.min(8,Math.round(portalSize*.15)));
   const sideClass=unit.owner===1?'player':'enemy';
   const rarityClass=getFxRarityClass(unit);
-  const markup='<div class="hv328-portal-ring ring-outer"></div><div class="hv328-portal-ring ring-middle"></div><div class="hv328-portal-ring ring-inner"></div><div class="hv328-portal-runes" aria-hidden="true">✦ · ⟡ · ✧ · ⟡ · ✦</div><div class="hv328-portal-center"></div>';
-  spawnBattleFxNode('hv328-summon-portal '+sideClass+' '+rarityClass,point.x,point.y,{},850,markup);
+  const markup='<div class="hv328-portal-ring ring-outer"></div><div class="hv328-portal-ring ring-middle"></div><div class="hv328-portal-ring ring-inner"></div><div class="hv328-portal-runes" aria-hidden="true">✦ ⟡ ✦</div><div class="hv328-portal-center"></div>';
+  spawnBattleFxNode('hv328-summon-portal '+sideClass+' '+rarityClass,point.x,point.y,{'--hv331-portal-size':portalSize+'px','--hv331-rune-size':runeSize+'px'},700,markup);
 }
 function playBattleFx(attacker,target){
   if(!attacker||!target)return;
@@ -633,7 +637,7 @@ function playSpearBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impac
   battleSetTimeout(()=>{
     if(fx.hit===false)return;
     tryPlaySound(impactSound,impactVolume);
-    spawnBattleFxNode(`battle-fx-spear-impact ${sideClass} ${rarityClass}`,to.x,to.y,{"--spear-angle":`${angle}deg`},980,'<img src="assets/effects/spear/spear_impact_01.webp" alt="" draggable="false">');
+    hv331PlayBloodImpact(to,from,sideClass);
   },Math.max(100,travelMs-8));
   return true;
 }
@@ -649,11 +653,33 @@ function getPhysicalMeleeSlashAsset(weaponKind){
   if(kind==="axe")return "assets/effects/axe/axe_slash_01.webp";
   return "assets/effects/melee/melee_slash_02.webp";
 }
-function getPhysicalImpactAsset(fx,weaponKind){
-  const kind=String(weaponKind||"").toLowerCase();
-  if(isCavalryBattleFx(fx))return "assets/effects/melee/melee_impact_01.webp";
-  if(kind==="axe")return "assets/effects/axe/axe_impact_01.webp";
-  return "assets/effects/melee/melee_impact_01.webp";
+// v331: pringue de sangre en SVG sin fondo, sin textura rectangular ni explosiones.
+// Las coordenadas son exclusivamente visuales; el motor decide hit y dano.
+function hv331PlayBloodImpact(to,from,sideClass=''){
+  if(!to)return null;
+  const x=Number(to.x),y=Number(to.y);
+  const dx=x-Number(from?.x??(x-10)),dy=y-Number(from?.y??y);
+  const angle=Math.atan2(dy,dx)*180/Math.PI;
+  const cell=document.querySelector('#grid .cell');
+  const rect=cell?.getBoundingClientRect?.();
+  const base=Math.min(Number(rect?.width||44),Number(rect?.height||44));
+  const size=Math.max(30,Math.min(58,Math.round(base*1.03)));
+  const svg='<svg class="hv331-blood-art" viewBox="0 0 100 100" aria-hidden="true" focusable="false">'
+    +'<path d="M28 54 Q20 48 29 43 L38 43 42 36 51 41 57 37 60 45 72 42 Q78 48 68 54 L60 59 56 67 45 62 36 66 35 58Z" fill="#99070e"/>'
+    +'<path d="M34 49 Q39 45 47 48 L56 46 61 50 55 55 44 57 37 54Z" fill="#d11a22"/>'
+    +'<path d="M62 43 Q72 32 79 21 Q75 39 68 47Z" fill="#b20b14"/>'
+    +'<path d="M36 43 Q26 32 20 25 Q31 30 42 41Z" fill="#bd1019"/>'
+    +'<path d="M47 39 Q44 28 47 16 L52 37Z" fill="#e02a30"/>'
+    +'<path d="M51 62 Q61 71 66 84 Q54 76 47 65Z" fill="#86050d"/>'
+    +'<path d="M30 60 Q19 64 12 72 Q20 59 32 54Z" fill="#c21119"/>'
+    +'<ellipse cx="83" cy="41" rx="4.2" ry="3.4" fill="#c81720"/>'
+    +'<ellipse cx="77" cy="69" rx="3.2" ry="5.4" fill="#940a12"/>'
+    +'<ellipse cx="24" cy="83" rx="3" ry="4.2" fill="#c91821"/>'
+    +'<ellipse cx="13" cy="43" rx="2.8" ry="2.8" fill="#9d0d13"/>'
+    +'<ellipse cx="61" cy="13" rx="2.7" ry="3.8" fill="#be1722"/>'
+    +'<ellipse cx="89" cy="78" rx="2" ry="2.5" fill="#aa0b14"/>'
+    +'</svg>';
+  return spawnBattleFxNode('hv331-blood-impact '+sideClass,x,y,{'--hv331-blood-size':size+'px','--hv331-blood-angle':angle+'deg'},360,svg);
 }
 // v326: cada arma recorre del atacante al objetivo y se oye al impactar.
 function hv326MeleeTravelMs(kind){
@@ -698,8 +724,8 @@ function playPhysicalMeleeBattleFxEvent(fx,from,to,len,angle,sideClass,rarityCla
   hv326FlyWeaponFx(from,to,kind,sideClass,rarityClass,duration);
   battleSetTimeout(()=>{
     if(fx.hit===false)return;
-    tryPlaySound(impactSound,impactVolume);
-    spawnBattleFxNode('battle-fx-melee-impact-img '+sideClass+' '+rarityClass,to.x,to.y,{},980,'<img src="'+getPhysicalImpactAsset(fx,kind)+'" alt="" draggable="false">');
+    tryPlaySound(kind==='dagger'?'impact_sword':impactSound,impactVolume);
+    hv331PlayBloodImpact(to,from,sideClass);
     if(cavalry)spawnBattleFxNode('battle-fx-charge-dust '+sideClass+' '+rarityClass,to.x,to.y,{"--charge-angle":angle+'deg'},820,'<img src="assets/effects/charge/charge_dust_01.webp" alt="" draggable="false">');
   },duration);
   return true;
@@ -710,7 +736,7 @@ function hv326PlayThrownAxe(fx,from,to,sideClass,rarityClass,impactSound,impactV
   battleSetTimeout(()=>{
     if(fx.hit===false)return;
     tryPlaySound(impactSound,impactVolume);
-    spawnBattleFxNode('battle-fx-melee-impact-img '+sideClass+' '+rarityClass,to.x,to.y,{},980,'<img src="assets/effects/axe/axe_impact_01.webp" alt="" draggable="false">');
+    hv331PlayBloodImpact(to,from,sideClass);
   },duration);
   return true;
 }
@@ -772,8 +798,7 @@ function hv321PlayArrowVolley(leader,targets,skillId){
         hv321FlyArrow(from,to,{variant,duration,curveSign:(i+j)%2?-1:1});
         battleSetTimeout(()=>{
           if(j===0&&i===0)tryPlaySound("impact_arrow",.45);
-          const cls=`hv321-arrow-impact hv321-arrow-${variant}`;
-          spawnBattleFxNode(cls,to.x,to.y,{},680,'<img src="assets/effects/arrows/arrow_impact_01.webp" alt="" draggable="false">');
+          hv331PlayBloodImpact(to,from,'');
         },duration);
       },stagger);
     }
@@ -791,8 +816,7 @@ function playArrowBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impac
   battleSetTimeout(()=>{
     if(fx.hit===false)return;
     tryPlaySound(impactSound,impactVolume);
-    spawnBattleFxNode(`battle-fx-arrow-impact ${sideClass} ${rarityClass}`,to.x,to.y,{},920,'<img src="assets/effects/arrows/arrow_impact_01.webp" alt="" draggable="false">');
-    spawnBattleFxNode(`battle-fx-arrow-stuck ${sideClass} ${rarityClass}`,to.x,to.y,{"--arrow-angle":`${angle}deg`},1780,'<img src="assets/effects/arrows/arrow_stuck_01.webp" alt="" draggable="false">');
+    hv331PlayBloodImpact(to,from,sideClass);
   },travelMs);
   return true;
 }
@@ -826,7 +850,6 @@ function playBattleFxEvent(fx,attackerRef=null){
   const angle=Math.atan2(dy,dx)*180/Math.PI;
   const sideClass=fx.attackerOwner===1?"player":"enemy";
   const rarityClass=fx.rarityClass||"fx-basic";
-  const impactExtra=["fx-heroic","fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-impact-halo"></div>':'';
   if(fx.attackStyle==="ranged"){
     if(weaponKind==="arrow"){
       playArrowBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impactSound,impactVolume);
@@ -841,20 +864,20 @@ function playBattleFxEvent(fx,attackerRef=null){
       return;
     }
     const travelMs=Math.max(170,Math.min(380,Math.round(len*2.2)));
-    battleSetTimeout(()=>tryPlaySound(impactSound,impactVolume),Math.max(80,travelMs-55));
+    battleSetTimeout(()=>{if(fx.hit!==false)tryPlaySound(impactSound,impactVolume);},Math.max(40,travelMs-12));
     const projectileExtra=["fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-projectile-trail"></div>':'';
     spawnBattleFxNode(`battle-fx-projectile ${sideClass} ${rarityClass}`,from.x,from.y,{"--fx-len":`${Math.max(24,len)}px`,"--fx-angle":`${angle}deg`,"--fx-flight":`${travelMs}ms`},travelMs+220,`<div class="battle-fx-projectile-shaft"></div><div class="battle-fx-projectile-head"></div><div class="battle-fx-projectile-fletch"></div>${projectileExtra}`);
-    battleSetTimeout(()=>spawnBattleFxNode(`battle-fx-impact ranged ${sideClass} ${rarityClass}`,to.x,to.y,{},940,`<div class="battle-fx-impact-core"></div><div class="battle-fx-impact-ring"></div><div class="battle-fx-impact-sparks"></div>${impactExtra}`),Math.max(40,travelMs-12));
+    battleSetTimeout(()=>{if(fx.hit!==false)hv331PlayBloodImpact(to,from,sideClass);},Math.max(40,travelMs-12));
     return;
   }
   if(["sword","axe","spear","dagger"].includes(String(weaponKind||"").toLowerCase())){
     playPhysicalMeleeBattleFxEvent(fx,from,to,len,angle,sideClass,rarityClass,impactSound,impactVolume,weaponKind);
     return;
   }
-  battleSetTimeout(()=>tryPlaySound(impactSound,impactVolume),180);
+  battleSetTimeout(()=>{if(fx.hit!==false){tryPlaySound(impactSound,impactVolume);hv331PlayBloodImpact(to,from,sideClass);}},180);
   const slashExtra=["fx-glorious","fx-epic","fx-mythic","fx-demigod"].includes(rarityClass)?'<div class="battle-fx-slash-trail"></div>':'';
   spawnBattleFxNode(`battle-fx-slash ${sideClass} ${rarityClass}`,from.x,from.y,{"--fx-len":`${Math.max(24,len)}px`,"--fx-angle":`${angle}deg`},640,`<div class="battle-fx-slash-core"></div>${slashExtra}`);
-  spawnBattleFxNode(`battle-fx-impact melee ${sideClass} ${rarityClass}`,to.x,to.y,{},980,`<div class="battle-fx-impact-core"></div><div class="battle-fx-impact-ring"></div><div class="battle-fx-impact-sparks"></div>${impactExtra}`);
+
 }
 function playDefenseFxEvent(fx){
   if(!fx||!fx.at)return;
