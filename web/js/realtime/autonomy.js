@@ -14,7 +14,7 @@ function hallvallaRtAttackCooldown(unit){
 function hallvallaRtVisibleEnemy(attacker,target){
   if(!attacker||!target||Number(target.hp||0)<=0||Number(target.owner)===Number(attacker.owner))return false;
   if(Number(target.rtExiledUntil||0)>hallvallaRtNow())return false;
-  if(typeof isStealthedUnit==="function"&&isStealthedUnit(target)&&!target.revealed)return false;
+  if(typeof isStealthedUnit==="function"&&isStealthedUnit(target))return false;
   return true;
 }
 function hallvallaRtValidEnemy(attacker,target){
@@ -434,7 +434,7 @@ function hallvallaRtAiBestCellTrapTarget(owner,units){
 function hallvallaRtAiChoosePlay(ai,units,mana){
   const allies=(units||[]).filter(u=>u&&u.owner===2&&Number(u.hp||0)>0);
   const allyUnits=allies.filter(u=>!u.leader);
-  const enemies=(units||[]).filter(u=>u&&u.owner===1&&Number(u.hp||0)>0);
+  const enemies=(units||[]).filter(u=>hallvallaRtVisibleEnemy({owner:2},u));
   const enemyUnits=enemies.filter(u=>!u.leader);
   const aiLeader=hallvallaRtGetOwnerLeader(2,units);
   const lastSummon=hallvallaRtLastLivingSummon(2,units);
@@ -575,9 +575,9 @@ function hallvallaRtAiChoosePlay(ai,units,mana){
     }
     if(card?.trap==="reveal_stealth"){
       const hidden=enemies.filter(u=>typeof isStealthedUnit==="function"&&isStealthedUnit(u));
-      if(!hidden.length)continue;
-      const target=[...hidden].sort((a,b)=>hallvallaRtAiThreatValue(b)-hallvallaRtAiThreatValue(a))[0];
-      push("reveal_stealth",card,target,320+hallvallaRtAiThreatValue(target)-cost*5,{cell:{x:target.x,y:target.y}});
+      const visibleThreats=enemies.filter(u=>dist(aiLeader,u)<=Math.max(3,Number(card.radius||2)+1));
+      if(!visibleThreats.length)continue;
+      push("reveal_stealth",card,null,165+visibleThreats.length*24-cost*5,{cell:{x:aiLeader.x,y:aiLeader.y}});
       continue;
     }
     if(card?.trap==="beast_cell"){

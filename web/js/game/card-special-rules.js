@@ -278,7 +278,10 @@ function isStealthedUnit(u){return !!u&&!u.leader&&(u.stealth===true||u.hidden==
 function hvStealthEnter(unit,{hidden=false,durationMs=0,now=Date.now()}={}){
   if(!unit||unit.leader)return unit;
   const ms=Math.max(0,Number(durationMs)||0);
-  return {...unit,stealth:true,hidden:!!hidden,revealed:false,hvLeaderStealthUntil:ms>0?now+ms:0};
+  const previousUntil=Math.max(0,Number(unit.hvLeaderStealthUntil||0));
+  const indefiniteAlreadyActive=isStealthedUnit(unit)&&previousUntil<=0;
+  const until=ms>0?(indefiniteAlreadyActive?0:Math.max(previousUntil,now+ms)):0;
+  return {...unit,stealth:true,hidden:!!hidden,revealed:false,hvLeaderStealthUntil:until};
 }
 function hvStealthExit(unit,reason="",includeText=false){
   if(!unit||unit.leader)return unit;

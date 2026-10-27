@@ -98,6 +98,11 @@ function resolveBeastCellTraps(moving,units,traps){
   return{units:out,traps:nextTraps,logs};
 }
 
+function hvAssassinStealthCriticalMultiplier(attacker,attackContext=null,hit=null){
+  if(!attacker||!hit?.hit||!attackContext?.startedFromStealth)return 1;
+  // La misma cualidad que utiliza el buff del lider Asesino.
+  return typeof unitHasLeaderBuffTrait==="function"&&unitHasLeaderBuffTrait(attacker,"assassin")?2:1;
+}
 function getBattleDamage(attacker,mods={}){const base=Math.max(0,effectiveAtk(attacker)+(mods.attackerAtk||0)-(mods.damageReduction||0));return Math.max(0,Math.round(base*getEquipmentDamageMultiplier(attacker)))}
 function isWarriorLeaderSweepAttacker(unit){
   return !!(unit&&unit.leader&&unit.leaderType==="warrior"&&Number(unit.hp||0)>0);
@@ -773,6 +778,7 @@ function resolveHallvallaPikeWall(attacker,defender,units,now=Date.now()){
 function inspectSharedAttackTargetBasics(attacker,defender,{runInState=(fn)=>fn(),stateSnapshot=null}={}){
   const inState=(fn)=>runInState(fn,stateSnapshot);
   if(!attacker||!defender||attacker.owner===defender.owner)return{ok:false,code:"invalid_target"};
+  if(typeof isStealthedUnit==="function"&&isStealthedUnit(defender))return{ok:false,code:"stealth_target"};
   if(!inState(()=>canUnitAttackTarget(attacker,defender)))return{ok:false,code:"blocked_target"};
   return{ok:true};
 }
@@ -1001,7 +1007,10 @@ async function resolveSharedAttackOutcome({
   const dmgTrap=runInState(()=>applyDamageTrapModifiers(d,getBattleDamage(a,mods),preTrap.traps,hit.hit),{units,legendaryTraps:preTrap.traps,beastTraps});
   let resolvedLegendaryTraps=dmgTrap.traps||preTrap.traps;
   const ulfhednarCritResult=rollUlfhednarCritical(a,hit);
-  const battleAtk=Math.max(0,Math.round((dmgTrap.damage||0)*(ulfhednarCritResult.multiplier||1)));
+  const assassinStealthCriticalMultiplier=hvAssassinStealthCriticalMultiplier(a,attackContext,hit);
+  const attackCriticalMultiplier=Math.max(1,Number(ulfhednarCritResult.multiplier)||1,assassinStealthCriticalMultiplier);
+  const battleAtk=Math.max(0,Math.round((dmgTrap.damage||0)*attackCriticalMultiplier));
+  const assassinStealthCriticalText=assassinStealthCriticalMultiplier===2?" CRITICO DESDE SIGILO: 200 % del dano del golpe (x2).":"";
   let hannibalSplitText="";
   let berserkerOsoText="",skiparWarLootText="";
   const arjunaRerollSpent=!!mods.hvArjunaRerollUsed;
@@ -1375,11 +1384,12 @@ async function resolveSharedAttackOutcome({
   const cavalryExtraText=`${equipmentRetreatResult.text||""}${scythianRetreatResult.text||""}${cossackAdvanceResult.text||""}`;
   const samuraiExtraText=`${naginataDaimyoResult.text||""}${yabusameRetreatResult.text||""}`;
   const geishaKeepsStealthAfterKill=!!(a.key==="geisha_encubierta"&&attackerWasStealthedBeforeAttack&&geishaFanKillResult?.triggered&&defenderFell);
-  const finalKeepStealthAfterAttack=keepStealthAfterAttack||geishaKeepsStealthAfterKill;
+  const preserveInnateAssassinStealthOnMiss=!!(a.hvInnateAssassinStealth&&attackerWasStealthedBeforeAttack&&!hit.hit);
+  const finalKeepStealthAfterAttack=keepStealthAfterAttack||geishaKeepsStealthAfterKill||preserveInnateAssassinStealthOnMiss;
   units=clearStealthAfterAttackIfNeeded(units,a.id,finalKeepStealthAfterAttack);
   const simoStealthResult=grantSimoStealthAfterKill(units,a,d,hit.hit&&defenderFell);
   units=simoStealthResult.units;
-  const stealthText=attackerWasStealthedBeforeAttack&&!hanzoContractResult.triggered?(geishaKeepsStealthAfterKill?` Danza del Engaño: ${a.name} destruye a su objetivo con Corte de Abanico y conserva Sigilo.`:(keepStealthAfterAttack?` Golpe Silencioso: ${a.name} atacó a distancia y mantiene Sigilo.`:` ${a.name} pierde Sigilo al declarar el ataque.`)):"";
+  const stealthText=attackerWasStealthedBeforeAttack&&!hanzoContractResult.triggered?(geishaKeepsStealthAfterKill?` Danza del Engaño: ${a.name} destruye a su objetivo con Corte de Abanico y conserva Sigilo.`:(preserveInnateAssassinStealthOnMiss?` ${a.name} falla el golpe y permanece en Sigilo.`:(keepStealthAfterAttack?` Golpe Silencioso: ${a.name} atacó a distancia y mantiene Sigilo.`:` ${a.name} pierde Sigilo al atacar.`))):"";
   const ninjutsuExtraText=`${geishaFanKillResult?.text||""}${saboteadorEscapeResult?.text||""}${stealthText}${hanzoContractResult.text||""}${simoStealthResult.text||""}`;
   const vikingExtraText=`${ulfhednarCritResult.text||""}${berserkerOsoText}${skiparWarLootText}`;
   const actionTargetName=(interposition.originalDefender||d).name;
@@ -1405,7 +1415,7 @@ async function resolveSharedAttackOutcome({
     ?hvAdvanceVeilCurseOnAction(units,a.id,"un ataque"):{units,changed:false,text:""};
   units=veilActionResult.units;
   hvSkillOrderTraceSafe('14.cierre_estados_y_registros',{a,d,units,mods,hit});
-  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: acierta (${hit.roll}/${hit.chance}).${rerollText}${interpositionLogText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD del ciclo táctico actual. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${stompText}${hannibalSplitText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`:`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${stompText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`;
+  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: acierta (${hit.roll}/${hit.chance}).${assassinStealthCriticalText}${rerollText}${interpositionLogText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD del ciclo táctico actual. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${stompText}${hannibalSplitText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`:`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${stompText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`;
   hvSkillOrderTraceSafe('99.fin',{a,d,units,mods,hit});
   return {
     units,

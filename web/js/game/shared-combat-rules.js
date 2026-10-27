@@ -1430,6 +1430,7 @@ function makeTrapMark(card,target,owner){
 function canMarkLegendaryTrapForOwner(card,target,owner){
   if(!card||card.trap!=="legendary_mark")return false;
   if(!target||target.owner===owner||target.leader)return false;
+  if(typeof canTargetStealth==="function"&&!canTargetStealth(card,target))return false;
   const max=(typeof effectiveMaxHp==="function"?effectiveMaxHp(target):(target.maxHp||target.hp||0));
   if(card.legendaryTrap==="ash_banquet"&&(target.hp||0)<max)return false;
   if(card.legendaryTrap==="shadow_cut"&&(target.hp||0)>=max)return false;
