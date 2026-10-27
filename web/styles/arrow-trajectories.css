@@ -70,9 +70,4 @@
 .grid .cell > .unit-card[data-hv-spawn="1"] .field-figure-img{animation:none!important}
 .grid .cell > .unit-card[data-hv-spawn="1"] .hv-rig-2d .hv-rig-part{animation:none!important}
 @keyframes hv328SummonRise{0%{opacity:0;translate:0 19px;scale:.72}65%{opacity:1}100%{opacity:1;translate:0 0;scale:1}}
-/* Pieza visual solamente: nunca copiar marco, stats, base o sellos. */
-.unit-card.hv328-motion-piece{border:0!important;background:transparent!important;box-shadow:none!important;filter:none!important;isolation:visible!important;overflow:visible!important;pointer-events:none!important}
-.unit-card.hv328-motion-piece:before,.unit-card.hv328-motion-piece:after{content:none!important;display:none!important}
-.unit-card.hv328-motion-piece > :not(.unit-portrait):not(.field-figure-layer){display:none!important}
-.unit-card.hv328-motion-piece .unit-portrait,.unit-card.hv328-motion-piece .field-figure-layer{animation:none!important;transition:none!important}
 @media(prefers-reduced-motion:reduce){#battleFxLayer .hv328-summon-portal{animation-duration:.15s}.grid .cell > .unit-card[data-hv-spawn="1"] .unit-portrait,.grid .cell > .unit-card[data-hv-spawn="1"] .field-figure-layer{animation:none}}
