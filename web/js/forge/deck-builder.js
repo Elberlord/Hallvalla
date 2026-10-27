@@ -845,14 +845,14 @@ function renderForgeLeaderPortraitRail(){
   if(!rail)return;
   const current=typeof getSelectedLeaderType==="function"?getSelectedLeaderType():"";
   const rows=Object.entries(LEADER_DATA);
-  rail.innerHTML=`<div class="hv-forge-leader-rail-head">LÍDERES <small>TOCA PARA VER DET</small></div>`+
+  rail.innerHTML=`<div class="hv-forge-leader-rail-head">LÍDERES <small>DET · BUFF Y HABILIDADES</small></div>`+
     rows.map(([type,data])=>{
       const level=typeof getLocalLeaderLevel==="function"?Math.max(1,Math.min(45,Number(getLocalLeaderLevel(type))||1)):1;
       const count=Math.min(9,Math.floor(level/5));
       const active=type===current;
       return `<button type="button" class="hv-forge-leader-portrait ${active?"is-active":""}" data-forge-leader-det="${escapeHtml(type)}" title="${escapeHtml(data.name)} · ${count}/9 habilidades" aria-label="Detalles de ${escapeHtml(data.name)}, nivel ${level}, ${count} habilidades desbloqueadas">
         <img src="${escapeHtml(data.portrait||"")}" alt="" loading="lazy" decoding="async">
-        <span class="hv-forge-leader-label"><strong>${escapeHtml(data.name)}</strong><small>Nv. ${level} · ${count}/9 habilidades</small></span>
+        <span class="hv-forge-leader-label"><strong>${escapeHtml(data.name)}</strong><small>Nv. ${level} · Buff Tier ${getLeaderBuffTierFromLevel(level)} · ${escapeHtml(LEADER_DETAIL_META[type]?.target||"compatibles")}</small></span>
         <span class="hv-forge-leader-indicator" aria-hidden="true">${active?"✦":"›"}</span>
       </button>`;
     }).join("");
@@ -860,7 +860,7 @@ function renderForgeLeaderPortraitRail(){
     button.addEventListener("click",event=>{
       event.preventDefault();
       event.stopPropagation();
-      openLeaderAbilityModal(button.dataset.forgeLeaderDet);
+      openLeaderDetailModal(button.dataset.forgeLeaderDet);
     });
   });
 }
@@ -1619,6 +1619,58 @@ const LEADER_DETAIL_META={
     ability:"Desde nivel 5, todas las unidades aliadas causan Veneno cuando hacen daño real a HP, incluso en contrataque si atraviesan Guardia. El veneno dura 50 s y se duplica cada tick: 1 → 2 → 4 → 8 → 16."
   }
 };
+/* v332: el UI comparte la MISMA elegibilidad que usa getLeaderBonus() en combate.
+   No calcula nuevas reglas; muestra el efecto actual y su alcance exacto. */
+function hv332LeaderBuffInfoHtml(type){
+  if(!LEADER_DATA?.[type])return '';
+  const level=getLocalLeaderLevel(type);
+  const tier=getLeaderBuffTierFromLevel(level);
+  const bonus=LEADER_BUFF_TABLE[type]?.[tier]||LEADER_CUMULATIVE_TIER_BUFFS?.[tier]||{};
+  const group=LEADER_DETAIL_META[type]?.target||'unidades compatibles';
+  const active=typeof getSelectedLeaderType==='function'&&getSelectedLeaderType()===type;
+  const eligible=card=>{
+    if(!card||card.type!=='unit'||typeof getUnitLeaderBuffTraits!=='function')return false;
+    try{return getUnitLeaderBuffTraits(card).includes(type)}catch(_){return false}
+  };
+  const unique=(items)=>{
+    const rows=new Map();
+    for(const card of Array.isArray(items)?items:[]){
+      if(!eligible(card))continue;
+      const key=String(card.key||card.name||'').trim();
+      if(key&&!rows.has(key))rows.set(key,card);
+    }
+    return [...rows.values()].sort((a,b)=>String(a.name||a.key).localeCompare(String(b.name||b.key),'es'));
+  };
+  // No contaminar el mazo ni la coleccion: datos exclusivamente de lectura.
+  let deck=[],owned=[],catalog=[];
+  try{deck=Array.isArray(currentDeckDraft)&&currentDeckDraft.length?currentDeckDraft:getSavedDeck()}catch(_){}
+  try{owned=getCollectionCardsExpanded()}catch(_){}
+  try{catalog=getCraftableCardPool()}catch(_){}
+  const deckSet=new Set(unique(deck).map(c=>String(c.key||c.name||'')));
+  const ownedRows=unique(owned).filter(c=>!deckSet.has(String(c.key||c.name||'')));
+  const ownedSet=new Set([...deckSet,...ownedRows.map(c=>String(c.key||c.name||''))]);
+  const allRows=unique(catalog).filter(c=>!ownedSet.has(String(c.key||c.name||'')));
+  const list=(rows,empty)=>rows.length
+    ?'<div class="hv332-unit-list">'+rows.map(c=>'<span class="hv332-unit">'+escapeHtml(c.name||c.key||'Unidad')+'</span>').join('')+'</div>'
+    :'<p class="hv332-empty">'+empty+'</p>';
+  const deckRows=unique(deck);
+  const totalUnits=(Array.isArray(deck)?deck:[]).filter(c=>c?.type==='unit').length;
+  const buffText=formatLeaderTierBuffStats(bonus);
+  if(!document.getElementById('hv332-leader-buff-style')){
+    const style=document.createElement('style');style.id='hv332-leader-buff-style';
+    style.textContent=`#leaderDetailModal .hv332-buff,#leaderAbilityModal .hv332-buff{padding:14px;border:1px solid #9c8358;border-radius:12px;background:linear-gradient(160deg,#17253b,#101720);color:#f0e7d6;margin:12px 0;line-height:1.42} .hv332-buff h3{font-size:18px;margin:0 0 9px;color:#ffe3a0} .hv332-buff-summary{padding:10px;background:#27344b;border-left:3px solid #ddbd77;border-radius:6px;margin:8px 0 12px;font-weight:700;color:#fff4d9} .hv332-buff strong{color:#ffe3a0} .hv332-buff p{margin:7px 0;font-size:13px} .hv332-buff details{border-top:1px solid #88765360;padding:9px 0;margin-top:3px} .hv332-buff summary{cursor:pointer;color:#f3dbab;font-size:13px;font-weight:700} .hv332-unit-list{display:flex;flex-wrap:wrap;gap:5px;padding-top:9px;max-height:180px;overflow:auto} .hv332-unit{border:1px solid #9a7c4d;background:#232f42;color:#f8e8c5;padding:4px 7px;border-radius:5px;font-size:12px} .hv332-empty{color:#c2b9ac;font-style:italic}`;
+    document.head.appendChild(style);
+  }
+  return `<section class="hv332-buff" aria-label="Buff del lider y unidades afectadas">
+    <h3>Buff de lider · Tier ${tier}</h3>
+    <div class="hv332-buff-summary">${escapeHtml(buffText)} · ${escapeHtml(active?'Tu lider actual':'Vista previa de este lider')}</div>
+    <p><strong>A quien afecta:</strong> ${escapeHtml(group)}. El motor valida clase, tipo de arma, locomocion y rasgos de cada unidad.</p>
+    <p>Se aplica a todas las unidades aliadas compatibles mientras su lider siga activo; no requiere estar cerca. No mejora hechizos ni trampas. Una unidad hibrida solo recibe el buff del lider que tenga en su equipo.</p>
+    <details open><summary>En tu mazo: ${deckRows.length} tipo(s) compatible(s) de ${totalUnits} cartas de unidad</summary>${list(deckRows,'No hay unidades compatibles en el mazo cargado.')}</details>
+    <details><summary>En tu coleccion, fuera del mazo: ${ownedRows.length} tipo(s)</summary>${list(ownedRows,'No hay otras unidades compatibles en tu coleccion.')}</details>
+    <details><summary>En el catalogo disponible: ${allRows.length} tipo(s) adicionales</summary>${list(allRows,'No se encontraron mas unidades catalogadas.')}</details>
+  </section>`;
+}
 function leaderTierExplanationHtml(meta){
   return `<div class="leader-tier-list">${meta.tiers.map(t=>`<div class="leader-tier-row">${escapeHtml(t)}</div>`).join("")}</div>`;
 }
@@ -1638,6 +1690,7 @@ function openLeaderDetailModal(type){
       <p>Tu nivel actual: <b>${normalizeLeaderLevel(level)}</b> · Tier actual: <b>${tier}</b></p>
     </div>
   </div>
+  ${hv332LeaderBuffInfoHtml(type)}
   <section class="leader-info-section">
     <h3>Buff por tier</h3>
     <p>Objetivo del buff: <b>${escapeHtml(meta.target)}</b>.</p>
@@ -1673,7 +1726,7 @@ function openLeaderAbilityModal(type){
       <p>Nivel ${level} · Tier ${tier} · ${count} de 9 habilidades desbloqueadas</p>
       <p>Las habilidades con candado se desbloquean cada 5 niveles.</p>
     </div>
-  </div>${grid}`;
+  </div>${hv332LeaderBuffInfoHtml(type)}${grid}`;
   const modal=$("leaderAbilityModal");
   if(modal){modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");}
 }
