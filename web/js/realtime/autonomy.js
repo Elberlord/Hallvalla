@@ -3,9 +3,26 @@
 function hallvallaRtMoveCooldown(unit){
   const normal=typeof getHallvallaUnitMoveCooldownMs==="function"?getHallvallaUnitMoveCooldownMs(unit):
     Math.max(1320,Math.round(HALLVALLA_RT_CFG.baseMoveCooldownMs/(0.70+Math.max(1,Math.min(5,Number(unit?.mov||1)))*0.30)));
+  if(!Number.isFinite(normal))return normal;
   const skipar=unit?.key==="skipar_del_drakkar"&&!unit?.hvSkiparFirstMoveConsumed?hvActionRarityValue(unit)*1000:0;
   const subotai=Math.max(0,Number(unit?.hvSubotaiNextMoveBoostMs||0));
-  return Math.max(1000,normal-skipar-subotai);
+  const cavalry=typeof unitHasLeaderBuffTrait==="function"&&unitHasLeaderBuffTrait(unit,"cavalry");
+  const assassin=typeof unitHasLeaderBuffTrait==="function"&&unitHasLeaderBuffTrait(unit,"assassin");
+  const rawBase=typeof getHallvallaUnitBaseMoveCooldownMs==="function"?getHallvallaUnitBaseMoveCooldownMs(unit):normal;
+  const base=Number.isFinite(rawBase)?rawBase:normal;
+  // Lentitud, sobrecarga y estados se SUMAN despues de ajustar la velocidad natural.
+  const statusPenalty=Math.max(0,normal-base);
+  const locomotion=String(unit?.loadProfile?.locomotion||unit?.locomotionClass||
+    (typeof getHallvallaUnitLoadProfile==="function"?getHallvallaUnitLoadProfile(unit)?.locomotion:"")||"").toLowerCase();
+  const horse=locomotion==="mounted_horse"||locomotion==="mounted_undead_horse"||(!locomotion&&cavalry);
+  const biped=!horse&&(locomotion==="foot"||
+    (locomotion==="supernatural"&&!unit?.beast&&!unit?.aerial)||
+    (!locomotion&&!unit?.beast&&!unit?.aerial&&!unit?.flight));
+  let adjustedBase=assassin?Math.round(base*0.5):base;
+  if(cavalry||horse)adjustedBase-=4000; // -4 s entre celdas; NO aumenta MOV.
+  if(horse)adjustedBase=Math.min(adjustedBase,3500); // Montura mas rapida que cualquier bipedo sin estados.
+  else if(biped)adjustedBase=Math.max(adjustedBase,5000); // Incluso los asesinos a pie.
+  return Math.max(1000,Math.round(adjustedBase+statusPenalty)-skipar-subotai);
 }
 function hallvallaRtAttackCooldown(unit){
   if(typeof getHallvallaUnitAttackCooldownMs==="function")return getHallvallaUnitAttackCooldownMs(unit);
@@ -30,10 +47,22 @@ function hallvallaRtTargetCandidates(unit,units=publicState?.units||[]){
   const pool=[...(nonLeaders.length?nonLeaders:candidates)];
   const tactical=globalThis.hallvallaRtGetTacticalOrder?.(unit)||null;
   if(tactical?.mode==="attack")return candidates.filter(t=>String(t.id)===String(tactical.targetId));
-  // TR: cada unidad persigue la amenaza rival físicamente más cercana a ella.
-  // Si ya no quedan invocaciones rivales, el líder enemigo pasa a ser el objetivo.
+  // Especializaciones tácticas: asesinos rematan; pesados interceptan amenazas cercanas a fragiles.
+  const assassin=typeof unitHasLeaderBuffTrait==="function"&&unitHasLeaderBuffTrait(unit,"assassin");
+  const heavy=typeof isHallvallaTankUnit==="function"&&isHallvallaTankUnit(unit);
+  const weakAllies=heavy?(units||[]).filter(a=>a&&a.id!==unit.id&&!a.leader&&a.owner===unit.owner&&Number(a.hp||0)>0&&
+    (Number(a.hp||0)<=3||Number(a.hp||0)<=Math.ceil(Number(a.maxHp||a.hp||1)*0.55))):[];
+  const dangerToWeak=(target)=>weakAllies.length?Math.min(...weakAllies.map(a=>dist(a,target))):99;
   pool.sort((a,b)=>{
     const da=dist(unit,a),db=dist(unit,b);
+    if(assassin){
+      // Vida absoluta primero; la distancia desempata. Nunca selecciona enemigos ocultos.
+      return (Number(a.hp||0)-Number(b.hp||0))||(da-db)||String(a.id||'').localeCompare(String(b.id||''));
+    }
+    if(heavy&&weakAllies.length){
+      const sa=da+dangerToWeak(a)*3,sb=db+dangerToWeak(b)*3;
+      if(sa!==sb)return sa-sb;
+    }
     return (da-db)||(Number(a.hp||0)-Number(b.hp||0))||String(a.id||'').localeCompare(String(b.id||''));
   });
   if(tactical?.mode==="priority"){
@@ -88,6 +117,14 @@ function hallvallaRtLeaderHoldRadius(unit,units=publicState?.units||[]){
   const ids=[...(unit.unitSkillIds||[]),...(unit.unitLearnedSkillIds||[]),...(unit.unitSkillRuntimeIds||[]),...(meta?.innate||[])];
   return ids.includes("HV-232")?2:0;
 }
+function hallvallaRtIsRangedUnit(unit){
+  if(!unit||unit.leader||unit.cannotAttack)return false;
+  return Math.max(1,Number(typeof getUnitAttackRange==="function"?getUnitAttackRange(unit):unit.range||1))>1;
+}
+function hallvallaRtClosestVisibleEnemyDistance(unit,units=publicState?.units||[]){
+  const visible=(units||[]).filter(enemy=>hallvallaRtVisibleEnemy(unit,enemy));
+  return visible.length?Math.min(...visible.map(enemy=>dist(unit,enemy))):Infinity;
+}
 function hallvallaRtChooseStep(unit,target,units=publicState?.units||[]){
   if(!unit||!target||isRtTrapLocked(unit,"move",hallvallaRtNow())||Number(typeof effectiveMov==='function'?effectiveMov(unit):unit.mov||0)<=0)return null;
   const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&Number(u.hp||0)>0).map(u=>hallvallaRtCellKey(u.x,u.y)));
@@ -106,6 +143,30 @@ function hallvallaRtChooseStep(unit,target,units=publicState?.units||[]){
     return advance[0]?.cell||null;
   }
 
+  // Tiradores: conservar el alcance máximo, retroceder al sufrir presión y no perseguir a melee.
+  // Se respetan órdenes de seguimiento a aliados (target.owner===unit.owner) y MOV original.
+  if(hallvallaRtIsRangedUnit(unit)&&Number(target.owner)!==Number(unit.owner)){
+    const range=Math.max(2,Number(getUnitAttackRange(unit)||unit.range||2));
+    const threats=(units||[]).filter(other=>hallvallaRtVisibleEnemy(unit,other));
+    const closest=(cell)=>threats.length?Math.min(...threats.map(other=>dist(cell,other))):Infinity;
+    const nearby=closest(unit),desired=range;
+    if(currentDistance<=range&&nearby>=desired)return null;
+    const score=(cell)=>{
+      const targetDist=dist(cell,target),danger=closest(cell);
+      const exposure=Math.max(0,desired-danger)*100;
+      const positioning=targetDist>range?(targetDist-range)*12:(range-targetDist)*4;
+      const escape=nearby<desired&&danger>nearby?-30*(danger-nearby):0;
+      return exposure+positioning+escape+hallvallaRtCrowdPenalty(cell,unit.owner,units)*2+Math.abs(cell.x-lane)*.035;
+    };
+    const options=hallvallaRtNeighbors(Number(unit.x),Number(unit.y))
+      .filter(c=>!occupied.has(hallvallaRtCellKey(c.x,c.y)))
+      .map(cell=>({cell,score:score(cell)}))
+      .sort((a,b)=>a.score-b.score||a.cell.y-b.cell.y||a.cell.x-b.cell.x);
+    const best=options[0];
+    if(!best)return null;
+    if(currentDistance<=range&&best.score>=score(unit)-0.5)return null;
+    return best.cell;
+  }
   // TR v119 · estilo MTGB: persecución local directa, sin pathfinding global.
   // Solo se inspeccionan las 8 celdas vecinas y se elige una libre que acerque
   // al objetivo. No hay A*, cola abierta, árbol de padres ni búsqueda de ruta.
@@ -1172,7 +1233,12 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
   let beastTraps=[...(publicState?.beastTraps||[])];
   let statusFxEvent=null,floatFxEvent=null,moves=0,stateChanges=0;
   const logs=[];
-  const ids=hallvallaRtFairUnitIds(units,{leaders:false,nonLeaders:true});
+  // Vanguardias primero: los acorazados ocupan el frente antes que los fragiles.
+  const ids=hallvallaRtFairUnitIds(units,{leaders:false,nonLeaders:true}).sort((a,b)=>{
+    const ua=units.find(u=>u.id===a),ub=units.find(u=>u.id===b);
+    const heavy=u=>typeof isHallvallaTankUnit==="function"&&isHallvallaTankUnit(u)?1:0;
+    return heavy(ub)-heavy(ua);
+  });
   for(const id of ids){
     if(moves>=maxMoves)break;
     const live=units.find(u=>u.id===id&&Number(u.hp||0)>0);if(!live||Number(live.rtExiledUntil||0)>now||isRtTrapLocked(live,"move",now))continue;
@@ -1231,7 +1297,8 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
         if(!target&&holdRadius>0&&ownLeader&&dist(live,ownLeader)>holdRadius)step=hallvallaRtChooseStep(live,ownLeader,units);
         if(!target&&!step)continue;
         // Mantener su puesto si ya puede atacar dentro de su zona.
-        if(target&&hallvallaRtCanAttackNow(live,target))continue;
+        if(target&&hallvallaRtCanAttackNow(live,target)&&
+          (!hallvallaRtIsRangedUnit(live)||hallvallaRtClosestVisibleEnemyDistance(live,units)>=Math.max(2,Number(getUnitAttackRange(live)||1))))continue;
         if(now-lastMove<Math.max(1000,hallvallaRtMoveCooldown(live)-Math.max(0,Number(live.hvLeaderNextMoveAccelerateMs||0)))+Math.max(0,Number(live.hvNextMoveDelayMs||0)))continue;
         if(!step&&target)step=hallvallaRtChooseStep(live,target,units);
         if(!step&&target){

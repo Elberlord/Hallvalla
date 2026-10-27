@@ -81,6 +81,11 @@ function isHeavyInfantryUnit(u){
   || name.includes("paladin")
   || name.includes("lancero solar");
 }
+// Clasificacion de tanque centralizada: clase pesada o armadura pesada real.
+function isHallvallaTankUnit(u){
+  return !!u&&!u.leader&&(isHeavyInfantryUnit(u)||
+    String(u.armorClass||u.loadProfile?.armorClass||"").toLowerCase()==="heavy");
+}
 function countAdjacentUnitsByKey(unit,key,units=publicState?.units||[]){
   if(!unit)return 0;
   return (units||[]).filter(other=>other&&other.id!==unit.id&&other.owner===unit.owner&&other.hp>0&&String(other.key||"").toLowerCase()===String(key||"").toLowerCase()&&dist(unit,other)<=1).length;

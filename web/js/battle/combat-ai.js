@@ -394,11 +394,15 @@ function getHallvallaInterpositionProtector(defender,units=publicState?.units||[
   const currentWindow=publicState?.combatWindowKey||"";
   const candidates=(units||[]).filter(unit=>{
     if(!unit||unit.id===defender.id||unit.owner!==defender.owner||unit.leader||Number(unit.hp||0)<=0)return false;
-    if(!hallvallaUnitHasRuntimeSkill(unit,HALLVALLA_INTERPOSITION_SKILL_ID))return false;
-    if(Number(unit?.unitSkillCooldowns?.[HALLVALLA_INTERPOSITION_SKILL_ID]||0)>now)return false;
+    const skillReady=hallvallaUnitHasRuntimeSkill(unit,HALLVALLA_INTERPOSITION_SKILL_ID)&&
+      Number(unit?.unitSkillCooldowns?.[HALLVALLA_INTERPOSITION_SKILL_ID]||0)<=now;
+    const fragile=Number(defender.hp||0)<=3||Number(defender.hp||0)<=Math.ceil(Number(defender.maxHp||defender.hp||1)*0.55);
+    const heavyReady=fragile&&typeof isHallvallaTankUnit==="function"&&isHallvallaTankUnit(unit)&&
+      Number(unit.guard||0)>0&&Number(unit.hvHeavyProtectUntil||0)<=now&&dist(unit,defender)<=1;
+    if(!skillReady&&!heavyReady)return false;
     if(currentWindow&&unit.noMoveWindowKey===currentWindow)return false;
     if(typeof isRtTrapLocked==="function"&&isRtTrapLocked(unit,"move",now))return false;
-    try{return dist(unit,defender)<=2;}catch(_){return false;}
+    try{return dist(unit,defender)<=(skillReady?2:1);}catch(_){return false;}
   });
   candidates.sort((a,b)=>{
     let da=99,db=99;
@@ -412,17 +416,18 @@ function activateHallvallaInterposition(defender,units,now=Date.now()){
   const protector=getHallvallaInterpositionProtector(defender,units,now);
   if(!protector)return{units:[...(units||[])],defender,originalDefender:null,protector:null,text:""};
   const cooldownUntil=now+HALLVALLA_INTERPOSITION_COOLDOWN_MS;
-  const nextUnits=(units||[]).map(unit=>unit.id===protector.id?{
-    ...unit,
-    unitSkillCooldowns:{...(unit.unitSkillCooldowns||{}),[HALLVALLA_INTERPOSITION_SKILL_ID]:cooldownUntil}
-  }:unit);
+  const skillReady=hallvallaUnitHasRuntimeSkill(protector,HALLVALLA_INTERPOSITION_SKILL_ID)&&
+    Number(protector.unitSkillCooldowns?.[HALLVALLA_INTERPOSITION_SKILL_ID]||0)<=now;
+  const nextUnits=(units||[]).map(unit=>unit.id===protector.id?(skillReady?{
+    ...unit,unitSkillCooldowns:{...(unit.unitSkillCooldowns||{}),[HALLVALLA_INTERPOSITION_SKILL_ID]:cooldownUntil}
+  }:{...unit,hvHeavyProtectUntil:cooldownUntil}):unit);
   const liveProtector=nextUnits.find(unit=>unit.id===protector.id)||protector;
   return{
     units:nextUnits,
     defender:liveProtector,
     originalDefender:defender,
     protector:liveProtector,
-    text:`Interposición: ${liveProtector.name} recibe el ataque destinado a ${defender.name}.`
+    text:`${skillReady?"Interposición":"Cobertura pesada"}: ${liveProtector.name} recibe el ataque destinado a ${defender.name}.`
   };
 }
 function applyGuardOfIronCooldownFromMods(units,mods){
