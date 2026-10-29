@@ -125,6 +125,55 @@ function hallvallaRtClosestVisibleEnemyDistance(unit,units=publicState?.units||[
   const visible=(units||[]).filter(enemy=>hallvallaRtVisibleEnemy(unit,enemy));
   return visible.length?Math.min(...visible.map(enemy=>dist(unit,enemy))):Infinity;
 }
+/* HallValla v338 · auditoría de soporte por efecto, no únicamente por nombre. */
+/* Hereda la auditoría de soporte v338. */
+const HALLVALLA_RT_GLOBAL_SUPPORT_KEYS=new Set([
+  // Curación global, necromancia e invocación estratégica.
+  'acolyte_healer','ericto','king_solomon','saladin',
+  // Apoyo de campo completo y comandantes de apoyo no ofensivos.
+  'sun_tzu','merlin','yi_sun_sin','subotai','joan_of_arc','julius_caesar',
+  // Perse: alias declarado por diseño hasta que se normalice su clave del catálogo.
+  'perse','persé','perseo','perseus'
+]);
+const HALLVALLA_RT_PROXIMITY_SUPPORT_KEYS=new Set([
+  // Su función depende de estar cerca de otras tropas o enemigos.
+  'richard_lionheart','leonidas','hector_troy','ulysses','arcane_adept',
+  'black_raven','african_lion','solomon_jinn','shaka_zulu'
+]);
+function hallvallaRtSupportKey(unit){
+  return String(unit?.key||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function hallvallaRtIsRearSupportUnit(unit){
+  if(!unit||unit.leader||unit.type&&unit.type!=='unit')return false;
+  const key=hallvallaRtSupportKey(unit);
+  if(HALLVALLA_RT_PROXIMITY_SUPPORT_KEYS.has(key))return false;
+  if(HALLVALLA_RT_GLOBAL_SUPPORT_KEYS.has(key))return true;
+  const label=String(unit.name||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  // La identidad "Perse" es parte del diseño confirmado; su ID actual no figura en el catálogo público.
+  if(/^(?:perse|perseo|perseus)(?:\b|\s)/i.test(label))return true;
+  const explicit=String(unit.aiCombatRole||unit.aiRole||unit.supportRole||'').toLowerCase();
+  if(['global_support','backline_global','corner_support','rear_support'].includes(explicit))return true;
+  if(['frontline','combat','proximity','proximity_support'].includes(explicit))return false;
+  const text=String(unit.text||unit.effectText||unit.ability||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  // Una habilidad de radio corto requiere mantener proximidad. Un mago ofensivo no es apoyo global.
+  const local=/(?:adyacente|a [12] casillas|en radio [12]|rango [12]|hasta [12] casillas|junto a (?:un |otro |el |la ))/.test(text);
+  const global=/(?:todas? (?:tus |las )?unidades aliadas|todos? (?:tus |los )?aliados|todo el campo|en todo el campo|cualquier aliado|mientras (?:este|permanezca|siga) en (?:el )?campo|permanece en retaguardia)/.test(text);
+  const functionSupport=/(?:recupera|curac|sanac|reviv|resucit|reanim|necrom|nigrom|otorga|concede|buff|protege|reduccion de coste|cuestan? .* menos|recovery|puntos de servicio)/.test(text);
+  const lowAttack=Math.max(0,Number(unit.atk||0))<=3;
+  if(!local&&global&&functionSupport&&lowAttack)return true;
+  if(!local&&global&&lowAttack&&(unit.healer||unit.nigromante))return true;
+  return false;
+}
+
+// Los dragones adultos son tanques DPS con alcance, no tiradores de retaguardia.
+// La clasificación se restringe a la etapa adulta canonica de los tres elementos.
+function hallvallaRtIsAdultDragon(unit){
+  if(!unit||unit.leader)return false;
+  const key=String(unit.key||'').toLowerCase();
+  if(/^adult_(?:lightning|fire|ice)_dragon$/.test(key))return true;
+  return unit.dragonCompanion===true&&String(unit.dragonStage||'')==='adult'&&
+    ['lightning','fire','ice'].includes(String(unit.dragonElement||'').toLowerCase());
+}
 function hallvallaRtIsSpearEscortUnit(unit){
   if(!unit||unit.leader||unit.beast||unit.aerial||unit.flight)return false;
   const locomotion=String(unit?.loadProfile?.locomotion||unit?.locomotionClass||'').toLowerCase();
@@ -177,7 +226,7 @@ function hallvallaRtSupportPositionScore(unit,cell,units=publicState?.units||[])
   const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&Number(u.hp||0)>0).map(u=>hallvallaRtCellKey(u.x,u.y)));
   const adjacentFree=hallvallaRtNeighbors(Number(cell.x),Number(cell.y)).filter(c=>!occupied.has(hallvallaRtCellKey(c.x,c.y))).length;
   // Ericto y Salomón generan entidades adyacentes. Nunca encerrarlos deliberadamente.
-  const summoner=unit.key==='ericto'||unit.key==='king_solomon';
+  const summoner=['ericto','king_solomon','saladin'].includes(hallvallaRtSupportKey(unit))||/\b(?:reanim|invoc|resucit)\w*/i.test(String(unit.text||unit.effectText||''));
   const spacePenalty=summoner&&adjacentFree<2?(2-adjacentFree)*28:0;
   return back*10+side*5+exposure+spacePenalty+hallvallaRtCrowdPenalty(cell,unit.owner,units)*1.5;
 }
@@ -207,6 +256,14 @@ function hallvallaRtAiChooseFormationSpawnCell(card,units,owner=2){
   const escort=hallvallaRtFindEscortArcher(unit,units);
   if(escort){
     return [...cells].sort((a,b)=>hallvallaRtEscortCellScore(unit,a,escort,units)-hallvallaRtEscortCellScore(unit,b,escort,units)||a.y-b.y||a.x-b.x)[0];
+  }
+  // Tanque-DPS: despliegue preferente en el eje central del campo aliado.
+  // No invade territorio rival; hallvallaRtGetSpawnCells ya aplica todos los límites.
+  if(hallvallaRtIsAdultDragon(unit)){
+    const mid=Math.floor((ROWS-1)/2),center=Math.floor((COLS-1)/2);
+    const score=c=>Math.abs(Number(c.y)-mid)*12+Math.abs(Number(c.x)-center)*8+
+      hallvallaRtCrowdPenalty(c,owner,units)*4;
+    return [...cells].sort((a,b)=>score(a)-score(b)||a.y-b.y||a.x-b.x)[0];
   }
   const ranged=Number(card.range||1)>1&&!card.healer&&!card.nigromante;
   const heavy=typeof isHallvallaTankUnit==='function'&&isHallvallaTankUnit(card);
@@ -244,7 +301,7 @@ function hallvallaRtChooseStep(unit,target,units=publicState?.units||[]){
 
   // Tiradores: conservar el alcance máximo, retroceder al sufrir presión y no perseguir a melee.
   // Se respetan órdenes de seguimiento a aliados (target.owner===unit.owner) y MOV original.
-  if(hallvallaRtIsRangedUnit(unit)&&Number(target.owner)!==Number(unit.owner)){
+  if(hallvallaRtIsRangedUnit(unit)&&!hallvallaRtIsAdultDragon(unit)&&Number(target.owner)!==Number(unit.owner)){
     const range=Math.max(2,Number(getUnitAttackRange(unit)||unit.range||2));
     const threats=(units||[]).filter(other=>hallvallaRtVisibleEnemy(unit,other));
     const closest=(cell)=>threats.length?Math.min(...threats.map(other=>dist(cell,other))):Infinity;
@@ -969,12 +1026,6 @@ function hallvallaRtPauseEnemySupportCooldowns(targetOwner,now=Date.now(),ms=500
     if(Number(last||0)+maxMs>now)hallvallaRtState.supportAt.set(key,Number(last)+ms);
   }
 }
-function hallvallaRtIsRearSupportUnit(unit){
-
-  const key=String(unit?.key||"");
-  return key==="acolyte_healer"||key==="ericto"||key==="king_solomon"||key==="sun_tzu";
-}
-
 function hallvallaRtInstallRecovery(caster,units,now){
   const until=now+HALLVALLA_RT_RECOVERY_DURATION_MS;
 
@@ -1402,7 +1453,7 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
         if(!target&&!step)continue;
         // Mantener su puesto si ya puede atacar dentro de su zona.
         if(target&&hallvallaRtCanAttackNow(live,target)&&
-          (!hallvallaRtIsRangedUnit(live)||hallvallaRtClosestVisibleEnemyDistance(live,units)>=Math.max(2,Number(getUnitAttackRange(live)||1))))continue;
+          (!hallvallaRtIsRangedUnit(live)||hallvallaRtIsAdultDragon(live)||hallvallaRtClosestVisibleEnemyDistance(live,units)>=Math.max(2,Number(getUnitAttackRange(live)||1))))continue;
         if(now-lastMove<Math.max(1000,hallvallaRtMoveCooldown(live)-Math.max(0,Number(live.hvLeaderNextMoveAccelerateMs||0)))+Math.max(0,Number(live.hvNextMoveDelayMs||0)))continue;
         if(!step&&target)step=hallvallaRtChooseStep(live,target,units);
         if(!step&&target){

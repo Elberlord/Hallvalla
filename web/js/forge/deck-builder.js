@@ -1296,7 +1296,8 @@ function renderDeckBuilder(){
       (rarityFilter==="epic"&&(rarity==="rara"||rarity==="rare"||rarity==="épica"||rarity==="epica"))||
       (rarityFilter==="mythic"&&(rarity==="mítica"||rarity==="mitica"))||
       (rarityFilter==="legendary"&&(rarity==="legendaria"||rarity==="legendary"))||
-      (rarityFilter==="demigod"&&(rarity==="semidiós"||rarity==="semidios"));
+      (rarityFilter==="demigod"&&(rarity==="semidiós"||rarity==="semidios"))||
+      (rarityFilter==="astral"&&rarity==="astral");
     const bounds=getBattlePowerFilterBounds(powerFilter);
     const powerOk=powerFilter==="all"||(powerFilter==="unrated"&&!Number.isFinite(battlePower))||(bounds&&Number.isFinite(battlePower)&&battlePower>=bounds.min&&battlePower<=bounds.max);
     return typeOk&&ownershipOk&&rarityOk&&powerOk;

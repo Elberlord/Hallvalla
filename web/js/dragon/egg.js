@@ -99,7 +99,7 @@ function makeDragonCompanionCard(stage,element){
   const elementName=dragonElementLabel(element);
   const rarity=stage==="baby"?"Gloriosa":stage==="young"?"Mítica":"Astral";
   const threshold=getDragonStageThreshold(stage);
-  const growthText=stage==="adult"?"Forma adulta completa.":`Mientras permanezca vivo en el campo, todas las eliminaciones aliadas continúan sumando a su crecimiento. Evoluciona después del duelo al alcanzar ${threshold} eliminaciones acumuladas.`;
+  const growthText=stage==="adult"?"Forma adulta completa. Obtiene maestría por bajas propias hasta Nivel XLV: +2 Destreza por nivel.":`Mientras permanezca vivo en el campo, todas las eliminaciones aliadas continúan sumando a su crecimiento. Evoluciona después del duelo al alcanzar ${threshold} eliminaciones acumuladas.`;
   return{
     key:dragonCardKey(stage,element),name:`Dragón ${stageName} de ${elementName}`,type:"unit",
     icon:element==="fire"?"🔥":element==="ice"?"❄️":"⚡",portrait:DRAGON_COMPANION_ASSETS[visualStage].hand,fieldFigure:DRAGON_COMPANION_ASSETS[visualStage].field,
@@ -487,6 +487,24 @@ function getDragonDetProgressData(entity){
   const records=getDragonCompanions().filter(record=>getDragonRecordCardKey(record)===String(entity.key||"")).sort((a,b)=>a.obtainedAt-b.obtainedAt);
   if(!records.length)return null;
   const first=records[0];
+  if(first.stage==="adult"){
+    // Evolucion completa: a partir de ahora la barra representa maestria normal.
+    const record=typeof getUnitMasteryRecord==="function"?getUnitMasteryRecord(entity):{kills:0};
+    const kills=Math.max(0,Math.floor(Number(record?.kills||0)));
+    const rank=typeof getUnitMasteryRankFromKills==="function"?getUnitMasteryRankFromKills(kills):1;
+    const cap=typeof UNIT_MASTERY_MAX_RANK==="number"?UNIT_MASTERY_MAX_RANK:45;
+    const maxed=rank>=cap;
+    const from=typeof getUnitMasteryKillsForRank==="function"?getUnitMasteryKillsForRank(rank):0;
+    const next=maxed?kills:typeof getUnitMasteryKillsForRank==="function"?getUnitMasteryKillsForRank(rank+1):kills+20;
+    const current=maxed?0:Math.max(0,kills-from);
+    const total=maxed?1:Math.max(1,next-from);
+    const remaining=maxed?0:Math.max(0,next-kills);
+    const percent=maxed?100:Math.max(0,Math.min(100,100*current/total));
+    const rankText=typeof romanUnitRank==="function"?romanUnitRank(rank):String(rank);
+    const dexBonus=typeof getUnitMasteryDexBonusByRank==="function"?getUnitMasteryDexBonusByRank(rank):Math.max(0,(rank-1)*2);
+    const progressText=maxed?`${kills} bajas · NIVEL MÁXIMO`:`${kills}/${next} bajas · faltan ${remaining}`;
+    return{rank:rankText,progressText,percent,maxed,current,total,remaining,records,summary:`Adulto · Nivel ${rankText} · +${dexBonus} DX de maestría · ${progressText}`};
+  }
   const threshold=getDragonStageThreshold(first.stage);
   const current=Math.min(threshold,Math.max(0,Number(first.kills||0)));
   const remaining=Math.max(0,threshold-current);
@@ -496,7 +514,7 @@ function getDragonDetProgressData(entity){
     return `${records.length>1?`#${index+1} `:""}${record.stage==="adult"?"ADULTO":`${record.kills}/${t} · faltan ${Math.max(0,t-record.kills)}`}`;
   });
   const mastery=typeof getUnitMasteryRecord==="function"?getUnitMasteryRecord(entity):{kills:0};
-  const rank=typeof getUnitMasteryRankFromKills==="function"?getUnitMasteryRankFromKills(mastery?.kills||0):1;
+  const rank=1; // Huevo, Bebe y Joven solo evolucionan; no ganan maestria.
   return{rank:typeof romanUnitRank==="function"?romanUnitRank(rank):String(rank),progressText:labels.join("   ·   "),percent,maxed:first.stage==="adult",current,total:threshold,remaining,records,summary:`${dragonStageLabel(first.stage)} · ${labels.join(" · ")}`};
 }
 globalThis.getDragonDetProgressData=getDragonDetProgressData;

@@ -218,7 +218,7 @@
         <div class="hvc-grid two">
           <label class="hvc-field"><span>Nombre visible</span><input id="hvcName" value="${esc(source.name||"")}"></label>
           <label class="hvc-field"><span>ID interno automatico</span><input id="hvcKey" value="${esc(state.mode==="existing"?state.key:slug(source.name||""))}" readonly></label>
-          <label class="hvc-field"><span>Rareza</span><select id="hvcRarity">${["Basica","Rara","Epica","Gloriosa","Mitica","Legendaria","Semidios"].map(v=>`<option ${String(source.rarity||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()===v.toLowerCase()?"selected":""}>${v}</option>`).join("")}</select></label>
+          <label class="hvc-field"><span>Rareza</span><select id="hvcRarity">${["Basica","Rara","Epica","Gloriosa","Mitica","Legendaria","Semidios","Astral"].map(v=>`<option ${String(source.rarity||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()===v.toLowerCase()?"selected":""}>${v}</option>`).join("")}</select></label>
           <label class="hvc-field"><span>Tipo</span><select id="hvcType">${registryOptions("types",source.unitType||"unit")}</select></label>
           <label class="hvc-field"><span>Raza</span><select id="hvcRace">${registryOptions("races",source.race||"human")}</select></label>
           <label class="hvc-field"><span>Arma principal</span><select id="hvcWeapon">${registryOptions("weapons",weapon)}</select></label>

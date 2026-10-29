@@ -841,8 +841,15 @@ function getUnitMasteryRankFromKills(kills){
   }
   return rank;
 }
+function isHallvallaPreAdultDragon(entity){
+  const key=String(entity?.key||"");
+  return key==="dragon_egg"||/^(baby|young)_(lightning|fire|ice)_dragon$/.test(key);
+}
 function getUnitMasteryRank(entity){
   if(!entity||entity.leader||isUnitServiceProgression(entity))return 1;
+  // Se respetan los rangos propios del ejercito enemigo en Aventura.
+  const remote=entity.owner!=null&&typeof myPlayer!=="undefined"&&myPlayer!=null&&Number(entity.owner)!==Number(myPlayer);
+  if(!remote&&isHallvallaPreAdultDragon(entity))return 1;
   if(Number(entity.masteryRank)>0)return Math.max(1,Math.min(UNIT_MASTERY_MAX_RANK,Number(entity.masteryRank)||1));
   if(entity.owner&&myPlayer&&Number(entity.owner)!==Number(myPlayer)){
     // v147: cualquier unidad generada/reanimada por la IA durante Aventura
@@ -863,11 +870,8 @@ function getUnitDisplayMasteryRank(entity){
   const remote=entity.owner!=null && typeof myPlayer!=="undefined" && myPlayer!=null && Number(entity.owner)!==Number(myPlayer);
   if(remote)return clampRank(getUnitMasteryRank(entity));
   if(typeof isUnitServiceProgression==="function" && isUnitServiceProgression(entity))return serialized;
-  if(typeof globalThis.getDragonDetProgressData==="function"){
-    // Los dragones conservan su presentacion especializada en DET.
-    const dragon=globalThis.getDragonDetProgressData?.(entity);
-    if(dragon)return clampRank(entity.masteryRank||1);
-  }
+  // La maestria del adulto proviene del perfil: no de la carta antigua con Rango I.
+  if(isHallvallaPreAdultDragon(entity))return 1;
   const record=getUnitMasteryRecord(entity);
   return clampRank(getUnitMasteryRankFromKills(record?.kills||0));
 }
@@ -883,7 +887,7 @@ function getUnitMasteryProgressText(entity){
 }
 function registerLocalUnitMasteryKill(killer,victim){
   try{
-    if(!killer||!victim||isUnitServiceProgression(killer))return null;
+    if(!killer||!victim||isUnitServiceProgression(killer)||isHallvallaPreAdultDragon(killer))return null;
     if(killer.leader)return registerLocalLeaderMasteryKill(killer,victim);
     let creditedKiller=killer;
     if(killer.reanimated&&killer.reanimatedByErictoId){
