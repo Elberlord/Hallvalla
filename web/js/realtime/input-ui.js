@@ -552,6 +552,7 @@ function hallvallaRtCastUnitCore({owner,card,aiState=null,preferredCell=null,sou
   const cost=Math.max(0,Number(costInfo?.effective ?? (liveCard?effectiveCardCost(liveCard,ownerNum):0) ?? 0));
   const cells=hallvallaRtGetSpawnCells(ownerNum,unitsBefore);
   const preferred=preferredCell&&cells.some(c=>Number(c.x)===Number(preferredCell.x)&&Number(c.y)===Number(preferredCell.y))?{x:Number(preferredCell.x),y:Number(preferredCell.y)}:null;
+  if(preferredCell&&!preferred)return {ok:false,reason:"invalid_spawn_cell"};
   const cell=preferred||cells[0]||null;
   if(isPlayer){
     hallvallaRtState.lastPlayerSummonAttempt={at:inputAt,stage:"validate",cardId:card.id,key:card.key,name:card.name,owner:ownerNum,mana,cost,spawnCells:cells.length,source};
@@ -567,7 +568,8 @@ function hallvallaRtCastUnitCore({owner,card,aiState=null,preferredCell=null,sou
 
   let units=[...unitsBefore];
   let newUnit=makeUnit({...liveCard,owner:ownerNum,summonOrigin:"hand",fieldGeneratedSummon:false},cell.x,cell.y);
-  newUnit={...newUnit,rtSummonedAt:inputAt,rtSpawnExitPending:true};
+  const summonLeader=hallvallaRtGetOwnerLeader(ownerNum,unitsBefore);
+  newUnit={...newUnit,rtSummonedAt:inputAt,rtSpawnExitPending:!!summonLeader&&dist(newUnit,summonLeader)<=1};
   if(ownerHasUnit(ownerNum===1?2:1,"yi_sun_sin",units))newUnit={...newUnit,tempDexDebuff:(newUnit.tempDexDebuff||0)+4,tempGuardBuff:(newUnit.tempGuardBuff||0)-4,yiSunDebuffed:true};
   units.push(newUnit);
   let extraLogs=[],statusFxEvent=null,floatFxEvent=null;
@@ -761,7 +763,7 @@ function hallvallaRtRenderArsenal(){
   const renderRows=slice.map((entry,i)=>{
     const card=entry.card,state=card.type==="unit"?hallvallaRtPlayerUnitPlayState(card):getCardPlayState(card),cost=Math.max(0,Number(effectiveCardCost(card,Number(myPlayer||1))||0));
     const action=`choice${i+1}`;
-    const html=`<button type="button" class="rt-arsenal-card${state.canPlay?" is-playable":""}" data-rt-card-id="${escapeHtml(String(card.id))}" data-rt-can-play="${state.canPlay?"1":"0"}" aria-disabled="${state.canPlay?"false":"true"}" title="${escapeHtml(card.name||"")}"><span class="rt-arsenal-art">${getCardVisualHtml(card,"rt-arsenal-art-img")}</span><span class="rt-arsenal-cost">${cost}</span>${entry.copies>1?`<span class="rt-arsenal-copies">×${entry.copies}</span>`:""}<span class="rt-card-bind-host">${hallvallaRtBindingBadgeHtml(action,"rt-card-bind")}</span></button>`;
+    const html=`<button type="button" class="rt-arsenal-card${state.canPlay?" is-playable":""}" style="touch-action:none;user-select:none;" data-rt-card-id="${escapeHtml(String(card.id))}" data-rt-can-play="${state.canPlay?"1":"0"}" aria-disabled="${state.canPlay?"false":"true"}" title="${escapeHtml(card.name||"")}"><span class="rt-arsenal-art">${getCardVisualHtml(card,"rt-arsenal-art-img")}</span><span class="rt-arsenal-cost">${cost}</span>${entry.copies>1?`<span class="rt-arsenal-copies">×${entry.copies}</span>`:""}<span class="rt-card-bind-host">${hallvallaRtBindingBadgeHtml(action,"rt-card-bind")}</span></button>`;
     return {html,sig:[String(card.id||""),String(card.key||""),cost,state.canPlay?1:0,Number(entry.copies||1),action]};
   });
   const nextHtml=renderRows.length?renderRows.map(r=>r.html).join(""):`<div class="rt-arsenal-empty"></div>`;
@@ -783,8 +785,17 @@ function hallvallaRtBindArsenal(){
     hallvallaRtSetInputDevice(ev.pointerType==="touch"?"touch":"keyboard");
     const cardBtn=ev.target.closest?.("[data-rt-card-id]");
     if(!cardBtn||ev.isPrimary===false||Number(ev.button||0)!==0)return;
-    ev.preventDefault();ev.stopPropagation();
     const id=String(cardBtn.dataset.rtCardId||"");
+    const liveCard=(privateState?.hand||[]).find(c=>String(c?.id||"")===id);
+    if(liveCard?.type==="unit"&&typeof startHandCardBoardDrag==="function"){
+      // Unidades: mantener el puntero hasta que el jugador suelte o elija celda.
+      if(startHandCardBoardDrag(ev,liveCard,cardBtn)){
+        ev.preventDefault();ev.stopPropagation();
+        hallvallaRtTraceInput("pointerdown-unit-placement",{cardId:id});
+        return;
+      }
+    }
+    ev.preventDefault();ev.stopPropagation();
     hallvallaRtState.lastPointerActivationAt=hallvallaRtNow();
     hallvallaRtState.lastPointerActivationCardId=id;
     hallvallaRtTraceInput("pointerdown-card",{cardId:id});

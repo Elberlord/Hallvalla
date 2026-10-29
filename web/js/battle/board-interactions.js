@@ -96,6 +96,7 @@ function clearBoardDragVisuals({rerender=true}={}){
 function makeBoardDragGhost(sourceEl,label=""){
   const ghost=sourceEl&&sourceEl.cloneNode?sourceEl.cloneNode(true):document.createElement("div");
   ghost.classList.add("hv-board-drag-ghost");
+  ghost.style.pointerEvents="none"; // No interceptar la casilla bajo el dedo/cursor.
   ghost.style.left="-999px";
   ghost.style.top="-999px";
   ghost.setAttribute("aria-hidden","true");
@@ -148,11 +149,18 @@ async function handleBoardDragEnd(ev){
   unbindBoardDragWindowListeners();
   const state=boardDragState;
   boardDragState=null;
-  if(!state.dragging)return;
+  if(!state.dragging){
+    // Toque corto sobre arsenal: seleccionar unidad y después elegir una casilla.
+    if(state.sourceEl?.closest?.("#rtArsenalPanel")){
+      const card=(privateState?.hand||[]).find(c=>String(c?.id||"")===String(state.cardId||""));
+      if(card&&typeof selectCard==="function")selectCard(card);
+    }
+    return;
+  }
   ev.preventDefault();
   lastBoardDragEndedAt=Date.now();
   const drop=getBoardCellFromPoint(ev.clientX,ev.clientY);
-  if(!drop){clearBoardDragVisuals();if(typeof hallvallaRtReleaseHandFocus==="function")hallvallaRtReleaseHandFocus();setHint("Arrastre cancelado.");return;}
+  if(!drop){clearBoardDragVisuals({rerender:false});clearSelection();setHint("Arrastre cancelado.");return;}
   try{
     const card=(privateState?.hand||[]).find(c=>c.id===state.cardId);
     const moveKey=`${drop.x},${drop.y}`;
