@@ -8,6 +8,7 @@
   globalThis.__HV_RESULT_MVP_V1__=true;
 
   const session={id:"",seen:new Set(),units:new Map(),events:0};
+  const hv346AdultDragon=/^adult_(?:fire|ice|lightning)_dragon$/;
   let currentMvpId="";
   const number=(value)=>{const n=Number(value);return Number.isFinite(n)?n:0;};
   const safe=(value)=>String(value??"");
@@ -22,7 +23,11 @@
     const id=safe(u.id),key=safe(u.key||u.visualKey||u.assetKey||"");
     let entry=session.units.get(id);
     if(!entry){
-      entry={id,key,name:safe(u.name||key||"Unidad"),owner:number(u.owner),unit:u,
+      let masteryStart=0;
+      if(hv346AdultDragon.test(key)&&typeof getUnitMasteryRecord==='function'){
+        try{masteryStart=Math.max(0,Math.floor(number(getUnitMasteryRecord(u)?.kills)));}catch(_){}
+      }
+      entry={id,key,name:safe(u.name||key||"Unidad"),owner:number(u.owner),unit:u,masteryStart,
         hp:0,guard:0,kills:0,blocks:0,heals:0,support:0,actions:0};
       session.units.set(id,entry);
     }
@@ -115,6 +120,13 @@
     const title=el("h1","hv-mvp-result hv-mvp-result-"+result,result==="victory"?"¡GANASTE!":result==="defeat"?"PERDISTE":"EMPATE");
     layout.appendChild(title);
     const mvp=chooseMvp(typeof publicState!=="undefined"?publicState:null);
+    // Solo para dragones ADULTOS del jugador: reconciliar las bajas que
+    // el MVP realmente conto, sin duplicar las que guardo el motor v345.
+    if(typeof hallvallaReconcileAdultDragonMvpKills==='function'){
+      try{hallvallaReconcileAdultDragonMvpKills(
+        [...session.units.values()].filter(e=>hv346AdultDragon.test(e.key)&&e.kills>0)
+      );}catch(error){console.warn('[HallValla] Maestria del dragon adulto: no se pudo reconciliar',error);}
+    }
     currentMvpId=mvp?.id||"";
     const hero=el("div","hv-mvp-figure-zone");
     const pedestal=el("div","hv-mvp-pedestal");hero.appendChild(pedestal);

@@ -814,7 +814,15 @@ function romanUnitRank(n){
   return out||"I";
 }
 function normalizeUnitMasteryName(name){return String(name||"").trim().replace(/\s+/g," ");}
-function getUnitMasteryKey(entity){return normalizeUnitMasteryName(entity?.name||"").toLowerCase();}
+const HV_ADULT_DRAGON_MASTERY_NAMES=Object.freeze({
+  adult_fire_dragon:'Dragón Adulto de Fuego',
+  adult_ice_dragon:'Dragón Adulto de Hielo',
+  adult_lightning_dragon:'Dragón Adulto de Relámpago'
+});
+function getUnitMasteryKey(entity){
+  const canonical=HV_ADULT_DRAGON_MASTERY_NAMES[String(entity?.key||'').toLowerCase()];
+  return normalizeUnitMasteryName(canonical||entity?.name||'').toLowerCase();
+}
 function normalizeUnitMasteryBook(book={}){
   const out={};
   try{
@@ -884,6 +892,34 @@ function getUnitMasteryProgressText(entity){
   if(rank>=UNIT_MASTERY_MAX_RANK)return `${rec.kills} bajas · Rango máximo`;
   const next=getUnitMasteryKillsForRank(rank+1);
   return `${rec.kills}/${next} bajas`;
+}
+// Seguro de maestria v346: el resultado MVP contiene bajas por unidad que
+// pueden no haber llegado al registro de maestria de un dragon adulto.
+// El minimo es la maestria AL INVOCAR + las bajas del MVP de ese duelo;
+// nunca se suman de nuevo si el motor ya las registro durante el combate.
+function hallvallaReconcileAdultDragonMvpKills(entries){
+  if(!Array.isArray(entries)||!entries.length||!myPlayer)return {changed:false,count:0};
+  const profile=getPlayerProfile();
+  const book=normalizeUnitMasteryBook(profile.unitMastery||{});
+  let changed=false,count=0;
+  for(const e of entries){
+    const key=String(e?.key||'').toLowerCase();
+    const canonical=HV_ADULT_DRAGON_MASTERY_NAMES[key];
+    if(!canonical||Number(e?.owner)!==Number(myPlayer))continue;
+    const kills=Math.max(0,Math.floor(Number(e?.kills)||0));
+    if(!kills)continue;
+    const first=Math.max(0,Math.floor(Number(e?.masteryStart)||0));
+    const masteryKey=getUnitMasteryKey({key,name:canonical});
+    const existing=Math.max(0,Math.floor(Number(book[masteryKey]?.kills)||0));
+    const required=first+kills;
+    if(existing<required){
+      book[masteryKey]={name:canonical,kills:required};
+      count+=required-existing;
+      changed=true;
+    }
+  }
+  if(changed)savePlayerProfile({...profile,unitMastery:book});
+  return {changed,count};
 }
 function registerLocalUnitMasteryKill(killer,victim){
   try{
