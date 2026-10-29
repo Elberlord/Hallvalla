@@ -125,6 +125,105 @@ function hallvallaRtClosestVisibleEnemyDistance(unit,units=publicState?.units||[
   const visible=(units||[]).filter(enemy=>hallvallaRtVisibleEnemy(unit,enemy));
   return visible.length?Math.min(...visible.map(enemy=>dist(unit,enemy))):Infinity;
 }
+function hallvallaRtIsSpearEscortUnit(unit){
+  if(!unit||unit.leader||unit.beast||unit.aerial||unit.flight)return false;
+  const locomotion=String(unit?.loadProfile?.locomotion||unit?.locomotionClass||'').toLowerCase();
+  if(locomotion.startsWith('mounted_')||(typeof unitHasLeaderBuffTrait==='function'&&unitHasLeaderBuffTrait(unit,'cavalry')))return false;
+  const weapon=String(unit.weaponClass||(typeof getWeaponClassForCard==='function'?getWeaponClassForCard(unit):'')||'').toLowerCase();
+  return weapon==='spear'||weapon==='pike'||weapon==='lance'||(typeof isLanceUnitCardLike==='function'&&isLanceUnitCardLike(unit));
+}
+function hallvallaRtFindEscortArcher(unit,units=publicState?.units||[]){
+  if(!hallvallaRtIsSpearEscortUnit(unit))return null;
+  return (units||[]).filter(a=>a&&a.id!==unit.id&&!a.leader&&Number(a.owner)===Number(unit.owner)&&Number(a.hp||0)>0&&!hallvallaRtIsRearSupportUnit(a)&&
+    (Number(a.range||1)>1||String(a.weaponClass||'').toLowerCase()==='bow')&&!a.healer&&!a.nigromante)
+    .sort((a,b)=>dist(unit,a)-dist(unit,b)||String(a.id||'').localeCompare(String(b.id||'')))[0]||null;
+}
+function hallvallaRtEscortDesiredCell(unit,archer,units=publicState?.units||[]){
+  const enemies=(units||[]).filter(e=>hallvallaRtVisibleEnemy(unit,e));
+  enemies.sort((a,b)=>dist(archer,a)-dist(archer,b));
+  const enemy=enemies[0]||null;
+  const forward=Number(unit.owner)===1?-1:1;
+  const dx=enemy?Math.sign(Number(enemy.x)-Number(archer.x)):0;
+  const dy=enemy?Math.sign(Number(enemy.y)-Number(archer.y)):forward;
+  return {x:Math.max(0,Math.min(COLS-1,Number(archer.x)+dx)),y:Math.max(0,Math.min(ROWS-1,Number(archer.y)+(dy||forward)))};
+}
+function hallvallaRtEscortCellScore(unit,cell,archer,units=publicState?.units||[]){
+  const ideal=hallvallaRtEscortDesiredCell(unit,archer,units);
+  const archerDistance=dist(cell,archer);
+  const enemy=(units||[]).filter(e=>hallvallaRtVisibleEnemy(unit,e)).sort((a,b)=>dist(archer,a)-dist(archer,b))[0]||null;
+  const behind=enemy&&dist(cell,enemy)>dist(archer,enemy)?6:0;
+  return dist(cell,ideal)*10+Math.max(0,archerDistance-1)*4+behind+hallvallaRtCrowdPenalty(cell,unit.owner,units)*1.5;
+}
+function hallvallaRtChooseEscortStep(unit,archer,units=publicState?.units||[]){
+  if(!archer)return null;
+  const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&Number(u.hp||0)>0).map(u=>hallvallaRtCellKey(u.x,u.y)));
+  const current=hallvallaRtEscortCellScore(unit,unit,archer,units);
+  const next=hallvallaRtNeighbors(Number(unit.x),Number(unit.y))
+    .filter(c=>!occupied.has(hallvallaRtCellKey(c.x,c.y)))
+    .map(c=>({cell:c,score:hallvallaRtEscortCellScore(unit,c,archer,units)}))
+    .sort((a,b)=>a.score-b.score||a.cell.y-b.cell.y||a.cell.x-b.cell.x)[0];
+  return next&&next.score<current-0.8?next.cell:null;
+}
+function hallvallaRtSupportPositionScore(unit,cell,units=publicState?.units||[]){
+  const backY=Number(unit.owner)===1?ROWS-1:0;
+  const back=Math.abs(Number(cell.y)-backY);
+  const side=Math.min(Number(cell.x),COLS-1-Number(cell.x));
+  const enemy=(units||[]).filter(e=>hallvallaRtVisibleEnemy(unit,e));
+  const exposure=enemy.reduce((worst,e)=>{
+    const d=dist(cell,e);
+    const rg=Math.max(1,Number(e.range||1));
+    return Math.max(worst,Math.max(0,Math.max(4,rg+1)-d)*18);
+  },0);
+  const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&Number(u.hp||0)>0).map(u=>hallvallaRtCellKey(u.x,u.y)));
+  const adjacentFree=hallvallaRtNeighbors(Number(cell.x),Number(cell.y)).filter(c=>!occupied.has(hallvallaRtCellKey(c.x,c.y))).length;
+  // Ericto y Salomón generan entidades adyacentes. Nunca encerrarlos deliberadamente.
+  const summoner=unit.key==='ericto'||unit.key==='king_solomon';
+  const spacePenalty=summoner&&adjacentFree<2?(2-adjacentFree)*28:0;
+  return back*10+side*5+exposure+spacePenalty+hallvallaRtCrowdPenalty(cell,unit.owner,units)*1.5;
+}
+function hallvallaRtChooseSupportStep(unit,units=publicState?.units||[]){
+  const backY=Number(unit.owner)===1?ROWS-1:0;
+  const nearCorner=Math.abs(Number(unit.y)-backY)<=1&&Math.min(Number(unit.x),COLS-1-Number(unit.x))<=1;
+  const danger=hallvallaRtClosestVisibleEnemyDistance(unit,units);
+  if(nearCorner&&danger>4)return null;
+  const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&Number(u.hp||0)>0).map(u=>hallvallaRtCellKey(u.x,u.y)));
+  const middle=Math.floor((ROWS-1)/2);
+  const allowed=c=>Number(unit.owner)===1?Number(c.y)>=middle:Number(c.y)<=middle;
+  const choices=hallvallaRtNeighbors(Number(unit.x),Number(unit.y))
+    .filter(c=>!occupied.has(hallvallaRtCellKey(c.x,c.y))&&allowed(c))
+    .map(c=>({cell:c,score:hallvallaRtSupportPositionScore(unit,c,units)}))
+    .sort((a,b)=>a.score-b.score||a.cell.y-b.cell.y||a.cell.x-b.cell.x);
+  const current=hallvallaRtSupportPositionScore(unit,unit,units);
+  return choices.length&&choices[0].score<current-0.8?choices[0].cell:null;
+}
+function hallvallaRtAiChooseFormationSpawnCell(card,units,owner=2){
+  const cells=hallvallaRtGetSpawnCells(owner,units);
+  if(!cells.length)return null;
+  const unit={...card,owner};
+  const leader=hallvallaRtGetOwnerLeader(owner,units);
+  if(hallvallaRtIsRearSupportUnit(unit)){
+    return [...cells].sort((a,b)=>hallvallaRtSupportPositionScore(unit,a,units)-hallvallaRtSupportPositionScore(unit,b,units)||a.y-b.y||a.x-b.x)[0];
+  }
+  const escort=hallvallaRtFindEscortArcher(unit,units);
+  if(escort){
+    return [...cells].sort((a,b)=>hallvallaRtEscortCellScore(unit,a,escort,units)-hallvallaRtEscortCellScore(unit,b,escort,units)||a.y-b.y||a.x-b.x)[0];
+  }
+  const ranged=Number(card.range||1)>1&&!card.healer&&!card.nigromante;
+  const heavy=typeof isHallvallaTankUnit==='function'&&isHallvallaTankUnit(card);
+  if(ranged||heavy){
+    const backY=owner===1?ROWS-1:0;
+    const center=Math.floor((COLS-1)/2);
+    const goalY=heavy?Math.floor((ROWS-1)/2):backY+(owner===1?-1:1);
+    const allies=(units||[]).filter(u=>u&&u.owner===owner&&Number(u.hp||0)>0&&!u.leader);
+    const guard=heavy?allies.filter(u=>Number(u.range||1)>1&&!hallvallaRtIsRearSupportUnit(u))[0]:null;
+    const goalX=guard?Number(guard.x):Number(leader?.x??center);
+    return [...cells].sort((a,b)=>{
+      const score=c=>Math.abs(Number(c.y)-goalY)*10+Math.abs(Number(c.x)-goalX)*2+hallvallaRtCrowdPenalty(c,owner,units)*2;
+      return score(a)-score(b)||a.y-b.y||a.x-b.x;
+    })[0];
+  }
+  return cells[0];
+}
 function hallvallaRtChooseStep(unit,target,units=publicState?.units||[]){
   if(!unit||!target||isRtTrapLocked(unit,"move",hallvallaRtNow())||Number(typeof effectiveMov==='function'?effectiveMov(unit):unit.mov||0)<=0)return null;
   const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&Number(u.hp||0)>0).map(u=>hallvallaRtCellKey(u.x,u.y)));
@@ -513,7 +612,7 @@ function hallvallaRtAiChoosePlay(ai,units,mana){
   if(allyUnits.length<2&&spawnCell){
     const affordableUnits=affordable.filter(card=>card?.type==='unit');
     if(affordableUnits.length){
-      const best=affordableUnits.map(card=>({kind:"summon",card,target:null,cell:spawnCell,score:5000+hallvallaRtAiUnitValue(card)-hallvallaRtAiCardCost(card)*8})).sort((a,b)=>b.score-a.score)[0];
+      const best=affordableUnits.map(card=>({kind:"summon",card,target:null,cell:hallvallaRtAiChooseFormationSpawnCell(card,units,2),score:5000+hallvallaRtAiUnitValue(card)-hallvallaRtAiCardCost(card)*8})).sort((a,b)=>b.score-a.score)[0];
       if(best)return best;
     }
     if(canSummon&&handCards.some(card=>card?.type==='unit'))return null;
@@ -527,7 +626,7 @@ function hallvallaRtAiChoosePlay(ai,units,mana){
       const closeThreat=aiLeader?enemies.filter(e=>dist(aiLeader,e)<=3).length:0;
       if(closeThreat)score+=Math.max(0,Number(card.hp||0))*10+Math.max(0,Number(card.guard||0))*8+closeThreat*90;
       const rg=Math.max(1,Number(card.range||1));if(rg>=2)score+=55+rg*12;
-      push("summon",card,null,score,{cell:spawnCell});
+      push("summon",card,null,score,{cell:hallvallaRtAiChooseFormationSpawnCell(card,units,2)});
       continue;
     }
     if(typeof isEquipmentCard==="function"&&isEquipmentCard(card)){
@@ -1246,10 +1345,10 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
     const ownLeader=hallvallaRtGetOwnerLeader(live.owner,units);
     const holdRadius=hallvallaRtLeaderHoldRadius(live,units);
     const tactical=globalThis.hallvallaRtGetTacticalOrder?.(live)||null;
-    if(hallvallaRtIsRearSupportUnit(live)&&!["follow","retreat"].includes(tactical?.mode)&&(!holdRadius||!ownLeader||dist(live,ownLeader)<=holdRadius))continue;
     const inSpawnRing=!!ownLeader&&dist(live,ownLeader)<=1;
     // Con vínculo arcano radio 1, salir del anillo rompe el efecto.
-    const freshSpawn=holdRadius===1?false:(live.rtSpawnExitPending===true||Number(live.rtSummonedAt||0)>0&&inSpawnRing);
+    const dedicatedFormation=!tactical&&(hallvallaRtIsRearSupportUnit(live)||!!hallvallaRtFindEscortArcher(live,units));
+    const freshSpawn=dedicatedFormation||holdRadius===1?false:(live.rtSpawnExitPending===true||Number(live.rtSummonedAt||0)>0&&inSpawnRing);
     // PERF v119: para unidades normales, ni targeting ni steering local se ejecutan
     // hasta que el cooldown real de movimiento vence. La reposición de Hua Lan
     // es una reacción inmediata y, por diseño, no espera ese cooldown.
@@ -1291,6 +1390,11 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
         // Prioridad absoluta tras invocar: abandonar el anillo del líder para no bloquear
         // la siguiente convocatoria, incluso si ya podría atacar desde la casilla de aparición.
         step=hallvallaRtChooseSpawnExitStep(live,units);
+      }
+      if(!step&&dedicatedFormation){
+        step=hallvallaRtIsRearSupportUnit(live)?hallvallaRtChooseSupportStep(live,units):hallvallaRtChooseEscortStep(live,hallvallaRtFindEscortArcher(live,units),units);
+        // Cuando la escolta ya protege o el apoyo está a salvo, no perseguir al enemigo.
+        if(!step)continue;
       }
       if(!step){
         const target=hallvallaRtChooseTarget(live,units);
