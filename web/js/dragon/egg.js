@@ -487,8 +487,10 @@ function processDragonGrowthAfterBattle(state){
 function getDragonDetProgressData(entity){
   if(!entity||!isDragonCompanionKey(entity.key))return null;
   const records=getDragonCompanions().filter(record=>getDragonRecordCardKey(record)===String(entity.key||"")).sort((a,b)=>a.obtainedAt-b.obtainedAt);
-  if(!records.length)return null;
-  const first=records[0];
+  // Una copia adulta antigua puede carecer de registro de evolucion local;
+  // su maestria se consulta igualmente en el perfil y empieza en Nivel I.
+  const first=records[0]||(/^adult_(?:lightning|fire|ice)_dragon$/.test(String(entity.key||''))?{stage:'adult'}:null);
+  if(!first)return null;
   if(first.stage==="adult"){
     // Evolucion completa: a partir de ahora la barra representa maestria normal.
     const record=typeof getUnitMasteryRecord==="function"?getUnitMasteryRecord(entity):{kills:0};

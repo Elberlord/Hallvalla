@@ -1368,12 +1368,32 @@ async function hallvallaRtDragonAdultSpecialTick(now){
         stealthAreaDamageEvent=makeStage8StealthAreaDamageEvent(dragon.owner,Number(dragon.owner)===1?2:1,
           {kind:'cell_guard_damage',label,cells,sourceName:dragon.name,sourceKey:kind==='quake'?'hv_adult_dragon_quake':'hv_adult_dragon_tail'});
       }
-      const saved=await updatePublic({units:resolved.units,_clockKillCreditOwner:Number(dragon.owner),
+      // Contar SOLO bajas provocadas por esta habilidad. Evitar muertes
+      // ficticias cuando otra habilidad salva a la unidad en el ultimo instante.
+      let hv345Units=resolved.units;
+      const hv345Fallen=hv345Units.filter(u=>u&&Number(u.hp||0)<=0).map(u=>u.id);
+      if(hv345Fallen.length&&typeof applyLegendaryFatalSaves==='function')
+        hv345Units=applyLegendaryFatalSaves(hv345Units,hv345Fallen);
+      const hv345MasteryVictims=units.filter(v=>v&&Number(v.hp||0)>0&&Number(v.owner)!==Number(dragon.owner)&&
+        !hv345Units.some(after=>String(after.id)===String(v.id)&&Number(after.hp||0)>0));
+      hv345Units=hv345Units.filter(u=>u&&Number(u.hp||0)>0);
+      const saved=await updatePublic({units:hv345Units,_clockKillCreditOwner:Number(dragon.owner),
         ...(fx?{floatFxEvent:fx}:{}),
         ...(stealthAreaDamageEvent?{stealthAreaDamageEvent}:{}),
         log:[log,...(publicState?.log||[])].slice(0,18)});
+      if(saved&&hv345MasteryVictims.length&&typeof registerLocalUnitMasteryKill==='function'){
+        let hv345Promoted=false;
+        for(const victim of hv345MasteryVictims){
+          const result=registerLocalUnitMasteryKill(dragon,victim);
+          if(result?.rankedUp&&typeof applyUnitMasteryRankUpToUnits==='function'){
+            hv345Units=applyUnitMasteryRankUpToUnits(hv345Units,dragon,result);
+            hv345Promoted=true;
+          }
+        }
+        if(hv345Promoted)await updatePublic({units:hv345Units});
+      }
       // Al derrotar al lider enemigo, cerrar la batalla igual que el ataque normal.
-      if(saved&&typeof finalizeBattle==='function')await finalizeBattle(resolved.units,'');
+      if(saved&&typeof finalizeBattle==='function')await finalizeBattle(hv345Units,'');
       return !!saved;
     }
   }
@@ -1424,11 +1444,32 @@ async function hallvallaRtStatusTick(now){
   // Sangrado: un tick por ciclo táctico de 10 s; si no tiene duración explícita, permanece hasta curación/destrucción.
   for(const owner of [1,2]){try{const r=applyBleedingCycleTick(units,owner);units=r.units;logs.push(...(r.logs||[]));statusFxEvent=statusFxEvent||r.statusFxEvent;floatFxEvent=floatFxEvent||r.floatFxEvent;}catch(_){}}
   // Veneno se procesa al abrir cada ciclo táctico junto con las trampas de inicio de ciclo.
+  const hv345BeforeBurn=[...units];
   try{const r=applyBurnCycleTick(units);units=r.units;logs.push(...(r.logs||[]));statusFxEvent=statusFxEvent||r.statusFxEvent;floatFxEvent=floatFxEvent||r.floatFxEvent;}catch(_){ }
+  const hv345BurnSourceKeys={'Dragón Adulto de Fuego':'adult_fire_dragon','Dragón Adulto de Hielo':'adult_ice_dragon','Dragón Adulto de Relámpago':'adult_lightning_dragon'};
+  const hv345BurnVictims=hv345BeforeBurn.filter(v=>v&&Number(v.hp||0)>0&&
+    Number(v.burnDamage||0)>0&&(v.burnPersistent===true||Number(v.burnTurns||0)>0)&&
+    hv345BurnSourceKeys[String(v.burnSourceName||'')]&&
+    !units.some(after=>String(after.id)===String(v.id)&&Number(after.hp||0)>0));
   const fallen=units.filter(u=>Number(u.hp||0)<=0).map(u=>u.id);if(fallen.length&&typeof applyLegendaryFatalSaves==="function")units=applyLegendaryFatalSaves(units,fallen);units=units.filter(u=>Number(u.hp||0)>0);
   if(JSON.stringify(before)===JSON.stringify(units))return false;
-  await updatePublic({units,statusFxEvent:statusFxEvent||null,floatFxEvent:floatFxEvent||null,log:logs.length?[...logs,...(publicState?.log||[])].slice(0,18):(publicState?.log||[])});
-  return true;
+  const hv345BurnSaved=await updatePublic({units,statusFxEvent:statusFxEvent||null,floatFxEvent:floatFxEvent||null,log:logs.length?[...logs,...(publicState?.log||[])].slice(0,18):(publicState?.log||[])});
+  if(hv345BurnSaved&&hv345BurnVictims.length&&typeof registerLocalUnitMasteryKill==='function'){
+    let hv345Promoted=false;
+    for(const victim of hv345BurnVictims){
+      const name=String(victim.burnSourceName||'');
+      const killer=hv345BeforeBurn.find(u=>u&&u.name===name&&Number(u.owner)!==Number(victim.owner)&&
+        String(u.key||'')===hv345BurnSourceKeys[name])||
+        {name,key:hv345BurnSourceKeys[name],owner:Number(victim.owner)===1?2:1};
+      const result=registerLocalUnitMasteryKill(killer,victim);
+      if(result?.rankedUp&&typeof applyUnitMasteryRankUpToUnits==='function'){
+        units=applyUnitMasteryRankUpToUnits(units,killer,result);
+        hv345Promoted=true;
+      }
+    }
+    if(hv345Promoted)await updatePublic({units});
+  }
+  return !!hv345BurnSaved;
 }
 
 function hallvallaRtFairUnitIds(units,{leaders=true,nonLeaders=true}={}){

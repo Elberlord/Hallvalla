@@ -1074,10 +1074,22 @@ async function resolveSharedAttackOutcome({
     }
   }
   if(dmgTrap.forceKill)units=units.map(u=>u.id===d.id?resolveBlessedArmorTransition(u,{...u,hp:0}):u);
+  const hv345BeforeDragonArea=units;
   const dragonCompanionResult=typeof applyDragonCompanionAttackEffects==="function"
     ?applyDragonCompanionAttackEffects(units,a,d,{hit:!!hit.hit,hpLoss,guardLoss,state:getDragonState({units,legendaryTraps:resolvedLegendaryTraps,beastTraps})})
     :{units,text:"",statusFxEvent:null,floatFxEvent:null};
   units=dragonCompanionResult.units||units;
+  // Las bajas del objetivo principal ya usan masteryKillResult: solo contar
+  // secundarios del area, sin duplicar ni premiar salvamentos mortales.
+  const hv345AreaFallen=(typeof isDragonCompanionKey==='function'&&
+    /^adult_(?:fire|ice|lightning)_dragon$/.test(String(a.key||'')))
+    ?hv345BeforeDragonArea.filter(v=>v&&String(v.id)!==String(d.id)&&Number(v.hp||0)>0&&Number(v.owner)!==Number(a.owner)&&
+       !units.some(after=>String(after.id)===String(v.id)&&Number(after.hp||0)>0))
+    :[];
+  if(hv345AreaFallen.length&&typeof applyLegendaryFatalSaves==='function')
+    units=applyLegendaryFatalSaves(units,hv345AreaFallen.map(v=>v.id));
+  const hv345AreaMasteryVictims=hv345AreaFallen.filter(v=>
+    !units.some(after=>String(after.id)===String(v.id)&&Number(after.hp||0)>0));
   dragonCompanionText=dragonCompanionResult.text||"";
   const solomonIfritResult=applySolomonIfritAfterHit(units,a,d,hit,hpLoss);
   units=solomonIfritResult.units;
@@ -1101,6 +1113,10 @@ async function resolveSharedAttackOutcome({
   if(arcaneDrain.triggered)units=arcaneDrain.units;
   const masteryKillResult=defenderFell?registerLocalUnitMasteryKill(a,d):null;
   units=applyUnitMasteryRankUpToUnits(units,a,masteryKillResult);
+  for(const victim of hv345AreaMasteryVictims){
+    const result=registerLocalUnitMasteryKill(a,victim);
+    units=applyUnitMasteryRankUpToUnits(units,a,result);
+  }
   const naginataDaimyoResult=defenderFell?applyNaginataDaimyoPunishment(units,d,a.id,dist(a,d)<=1):{units,triggered:false,text:""};
   units=naginataDaimyoResult.units;
   const berserkerOsoResult=hit.hit&&hpLoss>0?applyBerserkerOsoGuardShatter(units,a,d,hpLoss):{units,triggered:false,text:""};
