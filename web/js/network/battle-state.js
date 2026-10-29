@@ -239,6 +239,7 @@ async function maybeResolveStage8StealthAreaDamage(){
     const attackerRef={name:String(event.sourceName||event.label||"Daño de área"),key:String(event.sourceKey||""),owner:Number(event.sourceOwner||0),dragonElement:String(event.element||""),dragonStage:String(event.dragonStage||"adult")};
     hidden=hidden.map(unit=>{
       if(!canReceiveUntargetedAreaEffect(unit))return unit;
+      if(String(event.sourceKey||'')==='hv_adult_dragon_quake'&&(unit.aerial||unit.flight))return unit;
       const cell=cellMap.get(`${Number(unit.x)},${Number(unit.y)}`);
       if(!cell)return unit;
       const damage=Math.max(0,Number(cell.damage||0));
@@ -246,6 +247,7 @@ async function maybeResolveStage8StealthAreaDamage(){
       hitIds.push(String(unit.id||""));
       let next=typeof applyGuardDamage==="function"?applyGuardDamage(unit,damage):{...unit,hp:Number(unit.hp||0)-damage};
       next={...next,damagedThisWindow:true};
+      if(String(event.sourceKey||'')==='hv_adult_dragon_quake'&&Number(next.hp||0)>0)next.hvNextMoveSkip=true;
       if(Number(next.hp||0)>0&&Number(event.statusStacks||0)>0&&typeof applyDragonCompanionElementStatus==="function"){
         next=applyDragonCompanionElementStatus(next,attackerRef,Number(event.statusStacks||0),publicState);
       }

@@ -99,14 +99,14 @@ function makeDragonCompanionCard(stage,element){
   const elementName=dragonElementLabel(element);
   const rarity=stage==="baby"?"Gloriosa":stage==="young"?"Mítica":"Astral";
   const threshold=getDragonStageThreshold(stage);
-  const growthText=stage==="adult"?"Forma adulta completa. Obtiene maestría por bajas propias hasta Nivel XLV: +2 Destreza por nivel.":`Mientras permanezca vivo en el campo, todas las eliminaciones aliadas continúan sumando a su crecimiento. Evoluciona después del duelo al alcanzar ${threshold} eliminaciones acumuladas.`;
+  const growthText=stage==="adult"?"Forma adulta completa. La maestría sigue aumentando +2 Destreza por nivel.":`Mientras permanezca vivo en el campo, todas las eliminaciones aliadas continúan sumando a su crecimiento. Evoluciona después del duelo al alcanzar ${threshold} eliminaciones acumuladas.`;
   return{
     key:dragonCardKey(stage,element),name:`Dragón ${stageName} de ${elementName}`,type:"unit",
     icon:element==="fire"?"🔥":element==="ice"?"❄️":"⚡",portrait:DRAGON_COMPANION_ASSETS[visualStage].hand,fieldFigure:DRAGON_COMPANION_ASSETS[visualStage].field,
     rarity,special:true,beast:true,assetBucket:"beasts",personalCharacter:true,dragonCompanion:true,dragonStage:stage,dragonElement:element,
     elementalAffinity:element==="ice"?{ice:0,fire:2}:{[element]:0},
     cost:stage==="adult"?10:stage==="young"?7:4,...stats,aerial:true,flight:true,
-    text:`Vuelo: las unidades terrestres cuerpo a cuerpo y las trampas de suelo no pueden afectarlo. Afinidad: inmune a ${elementName}${element==="ice"?"; Fuego le causa ×2 daño mágico":""}. ${growthText}`
+    text:`Vuelo: las unidades terrestres cuerpo a cuerpo y las trampas de suelo no pueden afectarlo. Afinidad: inmune a ${elementName}${element==="ice"?"; Fuego le causa ×2 daño mágico":""}. ${growthText}${stage==="adult"?" Colazo: daño 4 a todos los enemigos a 3 casillas, recarga 30 s. Terremoto: daño 3 a enemigos terrestres a 3 casillas, interrumpe su próximo movimiento, recarga 30 s.":""}`
   };
 }
 
@@ -268,7 +268,8 @@ function clearActiveDragonRecordIds(){
   const record=findDragonRecordForCardKey(unit.key);
   if(Number(unit.owner)===getLocalDragonOwner()&&record)addActiveDragonRecordId(record.id);
   const threshold=getDragonStageThreshold(record?.stage||unit.dragonStage||"adult");
-  return{...unit,dragonCompanion:true,dragonCompanionId:record?.id||"",dragonStage:record?.stage||unit.dragonStage,dragonElement:record?.element||unit.dragonElement,dragonKills:Number(record?.kills||0),dragonThreshold:threshold,dragonGrowthThreshold:threshold};
+  const canonical=/^adult_(?:lightning|fire|ice)_dragon$/.test(String(unit.key||''))?getDragonCompanionCardTemplate(unit.key):null;
+  return{...unit,...(canonical?{text:canonical.text,effectText:canonical.text}:{}),dragonCompanion:true,dragonCompanionId:record?.id||"",dragonStage:record?.stage||unit.dragonStage,dragonElement:record?.element||unit.dragonElement,dragonKills:Number(record?.kills||0),dragonThreshold:threshold,dragonGrowthThreshold:threshold};
 },{id:"dragon-growth:normal-unit"});
 // Compatibilidad con partidas antiguas que aún materialicen una unidad principal.
 registerHallvallaHook("principal.makeUnit",(unit,{owner})=>{
@@ -276,8 +277,9 @@ registerHallvallaHook("principal.makeUnit",(unit,{owner})=>{
   const record=findDragonRecordForCardKey(unit.key);
   if(Number(owner)===getLocalDragonOwner()&&record)addActiveDragonRecordId(record.id);
   const threshold=getDragonStageThreshold(record?.stage||unit.dragonStage||"adult");
+  const canonical=/^adult_(?:lightning|fire|ice)_dragon$/.test(String(unit.key||''))?getDragonCompanionCardTemplate(unit.key):null;
   return{
-    ...unit,dragonCompanion:true,dragonCompanionId:record?.id||"",dragonStage:record?.stage||unit.dragonStage,
+    ...unit,...(canonical?{text:canonical.text,effectText:canonical.text}:{}),dragonCompanion:true,dragonCompanionId:record?.id||"",dragonStage:record?.stage||unit.dragonStage,
     dragonElement:record?.element||unit.dragonElement,dragonKills:Number(record?.kills||0),dragonThreshold:threshold,
     aerial:unit.key!=="dragon_egg",flight:unit.key!=="dragon_egg",immobile:unit.key==="dragon_egg",cannotAttack:unit.key==="dragon_egg",cannotDefend:unit.key==="dragon_egg"
   };
@@ -503,7 +505,7 @@ function getDragonDetProgressData(entity){
     const rankText=typeof romanUnitRank==="function"?romanUnitRank(rank):String(rank);
     const dexBonus=typeof getUnitMasteryDexBonusByRank==="function"?getUnitMasteryDexBonusByRank(rank):Math.max(0,(rank-1)*2);
     const progressText=maxed?`${kills} bajas · NIVEL MÁXIMO`:`${kills}/${next} bajas · faltan ${remaining}`;
-    return{rank:rankText,progressText,percent,maxed,current,total,remaining,records,summary:`Adulto · Nivel ${rankText} · +${dexBonus} DX de maestría · ${progressText}`};
+    return{rank:rankText,progressText,percent,maxed,current,total,remaining,records,summary:`Maestría activa · +${dexBonus} DX · ${progressText}`};
   }
   const threshold=getDragonStageThreshold(first.stage);
   const current=Math.min(threshold,Math.max(0,Number(first.kills||0)));
@@ -527,7 +529,8 @@ function getDragonProgressHtml(unit){
   const record=getDragonProgressRecordForUnit(unit);
   if(!record)return"";
   const threshold=getDragonStageThreshold(record.stage);
-  const label=record.stage==="adult"?"ADULTO":`${record.kills}/${threshold}`;
+  if(record.stage==="adult")return ""; // v344: insignia ADULTO retirada; evolucion canonica intacta.
+  const label=`${record.kills}/${threshold}`;
   return`<span class="dragon-growth-badge ${record.ready?"is-ready":""}" title="Progreso dracónico: ${label}">${label}</span>`;
 }
 registerHallvallaHook("unit.statusBubblesHtml",(html,{unit})=>`${html}${getDragonProgressHtml(unit)}`,{id:"dragon-growth:status-progress"});

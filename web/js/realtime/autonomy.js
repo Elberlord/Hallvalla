@@ -1305,7 +1305,82 @@ async function hallvallaRtHannibalCannasTick(now){
   }
   return false;
 }
+/* v344: dos habilidades NATIVAS, independientes del nivel/tier y del ataque normal.
+   El rango 3 cuenta diagonales (distancia del tablero). Ambas impactan Guardia
+   antes de Vida. COLAZO afecta cualquier enemigo; TERREMOTO solo terrestres.
+   Valores de balance inicial: 4 y 3 de dano, respectivamente; 30 s cada una. */
+const HV_DRAGON_ADULT_SPECIAL_RANGE=3;
+const HV_DRAGON_ADULT_SPECIAL_COOLDOWN_MS=30000;
+const HV_DRAGON_ADULT_TAIL_DAMAGE=4;
+const HV_DRAGON_ADULT_QUAKE_DAMAGE=3;
+function hvDragonAdultSpecialTargets(source,units,kind){
+  return (units||[]).filter(enemy=>enemy&&enemy.id!==source.id&&Number(enemy.owner)!==Number(source.owner)&&Number(enemy.hp||0)>0&&
+    dist(source,enemy)<=HV_DRAGON_ADULT_SPECIAL_RANGE&&
+    (kind!=='quake'||!(enemy.aerial||enemy.flight))&&
+    (typeof canReceiveUntargetedAreaEffect!=='function'||canReceiveUntargetedAreaEffect(enemy,source)));
+}
+function hvDragonAdultResolveSpecial(units,source,kind,now){
+  const damage=kind==='tail'?HV_DRAGON_ADULT_TAIL_DAMAGE:HV_DRAGON_ADULT_QUAKE_DAMAGE;
+  const stamp=kind==='tail'?'hvDragonAdultTailNextAt':'hvDragonAdultQuakeNextAt';
+  const victims=hvDragonAdultSpecialTargets(source,units,kind);
+  if(!victims.length)return null;
+  const ids=new Set(victims.map(u=>String(u.id)));
+  let actualHits=0,lifeDamage=0,guardDamage=0,first=null;
+  const next=units.map(u=>{
+    if(u.id===source.id)return {...u,[stamp]:now+HV_DRAGON_ADULT_SPECIAL_COOLDOWN_MS};
+    if(!ids.has(String(u.id)))return u;
+    let updated=applyGuardDamage(u,damage,0,0);
+    if(typeof routeHannibalMountedHpDamage==='function'&&Number(updated.lastHpLoss||0)>0){
+      const route=routeHannibalMountedHpDamage(u,updated,source);updated=route.unit||updated;
+    }
+    const hp=Math.max(0,Number(updated.lastHpLoss||0));
+    const gd=Math.max(0,Number(updated.lastGuardLoss||0));
+    actualHits++;lifeDamage+=hp;guardDamage+=gd;
+    if(kind==='quake'&&Number(updated.hp||0)>0)updated={...updated,hvNextMoveSkip:true};
+    if(!first)first=updated;
+    delete updated.lastHpLoss;delete updated.lastGuardLoss;
+    return updated;
+  });
+  return {units:next,first,actualHits,lifeDamage,guardDamage,damage,victims};
+}
+async function hallvallaRtDragonAdultSpecialTick(now){
+  const units=[...(publicState?.units||[])];
+  for(const dragon of units){
+    if(!hallvallaRtIsAdultDragon(dragon)||Number(dragon.hp||0)<=0||isRtTrapLocked(dragon,'silence',now))continue;
+    for(const kind of ['tail','quake']){
+      const stamp=kind==='tail'?'hvDragonAdultTailNextAt':'hvDragonAdultQuakeNextAt';
+      if(Number(dragon[stamp]||0)>now)continue;
+      const resolved=hvDragonAdultResolveSpecial(units,dragon,kind,now);
+      if(!resolved)continue; // sin objetivo, NO consume cooldown.
+      const label=kind==='tail'?'Colazo':'Terremoto';
+      const log=dragon.name+' usa '+label+' (rango 3): '+resolved.actualHits+' objetivo(s); '+resolved.guardDamage+' Guardia y '+resolved.lifeDamage+' Vida. Recarga 30 s.';
+      const fx=resolved.first&&typeof makeFloatFxEvent==='function'?makeFloatFxEvent('damage',resolved.first,resolved.lifeDamage||resolved.guardDamage||1):null;
+      // El evento de area permite a los clientes resolver tambien unidades ocultas
+      // no visibles para el lanzador (misma politica que otras areas del juego).
+      let stealthAreaDamageEvent=null;
+      if(typeof makeStage8StealthAreaDamageEvent==='function'){
+        const cells=[];
+        for(let dx=-3;dx<=3;dx++)for(let dy=-3;dy<=3;dy++){
+          const x=Number(dragon.x)+dx,y=Number(dragon.y)+dy;
+          if(x<0||x>=COLS||y<0||y>=ROWS)continue;
+          cells.push({x,y,damage:resolved.damage});
+        }
+        stealthAreaDamageEvent=makeStage8StealthAreaDamageEvent(dragon.owner,Number(dragon.owner)===1?2:1,
+          {kind:'cell_guard_damage',label,cells,sourceName:dragon.name,sourceKey:kind==='quake'?'hv_adult_dragon_quake':'hv_adult_dragon_tail'});
+      }
+      const saved=await updatePublic({units:resolved.units,_clockKillCreditOwner:Number(dragon.owner),
+        ...(fx?{floatFxEvent:fx}:{}),
+        ...(stealthAreaDamageEvent?{stealthAreaDamageEvent}:{}),
+        log:[log,...(publicState?.log||[])].slice(0,18)});
+      // Al derrotar al lider enemigo, cerrar la batalla igual que el ataque normal.
+      if(saved&&typeof finalizeBattle==='function')await finalizeBattle(resolved.units,'');
+      return !!saved;
+    }
+  }
+  return false;
+}
 async function hallvallaRtSupportTick(now){
+  if(await hallvallaRtDragonAdultSpecialTick(now))return true;
   if(await hallvallaRtHannibalCannasTick(now))return true;
   const units=[...(publicState?.units||[])];
   if(typeof hvSkillRevealTrueSight==="function"){
