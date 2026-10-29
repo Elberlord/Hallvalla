@@ -1509,8 +1509,9 @@ function clearCycleTempStatsForUnit(u,combatWindowKey){
   if(u&&u.key==="berserker_de_oso")u={...u,fearSourceName:"",fearWindowKey:"",tempAtkDebuff:u.fearWindowKey?0:u.tempAtkDebuff};
   const fearStillActive=!!(u&&u.fearWindowKey&&u.fearWindowKey===combatWindowKey);
   const genghisMovStillActive=!!(u&&u.genghisMovDebuffWindowKey&&u.genghisMovDebuffWindowKey===combatWindowKey);
-  const hannibalAtkStillActive=!!(u&&u.hannibalAtkDebuffWindowKey&&u.hannibalAtkDebuffWindowKey===combatWindowKey);
-  const hannibalMovStillActive=!!(u&&u.hannibalMovDebuffWindowKey&&u.hannibalMovDebuffWindowKey===combatWindowKey);
+  const cannaUntil=Number(u?.hannibalCannasDebuffUntil||0);
+  const hannibalAtkStillActive=cannaUntil>0?cannaUntil>Date.now():!!(u&&u.hannibalAtkDebuffWindowKey&&u.hannibalAtkDebuffWindowKey===combatWindowKey);
+  const hannibalMovStillActive=cannaUntil>0?cannaUntil>Date.now():!!(u&&u.hannibalMovDebuffWindowKey&&u.hannibalMovDebuffWindowKey===combatWindowKey);
   const next={
     ...u,
     moved:false,
@@ -1527,6 +1528,7 @@ function clearCycleTempStatsForUnit(u,combatWindowKey){
     genghisMovDebuff:genghisMovStillActive?Math.max(1,Number(u.genghisMovDebuff||1)):0,
     genghisMovDebuffWindowKey:genghisMovStillActive?u.genghisMovDebuffWindowKey:"",
     genghisMovDebuffSource:genghisMovStillActive?(u.genghisMovDebuffSource||"Gengis Kan"):"",
+    hannibalCannasDebuffUntil:hannibalMovStillActive||hannibalAtkStillActive?cannaUntil:0,
     hannibalMovDebuff:hannibalMovStillActive?Math.max(1,Number(u.hannibalMovDebuff||1)):0,
     hannibalMovDebuffWindowKey:hannibalMovStillActive?u.hannibalMovDebuffWindowKey:"",
     hannibalMovDebuffSource:hannibalMovStillActive?(u.hannibalMovDebuffSource||"Hannibal Barca"):"",

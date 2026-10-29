@@ -297,7 +297,7 @@ function makeSafeBadgeIdPart(value){
 function getHpHeartBadgeHtml(u,scope="unit"){
   if(!u)return "";
   const hp=Math.max(0,Number(getDisplayHp(u)||0));
-  const max=Math.max(1,Number(effectiveMaxHp(u)||u.maxHp||hp||1));
+  const max=Math.max(1,Number(getDisplayMaxHp(u)||u.maxHp||hp||1));
   const pct=clamp(Math.round((hp/max)*100),0,100);
   const tier=pct<=35?"low":pct<=65?"mid":"high";
   const uid=`${scope}_${makeSafeBadgeIdPart(u.id||u.key||u.name||"hp")}`;
@@ -630,7 +630,7 @@ function getBattleBoardUnitSpec(u,x,y){
   const markup=`<div class="unit-frame-skin" aria-hidden="true"></div><div class="unit-frame-rarity" aria-hidden="true"></div>${portraitLayerHtml}${fieldFigureHtml}${persistentElementFxHtml}${getVeilCurseCountdownHtml(u)}${getUnitStatusBubblesHtml(u)}${getUnitBottomFrameHtml(u)}${getBoardTeamMarkerHtml(u)}${u.principal?`<span class="unit-principal-badge" title="Personaje Principal" aria-label="Personaje Principal">★</span>`:""}`;
   return{
     className,markup,
-    title:`${u.name}${u.principal?" · Personaje Principal":""}${ownerStealth?" · Sigilo privado":""} · HP ${getDisplayHp(u)}/${effectiveMaxHp(u)} · AT ${effectiveAtk(u)}`,
+    title:`${u.name}${u.principal?" · Personaje Principal":""}${ownerStealth?" · Sigilo privado":""} · HP ${getDisplayHp(u)}/${getDisplayMaxHp(u)} · AT ${effectiveAtk(u)}`,
     unitKey:String(u.key||"").trim().toLowerCase(),
     visibilityTag:ownerStealth?"stealth-owner":"visible",
     unitId:String(u.id||""),x:String(x),y:String(y)

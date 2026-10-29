@@ -669,7 +669,7 @@ function getUnifiedDetDisplayedStats(entity,{live=false}={}){
       : (entity?.cost??'—');
     if(live){
       return {
-        hp:`${getDisplayHp(entity)}/${effectiveMaxHp(entity)}`,
+        hp:`${getDisplayHp(entity)}/${getDisplayMaxHp(entity)}`,
         dexterity:effectiveDex(entity),
         movement:effectiveMov(entity),
         attack:effectiveAtk(entity),

@@ -27,12 +27,13 @@ function transformHannibalToElephant(unit,elephantHp){
 function routeHannibalMountedHpDamage(before,damaged,attacker){
   if(!isHannibalMountedUnit(before)||!damaged||Number(damaged.lastHpLoss||0)<=0)return{unit:damaged,splitText:"",component:""};
   const rawLoss=Math.max(0,Number(damaged.lastHpLoss||0));
-  const melee=!!attacker&&dist(attacker,before)<=1;
-  const component=melee?"elephant":"rider";
+  // v343: distancia y tipo de ataque no permiten saltarse la montura.
+  const component="elephant";
   const riderBefore=Math.max(0,Number(before.hannibalRiderHp??HANNIBAL_RIDER_BASE_HP));
   const elephantBefore=Math.max(0,Number(before.hannibalElephantHp??HANNIBAL_ELEPHANT_BASE_HP));
   const available=component==="elephant"?elephantBefore:riderBefore;
   const applied=Math.min(rawLoss,available);
+  // El excedente del golpe que tumba al elefante no alcanza al jinete.
   const overflow=Math.max(0,rawLoss-applied);
   let riderHp=riderBefore,elephantHp=elephantBefore;
   if(component==="elephant")elephantHp=Math.max(0,elephantHp-applied);else riderHp=Math.max(0,riderHp-applied);
@@ -49,6 +50,23 @@ function routeHannibalMountedHpDamage(before,damaged,attacker){
   }
   next.hp=Math.max(0,riderHp+elephantHp);
   return{unit:next,component,splitText:""};
+}
+/* v343: correccion para curaciones, magia y efectos directos no cursados por el ataque normal.
+   La montura absorbe TODO el dano a Vida antes de poner en riesgo al jinete. */
+function reconcileHannibalMountedPool(before,after){
+  if(!before||!after||before.id!==after.id||!isHannibalMountedUnit(before)||!isHannibalMountedUnit(after))return after;
+  const rider=Math.max(0,Number(after.hannibalRiderHp??before.hannibalRiderHp??HANNIBAL_RIDER_BASE_HP));
+  let elephant=Math.max(0,Number(after.hannibalElephantHp??before.hannibalElephantHp??HANNIBAL_ELEPHANT_BASE_HP));
+  const summed=rider+elephant,raw=Math.max(0,Number(after.hp??summed));
+  if(raw===summed)return after; // el resolver de combate ya distribuyo el dano
+  if(raw<summed){
+    elephant=Math.max(0,elephant-(summed-raw));
+    if(elephant===0&&rider>0)return transformHannibalToRider({...after,hannibalElephantHp:0,hannibalRiderHp:rider},rider);
+  }else{
+    const cap=Math.max(1,Number(after.hannibalElephantMaxHp||HANNIBAL_ELEPHANT_BASE_HP));
+    elephant=Math.min(cap,elephant+(raw-summed));
+  }
+  return {...after,hannibalElephantHp:elephant,hannibalRiderHp:rider,hp:elephant+rider};
 }
 function getUnitAt(x,y){return(publicState?.units||[]).find(u=>u.x===x&&u.y===y)}function getUnit(id){return(publicState?.units||[]).find(u=>u.id===id)}function getLeader(p){return(publicState?.units||[]).find(u=>u.owner===p&&u.leader)}
 function getLeaderTypeForOwner(owner,units=publicState?.units||[]){return (units||[]).find(u=>u.owner===owner&&u.leader)?.leaderType||""}
@@ -231,7 +249,14 @@ function syncLeaderHpBonuses(units){
     return {...u,hp:nextHp,leaderHpBonusApplied:targetBonus};
   });
 }
-function getDisplayHp(u){return Math.max(0,Math.min(Number(u?.hp||0),Number(effectiveMaxHp(u)||u?.maxHp||u?.hp||0)));}
+function getDisplayMaxHp(u){
+  if(isHannibalMountedUnit(u))return Math.max(1,Number(u.hannibalElephantMaxHp||HANNIBAL_ELEPHANT_BASE_HP));
+  return Math.max(1,Number(effectiveMaxHp(u)||u?.maxHp||u?.hp||1));
+}
+function getDisplayHp(u){
+  if(isHannibalMountedUnit(u))return Math.max(0,Math.min(Number(u.hannibalElephantHp??HANNIBAL_ELEPHANT_BASE_HP),getDisplayMaxHp(u)));
+  return Math.max(0,Math.min(Number(u?.hp||0),Number(effectiveMaxHp(u)||u?.maxHp||u?.hp||0)));
+}
 
 function resolveCardCostOwner(card,player){
   const explicit=Number(player||card?.owner||myPlayer||0);
@@ -476,8 +501,16 @@ function isRtTrapLocked(unit,kind,now=hallvallaTrapNow()){
    de 08-actions-inspector.js, que se carga después. */
 function getKhalidAttackPenalty(u){return u?.key==="khalid_ibn_al_walid"?Math.max(0,Number(u.khalidAttackPenalty||0)):0;}
 function getGenghisMovDebuff(u){return u&&u.genghisMovDebuffWindowKey&&u.genghisMovDebuffWindowKey===publicState?.combatWindowKey?Math.max(1,Number(u.genghisMovDebuff||1)):0;}
-function getHannibalMovDebuff(u){return u&&u.hannibalMovDebuffWindowKey&&u.hannibalMovDebuffWindowKey===publicState?.combatWindowKey?Math.max(1,Number(u.hannibalMovDebuff||1)):0;}
-function getHannibalAtkDebuff(u){return u&&u.hannibalAtkDebuffWindowKey&&u.hannibalAtkDebuffWindowKey===publicState?.combatWindowKey?Math.max(1,Number(u.hannibalAtkDebuff||1)):0;}
+function getHannibalMovDebuff(u){
+  if(!u)return 0;const until=Number(u.hannibalCannasDebuffUntil||0);
+  const active=until>0?until>Date.now():!!u.hannibalMovDebuffWindowKey&&u.hannibalMovDebuffWindowKey===publicState?.combatWindowKey;
+  return active?Math.max(0,Number(u.hannibalMovDebuff||0)):0;
+}
+function getHannibalAtkDebuff(u){
+  if(!u)return 0;const until=Number(u.hannibalCannasDebuffUntil||0);
+  const active=until>0?until>Date.now():!!u.hannibalAtkDebuffWindowKey&&u.hannibalAtkDebuffWindowKey===publicState?.combatWindowKey;
+  return active?Math.max(0,Number(u.hannibalAtkDebuff||0)):0;
+}
 function effectiveAtk(u){const bonus=getLeaderBonus(u);const arcaneLink=getArcaneAdeptLinkBonus(u);let v=(typeof globalThis.hvOrbAtkModifier==='function'?globalThis.hvOrbAtkModifier(u):0)+(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"atk"):0)+(u?.atk||0)+(u?.buffAtk||0)+(u?.permAtk||0)+(u?.tempAtkBuff||0)-(u?.tempAtkDebuff||0)-Number(u?.hvNextAttackAtkDebuff||0)-getRtTrapDebuff(u,"atk")-getHannibalAtkDebuff(u)-getKhalidAttackPenalty(u)-(typeof globalThis.hvSacredPenalty==='function'?globalThis.hvSacredPenalty(u,'atk'):0)-(u?.leader?0:getMoraleAttackPenalty(u?.owner))+(bonus.atk||0)+(arcaneLink.atk||0);if(u?.key==="cu_chulainn"&&isHalfHpOrLess(u))v+=5;v+=gilgameshEnemyAura(u);v+=africanLionAllyAtkAura(u);v+=hectorEnemyAtkAura(u);v+=cuChulainnFearAura(u);v+=(typeof hvLeaderSkillAtk==="function"?hvLeaderSkillAtk(u):0);return Math.max(0,v)}
 function isRhinoStunnedNow(u){return !!(u&&u.rhinoStunnedWindowKey&&u.rhinoStunnedWindowKey===publicState?.combatWindowKey)}
 function halveForRhinoStun(v,u){v=Math.max(0,Number(v)||0);return isRhinoStunnedNow(u)?Math.floor(v/2):v}

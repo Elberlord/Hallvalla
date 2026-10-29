@@ -1274,7 +1274,39 @@ async function hallvallaRtVeilAfterSupport(caster){
   if(progressed.changed)await updatePublic({units:progressed.units,
     log:[progressed.text,...(publicState?.log||[])].slice(0,18)});
 }
+/* v343: Trampa de Cannas, motor TR. Recarga real de 30 s por Hannibal.
+   El efecto se aplica durante 10 s y no requiere esperar al cambio de ciclo. */
+const HANNIBAL_CANNAS_COOLDOWN_MS=30000;
+const HANNIBAL_CANNAS_DEBUFF_MS=10000;
+async function hallvallaRtHannibalCannasTick(now){
+  const units=[...(publicState?.units||[])];
+  const sources=units.filter(u=>u&&!u.leader&&Number(u.hp||0)>0&&
+    (u.key==='hannibal_barca'||u.key==='hannibal_dismounted'));
+  for(const source of sources){
+    if(Number(source.hannibalCannasNextAt||0)>now||isRtTrapLocked(source,'silence',now))continue;
+    const allies=units.filter(a=>a&&!a.leader&&a.id!==source.id&&a.owner===source.owner&&Number(a.hp||0)>0);
+    const enemies=units.filter(e=>e&&!e.leader&&e.owner!==source.owner&&Number(e.hp||0)>0&&
+      allies.filter(a=>dist(e,a)<=1).length>=2);
+    if(!enemies.length)continue;
+    const victimIds=new Set(enemies.map(e=>String(e.id)));
+    const out=units.map(u=>{
+      if(u.id===source.id)return {...u,hannibalCannasNextAt:now+HANNIBAL_CANNAS_COOLDOWN_MS};
+      if(!victimIds.has(String(u.id)))return u;
+      return {...u,hannibalAtkDebuff:Math.max(5,Number(u.hannibalAtkDebuff||0)),
+        hannibalMovDebuff:Math.max(1,Number(u.hannibalMovDebuff||0)),
+        hannibalCannasDebuffUntil:now+HANNIBAL_CANNAS_DEBUFF_MS,
+        hannibalAtkDebuffWindowKey:publicState?.combatWindowKey||'RT',
+        hannibalMovDebuffWindowKey:publicState?.combatWindowKey||'RT',
+        hannibalAtkDebuffSource:source.name||'Hannibal Barca',
+        hannibalMovDebuffSource:source.name||'Hannibal Barca'};
+    });
+    const log=`Trampa de Cannas: ${source.name||'Hannibal Barca'} atrapa a ${enemies.map(e=>e.name).join(', ')}. -5 AT y -1 MOV por 10 s; recarga 30 s.`;
+    return !!(await updatePublic({units:out,log:[log,...(publicState?.log||[])].slice(0,18)}));
+  }
+  return false;
+}
 async function hallvallaRtSupportTick(now){
+  if(await hallvallaRtHannibalCannasTick(now))return true;
   const units=[...(publicState?.units||[])];
   if(typeof hvSkillRevealTrueSight==="function"){
     const sight=hvSkillRevealTrueSight(units);

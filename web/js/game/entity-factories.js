@@ -43,7 +43,7 @@ function getUnitEffectText(u){
     const riderMax=Math.max(1,Number(u?.hannibalRiderMaxHp??HANNIBAL_RIDER_BASE_HP));
     const elephantHp=Math.max(0,Number(u?.hannibalElephantHp??HANNIBAL_ELEPHANT_BASE_HP));
     const elephantMax=Math.max(1,Number(u?.hannibalElephantMaxHp??HANNIBAL_ELEPHANT_BASE_HP));
-    base=[base,`Estado de montura: Jinete ${riderHp}/${riderMax} Vida · Elefante ${elephantHp}/${elephantMax} Vida.`].filter(Boolean).join(" ");
+    base=[base,`Estado de montura: Elefante ${elephantHp}/${elephantMax} Vida (primero) · Jinete ${riderHp}/${riderMax} Vida (reserva).`].filter(Boolean).join(" ");
   }
   const equipped=getUnitEquipmentTemplates(u);
   if(!equipped.length)return typeof hallvallaPublicGameplayText==="function"?hallvallaPublicGameplayText(base):base;

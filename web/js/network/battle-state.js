@@ -713,6 +713,8 @@ async function normalizePublicPatchBeforeCommit(sourcePatch={},options={}){
   const beforeUnits=Array.isArray(publicState?.units)?publicState.units:[];
   let cleanPatch=typeof normalizeHallvallaRuntimePatch==="function"?normalizeHallvallaRuntimePatch(sourcePatch||{}):{...(sourcePatch||{})};
   if(Array.isArray(cleanPatch.units)){
+    const beforeById=new Map(beforeUnits.filter(Boolean).map(u=>[String(u.id),u]));
+    cleanPatch.units=cleanPatch.units.map(u=>reconcileHannibalMountedPool(beforeById.get(String(u?.id)),u));
     cleanPatch.units=hvReconcileLegacyTriggerWindows(beforeUnits,cleanPatch.units);
     const baseGraveyard=Array.isArray(cleanPatch.erictoGraveyard)?cleanPatch.erictoGraveyard:(publicState?.erictoGraveyard||[]);
     cleanPatch.erictoGraveyard=captureErictoGraveyard(baseGraveyard,beforeUnits,cleanPatch.units);
