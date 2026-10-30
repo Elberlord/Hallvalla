@@ -359,13 +359,13 @@ function applyAfterDamageBonuses(units,attackerBefore,defenderBefore,hpLoss,defe
     });
   }
   if(mods.caesarId)out=out.map(u=>u.id===mods.caesarId?{...u,caesarUsedWindow:true}:u);
-  if(mods.joanOrleansId&&attackHit){
-    const targetId=String(mods.joanOrleansTargetId||"");
+  if(mods.hvJoanCollectiveShield&&attackHit){
+    const targetId=String(defenderBefore.id||"");
     const growthWindow=typeof getLongGrowthWindowIndex==="function"?getLongGrowthWindowIndex():Math.max(0,Number(publicState?.combatWindowIndex||0));
-    out=out.map(u=>{
-      if(!targetId||u.id!==targetId||u.leader||u.id===mods.joanOrleansId||u.key==="joan_of_arc"||Number(u.hp||0)<=0)return u;
-      return {...u,joanGuardBuff:Math.max(8,Number(u.joanGuardBuff||0)),joanGuardUntilWindowIndex:Math.max(growthWindow+1,Number(u.joanGuardUntilWindowIndex||-1))};
-    });
+    out=out.map(u=>u.id===targetId&&!u.leader&&Number(u.hp||0)>0?{
+      ...u,joanGuardBuff:Math.max(8,Number(u.joanGuardBuff||0)),
+      joanGuardUntilWindowIndex:Math.max(growthWindow+1,Number(u.joanGuardUntilWindowIndex||-1))
+    }:u);
   }
 
   if(defenderFell){
@@ -458,15 +458,6 @@ function applySkillCooldownMarksFromMods(units,mods){
     }
     return {...unit,unitSkillCooldowns:cooldowns};
   });
-}
-function applyJoanOrleansCooldownFromMods(units,mods){
-  const joanId=String(mods?.joanOrleansId||"");
-  const cooldownUntil=Number(mods?.joanOrleansCooldownUntil||0);
-  if(!joanId||cooldownUntil<=0)return[...(units||[])];
-  return (units||[]).map(unit=>unit.id===joanId?{
-    ...unit,
-    joanOrleansCooldownUntil:Math.max(cooldownUntil,Number(unit?.joanOrleansCooldownUntil||0))
-  }:unit);
 }
 function hasAxeLeader(owner,units=publicState?.units||[]){return getLeaderTypeForOwner(owner,units)==="axe"&&hasActiveLeader(owner,units)}
 function hasBloodVictory(owner,units=publicState?.units||[]){return hasAxeLeader(owner,units)&&getLeaderAbilityForOwner(owner,units)==="blood_victory"}
@@ -562,14 +553,6 @@ function applyCoverFire(units,owner,sourceId){
     if(u.owner!==owner||u.id===sourceId||!isArcherUnit(u))return u;
     return {...u,tempDexBuff:(u.tempDexBuff||0)+1,coverFireBuffs:(u.coverFireBuffs||0)+1};
   });
-}
-function applyUlyssesAttackTactic(units,attacker){
-  if(!attacker||attacker.key!=="ulysses"||!hvCardReady(attacker,"estratega_itaca"))return{units,affected:[],log:""};
-  const affected=(units||[]).filter(u=>u.owner===attacker.owner&&!u.leader&&u.id!==attacker.id&&u.hp>0&&dist(attacker,u)<=2);
-  if(!affected.length)return{units,affected:[],log:""};
-  const affectedIds=new Set(affected.map(u=>u.id));
-  const out=(units||[]).map(u=>u.id===attacker.id?hvCardMark(u,"estratega_itaca"):affectedIds.has(u.id)?{...u,tempGuardBuff:(u.tempGuardBuff||0)+3,tempMovBuff:(u.tempMovBuff||0)+1,ulyssesTacticBuffWindowKey:publicState?.combatWindowKey||""}:u);
-  return{units:out,affected,log:` Estratega de Ítaca: ${affected.length} unidad${affected.length===1?" aliada gana":"es aliadas ganan"} +3 Guardia y +1 MOV en radio 2.`};
 }
 function applyGenghisKhanKillDebuff(units){
   // Reemplazo canónico: Horda ahora es aura global; no tiene efecto al matar.
@@ -818,7 +801,7 @@ function resolveSharedAttackPreparation({
   const preTrap=inState(()=>resolvePreAttackLegendaryTraps(a,liveUnits,legendaryTraps),snapshot(liveUnits,legendaryTraps,beastTraps));
   hvSkillOrderTraceSafe('01.trampas_previas',{a,d,units:preTrap.units||liveUnits});
   if(preTrap.cancel){
-    const cancelledUnits=(preTrap.units||[]).map(u=>u.id===a.id?{...u,buffAtk:0,tempAtkBuff:0,tempAtkDebuff:0,tempDexBuff:0,hvNextAttackAtkDebuff:0,hvSunTzuNextAttackDex:0,movedSpaces:0}:u);
+    const cancelledUnits=(preTrap.units||[]).map(u=>u.id===a.id?{...u,buffAtk:0,tempAtkBuff:0,tempAtkDebuff:0,tempDexBuff:0,hvNextAttackAtkDebuff:0,hvSunTzuNextAttackDex:0,hvShakaNextAttackAtk:0,hvGenghisNextAttackDex:0,movedSpaces:0}:u);
     preTrap.units=cancelledUnits;
     const cancelSpend=spendActionStatsByAttack(a,d,cancelledUnits,getCombatMods(a,d),{hit:false});
     return{terminal:"pretrap_cancel",a,d,units:preTrap.units,liveUnits,preTrap,cancelSpend,beastTraps};
@@ -974,7 +957,7 @@ async function resolveSharedAttackOutcome({
   units=hvCardMarksFromMods(units,mods);
   a=units.find(unit=>unit.id===a.id)||a;
   const originalDefender=d;
-  if(hit?.hit)units=applyJoanOrleansCooldownFromMods(units,mods);
+
   const interposition=hit?.hit?activateHallvallaInterposition(d,units):{units:[...(units||[])],defender:d,originalDefender:null,protector:null,text:""};
   units=interposition.units||units;
   if(interposition.protector){
@@ -1004,8 +987,6 @@ async function resolveSharedAttackOutcome({
   const attackerWasStealthedBeforeAttack=attackContext.startedFromStealth;
   const keepStealthAfterAttack=shouldKeepStealthAfterAttack(a,d,attackContext);
   units=applyAttackSideEffects(a,d,units);
-  const ulyssesAttackTactic=applyUlyssesAttackTactic(units,a);
-  units=ulyssesAttackTactic.units;
   const actionSpend=spendActionStatsByAttack(a,d,units,mods,hit);
   units=actionSpend.units;
   hvSkillOrderTraceSafe('06.consumo_atributos',{a,d,units,mods,hit});
@@ -1387,7 +1368,7 @@ async function resolveSharedAttackOutcome({
   const bloodMistText=hasShadowMistAssassin(a,units)?` Niebla de sangre: el asesino usa solo la mitad del desgaste de PREC/EVA.`:"";
   const steelWallText=steelWallTriggered?` Muro de acero: las otras infanterías pesadas aliadas ganan +1 Guardia temporal.`:"";
   const coverFireText=coverFireTriggered?` Fuego de cobertura: las otras arqueras aliadas ganan +1 Destreza temporal.`:"";
-  const ulyssesTacticText=ulyssesAttackTactic.log||"";
+
   const bloodBaitText=(bloodBaitBonus.logs||[]).length?` ${(bloodBaitBonus.logs||[]).join(" ")}`:"";
   const genghisDebuffText=genghisDebuffResult.log||"";
   const mulanExecutionText=mulanExecutionTriggered?` Ejecución táctica: ${a.name} prepara una reposición de hasta 1 casilla y un seguimiento automático.`:"";
@@ -1418,14 +1399,14 @@ async function resolveSharedAttackOutcome({
   hvSkillOrderTraceSafe('13.antes_consumir_estados',{a,d,units,mods,hit});
   // Consumir las penalizaciones después de resolver la acción afectada.
   units=units.map(u=>u.id===a.id?{...u,
-      saboteadorDexZeroNextAttack:false,saboteadorDexZeroWindowKey:"",hvNextAttackAtkDebuff:0,hvSunTzuNextAttackDex:0,
+      saboteadorDexZeroNextAttack:false,saboteadorDexZeroWindowKey:"",hvNextAttackAtkDebuff:0,hvSunTzuNextAttackDex:0,hvShakaNextAttackAtk:0,hvGenghisNextAttackDex:0,
       buffAtk:0,tempAtkBuff:0,tempAtkDebuff:0,tempDexBuff:0,
       hvSimpleBuff:typeof hvSkillConsumeSimpleBuff==="function"?hvSkillConsumeSimpleBuff(u.hvSimpleBuff,"attack"):u.hvSimpleBuff,
       tempDexDebuff:u.solomonSealSourceId?Math.min(3,Math.max(0,Number(u.tempDexDebuff||0))):0,
       fearWindowKey:"",fearSourceName:"",movedSpaces:0
     }:u.id===d.id?{...u,
       ...(typeof hvSkillFinalizeDefenderNextAction==="function"?hvSkillFinalizeDefenderNextAction(u):{...u,hvNextDefenseAgiDebuff:0,hvNextDefenseGuardDebuff:0}),
-      hvSunTzuNextDefenseGuard:0,tempAgiBuff:0,
+      hvSunTzuNextDefenseGuard:0,hvUlyssesNextDefenseGuard:0,hvLeonidasNextDefenseGuard:0,hvGenghisNextDefenseGuard:0,hvJoanNextDamageReduction:(mods.hvJoanCollectiveShield&&hit.hit)?0:Number(u.hvJoanNextDamageReduction||0),tempAgiBuff:0,
       hvSimpleBuff:typeof hvSkillConsumeSimpleBuff==="function"?hvSkillConsumeSimpleBuff(u.hvSimpleBuff,"defense"):u.hvSimpleBuff,
       tempAgiDebuff:u.solomonSealSourceId?Math.min(2,Math.max(0,Number(u.tempAgiDebuff||0))):0,
       tempGuardBuff:u.yiSunDebuffed?Math.min(0,Number(u.tempGuardBuff||0)):0
@@ -1436,7 +1417,7 @@ async function resolveSharedAttackOutcome({
     ?hvAdvanceVeilCurseOnAction(units,a.id,"un ataque"):{units,changed:false,text:""};
   units=veilActionResult.units;
   hvSkillOrderTraceSafe('14.cierre_estados_y_registros',{a,d,units,mods,hit});
-  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: acierta (${hit.roll}/${hit.chance}).${assassinStealthCriticalText}${rerollText}${interpositionLogText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD del ciclo táctico actual. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${ulyssesTacticText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${stompText}${hannibalSplitText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`:`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${ulyssesTacticText}${porcupineText}${lionFearText}${elephantChargeText}${stompText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`;
+  const actionLog=hit.hit?`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: acierta (${hit.roll}/${hit.chance}).${assassinStealthCriticalText}${rerollText}${interpositionLogText}${combatSummary(mods)}${warningRune.text||""}${assassinIgnoreText} ${guardLoss>0?`Consume ${guardLoss} GD del ciclo táctico actual. `:""}${hpLoss>0?`Inflige ${hpLoss} daño a HP.`:"No atraviesa la guardia."}${vikingExtraText}${pressureText}${actionSpendText}${warCryText}${bloodVictoryText}${leonidasLastStandText}${bloodMistText}${steelWallText}${coverFireText}${alexanderWallText}${bloodBaitText}${genghisDebuffText}${bleedText}${veilCurseResult.text||""}${dragonCompanionText}${falconRecoilText}${porcupineText}${lionFearText}${rhinoStunText}${elephantChargeText}${stompText}${hannibalSplitText}${counterText}${mulanExecutionText}${khalidChainText}${masteryKillText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`:`${actionLogPrefix}${a.name} ataca a ${actionTargetName}: falla (${hit.roll}/${hit.chance}).${rerollText}${combatSummary(mods)}${warningRune.text||""}${pressureText}${actionSpendText}${alexanderWallText}${porcupineText}${lionFearText}${elephantChargeText}${stompText}${counterText}${samuraiExtraText}${cavalryExtraText}${ninjutsuExtraText}${skillRetreatResult.text||""}`;
   hvSkillOrderTraceSafe('99.fin',{a,d,units,mods,hit});
   return {
     units,

@@ -482,7 +482,8 @@ function getUnitEffectMode(u){
   if(u.leader&&u.leaderType==="beastmaster"&&getLeaderAbilityForOwner(u.owner)==="prepare_hunt")return "passive";
   if(u.key==="acolyte_healer")return "passive";
   if(["african_lion","black_raven","ericto"].includes(u.key))return "self";
-  if(["richard_lionheart","saladin","sun_tzu","subotai"].includes(u.key))return "target";
+  if(["richard_lionheart","sun_tzu","subotai"].includes(u.key))return "passive";
+  if(u.key==="saladin")return "target";
   return "passive";
 }
 function getAdjacentFreeCells(unit,units=publicState?.units||[]){

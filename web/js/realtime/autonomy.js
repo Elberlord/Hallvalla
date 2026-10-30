@@ -1252,6 +1252,84 @@ async function hallvallaRtRecoveryTick(now){
 
   return true;
 }
+/* HallValla: apoyos colectivos por trigger de 30 segundos.
+   El tiempo de recarga viaja en el estado publico, no depende de un reloj local aislado.
+   Cada unidad consume sus propios bonos; los refuerzos esperan al siguiente trigger. */
+const HALLVALLA_COLLECTIVE_SUPPORT_KEYS=new Set([
+  "sun_tzu","richard_lionheart","joan_of_arc","ulysses",
+  "subotai","shaka_zulu","leonidas","genghis_khan"
+]);
+async function hallvallaRtAutoCollectiveSupport(caster,now){
+  if(!caster||!HALLVALLA_COLLECTIVE_SUPPORT_KEYS.has(caster.key)||caster.leader||Number(caster.hp||0)<=0)return false;
+  if(Number(caster.hvCollectiveSupportNextAt||0)>now)return false;
+  const units=[...(publicState?.units||[])];
+  const allies=units.filter(u=>u&&!u.leader&&u.owner===caster.owner&&Number(u.hp||0)>0);
+  if(!allies.length)return false;
+  const rarity=Math.max(1,Number(typeof hvActionRarityValue==="function"?hvActionRarityValue(caster):1));
+  const nextAt=now+30000;
+  let bonus="";
+  const updated=units.map(u=>{
+    if(!u)return u;
+    let n=u;
+    if(!u.leader&&u.owner===caster.owner&&Number(u.hp||0)>0){
+      switch(caster.key){
+        case "sun_tzu":{
+          const amount=rarity+rarity;
+          n={...u,hvSunTzuNextAttackDex:Math.max(Number(u.hvSunTzuNextAttackDex||0),amount),hvSunTzuNextDefenseGuard:Math.max(Number(u.hvSunTzuNextDefenseGuard||0),amount)};
+          bonus=`+${amount} DX / +${amount} GD en prÃ³ximas acciones`;
+          break;
+        }
+        case "richard_lionheart":{
+          if(Number(u.richardHpGrowth||0)>0||u.richardBuffSource)break;
+          const boosted={...u,richardHpGrowth:2};
+          n={...boosted,hp:Math.min(effectiveMaxHp(boosted),Number(u.hp||0)+2)};
+          bonus="+2 HP mÃ¡xima y actual, sin acumulaciÃ³n";
+          break;
+        }
+        case "joan_of_arc":{
+          const amount=3+rarity;
+          n={...u,hvJoanNextDamageReduction:Math.max(Number(u.hvJoanNextDamageReduction||0),amount)};
+          bonus=`reduce ${amount} de daÃ±o en prÃ³ximo impacto`;
+          break;
+        }
+        case "ulysses":{
+          n={...u,hvUlyssesNextDefenseGuard:Math.max(Number(u.hvUlyssesNextDefenseGuard||0),3+rarity),hvUlyssesNextMoveMov:Math.max(Number(u.hvUlyssesNextMoveMov||0),1+rarity)};
+          bonus=`+${3+rarity} GD en prÃ³xima defensa / +${1+rarity} MOV en prÃ³ximo movimiento`;
+          break;
+        }
+        case "subotai":{
+          const seconds=rarity+rarity;
+          n={...u,hvSubotaiNextMoveBoostMs:Math.max(Number(u.hvSubotaiNextMoveBoostMs||0),seconds*1000)};
+          bonus=`adelanta ${seconds} s el prÃ³ximo movimiento`;
+          break;
+        }
+        case "shaka_zulu":{
+          const amount=3+rarity;
+          n={...u,hvShakaNextAttackAtk:Math.max(Number(u.hvShakaNextAttackAtk||0),amount)};
+          bonus=`+${amount} AT en prÃ³ximo ataque`;
+          break;
+        }
+        case "leonidas":{
+          const amount=4+rarity;
+          n={...u,hvLeonidasNextDefenseGuard:Math.max(Number(u.hvLeonidasNextDefenseGuard||0),amount)};
+          bonus=`+${amount} GD en prÃ³xima defensa`;
+          break;
+        }
+        case "genghis_khan":{
+          const amount=1+rarity;
+          n={...u,hvGenghisNextAttackDex:Math.max(Number(u.hvGenghisNextAttackDex||0),amount),hvGenghisNextDefenseGuard:Math.max(Number(u.hvGenghisNextDefenseGuard||0),amount)};
+          bonus=`+${amount} DX / +${amount} GD; sin MOV`;
+          break;
+        }
+      }
+    }
+    if(u.id===caster.id)n={...n,hvCollectiveSupportNextAt:nextAt};
+    return n;
+  });
+  const messages={sun_tzu:"Arte de la Guerra",richard_lionheart:"CorazÃ³n Indomable",joan_of_arc:"Llama de OrlÃ©ans",ulysses:"Estratega de Ãtaca",subotai:"Marcha de Mil Horizontes",shaka_zulu:"Cuernos del BÃºfalo",leonidas:"Ãšltima FormaciÃ³n",genghis_khan:"Horda de la Estepa"};
+  await updatePublic({units:updated,log:[`${caster.name} activa ${messages[caster.key]}: ${allies.length} unidades aliadas; ${bonus||"sin nuevas acumulaciones"}. Recarga: 30 s.`,...(publicState?.log||[])].slice(0,18)});
+  return true;
+}
 async function hallvallaRtAutoGenericEffect(caster,now){
   if(!caster||caster.leader||Number(caster.hp||0)<=0||isRtTrapLocked(caster,"silence",now))return false;
   const mode=typeof getUnitEffectMode==="function"?getUnitEffectMode(caster):"passive";if(mode==="passive"||mode==="choice"||caster.key==="ericto")return false;
@@ -1420,6 +1498,10 @@ async function hallvallaRtSupportTick(now){
         const retryKey=`solomon-retry:${unit.id}`,last=Number(hallvallaRtState.supportAt.get(retryKey)||0);
         if(now-last>=1000){hallvallaRtState.supportAt.set(retryKey,now);await updatePublic({units:liveUnits});}
       }
+    }
+    if(HALLVALLA_COLLECTIVE_SUPPORT_KEYS.has(unit.key)&&await hallvallaRtAutoCollectiveSupport(unit,now)){
+      await hallvallaRtVeilAfterSupport(unit);
+      continue;
     }
     if(typeof globalThis.hvSimpleAutoBuffSkill==="function"&&await globalThis.hvSimpleAutoBuffSkill(unit,now)){
       await hallvallaRtVeilAfterSupport(unit);continue;
@@ -1617,7 +1699,7 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
     let trapMove;
     try{trapMove=resolveMovementLegendaryTraps(live,{x:step.x,y:step.y},units,legendaryTraps);}catch(_){trapMove={cancel:false,units,traps:legendaryTraps,logs:[]};}
     legendaryTraps=[...(trapMove.traps||legendaryTraps)];
-    units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveWindowKey:publicState?.combatWindowKey||'RT',hvNextMoveDelayMs:0,hvLeaderNextMoveAccelerateMs:0,hvNextMoveSkip:false,hvSubotaiNextMoveBoostMs:0,hvSkiparFirstMoveConsumed:u.key==='skipar_del_drakkar'?true:u.hvSkiparFirstMoveConsumed,rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false}:u);
+    units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveWindowKey:publicState?.combatWindowKey||'RT',hvUlyssesNextMoveMov:0,hvNextMoveDelayMs:0,hvLeaderNextMoveAccelerateMs:0,hvNextMoveSkip:false,hvSubotaiNextMoveBoostMs:0,hvSkiparFirstMoveConsumed:u.key==='skipar_del_drakkar'?true:u.hvSkiparFirstMoveConsumed,rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false}:u);
     if(!trapMove.cancel){
       units=units.map(u=>u.id===live.id?(()=>{
         let n={...u,tempMovBuff:0,tempMovDebuff:0,tempMovDebuffSource:"",movedSpaces:Number(u.movedSpaces||0),

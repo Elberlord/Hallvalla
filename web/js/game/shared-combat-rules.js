@@ -340,7 +340,7 @@ function alexanderBonusHp(u){
   return Math.min(1,Math.max(0,Number(u.alexanderHpGrowth||0)));
 }
 function getJoanGuardBuff(u,state=publicState){
-  if(!u||u.leader||u.key==="joan_of_arc")return 0;
+  if(!u||u.leader)return 0;
   const current=getLongGrowthWindowIndex(state);
   return Number(u.joanGuardUntilWindowIndex??-1)>=current?Math.min(8,Math.max(0,Number(u.joanGuardBuff||0))):0;
 }
@@ -357,10 +357,8 @@ function cuChulainnFearAura(u,units=publicState?.units||[]){
   return unitsInPlay(units).some(c=>c.key==="cu_chulainn"&&c.owner!==u.owner&&c.hp>0&&dist(c,u)<=1)?-3:0;
 }
 function attilaEnemyAura(u,units=publicState?.units||[]){return u?.leader?{guard:0,agi:0}:unitsInPlay(units).some(a=>a.key==="attila_hun"&&a.owner!==u.owner&&a.hp>0)&&isHalfHpOrLess(u)?{guard:-3,agi:-3}:{guard:0,agi:0}}
-function hectorGuardAura(u,units=publicState?.units||[]){
-  if(!u||u.leader||u.key==="leonidas"||!isBasicUnit(u))return 0;
-  return unitsInPlay(units).some(l=>l.key==="leonidas"&&l.id!==u.id&&l.owner===u.owner&&l.hp>0&&dist(l,u)<=1)?4:0;
-}
+// Compatibilidad para referencias historicas: Leonidas ahora aplica un trigger consumible, no un aura.
+function hectorGuardAura(){return 0;}
 function hectorEnemyAtkAura(u,units=publicState?.units||[]){
   if(!u||u.leader)return 0;
   const board=unitsInPlay(units).filter(x=>x&&x.hp>0);
@@ -532,7 +530,7 @@ function effectiveMov(u){
   const canonical=getCanonicalNaturalMovement(u);
   const hasFixedMov=u?.fixedMov!==null&&u?.fixedMov!==undefined&&u?.fixedMov!==""&&Number.isFinite(Number(u.fixedMov));
   const canonicalBaseMov=hasFixedMov?Math.max(0,Number(u.fixedMov)):(canonical?canonical.finalMov:(u?.mov||0));
-  const base=u?.leader?0:Math.max(0,canonicalBaseMov+(u?.permMov||0)+summonBonus+equipmentMoveBonus+(u?.tempMovBuff||0)+(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"mov"):0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getRtTrapDebuff(u,"mov")-getGenghisMovDebuff(u)-getHannibalMovDebuff(u)-getPikeWallMovDebuff(u));
+  const base=u?.leader?0:Math.max(0,canonicalBaseMov+(u?.permMov||0)+summonBonus+equipmentMoveBonus+(u?.tempMovBuff||0)+(u?.hvUlyssesNextMoveMov||0)+(typeof globalThis.hvSimpleActiveBonus==="function"?globalThis.hvSimpleActiveBonus(u,"mov"):0)+(bonus.mov||0)-(u?.tempMovDebuff||0)-getRtTrapDebuff(u,"mov")-getGenghisMovDebuff(u)-getHannibalMovDebuff(u)-getPikeWallMovDebuff(u));
   return applyHallvallaValueHooks("unit.effectiveMov",base,{unit:u});
 }function dist(a,b){return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))}function d(a,b){return dist(a,b)}function isStraightLineDelta(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);return Math.max(ax,ay)>=2&&(dx===0||dy===0||ax===ay)}function isWhiteRhinoChargeReady(u){return !!(u&&u.key==="white_rhino");}
 function isAfricanElephantChargeReady(u,target){
@@ -660,6 +658,23 @@ function getCombatMods(attacker,defender,attackContext=null){
   const sunTzuGuard=Math.max(0,Number(defender.hvSunTzuNextDefenseGuard||0));
   if(sunTzuDex>0){mods.attackerDex+=sunTzuDex;mods.notes.push(`${attacker.name} +${sunTzuDex} DX de Sun Tzu, solo este ataque.`);}
   if(sunTzuGuard>0){mods.defenderGuard+=sunTzuGuard;mods.notes.push(`${defender.name} +${sunTzuGuard} GD de Sun Tzu, solo esta defensa.`);}
+  // Los bonos de apoyo se guardan por unidad y se consumen individualmente.
+  const nextShaka=Math.max(0,Number(attacker.hvShakaNextAttackAtk||0));
+  const nextGenghisDex=Math.max(0,Number(attacker.hvGenghisNextAttackDex||0));
+  const nextUlyssesGuard=Math.max(0,Number(defender.hvUlyssesNextDefenseGuard||0));
+  const nextLeonidasGuard=Math.max(0,Number(defender.hvLeonidasNextDefenseGuard||0));
+  const nextGenghisGuard=Math.max(0,Number(defender.hvGenghisNextDefenseGuard||0));
+  if(nextShaka){mods.attackerAtk+=nextShaka;mods.notes.push(`${attacker.name} +${nextShaka} AT de Shaka Zulu.`);}
+  if(nextGenghisDex){mods.attackerDex+=nextGenghisDex;mods.notes.push(`${attacker.name} +${nextGenghisDex} DX de Gengis Kan.`);}
+  if(nextUlyssesGuard){mods.defenderGuard+=nextUlyssesGuard;mods.notes.push(`${defender.name} +${nextUlyssesGuard} GD de Ulises.`);}
+  if(nextLeonidasGuard){mods.defenderGuard+=nextLeonidasGuard;mods.notes.push(`${defender.name} +${nextLeonidasGuard} GD de LeÃ³nidas.`);}
+  if(nextGenghisGuard){mods.defenderGuard+=nextGenghisGuard;mods.notes.push(`${defender.name} +${nextGenghisGuard} GD de Gengis Kan.`);}
+  const joanProtection=Math.max(0,Number(defender.hvJoanNextDamageReduction||0));
+  if(joanProtection&&defender.noReductionWindowKey!==publicState?.combatWindowKey&&!isRtTrapLocked(defender,"reduction")){
+    mods.damageReduction+=joanProtection;
+    mods.hvJoanCollectiveShield=true;
+    mods.notes.push(`${defender.name} reduce ${joanProtection} daÃ±o con Llama de OrlÃ©ans.`);
+  }
   const weaponAdvantage=getWeaponAdvantage(attacker,defender);
   if(weaponAdvantage){
     mods.attackerDex+=weaponAdvantage.dexBonus;
@@ -701,7 +716,6 @@ function getCombatMods(attacker,defender,attackContext=null){
   if(attacker.key==='ulysses'&&hvCardTryMod(mods,attacker,'arco_odiseo')){
     mods.attackerAtk+=8;mods.notes.push('Arco de Odiseo: +8 AT para este ataque.');
   }
-  if(ownerHasUnit(attacker.owner,"shaka_zulu")&&adjacentAllies(defender).some(a=>a.owner===attacker.owner)&&hvCardTryMod(mods,firstOwnerUnit(attacker.owner,"shaka_zulu"),"cuernos_buffalo")){mods.attackerAtk+=3;mods.notes.push(`${attacker.name} +3 AT por Cuernos del Búfalo.`);if(adjacentAllies(defender).filter(a=>a.owner===attacker.owner).length>=2){mods.defenderAgi-=4;mods.notes.push(`${defender.name} -4 AGI por estar rodeado.`);}}
   if(attacker.key==="nasu_no_yoichi"&&isRangedAttack(attacker,defender)&&dist(attacker,defender)>=3&&hvCardTryMod(mods,attacker,"marca_abanico")){mods.defenderGuard-=4;mods.notes.push(`${defender.name} -4 Guardia por Marca del Abanico.`);}
   if(attacker.key==="tomoe_gozen"&&hvCardTryMod(mods,attacker,"jinete_luna")){mods.defenderAgi-=6;mods.notes.push(`${defender.name} -6 AGI por Jinete de la Luna Cortante.`);if((defender.range||1)>=2){mods.attackerAtk+=8;mods.notes.push(`${attacker.name} +8 AT contra unidades de rango.`);}}
   if(attacker.key==="solomon_ifrit"){mods.defenderGuard-=4;mods.notes.push(`${defender.name} -4 Guardia por Fuego del Mandato.`);}
@@ -711,16 +725,7 @@ function getCombatMods(attacker,defender,attackContext=null){
   if(isBasicUnit(attacker)&&defender.special&&ownerHasUnit(attacker.owner,"spartacus")){mods.attackerAtk+=5;mods.notes.push(`${attacker.name} +5 AT por Romper Cadenas.`);}
   const caesar=firstOwnerUnit(defender.owner,"julius_caesar");
   if(caesar&&hvCardTryMod(mods,caesar,"disciplina_cesar")){mods.attackerAtk-=4;mods.attackerDex-=3;mods.caesarId=caesar.id;mods.notes.push(`${attacker.name} -4 AT/-3 DX por Disciplina de las Legiones.`);}
-  const joan=firstOwnerUnit(defender.owner,"joan_of_arc");
-  const joanNow=Date.now();
-  if(joan&&Number(joan.hp||0)>0&&!defender.leader&&defender.id!==joan.id&&defender.key!=="joan_of_arc"&&Number(joan.joanOrleansCooldownUntil||0)<=joanNow&&defender.noReductionWindowKey!==publicState?.combatWindowKey&&!isRtTrapLocked(defender,"reduction")){
-    mods.damageReduction+=3;
-    mods.joanOrleansId=joan.id;
-    mods.joanOrleansTargetId=defender.id;
-    mods.joanOrleansReduction=3;
-    mods.joanOrleansCooldownUntil=joanNow+30000;
-    mods.notes.push(`Llama de Orleans: Juana de Arco reduce 3 de dano a ${defender.name}.`);
-  }
+
 
   if(defender.key==="gilgamesh"&&isRangedAttack(attacker,defender)&&defender.noReductionWindowKey!==publicState?.combatWindowKey&&!isRtTrapLocked(defender,"reduction")){mods.damageReduction+=2;mods.notes.push(`Gilgamesh reduce 2 daño de proyectiles o magia a distancia.`);}
   if(melee&&attacker.key==="bengal_tiger"&&isAttackFromStealth(attacker,attackContext)){mods.defenderAgi-=3;mods.notes.push(`${defender.name} -3 AGI por Emboscada desde Sigilo.`);}
