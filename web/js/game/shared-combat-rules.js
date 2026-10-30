@@ -8,21 +8,36 @@ function isHannibalMountedUnit(u){return !!u&&u.key==="hannibal_barca"&&u.hannib
 function isHannibalElephantCombatForm(u){return !!u&&(u.key==="african_elephant"||u.key==="hannibal_elephant_survivor"||isHannibalMountedUnit(u));}
 function initializeHannibalCompositeUnit(unit){
   if(!unit||unit.key!=="hannibal_barca")return unit;
-  const maxHp=Math.max(HANNIBAL_RIDER_BASE_HP+1,Number(unit.maxHp||unit.hp||22));
-  const riderMax=Math.min(HANNIBAL_RIDER_BASE_HP,maxHp-1);
-  const elephantMax=Math.max(1,maxHp-riderMax);
-  return {...unit,hannibalMounted:true,hannibalSeparated:false,hannibalRiderHp:riderMax,hannibalRiderMaxHp:riderMax,hannibalElephantHp:elephantMax,hannibalElephantMaxHp:elephantMax,hp:riderMax+elephantMax,maxHp:riderMax+elephantMax};
+  // Version canonica INDEPENDIENTE de copias antiguas guardadas en el mazo.
+  const riderMax=HANNIBAL_RIDER_BASE_HP;
+  const elephantMax=HANNIBAL_ELEPHANT_BASE_HP;
+  const dexBonus=Math.max(0,Number(unit.masteryDexBonus||0));
+  return {...unit,hannibalMounted:true,hannibalSeparated:false,
+    hannibalRiderHp:riderMax,hannibalRiderMaxHp:riderMax,
+    hannibalElephantHp:elephantMax,hannibalElephantMaxHp:elephantMax,
+    hp:riderMax+elephantMax,maxHp:riderMax+elephantMax,
+    // El jinete lanza jabalinas (AT4/RG3); la defensa fisica es del elefante.
+    atk:4,baseGuard:7,guard:7,dex:3+dexBonus,agi:3,
+    mov:2,canonicalMov:2,naturalMovBase:2,fixedMov:null,range:3};
 }
 registerHallvallaHook("unit.make",(unit)=>initializeHannibalCompositeUnit(unit),{id:"hannibal:composite-mount"});
 function transformHannibalToRider(unit,riderHp){
   const masteryDex=Math.max(0,Number(unit?.masteryDexBonus||0));
-  const maxHp=Math.max(1,Number(unit?.hannibalRiderMaxHp||HANNIBAL_RIDER_BASE_HP));
-  return {...unit,key:"hannibal_dismounted",name:"Hannibal Barca",hannibalMounted:false,hannibalSeparated:true,hannibalSurvivor:"rider",mountType:"",locomotionClass:"foot",beast:false,hp:Math.max(1,Math.min(maxHp,Number(riderHp||maxHp))),maxHp,atk:4,baseGuard:2,guard:2,dex:11+masteryDex,agi:4,mov:2,fixedMov:null,range:3,fieldFigure:"assets/field_figures_light/basic/roman_auxiliary_sagittarius.webp",text:"Hannibal continúa a pie. Ataca a distancia con jabalinas; el elefante ha caído. Conserva Trampa de Cannas."};
+  const maxHp=HANNIBAL_RIDER_BASE_HP;
+  return {...unit,key:"hannibal_dismounted",name:"Hannibal Barca",
+    hannibalMounted:false,hannibalSeparated:true,hannibalSurvivor:"rider",
+    hvHannibalRetreatPending:true,
+    mountType:"",locomotionClass:"foot",loadProfile:null,armorClass:"light",
+    naturalMovBase:2,canonicalMov:2,beast:false,
+    hp:Math.max(1,Math.min(maxHp,Number(riderHp??maxHp))),maxHp,
+    atk:4,baseGuard:2,guard:2,dex:11+masteryDex,agi:4,mov:2,fixedMov:2,range:3,
+    fieldFigure:"assets/field_figures_light/basic/roman_auxiliary_sagittarius.webp",
+    text:"Hannibal continúa a pie. Se retira hacia el líder aliado, ataca con jabalinas a distancia y conserva Trampa de Cannas."};
 }
 function transformHannibalToElephant(unit,elephantHp){
   const masteryDex=Math.max(0,Number(unit?.masteryDexBonus||0));
   const maxHp=Math.max(1,Number(unit?.hannibalElephantMaxHp||HANNIBAL_ELEPHANT_BASE_HP));
-  return {...unit,key:"hannibal_elephant_survivor",name:"Hannibal Barca",hannibalMounted:false,hannibalSeparated:true,hannibalSurvivor:"elephant",mountType:"",locomotionClass:"beast",beast:true,hp:Math.max(1,Math.min(maxHp,Number(elephantHp||maxHp))),maxHp,atk:16,baseGuard:7,guard:7,dex:3+masteryDex,agi:3,mov:1,fixedMov:null,range:1,fieldFigure:"assets/field_figures_light/beasts/african_elephant.webp",text:"El elefante de Hannibal permanece en combate después de perder a su jinete. Usa la fuerza y Arremetida Colosal del Elefante Africano."};
+  return {...unit,key:"hannibal_elephant_survivor",name:"Hannibal Barca",hannibalMounted:false,hannibalSeparated:true,hannibalSurvivor:"elephant",mountType:"",locomotionClass:"beast",beast:true,hp:Math.max(1,Math.min(maxHp,Number(elephantHp||maxHp))),maxHp,atk:16,baseGuard:7,guard:7,dex:3+masteryDex,agi:3,mov:2,canonicalMov:2,naturalMovBase:2,fixedMov:2,range:1,loadProfile:null,fieldFigure:"assets/field_figures_light/beasts/african_elephant.webp",text:"El elefante de Hannibal permanece en combate después de perder a su jinete. Usa la fuerza y Arremetida Colosal del Elefante Africano."};
 }
 function routeHannibalMountedHpDamage(before,damaged,attacker){
   if(!isHannibalMountedUnit(before)||!damaged||Number(damaged.lastHpLoss||0)<=0)return{unit:damaged,splitText:"",component:""};
@@ -735,6 +750,7 @@ function getCombatMods(attacker,defender,attackContext=null){
   if(melee&&attacker.key==="wild_boar"&&hvCardTryMod(mods,attacker,"carga_brusca")){mods.attackerAtk+=1;mods.notes.push(`${attacker.name} +1 AT por Carga Brusca.`);}
   if(melee&&isWhiteRhinoChargeReady(attacker)&&hvCardTryMod(mods,attacker,"embestida_rino")){mods.attackerAtk+=8;mods.rhinoCharge=true;mods.notes.push(`${attacker.name} usa Embestida Devastadora: AT 22.`);}
   if(melee&&isHannibalMountedUnit(attacker)){mods.attackerAtk+=12;mods.hannibalElephantMelee=true;mods.notes.push(`${attacker.name} combate con la fuerza del elefante: AT 16.`);}
+  if(!melee&&isHannibalMountedUnit(attacker)){mods.attackerDex+=8;mods.notes.push(`${attacker.name} usa la precisión de su jinete (+8 DX) al lanzar jabalinas.`);}
   if(melee&&isAfricanElephantChargeReady(attacker,defender)&&hvCardTryMod(mods,attacker,"arremetida_elephant")){mods.attackerAtk+=6;mods.defenderAgi-=4;mods.elephantCharge=true;mods.notes.push(`${attacker.name} usa Arremetida Colosal: +6 AT (AT 22) y ${defender.name} -4 AGI para evadir.`);}
   if(attacker.key==="peregrine_falcon"&&hvCardTryMod(mods,attacker,"picada_falcon")){mods.attackerAtk+=2;mods.falconDive=true;mods.notes.push(`${attacker.name} usa Ataque en Picada: golpe seguro, AT 3.`);}
   if(defender.key==="honey_badger"){mods.damageReduction+=1;mods.honeyBadgerReduction=true;mods.notes.push(`${defender.name} reduce 1 daño por Armadura Natural.`);}
@@ -1298,7 +1314,7 @@ function pushUnitStepwise(units,targetId,dx,dy,maxSteps=1){
 // Rango 1, un solo disparo cuando acierta un ataque melee, cooldown propio 30 s.
 function resolveAfricanElephantStomp(units,attacker,defender,hit){
   const unchanged={units:[...(units||[])],triggered:false,text:"",victimIds:[],fatalIds:[]};
-  if(!attacker||attacker.key!=="african_elephant"||!defender||!hit?.hit||dist(attacker,defender)>1) return unchanged;
+  if(!attacker||!isHannibalElephantCombatForm(attacker)||!defender||!hit?.hit||dist(attacker,defender)>1) return unchanged;
   if(!hvCardReady(attacker,"pisoton_elephant"))return unchanged;
   let out=[...(units||[])];
   if(!out.some(u=>u.id===attacker.id&&Number(u.hp||0)>0))return unchanged;
@@ -1306,7 +1322,7 @@ function resolveAfricanElephantStomp(units,attacker,defender,hit){
   const targets=out.filter(u=>u&&u.owner!==attacker.owner&&Number(u.hp||0)>0&&dist(u,liveElephant)<=1&&
     (typeof canReceiveUntargetedAreaEffect!=="function"||canReceiveUntargetedAreaEffect(u,attacker)));
   if(!targets.length)return unchanged;
-  const rank=hvActionRarityValue(attacker),damage=1+rank,hitNames=[],fatalIds=[];
+  const rank=attacker.key==="african_elephant"?hvActionRarityValue(attacker):6,damage=1+rank,hitNames=[],fatalIds=[];
   out=out.map(u=>u.id===attacker.id?hvCardMark(u,"pisoton_elephant"):u);
   for(const target of targets){
     const current=out.find(u=>u.id===target.id&&Number(u.hp||0)>0);

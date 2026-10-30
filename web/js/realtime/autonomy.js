@@ -344,6 +344,37 @@ function hallvallaRtChooseStep(unit,target,units=publicState?.units||[]){
   return null;
 }
 
+/* Hannibal desmontado: retiro tactico propio, no cambia la IA de otras unidades.
+   Mantener distancia 2 del lider, sin bloquear su celda de invocacion; evita el frente. */
+function hallvallaRtChooseHannibalCommandStep(unit,leader,units=publicState?.units||[]){
+  if(!unit||!leader||Number(leader.hp||0)<=0)return null;
+  const currentLeaderDist=dist(unit,leader);
+  const foes=(units||[]).filter(e=>hallvallaRtVisibleEnemy(unit,e));
+  const dangerAt=c=>foes.length?Math.min(...foes.map(e=>dist(c,e))):99;
+  const dangerNow=dangerAt(unit);
+  if(currentLeaderDist===2&&dangerNow>3)return null;
+  const occupied=new Set((units||[]).filter(u=>u&&u.id!==unit.id&&Number(u.hp||0)>0).map(u=>hallvallaRtCellKey(u.x,u.y)));
+  const options=hallvallaRtNeighbors(Number(unit.x),Number(unit.y))
+    .filter(c=>!occupied.has(hallvallaRtCellKey(c.x,c.y)))
+    .filter(c=>{
+      const d=dist(c,leader);
+      if(currentLeaderDist>2)return d<currentLeaderDist;
+      return d>=1&&d<=2;
+    })
+    .map(c=>{
+      const d=dist(c,leader),enemyDist=dangerAt(c);
+      const exposure=enemyDist<=1?200:enemyDist===2?100:enemyDist===3?35:0;
+      return {cell:c,score:Math.max(0,d-2)*120+exposure+Math.abs(d-2)*8+
+        hallvallaRtCrowdPenalty(c,unit.owner,units)*2};
+    }).sort((a,b)=>a.score-b.score||a.cell.y-b.cell.y||a.cell.x-b.cell.x);
+  if(!options.length)return null;
+  if(currentLeaderDist<=2){
+    const nowScore=(dangerNow<=1?200:dangerNow===2?100:dangerNow===3?35:0)+Math.abs(currentLeaderDist-2)*8;
+    if(options[0].score>=nowScore-1)return null;
+  }
+  return options[0].cell;
+}
+
 function hallvallaRtChooseSpawnExitStep(unit,units=publicState?.units||[]){
   if(!unit||unit.leader||isRtTrapLocked(unit,"move",hallvallaRtNow())||Number(typeof effectiveMov==="function"?effectiveMov(unit):unit.mov||0)<=0)return null;
   const leader=hallvallaRtGetOwnerLeader(unit.owner,units);
@@ -1626,6 +1657,8 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
     const ownLeader=hallvallaRtGetOwnerLeader(live.owner,units);
     const holdRadius=hallvallaRtLeaderHoldRadius(live,units);
     const tactical=globalThis.hallvallaRtGetTacticalOrder?.(live)||null;
+    const hannibalCommandRetreat=live.key==="hannibal_dismounted"&&!!ownLeader&&!tactical;
+    const hannibalImmediateStep=hannibalCommandRetreat&&live.hvHannibalRetreatPending===true;
     const inSpawnRing=!!ownLeader&&dist(live,ownLeader)<=1;
     // Con vínculo arcano radio 1, salir del anillo rompe el efecto.
     const dedicatedFormation=!tactical&&(hallvallaRtIsRearSupportUnit(live)||!!hallvallaRtFindEscortArcher(live,units));
@@ -1634,14 +1667,23 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
     // hasta que el cooldown real de movimiento vence. La reposición de Hua Lan
     // es una reacción inmediata y, por diseño, no espera ese cooldown.
     const lastMove=Number(hallvallaRtState.moveAt.get(live.id)||0);
-    if(!freshSpawn&&!mulanReposition&&now-lastMove<Math.max(1000,hallvallaRtMoveCooldown(live)-Math.max(0,Number(live.hvLeaderNextMoveAccelerateMs||0)))+Math.max(0,Number(live.hvNextMoveDelayMs||0)))continue;
+    if(!freshSpawn&&!mulanReposition&&!hannibalImmediateStep&&now-lastMove<Math.max(1000,hallvallaRtMoveCooldown(live)-Math.max(0,Number(live.hvLeaderNextMoveAccelerateMs||0)))+Math.max(0,Number(live.hvNextMoveDelayMs||0)))continue;
     if(live.hvNextMoveSkip===true&&!freshSpawn&&!mulanReposition){
       units=units.map(u=>u.id===live.id?{...u,hvNextMoveSkip:false,hvNextMoveDelayMs:0}:u);
       hallvallaRtState.moveAt.set(live.id,now);moves++;continue;
     }
     let step=null;
 
-    if(mulanReposition){
+    if(hannibalCommandRetreat){
+      step=hallvallaRtChooseHannibalCommandStep(live,ownLeader,units);
+      if(!step){
+        if(live.hvHannibalRetreatPending){
+          units=units.map(u=>u.id===live.id?{...u,hvHannibalRetreatPending:false}:u);
+          stateChanges++;
+        }
+        continue;
+      }
+    }else if(mulanReposition){
       // Si ya existe un blanco válido en alcance, la reposición es opcional: Hua Lan
       // conserva la casilla y pasa directamente a su único ataque de seguimiento.
       if(hallvallaRtFindAttackableTarget(live,units)){
@@ -1699,7 +1741,7 @@ async function hallvallaRtMoveReadyUnits(now,maxMoves=HALLVALLA_RT_CFG.maxMovesP
     let trapMove;
     try{trapMove=resolveMovementLegendaryTraps(live,{x:step.x,y:step.y},units,legendaryTraps);}catch(_){trapMove={cancel:false,units,traps:legendaryTraps,logs:[]};}
     legendaryTraps=[...(trapMove.traps||legendaryTraps)];
-    units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveWindowKey:publicState?.combatWindowKey||'RT',hvUlyssesNextMoveMov:0,hvNextMoveDelayMs:0,hvLeaderNextMoveAccelerateMs:0,hvNextMoveSkip:false,hvSubotaiNextMoveBoostMs:0,hvSkiparFirstMoveConsumed:u.key==='skipar_del_drakkar'?true:u.hvSkiparFirstMoveConsumed,rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false}:u);
+    units=trapMove.cancel?trapMove.units:trapMove.units.map(u=>u.id===live.id?{...u,x:step.x,y:step.y,nexoX:step.x,nexoY:step.y,moved:false,acted:false,movedSpaces:Number(u.movedSpaces||0)+movedNow,lastMoveDistance:movedNow,lastMoveStraightDistance:(dx===0||dy===0||Math.abs(step.x-live.x)===Math.abs(step.y-live.y))?movedNow:0,lastMoveDx:dx,lastMoveDy:dy,lastMoveWindowKey:publicState?.combatWindowKey||'RT',hvUlyssesNextMoveMov:0,hvNextMoveDelayMs:0,hvLeaderNextMoveAccelerateMs:0,hvNextMoveSkip:false,hvSubotaiNextMoveBoostMs:0,hvSkiparFirstMoveConsumed:u.key==='skipar_del_drakkar'?true:u.hvSkiparFirstMoveConsumed,rtSpawnExitPending:(ownLeader&&dist(step,ownLeader)<=1)?true:false,hvHannibalRetreatPending:u.key==="hannibal_dismounted"?false:u.hvHannibalRetreatPending}:u);
     if(!trapMove.cancel){
       units=units.map(u=>u.id===live.id?(()=>{
         let n={...u,tempMovBuff:0,tempMovDebuff:0,tempMovDebuffSource:"",movedSpaces:Number(u.movedSpaces||0),

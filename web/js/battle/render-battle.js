@@ -278,7 +278,8 @@ function getUnitTopLeftText(u){
     return `${Number(st.honor||0)}/${Number(st.maxHonor||0)}`;
   }
   if(isUnitServiceProgression(u))return String(getUnitServicePoints(u));
-  return ""; // v344: rango calculado internamente; no aparece en tarjetas de campo.
+  const rank=typeof getUnitDisplayMasteryRank==="function"?getUnitDisplayMasteryRank(u):Number(u.masteryRank||1);
+  return romanUnitRank(Math.max(1,Number(rank)||1)); // Maestria visible, sin modificar progreso.
 }
 function getUnitTopLeftTitle(u){
   if(!u)return "";
@@ -375,7 +376,7 @@ function getUnitBottomFrameHtml(u){
      únicos stats visibles. PREC/EVA continúan resolviéndose por debajo. */
   const attackHtml=`<span class="unit-stat-orb stat-orb-atk stat-orb-primary attack stat-badge-atk-wrap" data-board-stat="AT" title="${escapeHtml(attackTitle)}">${getAttackBadgeHtml(u,"unit-primary")}</span>`;
   const guardHtml=`<span class="unit-stat-orb stat-orb-aux guard stat-badge-guard-wrap" data-board-stat="GD" title="${escapeHtml(guardTitle)}">${getGuardBadgeHtml(u,"unit-aux")}</span>`;
-  const leftBadge=(u.leader||isUnitServiceProgression(u))?`<span class="unit-stat-orb stat-orb-cost" title="${escapeHtml(topLeftTitle)}"><b>${escapeHtml(topLeftText)}</b></span>`:"";
+  const leftBadge=topLeftText?`<span class="unit-stat-orb stat-orb-cost" title="${escapeHtml(topLeftTitle)}"><b>${escapeHtml(topLeftText)}</b></span>`:"";
   return `<div class="unit-ornate-ui">
     ${leftBadge}
     <span class="unit-hp-heart-anchor">${getHpHeartBadgeHtml(u,"unit")}</span>
