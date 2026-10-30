@@ -1406,7 +1406,7 @@ async function resolveSharedAttackOutcome({
       fearWindowKey:"",fearSourceName:"",movedSpaces:0
     }:u.id===d.id?{...u,
       ...(typeof hvSkillFinalizeDefenderNextAction==="function"?hvSkillFinalizeDefenderNextAction(u):{...u,hvNextDefenseAgiDebuff:0,hvNextDefenseGuardDebuff:0}),
-      hvSunTzuNextDefenseGuard:0,hvUlyssesNextDefenseGuard:0,hvLeonidasNextDefenseGuard:0,hvGenghisNextDefenseGuard:0,hvJoanNextDamageReduction:(mods.hvJoanCollectiveShield&&hit.hit)?0:Number(u.hvJoanNextDamageReduction||0),tempAgiBuff:0,
+      hvSunTzuNextDefenseGuard:0,hvUlyssesNextDefenseGuard:0,hvLeonidasNextDefenseGuard:0,hvGenghisNextDefenseGuard:0,hvJoanFortificationNextDefenseGuard:0,hvJoanNextDamageReduction:(mods.hvJoanCollectiveShield&&hit.hit)?0:Number(u.hvJoanNextDamageReduction||0),tempAgiBuff:0,
       hvSimpleBuff:typeof hvSkillConsumeSimpleBuff==="function"?hvSkillConsumeSimpleBuff(u.hvSimpleBuff,"defense"):u.hvSimpleBuff,
       tempAgiDebuff:u.solomonSealSourceId?Math.min(2,Math.max(0,Number(u.tempAgiDebuff||0))):0,
       tempGuardBuff:u.yiSunDebuffed?Math.min(0,Number(u.tempGuardBuff||0)):0

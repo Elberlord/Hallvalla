@@ -1138,7 +1138,18 @@ async function hallvallaRtAutoUnitSkills(caster,now=Date.now()){
       units=units.map(u=>u.id===target.id?hvSkillClearNegativeStates(u):u);log=`${live.name} usa Purificación sobre ${target.name}.`;changed=true;statusFxEvent=hvSkillStatusEvent("buff",target,1);
     }else if(skill.name==="Escudo Aliado"||skill.name==="Fortificación"||skill.name==="Protección del Flanco"){
       const target=(units||[]).filter(u=>u&&u.owner===live.owner&&!u.leader&&u.id!==live.id&&Number(u.hp||0)>0).sort((a,b)=>Number(a.guard||0)-Number(b.guard||0))[0];if(!target)continue;
-      units=units.map(u=>u.id===target.id?{...u,tempGuardBuff:Math.max(Number(u.tempGuardBuff||0),value)}:u);log=`${live.name} usa ${skill.name}: ${target.name} gana +${value} GD temporal.`;changed=true;statusFxEvent=hvSkillStatusEvent("buff",target,value);
+      if(live.key==="joan_of_arc"&&skill.id==="HV-225"){
+        // Fortificacion exclusiva de Juana: +5 base + rareza, un aliado, una defensa.
+        const rarity=Math.max(1,Number(typeof hvActionRarityValue==="function"?hvActionRarityValue(live):value));
+        const amount=5+rarity;
+        units=units.map(u=>u.id===target.id?{...u,hvJoanFortificationNextDefenseGuard:Math.max(0,Number(u.hvJoanFortificationNextDefenseGuard||0),amount)}:u);
+        log=`${live.name} usa Fortificación: ${target.name} recibe +${amount} GD para su próxima defensa.`;
+        changed=true;
+        // La marca fija aparece en la unidad. No disparar el antiguo FX que mostraba "-5".
+        statusFxEvent=null;
+      }else{
+        units=units.map(u=>u.id===target.id?{...u,tempGuardBuff:Math.max(Number(u.tempGuardBuff||0),value)}:u);log=`${live.name} usa ${skill.name}: ${target.name} gana +${value} GD temporal.`;changed=true;statusFxEvent=hvSkillStatusEvent("buff",target,value);
+      }
     }else if(tags.has("exorcism")){
       const enemies=(units||[]).filter(u=>u&&u.owner!==live.owner&&!u.leader&&Number(u.hp||0)>0&&(u.reanimated||u.undead||u.noMuerto));if(enemies.length){
         const target=enemies.sort((a,b)=>{let da=99,db=99;try{da=dist(live,a);db=dist(live,b);}catch(_){}return da-db;})[0];
@@ -1172,7 +1183,11 @@ async function hallvallaRtAutoUnitSkills(caster,now=Date.now()){
       changed=true;statusFxEvent=revivedCount?hvSkillStatusEvent('buff',live,revivedCount):null;
     }else continue;
     if(!changed)continue;
-    units=units.map(u=>u.id===live.id?hvSkillMarkCooldown(u,skill,now):u);
+    units=units.map(u=>u.id===live.id?(
+      live.key==="joan_of_arc"&&skill.id==="HV-225"
+        ?{...u,unitSkillCooldowns:{...(u.unitSkillCooldowns||{}),[skill.id]:now+30000}}
+        :hvSkillMarkCooldown(u,skill,now)
+    ):u);
     await updatePublic({units,erictoGraveyard:grave,undeadRemains:remains,statusFxEvent:statusFxEvent||null,floatFxEvent:floatFxEvent||null,log:[log,...(publicState?.log||[])].slice(0,18)});
     return true;
   }

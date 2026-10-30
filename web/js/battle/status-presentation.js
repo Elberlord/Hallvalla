@@ -41,6 +41,8 @@ function getUnitStatusEntries(u){
   if(hectorAtkPenalty>0)add(`-${hectorAtkPenalty} AT`,`Muralla de Troya`,`Pasiva de Héctor: esta unidad enemiga está en rango 1. Pierde 1 AT por cada enemigo en rango 1 de Héctor.`,"debuff atk-debuff","debuff");
   const achillesGuardBonus=achillesConcentrationGuard(u);
   if(achillesGuardBonus>0)add(`+${achillesGuardBonus} GD`,`Concentración del Pélida`,`Aquiles tiene 2 o más enemigos adyacentes y obtiene +6 Guardia.`,"buff guard-buff","buff");
+  const joanFortification=Math.max(0,n(u.hvJoanFortificationNextDefenseGuard));
+  if(joanFortification>0)add(`+${joanFortification} GD`,`Fortificación de Juana de Arco`,`Juana eligió esta unidad: +${joanFortification} Guardia para su próxima defensa. La marca desaparece después de recibir el ataque.`,"buff guard-buff","buff");
   if(n(u.tempGuardBuff)>0)add(`+${n(u.tempGuardBuff)} GD`,`Guardia aumentada`,n(u.steelWallBuffs)>0?`Guardia aumentada por Muro de acero (${n(u.steelWallBuffs)} acumulación${n(u.steelWallBuffs)===1?"":"es"}). Se limpia automáticamente cuando expire el efecto.`:`Guardia temporal adicional.`,"buff guard-buff","buff");
   if(n(u.tempGuardBuff)<0)add(`${n(u.tempGuardBuff)} GD`,`Guardia reducida`,`Guardia reducida por trampa o efecto temporal.`,"debuff guard-debuff","debuff");
   if(n(u.warningRuneGuard)>0)add(`◆ +${n(u.warningRuneGuard)} GD`,`Runa de advertencia`,`La próxima vez que esta unidad sea atacada, obtiene +${n(u.warningRuneGuard)} Guardia durante ese combate y la runa se consume.${u.warningRuneCardName?` Origen: ${u.warningRuneCardName}.`:""}`,"buff guard-buff","buff");

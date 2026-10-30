@@ -669,6 +669,8 @@ function getCombatMods(attacker,defender,attackContext=null){
   if(nextUlyssesGuard){mods.defenderGuard+=nextUlyssesGuard;mods.notes.push(`${defender.name} +${nextUlyssesGuard} GD de Ulises.`);}
   if(nextLeonidasGuard){mods.defenderGuard+=nextLeonidasGuard;mods.notes.push(`${defender.name} +${nextLeonidasGuard} GD de LeÃ³nidas.`);}
   if(nextGenghisGuard){mods.defenderGuard+=nextGenghisGuard;mods.notes.push(`${defender.name} +${nextGenghisGuard} GD de Gengis Kan.`);}
+  const joanFortificationGuard=Math.max(0,Number(defender.hvJoanFortificationNextDefenseGuard||0));
+  if(joanFortificationGuard>0){mods.defenderGuard+=joanFortificationGuard;mods.notes.push(`${defender.name} +${joanFortificationGuard} GD de Fortificación de Juana para esta defensa.`);}
   const joanProtection=Math.max(0,Number(defender.hvJoanNextDamageReduction||0));
   if(joanProtection&&defender.noReductionWindowKey!==publicState?.combatWindowKey&&!isRtTrapLocked(defender,"reduction")){
     mods.damageReduction+=joanProtection;
