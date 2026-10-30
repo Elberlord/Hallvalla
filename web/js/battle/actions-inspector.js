@@ -1083,7 +1083,7 @@ function ensureUnifiedDetLevelAndBattlePower(modal,entity){
   battle.setAttribute('aria-label',tierText?`Poder de batalla ${powerText}: ${tierText}`:`Poder de batalla ${powerText}`);
   battle.innerHTML=`<strong class="hv-det-battle-power-number">${escapeHtml(powerText)}</strong>${tierText?`<small class="hv-det-battle-power-tier">${escapeHtml(tierText)}</small>`:''}<span class="hv-det-cal-id">battlepower.value</span>`;
 
-  if(entity.leader||entity.type==='leader'||/^adult_(?:lightning|fire|ice)_dragon$/.test(String(entity.key||'')))layer.appendChild(levelValue);
+  if(level.visible)layer.appendChild(levelValue);
   layer.append(levelBar,battle);
   card.appendChild(layer);
   return layer;

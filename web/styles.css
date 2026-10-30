@@ -14557,7 +14557,7 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
 .field-stat-badges-tuner-status{text-align:left;}
 @media(max-width:720px){.field-stat-badges-tuner{left:8px !important;right:8px !important;top:70px !important;bottom:8px !important;width:auto !important;}}
 /* HP badge editor */
-.unit-card .unit-hp-heart-anchor{transform:translate(var(--sb-hp-unit-icon-x),var(--sb-hp-unit-icon-y)) scale(var(--sb-hp-unit-icon-scale)) !important; transform-origin:center center !important;}
+.unit-card .unit-hp-heart-anchor{transform:translate(var(--sb-hp-unit-icon-x),var(--sb-hp-unit-icon-y)) scale(calc(var(--sb-hp-unit-icon-scale) * 1.06)) !important; transform-origin:center center !important;}
 .leader-heart-slot .hp-heart-badge-leader{transform:translate(var(--sb-hp-leader-icon-x),var(--sb-hp-leader-icon-y)) scale(var(--sb-hp-leader-icon-scale)) !important; transform-origin:center center !important;}
 .unit-card .hp-heart-badge-unit .hp-heart-medallion-core,
 .unit-card .hp-heart-badge-unit .hp-heart-medallion-ring{transform:translate(var(--sb-hp-unit-ring-x),var(--sb-hp-unit-ring-y)) scale(var(--sb-hp-unit-ring-scale)); transform-box:fill-box; transform-origin:center center;}
@@ -14565,7 +14565,7 @@ html.hv-mobile-landscape #gameShell .hp-heart-number{
 .leader-heart-slot .hp-heart-badge-leader .hp-heart-medallion-ring{transform:translate(var(--sb-hp-leader-ring-x),var(--sb-hp-leader-ring-y)) scale(var(--sb-hp-leader-ring-scale)); transform-box:fill-box; transform-origin:center center;}
 .unit-card .hp-heart-badge-unit .hp-heart-medallion-ring{stroke-width:var(--sb-hp-unit-ring-stroke) !important;}
 .leader-heart-slot .hp-heart-badge-leader .hp-heart-medallion-ring{stroke-width:var(--sb-hp-leader-ring-stroke) !important;}
-.unit-card .hp-heart-badge-unit .hp-heart-number{font-size:var(--sb-hp-unit-num-size) !important;font-weight:var(--sb-hp-unit-num-weight) !important;transform:translate(var(--sb-hp-unit-num-x),var(--sb-hp-unit-num-y)) scaleX(var(--sb-hp-unit-num-scale-x)) scaleY(var(--sb-hp-unit-num-scale-y)) !important;transform-box:fill-box;transform-origin:center center;}
+.unit-card .hp-heart-badge-unit .hp-heart-number{font-size:calc(var(--sb-hp-unit-num-size) * 1.08) !important;font-weight:var(--sb-hp-unit-num-weight) !important;transform:translate(var(--sb-hp-unit-num-x),var(--sb-hp-unit-num-y)) scaleX(var(--sb-hp-unit-num-scale-x)) scaleY(var(--sb-hp-unit-num-scale-y)) !important;transform-box:fill-box;transform-origin:center center;}
 .leader-heart-slot .hp-heart-badge-leader .hp-heart-number{font-size:var(--sb-hp-leader-num-size) !important;font-weight:var(--sb-hp-leader-num-weight) !important;transform:translate(var(--sb-hp-leader-num-x),var(--sb-hp-leader-num-y)) scaleX(var(--sb-hp-leader-num-scale-x)) scaleY(var(--sb-hp-leader-num-scale-y)) !important;transform-box:fill-box;transform-origin:center center;}
 /* Shared helper for badge numbers */
 .unit-card .attack-emblem-medallion b,
